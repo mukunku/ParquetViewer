@@ -1,8 +1,8 @@
 # ParquetViewer
-Simple windows desktop application for viewing Apache Parquet files
+Simple Windows desktop application for viewing Apache Parquet files
 
 # Download
-If you'd like to use a pre-compiled EXE instead of compiling the project yourself, please see the Release folder: https://github.com/mukunku/ParquetViewer/tree/master/release
+If you'd like to use a pre-compiled EXE instead of compiling the project yourself, please see the release folder: https://github.com/mukunku/ParquetViewer/tree/master/release
 
 # Technical Details
 The project was written in C# using Visual Studio 2013 and .NET 4.5
