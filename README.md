@@ -1,7 +1,7 @@
 # ParquetViewer
 Simple Windows desktop application for viewing Apache Parquet files
 
-![Main UI](https://github.com/mukunku/ParquetViewer/blob/master/wiki_images/main_screenshot.png)
+![Main UI](https://github.com/mukunku/ParquetViewer/blob/master/wiki_images/main_screenshot2.png)
 
 # Download
 If you'd like to use a pre-compiled EXE instead of compiling the project yourself, please see the release folder: https://github.com/mukunku/ParquetViewer/tree/master/release
