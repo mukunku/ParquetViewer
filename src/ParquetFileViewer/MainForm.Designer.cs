@@ -67,6 +67,7 @@
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
+            this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -349,6 +350,7 @@
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.userGuideToolStripMenuItem,
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
@@ -357,7 +359,7 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -454,6 +456,13 @@
             this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
             this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
             // 
+            // userGuideToolStripMenuItem
+            // 
+            this.userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
+            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.userGuideToolStripMenuItem.Text = "User Guide";
+            this.userGuideToolStripMenuItem.Click += new System.EventHandler(this.userGuideToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -468,6 +477,7 @@
             this.MinimumSize = new System.Drawing.Size(680, 350);
             this.Name = "MainForm";
             this.Text = "New Parquet File";
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.SizeChanged += new System.EventHandler(this.MainForm_SizeChanged);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.MainForm_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.MainForm_DragEnter);
@@ -523,6 +533,7 @@
         private System.Windows.Forms.LinkLabel searchFilterLabel;
         private System.Windows.Forms.SaveFileDialog exportFileDialog;
         private System.ComponentModel.BackgroundWorker ExportFileBackgroundWorker;
+        private System.Windows.Forms.ToolStripMenuItem userGuideToolStripMenuItem;
     }
 }
 

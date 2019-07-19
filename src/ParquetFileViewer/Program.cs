@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
 using System.Windows.Forms;
 
 namespace ParquetFileViewer
@@ -12,11 +10,29 @@ namespace ParquetFileViewer
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            string fileToOpen = null;
+            try
+            {
+                if (args?.Length > 0 && File.Exists(args[0]))
+                {
+                    fileToOpen = args[0];
+                }
+            }
+            catch (Exception) { /*Swallow Exception*/ }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+
+            //Form must be created after calling SetCompatibleTextRenderingDefault();
+            Form mainForm = null;
+            if (string.IsNullOrWhiteSpace(fileToOpen))
+                mainForm = new MainForm();
+            else
+                mainForm = new MainForm(fileToOpen);
+
+            Application.Run(mainForm);
         }
     }
 }

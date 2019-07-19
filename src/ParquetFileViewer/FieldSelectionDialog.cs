@@ -36,73 +36,85 @@ namespace ParquetFileViewer
         private void FieldsToLoadForm_Load(object sender, EventArgs e)
         {
             this.CenterToParent();
+            this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
             this.fieldsPanel.Controls.Clear();
 
-            if (this.AvailableFields != null)
+            try
             {
-                int locationX = 0;
-                int locationY = 5;
-                bool isFirst = true;
-                Hashtable fieldNames = new Hashtable();
-
-                foreach (string field in this.AvailableFields)
+                if (this.AvailableFields != null)
                 {
-                    if (isFirst) //Add toggle all checkbox and some other setting changes
+                    int locationX = 0;
+                    int locationY = 5;
+                    bool isFirst = true;
+                    Hashtable fieldNames = new Hashtable();
+
+                    foreach (string field in this.AvailableFields)
                     {
-                        isFirst = false;
-
-                        if (this.PreSelectedFields != null)
+                        if (isFirst) //Add toggle all checkbox and some other setting changes
                         {
-                            foreach (string preSelectedField in this.PreSelectedFields)
+                            isFirst = false;
+
+                            if (this.PreSelectedFields != null)
                             {
-                                this.showSelectedFieldsRadioButton.Checked = true;
-                                break;
-                            }
-                        }
-
-                        var selectAllCheckbox = new CheckBox()
-                        {
-                            Name = SelectAllCheckboxName,
-                            Text = "Select All",
-                            Tag = SelectAllCheckboxName,
-                            Checked = false,
-                            Location = new Point(locationX, locationY),
-                            AutoSize = true
-                        };
-
-                        selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
-                        {
-                            var selectAllCheckBox = (CheckBox)checkboxSender;
-                            foreach (Control control in this.fieldsPanel.Controls)
-                            {
-                                if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox)
+                                foreach (string preSelectedField in this.PreSelectedFields)
                                 {
-                                    ((CheckBox)control).Checked = selectAllCheckBox.Checked;
+                                    this.showSelectedFieldsRadioButton.Checked = true;
+                                    break;
                                 }
                             }
-                        };
 
-                        this.fieldsPanel.Controls.Add(selectAllCheckbox);
-                        locationY += DynamicFieldCheckboxYIncrement;
-                    }
-
-                    if (!fieldNames.ContainsKey(field)) //Normally two fields with the same name shouldn't exist but lets make sure
-                    {
-                        this.fieldsPanel.Controls.Add(
-                            new CheckBox()
+                            var selectAllCheckbox = new CheckBox()
                             {
-                                Name = string.Concat("checkbox_", field),
-                                Text = field,
-                                Tag = field,
-                                Checked = this.PreSelectedFields.Contains(field),
+                                Name = SelectAllCheckboxName,
+                                Text = "Select All",
+                                Tag = SelectAllCheckboxName,
+                                Checked = false,
                                 Location = new Point(locationX, locationY),
                                 AutoSize = true
-                            });
+                            };
 
-                        locationY += DynamicFieldCheckboxYIncrement;
-                        fieldNames.Add(field, field);
+                            selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+                            {
+                                var selectAllCheckBox = (CheckBox)checkboxSender;
+                                foreach (Control control in this.fieldsPanel.Controls)
+                                {
+                                    if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox)
+                                    {
+                                        ((CheckBox)control).Checked = selectAllCheckBox.Checked;
+                                    }
+                                }
+                            };
+
+                            this.fieldsPanel.Controls.Add(selectAllCheckbox);
+                            locationY += DynamicFieldCheckboxYIncrement;
+                        }
+
+                        if (!fieldNames.ContainsKey(field)) //Normally two fields with the same name shouldn't exist but lets make sure
+                        {
+                            this.fieldsPanel.Controls.Add(
+                                new CheckBox()
+                                {
+                                    Name = string.Concat("checkbox_", field),
+                                    Text = field,
+                                    Tag = field,
+                                    Checked = this.PreSelectedFields.Contains(field),
+                                    Location = new Point(locationX, locationY),
+                                    AutoSize = true
+                                });
+
+                            locationY += DynamicFieldCheckboxYIncrement;
+                            fieldNames.Add(field, field);
+                        }
                     }
                 }
+            }
+            catch(Exception ex)
+            {
+                this.ShowError(ex, "Something went wrong while generating the field list.", true);
+            }
+            finally
+            {
+                this.fieldsPanel.ResumeLayout();
             }
         }
 
@@ -163,6 +175,11 @@ namespace ParquetFileViewer
             {
                 MessageBox.Show(string.Concat("Something went wrong:", Environment.NewLine, ex.ToString()), ex.Message);
             }
+        }
+
+        private void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
+        {
+            MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

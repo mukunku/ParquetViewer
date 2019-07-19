@@ -14,20 +14,22 @@ namespace ParquetFileViewer
 {
     public partial class MainForm : Form
     {
+        private const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
         private const int DefaultOffset = 0;
         private const int DefaultRowCount = 1000;
-        private readonly string DefaultFormTitle;
         private const int loadingPanelWidth = 200;
         private const int loadingPanelHeight = 200;
         private const string QueryUselessPartRegex = "^WHERE ";
+        private readonly string DefaultFormTitle;
 
         #region Members
+        private string fileToLoadOnLaunch = null;
         private string openFilePath;
         private string OpenFilePath
         {
             get
             {
-                return openFilePath;
+                return this.openFilePath;
             }
             set
             {
@@ -59,7 +61,7 @@ namespace ParquetFileViewer
             }
             set
             {
-                if (value != null && ((List<string>)value).Count > 0)
+                if (value != null && value.Count > 0)
                 {
                     this.selectedFields = value;
                     LoadFileToGridview();
@@ -89,6 +91,14 @@ namespace ParquetFileViewer
             }
         }
 
+        private bool IsAnyFileOpen
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(this.OpenFilePath) && this.SelectedFields != null;
+            }
+        }
+
         private DataTable mainDataSource;
         private DataTable MainDataSource
         {
@@ -111,6 +121,29 @@ namespace ParquetFileViewer
             this.recordCountTextBox.Text = DefaultRowCount.ToString();
             this.MainDataSource = new DataTable();
             this.OpenFilePath = null;
+
+            //Set DGV to be double buffered for smoother loading and scrolling
+            if (!System.Windows.Forms.SystemInformation.TerminalServerSession)
+            {
+                Type dgvType = this.mainGridView.GetType();
+                System.Reflection.PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                pi.SetValue(this.mainGridView, true, null);
+            }
+        }
+
+        public MainForm(string fileToOpenPath) : this()
+        {
+            //The code below will be executed after the default constructor => this()
+            this.fileToLoadOnLaunch = fileToOpenPath;
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
+            if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
+            {
+                this.OpenNewFile(this.fileToLoadOnLaunch);
+            }
         }
 
         #region Event Handlers
@@ -145,16 +178,9 @@ namespace ParquetFileViewer
         {
             int recordCount = 0;
             if (int.TryParse(((TextBox)sender).Text, out recordCount))
-            {
                 this.CurrentMaxRowCount = recordCount;
-            }
             else
                 ((TextBox)sender).Text = this.CurrentMaxRowCount.ToString();
-        }
-
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            (new AboutBox()).ShowDialog(this);
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
@@ -201,7 +227,7 @@ namespace ParquetFileViewer
 
         private void runQueryButton_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(this.OpenFilePath))
+            if (this.IsAnyFileOpen)
             {
                 string queryText = this.searchFilterTextBox.Text ?? string.Empty;
                 queryText = Regex.Replace(queryText, QueryUselessPartRegex, string.Empty).Trim();
@@ -299,6 +325,17 @@ MULTIPLE CONDITIONS:
                 this.ShowError(ex, null, false);
             }
         }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            (new AboutBox()).ShowDialog(this);
+        }
+
+        private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start(WikiURL);
+        }
+
         #endregion
 
         private void OpenFieldSelectionDialog()
@@ -319,7 +356,7 @@ MULTIPLE CONDITIONS:
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(this.OpenFilePath))
+                if (this.IsAnyFileOpen)
                 {
                     if (File.Exists(this.OpenFilePath))
                     {
