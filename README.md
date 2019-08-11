@@ -10,7 +10,11 @@ This is a quick and dirty utility that I created to easily view Apache Parquet f
 The Parquet.NET library that does all the actual work is not heavily optimized so performance within this application
 is far from ideal.
 
-This application can only open Parquet files located on the Windows machine the app is running on. It cannot connect to HDFS to read parquet data. If you would like to add this feature please feel free to do so..
+This application can only open Parquet files located on the Windows machine the app is running on. It cannot connect to HDFS to read parquet data. 
+
+Complex types such as structs, arrays and maps are not supported at this time.
+
+If you'd like to add any new features, feel free to send a pull request.
 
 # Download
 If you'd like to use a pre-compiled EXE instead of compiling the project yourself, please see the release folder: https://github.com/mukunku/ParquetViewer/releases
