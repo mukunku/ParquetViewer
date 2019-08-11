@@ -37,8 +37,7 @@ namespace ParquetFileViewer
 
         protected virtual void OnDelayedTextChanged(EventArgs e)
         {
-            if (this.DelayedTextChanged != null)
-                this.DelayedTextChanged(this, e);
+            this.DelayedTextChanged?.Invoke(this, e);
         }
 
         protected override void OnTextChanged(EventArgs e)

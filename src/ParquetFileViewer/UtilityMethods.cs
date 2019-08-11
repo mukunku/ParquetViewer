@@ -48,10 +48,10 @@ namespace ParquetFileViewer
 
                     if (rowsLeftToRead > 0)
                     {
-                        int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
-
                         int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCount - offset, recordCount), (int)groupReader.RowCount);
                         rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
+
+                        int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
 
                         ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup);
                     }
@@ -79,7 +79,6 @@ namespace ParquetFileViewer
                         continue;
                     }
 
-                    //int newRowsAdded = dataTable.Rows.Count - rowBeginIndex;
                     if (rowIndex >= readRecords)
                         break;
 
@@ -89,7 +88,9 @@ namespace ParquetFileViewer
                         dataTable.Rows.Add(newRow);
                     }
 
-                    if (field.DataType == Parquet.Data.DataType.DateTimeOffset)
+                    if (value == null)
+                        dataTable.Rows[rowIndex][field.Name] = DBNull.Value;
+                    else if (field.DataType == Parquet.Data.DataType.DateTimeOffset)
                         dataTable.Rows[rowIndex][field.Name] = ((DateTimeOffset)value).DateTime; //converts to local time!
                     else
                         dataTable.Rows[rowIndex][field.Name] = value;

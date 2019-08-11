@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -35,15 +36,17 @@ namespace ParquetFileViewer
             set
             {
                 this.openFileSchema = null;
+                this.SelectedFields = null;
                 this.openFilePath = value;
+                this.changeFieldsMenuStripButton.Enabled = false;
+                this.recordCountStatusBarLabel.Text = "0";
+                this.totalRowCountStatusBarLabel.Text = "0";
+                this.MainDataSource.Clear();
+                this.MainDataSource.Columns.Clear();
+
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     this.Text = this.DefaultFormTitle;
-                    this.changeFieldsMenuStripButton.Enabled = false;
-                    this.recordCountStatusBarLabel.Text = "0";
-                    this.totalRowCountStatusBarLabel.Text = "0";
-                    this.MainDataSource.Clear();
-                    this.MainDataSource.Columns.Clear();
                 }
                 else
                 {
@@ -62,9 +65,9 @@ namespace ParquetFileViewer
             }
             set
             {
+                this.selectedFields = value;
                 if (value != null && value.Count > 0)
                 {
-                    this.selectedFields = value;
                     LoadFileToGridview();
                 }
             }
@@ -77,7 +80,8 @@ namespace ParquetFileViewer
             set
             {
                 this.currentOffset = value;
-                LoadFileToGridview();
+                if (this.IsAnyFileOpen)
+                    LoadFileToGridview();
             }
         }
 
@@ -88,7 +92,8 @@ namespace ParquetFileViewer
             set
             {
                 this.currentMaxRowCount = value;
-                LoadFileToGridview();
+                if (this.IsAnyFileOpen)
+                    LoadFileToGridview();
             }
         }
 
@@ -168,9 +173,7 @@ namespace ParquetFileViewer
         {
             int offset = 0;
             if (int.TryParse(((TextBox)sender).Text, out offset))
-            {
                 this.CurrentOffset = offset;
-            }
             else
                 ((TextBox)sender).Text = this.CurrentOffset.ToString();
         }
@@ -341,7 +344,7 @@ MULTIPLE CONDITIONS:
 
         private void OpenFieldSelectionDialog()
         {
-            if (!string.IsNullOrWhiteSpace(this.OpenFilePath))
+            if (!string.IsNullOrWhiteSpace(this.OpenFilePath) && !this.FileSchemaBackgroundWorker.IsBusy)
             {
                 if (this.openFileSchema == null)
                 {
@@ -357,7 +360,7 @@ MULTIPLE CONDITIONS:
         {
             try
             {
-                if (this.IsAnyFileOpen)
+                if (this.IsAnyFileOpen && !this.ReadDataBackgroundWorker.IsBusy)
                 {
                     if (File.Exists(this.OpenFilePath))
                     {
@@ -587,11 +590,10 @@ MULTIPLE CONDITIONS:
 
         private void OpenNewFile(string filePath)
         {
-            this.OpenFilePath = null;
+            this.OpenFilePath = filePath;
             this.offsetTextBox.Text = DefaultOffset.ToString();
             this.recordCountTextBox.Text = DefaultRowCount.ToString();
 
-            this.OpenFilePath = filePath;
             this.OpenFieldSelectionDialog();
         }
 
