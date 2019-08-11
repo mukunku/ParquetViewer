@@ -1,92 +1,153 @@
-﻿using System;
+﻿using Parquet;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace ParquetFileViewer
 {
     public static class UtilityMethods
     {
-        public static DataTable ParquetDataSetToDataTable(Parquet.Data.DataSet dataset)
+        public static DataTable ParquetReaderToDataTable(ParquetReader parquetReader, out int totalRecordCount, List<string> selectedFields, int offset, int recordCount)
         {
-            DataTable datatable = new DataTable();
-            if (dataset != null)
+            //Get list of data fields and construct the DataTable
+            DataTable dataTable = new DataTable();
+            List<Parquet.Data.DataField> fields = new List<Parquet.Data.DataField>();
+            var dataFields = parquetReader.Schema.GetDataFields();
+            foreach (string selectedField in selectedFields)
             {
-                if (dataset.Schema.GetDataFields().Count == dataset.FieldCount)
+                var dataField = dataFields.FirstOrDefault(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
+                if (dataField != null)
                 {
-                    List<int> datetimeOffsetFieldIndexes = new List<int>();
-                    int index = 0;
-                    foreach (Parquet.Data.DataField field in dataset.Schema.GetDataFields())
+                    fields.Add(dataField);
+                    DataColumn newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(dataField.DataType))
                     {
-                        Type columnType = null;
-                        switch (field.DataType)
-                        {
-                            case Parquet.Data.DataType.Boolean:
-                                columnType = typeof(bool);
-                                break;
-                            case Parquet.Data.DataType.Byte:
-                                columnType = typeof(sbyte);
-                                break;
-                            case Parquet.Data.DataType.ByteArray:
-                                columnType = typeof(sbyte[]);
-                                break;
-                            case Parquet.Data.DataType.DateTimeOffset:
-                                //Let's treat DateTimeOffsets as DateTime
-                                columnType = typeof(DateTime);
-                                datetimeOffsetFieldIndexes.Add(index);
-                                break;
-                            case Parquet.Data.DataType.Decimal:
-                                columnType = typeof(decimal);
-                                break;
-                            case Parquet.Data.DataType.Double:
-                                columnType = typeof(double);
-                                break;
-                            case Parquet.Data.DataType.Float:
-                                columnType = typeof(float);
-                                break;
-                            case Parquet.Data.DataType.Short:
-                            case Parquet.Data.DataType.Int16:
-                            case Parquet.Data.DataType.Int32:
-                            case Parquet.Data.DataType.UnsignedInt16:
-                                columnType = typeof(int);
-                                break;
-                            case Parquet.Data.DataType.Int64:
-                                columnType = typeof(long);
-                                break;
-                            case Parquet.Data.DataType.UnsignedByte:
-                                columnType = typeof(byte);
-                                break;
-                            case Parquet.Data.DataType.String:
-                            default:
-                                columnType = typeof(string);
-                                break;
-                        }
-
-                        DataColumn newColumn = datatable.Columns.Add(field.Name, columnType);
-                        newColumn.AllowDBNull = field.HasNulls;
-                        index++;
-                    }
-
-                    foreach (Parquet.Data.Row row in dataset)
-                    {
-                        DataRow dataRow = datatable.NewRow();
-                        object[] rawValues = row.RawValues;
-
-                        //Convert DateTimeOffsets to DateTime
-                        foreach (int datetimeOffsetIndex in datetimeOffsetFieldIndexes)
-                        {
-                            if (rawValues[datetimeOffsetIndex] != null)
-                                rawValues[datetimeOffsetIndex] = ((DateTimeOffset)rawValues[datetimeOffsetIndex]).DateTime; //the DateTime property ignores the Offset value. Is there any instance where a parquet file can have an offset?
-                        }
-
-                        dataRow.ItemArray = rawValues;
-
-                        datatable.Rows.Add(dataRow);
-                    }
+                        AllowDBNull = dataField.HasNulls
+                    };
+                    dataTable.Columns.Add(newColumn);
                 }
                 else
-                    throw new ArgumentException("The provided dataset has some unsupported data types such as Lists, Maps or Structs");
+                    throw new Exception(string.Format("Field '{0}' does not exist", selectedField));
             }
-            return datatable;
+
+            //Read column by column to generate each row in the datatable
+            totalRecordCount = 0;
+            for (int i = 0; i < parquetReader.RowGroupCount; i++)
+            {
+                int rowsLeftToRead = recordCount;
+                using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
+                {
+                    if (groupReader.RowCount > int.MaxValue)
+                        throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}", groupReader.RowCount));
+
+                    int rowsPassedUntilThisRowGroup = totalRecordCount;
+                    totalRecordCount += (int)groupReader.RowCount;
+
+                    if (offset >= totalRecordCount)
+                        continue;
+
+                    if (rowsLeftToRead > 0)
+                    {
+                        int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
+
+                        int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCount - offset, recordCount), (int)groupReader.RowCount);
+                        rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
+
+                        ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup);
+                    }
+                }
+            }
+
+            return dataTable;
+        }
+
+        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<Parquet.Data.DataField> fields, int skipRecords, int readRecords)
+        {
+            int rowBeginIndex = dataTable.Rows.Count;
+            bool isFirstColumn = true;
+
+            foreach (var field in fields)
+            {
+                int rowIndex = rowBeginIndex;
+
+                int skippedRecords = 0;
+                foreach (var value in groupReader.ReadColumn(field).Data)
+                {
+                    if (skipRecords > skippedRecords)
+                    {
+                        skippedRecords++;
+                        continue;
+                    }
+
+                    //int newRowsAdded = dataTable.Rows.Count - rowBeginIndex;
+                    if (rowIndex >= readRecords)
+                        break;
+
+                    if (isFirstColumn)
+                    {
+                        var newRow = dataTable.NewRow();
+                        dataTable.Rows.Add(newRow);
+                    }
+
+                    if (field.DataType == Parquet.Data.DataType.DateTimeOffset)
+                        dataTable.Rows[rowIndex][field.Name] = ((DateTimeOffset)value).DateTime; //converts to local time!
+                    else
+                        dataTable.Rows[rowIndex][field.Name] = value;
+
+                    rowIndex++;
+                }
+
+                isFirstColumn = false;
+            }
+        }
+
+
+        public static Type ParquetNetTypeToCSharpType(Parquet.Data.DataType type)
+        {
+            Type columnType = null;
+            switch (type)
+            {
+                case Parquet.Data.DataType.Boolean:
+                    columnType = typeof(bool);
+                    break;
+                case Parquet.Data.DataType.Byte:
+                    columnType = typeof(sbyte);
+                    break;
+                case Parquet.Data.DataType.ByteArray:
+                    columnType = typeof(sbyte[]);
+                    break;
+                case Parquet.Data.DataType.DateTimeOffset:
+                    //Let's treat DateTimeOffsets as DateTime
+                    columnType = typeof(DateTime);
+                    break;
+                case Parquet.Data.DataType.Decimal:
+                    columnType = typeof(decimal);
+                    break;
+                case Parquet.Data.DataType.Double:
+                    columnType = typeof(double);
+                    break;
+                case Parquet.Data.DataType.Float:
+                    columnType = typeof(float);
+                    break;
+                case Parquet.Data.DataType.Short:
+                case Parquet.Data.DataType.Int16:
+                case Parquet.Data.DataType.Int32:
+                case Parquet.Data.DataType.UnsignedInt16:
+                    columnType = typeof(int);
+                    break;
+                case Parquet.Data.DataType.Int64:
+                    columnType = typeof(long);
+                    break;
+                case Parquet.Data.DataType.UnsignedByte:
+                    columnType = typeof(byte);
+                    break;
+                case Parquet.Data.DataType.String:
+                default:
+                    columnType = typeof(string);
+                    break;
+            }
+
+            return columnType;
         }
 
         public static List<string> GetDataTableColumns(DataTable datatable)
@@ -94,7 +155,7 @@ namespace ParquetFileViewer
             List<string> columns = new List<string>(datatable != null ? datatable.Columns.Count : 0);
             if (datatable != null)
             {
-                foreach(DataColumn column in datatable.Columns)
+                foreach (DataColumn column in datatable.Columns)
                 {
                     columns.Add(column.ColumnName);
                 }
