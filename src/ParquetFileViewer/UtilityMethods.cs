@@ -22,7 +22,8 @@ namespace ParquetFileViewer
                     fields.Add(dataField);
                     DataColumn newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(dataField.DataType))
                     {
-                        AllowDBNull = dataField.HasNulls
+                        // Should not set this, or line 89 in ProcessRowGroup() will throw an exception with any required field (because assigning later than adding)
+                        //AllowDBNull = dataField.HasNulls
                     };
                     dataTable.Columns.Add(newColumn);
                 }
