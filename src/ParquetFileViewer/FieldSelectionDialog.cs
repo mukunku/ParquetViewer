@@ -47,6 +47,7 @@ namespace ParquetFileViewer
                     int locationY = 5;
                     bool isFirst = true;
                     HashSet<string> fieldNames = new HashSet<string>();
+                    bool isClearingSelectAllCheckbox = false;
 
                     foreach (Field field in this.AvailableFields)
                     {
@@ -76,12 +77,14 @@ namespace ParquetFileViewer
                             selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
                             {
                                 var selectAllCheckBox = (CheckBox)checkboxSender;
-                                foreach (Control control in this.fieldsPanel.Controls)
-                                {
-                                    if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                if (!isClearingSelectAllCheckbox) {
+                                    foreach (Control control in this.fieldsPanel.Controls)
                                     {
-                                        if (checkbox.Enabled)
-                                            checkbox.Checked = selectAllCheckBox.Checked;
+                                        if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                        {
+                                            if (checkbox.Enabled)
+                                                checkbox.Checked = selectAllCheckBox.Checked;
+                                        }
                                     }
                                 }
                             };
@@ -93,17 +96,37 @@ namespace ParquetFileViewer
                         if (!fieldNames.Contains(field.Name.ToLowerInvariant())) //Normally two fields with the same name shouldn't exist but lets make sure
                         {
                             bool isUnsupportedFieldType = field.SchemaType == SchemaType.List || field.SchemaType == SchemaType.Map || field.SchemaType == SchemaType.Struct;
-                            this.fieldsPanel.Controls.Add(
-                                new CheckBox()
+                            var fieldCheckbox = new CheckBox()
+                            {
+                                Name = string.Concat("checkbox_", field.Name),
+                                Text = string.Concat(field.Name, isUnsupportedFieldType ? "(Unsupported)" : string.Empty),
+                                Tag = field.Name,
+                                Checked = this.PreSelectedFields.Contains(field.Name),
+                                Location = new Point(locationX, locationY),
+                                AutoSize = true,
+                                Enabled = !isUnsupportedFieldType
+                            };
+                            fieldCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+                            {
+                                var fieldCheckBox = (CheckBox)checkboxSender;
+                                if (!fieldCheckBox.Checked)
                                 {
-                                    Name = string.Concat("checkbox_", field.Name),
-                                    Text = string.Concat(field.Name, isUnsupportedFieldType ? "(Unsupported)" : string.Empty),
-                                    Tag = field.Name,
-                                    Checked = this.PreSelectedFields.Contains(field.Name),
-                                    Location = new Point(locationX, locationY),
-                                    AutoSize = true,
-                                    Enabled = !isUnsupportedFieldType
-                                });
+                                    foreach (Control control in this.fieldsPanel.Controls)
+                                    {
+                                        if (control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                        {
+                                            if (checkbox.Enabled && checkbox.Checked)
+                                            {
+                                                isClearingSelectAllCheckbox = true;
+                                                checkbox.Checked = false;
+                                                isClearingSelectAllCheckbox = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            };
+                            this.fieldsPanel.Controls.Add(fieldCheckbox);
 
                             locationY += DynamicFieldCheckboxYIncrement;
                             fieldNames.Add(field.Name.ToLowerInvariant());
