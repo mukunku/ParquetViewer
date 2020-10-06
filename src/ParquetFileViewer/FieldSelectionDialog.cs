@@ -120,6 +120,7 @@ namespace ParquetFileViewer
                                                 isClearingSelectAllCheckbox = true;
                                                 checkbox.Checked = false;
                                                 isClearingSelectAllCheckbox = false;
+                                                break;
                                             }
                                         }
                                     }
