@@ -11,10 +11,10 @@ namespace ParquetFileViewer
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
         private const int DynamicFieldCheckboxYIncrement = 30;
+        public static readonly List<SchemaType> UnsupportedSchemaTypes = new List<SchemaType>() { SchemaType.List, SchemaType.Map, SchemaType.Struct };
 
         public IEnumerable<string> PreSelectedFields { get; set; }
         public IEnumerable<Field> AvailableFields { get; set; }
-
         public List<string> NewSelectedFields { get; set; }
 
         public FieldsToLoadForm()
@@ -77,7 +77,8 @@ namespace ParquetFileViewer
                             selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
                             {
                                 var selectAllCheckBox = (CheckBox)checkboxSender;
-                                if (!isClearingSelectAllCheckbox) {
+                                if (!isClearingSelectAllCheckbox)
+                                {
                                     foreach (Control control in this.fieldsPanel.Controls)
                                     {
                                         if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
@@ -95,7 +96,7 @@ namespace ParquetFileViewer
 
                         if (!fieldNames.Contains(field.Name.ToLowerInvariant())) //Normally two fields with the same name shouldn't exist but lets make sure
                         {
-                            bool isUnsupportedFieldType = field.SchemaType == SchemaType.List || field.SchemaType == SchemaType.Map || field.SchemaType == SchemaType.Struct;
+                            bool isUnsupportedFieldType = UnsupportedSchemaTypes.Contains(field.SchemaType);
                             var fieldCheckbox = new CheckBox()
                             {
                                 Name = string.Concat("checkbox_", field.Name),
@@ -134,7 +135,7 @@ namespace ParquetFileViewer
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 this.ShowError(ex, "Something went wrong while generating the field list.", true);
             }
@@ -146,23 +147,31 @@ namespace ParquetFileViewer
 
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            RadioButton eventSource = (RadioButton)sender;
-            this.showSelectedFieldsRadioButton.Checked = !eventSource.Checked;
-
-            if (eventSource.Checked)
+            if (((RadioButton)sender).Checked)
             {
                 this.fieldsPanel.Enabled = false;
+                this.allFieldsRememberRadioButton.Checked = false;
+                this.showSelectedFieldsRadioButton.Checked = false;
+            }
+        }
+
+        private void AllFieldsRememberRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            if (((RadioButton)sender).Checked)
+            {
+                this.fieldsPanel.Enabled = false;
+                this.allFieldsRadioButton.Checked = false;
+                this.showSelectedFieldsRadioButton.Checked = false;
             }
         }
 
         private void showSelectedFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            RadioButton eventSource = (RadioButton)sender;
-            this.allFieldsRadioButton.Checked = !eventSource.Checked;
-
-            if (eventSource.Checked)
+            if (((RadioButton)sender).Checked)
             {
                 this.fieldsPanel.Enabled = true;
+                this.allFieldsRadioButton.Checked = false;
+                this.allFieldsRememberRadioButton.Checked = false;
             }
         }
 
@@ -170,10 +179,19 @@ namespace ParquetFileViewer
         {
             try
             {
-                this.NewSelectedFields.Clear();
-                if (this.allFieldsRadioButton.Checked || ((CheckBox)(this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true)[0])).Checked)
+                try
                 {
-                    foreach(Control control in this.fieldsPanel.Controls)
+                    if (this.allFieldsRememberRadioButton.Checked)
+                        AppSettings.AlwaysSelectAllFields = true;
+                    else
+                        AppSettings.AlwaysSelectAllFields = false;
+                }
+                catch { /* just in case */ }
+
+                this.NewSelectedFields.Clear();
+                if (this.allFieldsRadioButton.Checked || this.allFieldsRememberRadioButton.Checked || ((CheckBox)(this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true)[0])).Checked)
+                {
+                    foreach (Control control in this.fieldsPanel.Controls)
                     {
                         if (!control.Name.Equals(SelectAllCheckboxName) && control.Enabled)
                             this.NewSelectedFields.Add((string)control.Tag);
@@ -197,7 +215,7 @@ namespace ParquetFileViewer
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(string.Concat("Something went wrong:", Environment.NewLine, ex.ToString()), ex.Message);
             }
