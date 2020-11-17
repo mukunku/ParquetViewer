@@ -22,6 +22,8 @@ namespace ParquetFileViewer
         private const int loadingPanelWidth = 200;
         private const int loadingPanelHeight = 200;
         private const string QueryUselessPartRegex = "^WHERE ";
+        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ssZ";
+        private const string DefaultTableName = "MY_TABLE";
         private readonly string DefaultFormTitle;
 
         #region Members
@@ -113,6 +115,18 @@ namespace ParquetFileViewer
             {
                 this.mainDataSource = value;
                 this.mainGridView.DataSource = this.mainDataSource;
+
+                try
+                {
+                    //Format date fields
+                    string dateFormat = AppSettings.UseISODateFormat ? ISO8601DateTimeFormat : string.Empty;
+                    foreach (DataGridViewColumn column in this.mainGridView.Columns)
+                    {
+                        if (column.ValueType == typeof(DateTime))
+                            column.DefaultCellStyle.Format = dateFormat;
+                    }
+                }
+                catch { }
             }
         }
         private Panel loadingPanel = null;
@@ -150,6 +164,16 @@ namespace ParquetFileViewer
             {
                 this.OpenNewFile(this.fileToLoadOnLaunch);
             }
+
+            try
+            {
+                //Setup date format checkboxes
+                if (AppSettings.UseISODateFormat)
+                    this.iSO8601ToolStripMenuItem.Checked = true;
+                else
+                    this.defaultToolStripMenuItem.Checked = true;
+            }
+            catch { /* just in case */ }
         }
 
         #region Event Handlers
@@ -352,7 +376,7 @@ MULTIPLE CONDITIONS:
                     this.FileSchemaBackgroundWorker.RunWorkerAsync();
                 }
                 else
-                    this.FileSchemaBackgroundWorker_RunWorkerCompleted(null, new System.ComponentModel.RunWorkerCompletedEventArgs(this.openFileSchema, null, false));
+                    this.FileSchemaBackgroundWorker_RunWorkerCompleted(-1, new System.ComponentModel.RunWorkerCompletedEventArgs(this.openFileSchema, null, false));
             }
         }
 
@@ -500,13 +524,20 @@ MULTIPLE CONDITIONS:
                     var fields = this.openFileSchema.Fields;
                     if (fields != null && fields.Count > 0)
                     {
-                        var fieldSelectionForm = new FieldsToLoadForm(fields, UtilityMethods.GetDataTableColumns(this.MainDataSource));
-                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
+                        if (AppSettings.AlwaysSelectAllFields && sender?.GetType() != typeof(int)) //We send -1 from the field selection tooltip item so we can force the field selection form to be shown
                         {
-                            if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
-                                this.SelectedFields = fieldSelectionForm.NewSelectedFields;
-                            else
-                                this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
+                            this.SelectedFields = fields.Where(f => !FieldsToLoadForm.UnsupportedSchemaTypes.Contains(f.SchemaType)).Select(f => f.Name).ToList();
+                        }
+                        else
+                        {
+                            var fieldSelectionForm = new FieldsToLoadForm(fields, UtilityMethods.GetDataTableColumns(this.MainDataSource));
+                            if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
+                            {
+                                if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
+                                    this.SelectedFields = fieldSelectionForm.NewSelectedFields;
+                                else
+                                    this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
+                            }
                         }
                     }
                     else
@@ -741,5 +772,63 @@ MULTIPLE CONDITIONS:
             public FileType FileType;
         }
         #endregion
+
+        private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string tableName = DefaultTableName;
+            try
+            {
+                tableName = Path.GetFileNameWithoutExtension(this.OpenFilePath);
+            }
+            catch { /* just in case */ }
+
+            try
+            {
+                var dataset = new DataSet();
+
+                this.mainDataSource.TableName = tableName;
+                dataset.Tables.Add(this.mainDataSource);
+
+                var scriptAdapter = new CustomScriptBasedSchemaAdapter();
+                string sql = scriptAdapter.GetSchemaScript(dataset, false);
+
+                Clipboard.SetText(sql);
+                MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void DefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                AppSettings.UseISODateFormat = false;
+                this.defaultToolStripMenuItem.Checked = true;
+                this.iSO8601ToolStripMenuItem.Checked = false;
+                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void ISO8601ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                AppSettings.UseISODateFormat = true;
+                this.defaultToolStripMenuItem.Checked = false;
+                this.iSO8601ToolStripMenuItem.Checked = true;
+                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
     }
 }

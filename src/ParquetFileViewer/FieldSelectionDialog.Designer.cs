@@ -33,6 +33,7 @@
             this.showSelectedFieldsRadioButton = new System.Windows.Forms.RadioButton();
             this.fieldsPanel = new System.Windows.Forms.Panel();
             this.doneButton = new System.Windows.Forms.Button();
+            this.allFieldsRememberRadioButton = new System.Windows.Forms.RadioButton();
             this.mainTableLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -42,13 +43,15 @@
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.mainTableLayoutPanel.Controls.Add(this.allFieldsRadioButton, 0, 0);
-            this.mainTableLayoutPanel.Controls.Add(this.showSelectedFieldsRadioButton, 0, 1);
-            this.mainTableLayoutPanel.Controls.Add(this.fieldsPanel, 1, 2);
-            this.mainTableLayoutPanel.Controls.Add(this.doneButton, 1, 3);
+            this.mainTableLayoutPanel.Controls.Add(this.showSelectedFieldsRadioButton, 0, 2);
+            this.mainTableLayoutPanel.Controls.Add(this.fieldsPanel, 1, 3);
+            this.mainTableLayoutPanel.Controls.Add(this.doneButton, 1, 4);
+            this.mainTableLayoutPanel.Controls.Add(this.allFieldsRememberRadioButton, 0, 1);
             this.mainTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
             this.mainTableLayoutPanel.Name = "mainTableLayoutPanel";
-            this.mainTableLayoutPanel.RowCount = 4;
+            this.mainTableLayoutPanel.RowCount = 5;
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -78,7 +81,7 @@
             | System.Windows.Forms.AnchorStyles.Left)));
             this.showSelectedFieldsRadioButton.AutoSize = true;
             this.mainTableLayoutPanel.SetColumnSpan(this.showSelectedFieldsRadioButton, 2);
-            this.showSelectedFieldsRadioButton.Location = new System.Drawing.Point(3, 33);
+            this.showSelectedFieldsRadioButton.Location = new System.Drawing.Point(3, 63);
             this.showSelectedFieldsRadioButton.Name = "showSelectedFieldsRadioButton";
             this.showSelectedFieldsRadioButton.Size = new System.Drawing.Size(100, 24);
             this.showSelectedFieldsRadioButton.TabIndex = 1;
@@ -91,9 +94,9 @@
             this.fieldsPanel.AutoScroll = true;
             this.fieldsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fieldsPanel.Enabled = false;
-            this.fieldsPanel.Location = new System.Drawing.Point(23, 63);
+            this.fieldsPanel.Location = new System.Drawing.Point(23, 93);
             this.fieldsPanel.Name = "fieldsPanel";
-            this.fieldsPanel.Size = new System.Drawing.Size(403, 250);
+            this.fieldsPanel.Size = new System.Drawing.Size(403, 220);
             this.fieldsPanel.TabIndex = 2;
             // 
             // doneButton
@@ -107,6 +110,20 @@
             this.doneButton.Text = "Done";
             this.doneButton.UseVisualStyleBackColor = true;
             this.doneButton.Click += new System.EventHandler(this.doneButton_Click);
+            // 
+            // allFieldsRememberRadioButton
+            // 
+            this.allFieldsRememberRadioButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.allFieldsRememberRadioButton.AutoSize = true;
+            this.mainTableLayoutPanel.SetColumnSpan(this.allFieldsRememberRadioButton, 2);
+            this.allFieldsRememberRadioButton.Location = new System.Drawing.Point(3, 33);
+            this.allFieldsRememberRadioButton.Name = "allFieldsRememberRadioButton";
+            this.allFieldsRememberRadioButton.Size = new System.Drawing.Size(181, 24);
+            this.allFieldsRememberRadioButton.TabIndex = 1;
+            this.allFieldsRememberRadioButton.Text = "All Fields... (remember my choice)";
+            this.allFieldsRememberRadioButton.UseVisualStyleBackColor = true;
+            this.allFieldsRememberRadioButton.CheckedChanged += new System.EventHandler(this.AllFieldsRememberRadioButton_CheckedChanged);
             // 
             // FieldsToLoadForm
             // 
@@ -132,5 +149,6 @@
         private System.Windows.Forms.RadioButton showSelectedFieldsRadioButton;
         private System.Windows.Forms.Panel fieldsPanel;
         private System.Windows.Forms.Button doneButton;
+        private System.Windows.Forms.RadioButton allFieldsRememberRadioButton;
     }
 }
