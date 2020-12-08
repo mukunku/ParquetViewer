@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ParquetFileViewer
+namespace ParquetFileViewer.Helpers
 {
     public class CustomScriptBasedSchemaAdapter
     {
@@ -135,11 +135,11 @@ namespace ParquetFileViewer
             {
                 if (!flag)
                 {
-                    stringBuilder.Append(", ");
+                    stringBuilder.Append(" , ");
                 }
                 string str = this.MakeSafe(column.ColumnName);
                 string typeFor = this.GetTypeFor(column);
-                stringBuilder.AppendFormat("{0} {1}", str, typeFor);
+                stringBuilder.Append($"{Environment.NewLine} {str} {typeFor}");
                 flag = false;
             }
             return stringBuilder.ToString();
