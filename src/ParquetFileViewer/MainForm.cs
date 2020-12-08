@@ -1,4 +1,5 @@
 ﻿using Parquet;
+using ParquetFileViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -22,7 +22,7 @@ namespace ParquetFileViewer
         private const int loadingPanelWidth = 200;
         private const int loadingPanelHeight = 200;
         private const string QueryUselessPartRegex = "^WHERE ";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ssZ";
+        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         private const string DefaultTableName = "MY_TABLE";
         private readonly string DefaultFormTitle;
 
@@ -143,7 +143,7 @@ namespace ParquetFileViewer
             this.OpenFilePath = null;
 
             //Set DGV to be double buffered for smoother loading and scrolling
-            if (!System.Windows.Forms.SystemInformation.TerminalServerSession)
+            if (!SystemInformation.TerminalServerSession)
             {
                 Type dgvType = this.mainGridView.GetType();
                 System.Reflection.PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
@@ -481,7 +481,7 @@ MULTIPLE CONDITIONS:
                 e.Result = schema;
             else
             {
-                //Parquet.NET doesn't have any async methods or readers that allow sequential records reading so we need to use the ThreadPool to support cancellation.
+                //Parquet.NET doesn't have any async methods or readers that allow sequential reading so we need to use the ThreadPool to support cancellation.
                 var task = Task<ParquetReader>.Run(() =>
                 {
                     //Unfortunately there's no way to quickly get the metadata from a parquet file without reading an actual data row
@@ -530,7 +530,7 @@ MULTIPLE CONDITIONS:
                         }
                         else
                         {
-                            var fieldSelectionForm = new FieldsToLoadForm(fields, UtilityMethods.GetDataTableColumns(this.MainDataSource));
+                            var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? new string[0]);
                             if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
                             {
                                 if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
@@ -828,6 +828,16 @@ MULTIPLE CONDITIONS:
             catch (Exception ex)
             {
                 this.ShowError(ex);
+            }
+        }
+
+        private void MainGridView_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        {
+            if (e.Column is DataGridViewColumn column)
+            {
+                //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
+                //The value of this field is not important as we do not use the FILL mode for column sizing.
+                column.FillWeight = 0.01f;
             }
         }
     }
