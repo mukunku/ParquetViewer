@@ -29,9 +29,9 @@ namespace ParquetFileViewer.Helpers
 
             //Read column by column to generate each row in the datatable
             totalRecordCount = 0;
-            for (int i = 0; i < parquetReader.RowGroupCount; i++)
+            int rowsLeftToRead = recordCount;
+            for (int i = 0; i < parquetReader.RowGroupCount && rowsLeftToRead > 0; i++)
             {
-                int rowsLeftToRead = recordCount;
                 using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
                 {
                     if (groupReader.RowCount > int.MaxValue)
@@ -76,7 +76,7 @@ namespace ParquetFileViewer.Helpers
                         continue;
                     }
 
-                    if (rowIndex >= readRecords)
+                    if (rowIndex - rowBeginIndex >= readRecords)
                         break;
 
                     if (isFirstColumn)
