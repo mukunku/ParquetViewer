@@ -566,9 +566,8 @@ MULTIPLE CONDITIONS:
                 //BUG: Parquet.NET doesn't always respect the Count parameter, sometimes returning more than the passed value...
                 using (var parquetReader = ParquetReader.OpenFromFile(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }))
                 {
-                    int totalRowCount = 0;
-                    DataTable result = UtilityMethods.ParquetReaderToDataTable(parquetReader, out totalRowCount, this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount);
-                    return new ParquetReadResult(result, totalRowCount);
+                    DataTable result = UtilityMethods.ParquetReaderToDataTable(parquetReader, this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount);
+                    return new ParquetReadResult(result, parquetReader.ThriftMetadata.Num_rows);
                 }
             });
 

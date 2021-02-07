@@ -8,7 +8,7 @@ namespace ParquetFileViewer.Helpers
 {
     public static class UtilityMethods
     {
-        public static DataTable ParquetReaderToDataTable(ParquetReader parquetReader, out int totalRecordCount, List<string> selectedFields, int offset, int recordCount)
+        public static DataTable ParquetReaderToDataTable(ParquetReader parquetReader, List<string> selectedFields, int offset, int recordCount)
         {
             //Get list of data fields and construct the DataTable
             DataTable dataTable = new DataTable();
@@ -28,30 +28,32 @@ namespace ParquetFileViewer.Helpers
             }
 
             //Read column by column to generate each row in the datatable
-            totalRecordCount = 0;
+            int totalRecordCountSoFar = 0;
             int rowsLeftToRead = recordCount;
-            for (int i = 0; i < parquetReader.RowGroupCount && rowsLeftToRead > 0; i++)
+            for (int i = 0; i < parquetReader.RowGroupCount; i++)
             {
                 using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
                 {
                     if (groupReader.RowCount > int.MaxValue)
                         throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}", groupReader.RowCount));
 
-                    int rowsPassedUntilThisRowGroup = totalRecordCount;
-                    totalRecordCount += (int)groupReader.RowCount;
+                    int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
+                    totalRecordCountSoFar += (int)groupReader.RowCount;
 
-                    if (offset >= totalRecordCount)
+                    if (offset >= totalRecordCountSoFar)
                         continue;
 
                     if (rowsLeftToRead > 0)
                     {
-                        int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCount - offset, recordCount), (int)groupReader.RowCount);
+                        int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCountSoFar - offset, rowsLeftToRead), (int)groupReader.RowCount);
                         rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
 
                         int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
 
                         ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup);
                     }
+                    else
+                        break;
                 }
             }
 
