@@ -57,6 +57,9 @@ namespace ParquetFileViewer
             this.changeDateFormatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iSO8601ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.parquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.defaultParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.multithreadedParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -73,9 +76,6 @@ namespace ParquetFileViewer
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.parquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.defaultParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.multithreadedParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -361,6 +361,7 @@ namespace ParquetFileViewer
             // 
             // getSQLCreateTableScriptToolStripMenuItem
             // 
+            this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
             this.getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
             this.getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
@@ -378,16 +379,39 @@ namespace ParquetFileViewer
             // defaultToolStripMenuItem
             // 
             this.defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.defaultToolStripMenuItem.Text = "Default";
             this.defaultToolStripMenuItem.Click += new System.EventHandler(this.DefaultToolStripMenuItem_Click);
             // 
             // iSO8601ToolStripMenuItem
             // 
             this.iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            this.iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.iSO8601ToolStripMenuItem.Text = "ISO 8601";
             this.iSO8601ToolStripMenuItem.Click += new System.EventHandler(this.ISO8601ToolStripMenuItem_Click);
+            // 
+            // parquetEngineToolStripMenuItem
+            // 
+            this.parquetEngineToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.defaultParquetEngineToolStripMenuItem,
+            this.multithreadedParquetEngineToolStripMenuItem});
+            this.parquetEngineToolStripMenuItem.Name = "parquetEngineToolStripMenuItem";
+            this.parquetEngineToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.parquetEngineToolStripMenuItem.Text = "Parquet Engine";
+            // 
+            // defaultParquetEngineToolStripMenuItem
+            // 
+            this.defaultParquetEngineToolStripMenuItem.Name = "defaultParquetEngineToolStripMenuItem";
+            this.defaultParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.defaultParquetEngineToolStripMenuItem.Text = "Default";
+            this.defaultParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.DefaultParquetEngineToolStripMenuItem_Click);
+            // 
+            // multithreadedParquetEngineToolStripMenuItem
+            // 
+            this.multithreadedParquetEngineToolStripMenuItem.Name = "multithreadedParquetEngineToolStripMenuItem";
+            this.multithreadedParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.multithreadedParquetEngineToolStripMenuItem.Text = "Multithreaded (beta)";
+            this.multithreadedParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.MultithreadedParquetEngineToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -504,29 +528,6 @@ namespace ParquetFileViewer
             this.ExportFileBackgroundWorker.WorkerSupportsCancellation = true;
             this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
             this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
-            // 
-            // parquetEngineToolStripMenuItem
-            // 
-            this.parquetEngineToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.defaultParquetEngineToolStripMenuItem,
-            this.multithreadedParquetEngineToolStripMenuItem});
-            this.parquetEngineToolStripMenuItem.Name = "parquetEngineToolStripMenuItem";
-            this.parquetEngineToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            this.parquetEngineToolStripMenuItem.Text = "Parquet Engine";
-            // 
-            // defaultParquetEngineToolStripMenuItem
-            // 
-            this.defaultParquetEngineToolStripMenuItem.Name = "defaultParquetEngineToolStripMenuItem";
-            this.defaultParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
-            this.defaultParquetEngineToolStripMenuItem.Text = "Default";
-            this.defaultParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.DefaultParquetEngineToolStripMenuItem_Click);
-            // 
-            // multithreadedParquetEngineToolStripMenuItem
-            // 
-            this.multithreadedParquetEngineToolStripMenuItem.Name = "multithreadedParquetEngineToolStripMenuItem";
-            this.multithreadedParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
-            this.multithreadedParquetEngineToolStripMenuItem.Text = "Multithreaded (beta)";
-            this.multithreadedParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.MultithreadedParquetEngineToolStripMenuItem_Click);
             // 
             // MainForm
             // 

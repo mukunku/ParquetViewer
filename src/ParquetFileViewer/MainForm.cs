@@ -43,6 +43,7 @@ namespace ParquetFileViewer
                 this.SelectedFields = null;
                 this.openFilePath = value;
                 this.changeFieldsMenuStripButton.Enabled = false;
+                this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
                 this.MainDataSource.Clear();
@@ -56,6 +57,7 @@ namespace ParquetFileViewer
                 {
                     this.Text = string.Concat("Open File: ", value);
                     this.changeFieldsMenuStripButton.Enabled = true;
+                    this.getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
                 }
             }
         }
@@ -671,8 +673,8 @@ MULTIPLE CONDITIONS:
         private void OpenNewFile(string filePath)
         {
             this.OpenFilePath = filePath;
-            this.offsetTextBox.Text = DefaultOffset.ToString();
-            this.recordCountTextBox.Text = DefaultRowCount.ToString();
+            this.offsetTextBox.Text = string.IsNullOrWhiteSpace(this.offsetTextBox.Text) ? DefaultOffset.ToString() : this.offsetTextBox.Text;
+            this.recordCountTextBox.Text = string.IsNullOrWhiteSpace(this.recordCountTextBox.Text) ? DefaultRowCount.ToString() : this.recordCountTextBox.Text;
 
             this.OpenFieldSelectionDialog();
         }
@@ -833,16 +835,21 @@ MULTIPLE CONDITIONS:
 
             try
             {
-                var dataset = new DataSet();
+                if (this.mainDataSource?.Columns.Count > 0)
+                {
+                    var dataset = new DataSet();
 
-                this.mainDataSource.TableName = tableName;
-                dataset.Tables.Add(this.mainDataSource);
+                    this.mainDataSource.TableName = tableName;
+                    dataset.Tables.Add(this.mainDataSource);
 
-                var scriptAdapter = new CustomScriptBasedSchemaAdapter();
-                string sql = scriptAdapter.GetSchemaScript(dataset, false);
+                    var scriptAdapter = new CustomScriptBasedSchemaAdapter();
+                    string sql = scriptAdapter.GetSchemaScript(dataset, false);
 
-                Clipboard.SetText(sql);
-                MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Clipboard.SetText(sql);
+                    MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                    MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
