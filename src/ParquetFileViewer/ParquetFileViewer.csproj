@@ -93,6 +93,7 @@
       <DependentUpon>FieldSelectionDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Helpers\ExtensionMethods.cs" />
+    <Compile Include="Helpers\ParallelAsync.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
