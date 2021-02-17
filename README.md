@@ -10,6 +10,10 @@ This is a quick and dirty utility that I created to easily view Apache Parquet f
 
 If you'd like to add any new features feel free to send a pull request.
 
+Some Key Features:
+* Run simple sql-like queries on chunks of the file
+* Generate sql CREATE TABLE scripts for opened files
+
 # Limitations
 This application can only open Parquet files located on the Windows machine the app is running on. It cannot connect to HDFS to read parquet data. 
 
