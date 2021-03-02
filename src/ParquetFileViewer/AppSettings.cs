@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using System;
 
 namespace ParquetFileViewer
 {
@@ -6,6 +7,7 @@ namespace ParquetFileViewer
     {
         private const string UseISODateFormatKey = "UseISODateFormat";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
+        private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         public static bool UseISODateFormat
         {
             get
@@ -49,6 +51,35 @@ namespace ParquetFileViewer
                 using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
                 {
                     registryKey.SetValue(AlwaysSelectAllFieldsKey, value.ToString());
+                }
+            }
+        }
+
+        public static ParquetEngine ReadingEngine
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                    {
+                        ParquetEngine value = default;
+                        if (!Enum.TryParse<ParquetEngine>(registryKey.GetValue(ParquetReadingEngineKey)?.ToString(), out value))
+                            value = default;
+
+                        return value;
+                    }
+                }
+                catch
+                {
+                    return default;
+                }
+            }
+            set
+            {
+                using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                {
+                    registryKey.SetValue(ParquetReadingEngineKey, value.ToString());
                 }
             }
         }

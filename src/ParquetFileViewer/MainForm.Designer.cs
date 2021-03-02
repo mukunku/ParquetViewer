@@ -32,9 +32,12 @@ namespace ParquetFileViewer
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
+            this.recordCountTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.showRecordsFromLabel = new System.Windows.Forms.Label();
+            this.offsetTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.runQueryButton = new System.Windows.Forms.Button();
             this.searchFilterLabel = new System.Windows.Forms.LinkLabel();
+            this.searchFilterTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.clearFilterButton = new System.Windows.Forms.Button();
             this.mainGridView = new System.Windows.Forms.DataGridView();
             this.openParquetFileDialog = new System.Windows.Forms.OpenFileDialog();
@@ -54,6 +57,9 @@ namespace ParquetFileViewer
             this.changeDateFormatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iSO8601ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.parquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.defaultParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.multithreadedParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -70,9 +76,6 @@ namespace ParquetFileViewer
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.recordCountTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
-            this.offsetTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
-            this.searchFilterTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -123,6 +126,18 @@ namespace ParquetFileViewer
             this.recordsToLabel.Text = "Record Count:";
             this.recordsToLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // recordCountTextBox
+            // 
+            this.recordCountTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.recordCountTextBox.DelayedTextChangedTimeout = 1000;
+            this.recordCountTextBox.Location = new System.Drawing.Point(752, 5);
+            this.recordCountTextBox.Name = "recordCountTextBox";
+            this.recordCountTextBox.Size = new System.Drawing.Size(54, 20);
+            this.recordCountTextBox.TabIndex = 5;
+            this.recordCountTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.recordCountTextBox.DelayedTextChanged += new System.EventHandler(this.recordsToTextBox_TextChanged);
+            this.recordCountTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.recordsToTextBox_KeyPress);
+            // 
             // showRecordsFromLabel
             // 
             this.showRecordsFromLabel.Anchor = System.Windows.Forms.AnchorStyles.Right;
@@ -133,6 +148,18 @@ namespace ParquetFileViewer
             this.showRecordsFromLabel.TabIndex = 1;
             this.showRecordsFromLabel.Text = "Record Offset:";
             this.showRecordsFromLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // offsetTextBox
+            // 
+            this.offsetTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.offsetTextBox.DelayedTextChangedTimeout = 1000;
+            this.offsetTextBox.Location = new System.Drawing.Point(642, 5);
+            this.offsetTextBox.Name = "offsetTextBox";
+            this.offsetTextBox.Size = new System.Drawing.Size(54, 20);
+            this.offsetTextBox.TabIndex = 4;
+            this.offsetTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.offsetTextBox.DelayedTextChanged += new System.EventHandler(this.offsetTextBox_TextChanged);
+            this.offsetTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.offsetTextBox_KeyPress);
             // 
             // runQueryButton
             // 
@@ -168,6 +195,18 @@ namespace ParquetFileViewer
             this.searchFilterLabel.Text = "Filter Query:";
             this.searchFilterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.searchFilterLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.searchFilterLabel_Click);
+            // 
+            // searchFilterTextBox
+            // 
+            this.searchFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterTextBox, 2);
+            this.searchFilterTextBox.DelayedTextChangedTimeout = 1000;
+            this.searchFilterTextBox.Location = new System.Drawing.Point(85, 5);
+            this.searchFilterTextBox.Name = "searchFilterTextBox";
+            this.searchFilterTextBox.Size = new System.Drawing.Size(321, 20);
+            this.searchFilterTextBox.TabIndex = 1;
+            this.searchFilterTextBox.Text = "WHERE ";
+            this.searchFilterTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.searchFilterTextBox_KeyPress);
             // 
             // clearFilterButton
             // 
@@ -306,7 +345,8 @@ namespace ParquetFileViewer
             this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.changeFieldsMenuStripButton,
             this.getSQLCreateTableScriptToolStripMenuItem,
-            this.changeDateFormatToolStripMenuItem});
+            this.changeDateFormatToolStripMenuItem,
+            this.parquetEngineToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "&Edit";
@@ -321,6 +361,7 @@ namespace ParquetFileViewer
             // 
             // getSQLCreateTableScriptToolStripMenuItem
             // 
+            this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
             this.getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
             this.getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
@@ -348,6 +389,29 @@ namespace ParquetFileViewer
             this.iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.iSO8601ToolStripMenuItem.Text = "ISO 8601";
             this.iSO8601ToolStripMenuItem.Click += new System.EventHandler(this.ISO8601ToolStripMenuItem_Click);
+            // 
+            // parquetEngineToolStripMenuItem
+            // 
+            this.parquetEngineToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.defaultParquetEngineToolStripMenuItem,
+            this.multithreadedParquetEngineToolStripMenuItem});
+            this.parquetEngineToolStripMenuItem.Name = "parquetEngineToolStripMenuItem";
+            this.parquetEngineToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.parquetEngineToolStripMenuItem.Text = "Parquet Engine";
+            // 
+            // defaultParquetEngineToolStripMenuItem
+            // 
+            this.defaultParquetEngineToolStripMenuItem.Name = "defaultParquetEngineToolStripMenuItem";
+            this.defaultParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.defaultParquetEngineToolStripMenuItem.Text = "Default";
+            this.defaultParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.DefaultParquetEngineToolStripMenuItem_Click);
+            // 
+            // multithreadedParquetEngineToolStripMenuItem
+            // 
+            this.multithreadedParquetEngineToolStripMenuItem.Name = "multithreadedParquetEngineToolStripMenuItem";
+            this.multithreadedParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.multithreadedParquetEngineToolStripMenuItem.Text = "Multithreaded (beta)";
+            this.multithreadedParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.MultithreadedParquetEngineToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -465,42 +529,6 @@ namespace ParquetFileViewer
             this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
             this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
             // 
-            // recordCountTextBox
-            // 
-            this.recordCountTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.recordCountTextBox.DelayedTextChangedTimeout = 1000;
-            this.recordCountTextBox.Location = new System.Drawing.Point(752, 5);
-            this.recordCountTextBox.Name = "recordCountTextBox";
-            this.recordCountTextBox.Size = new System.Drawing.Size(54, 20);
-            this.recordCountTextBox.TabIndex = 5;
-            this.recordCountTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.recordCountTextBox.DelayedTextChanged += new System.EventHandler(this.recordsToTextBox_TextChanged);
-            this.recordCountTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.recordsToTextBox_KeyPress);
-            // 
-            // offsetTextBox
-            // 
-            this.offsetTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.offsetTextBox.DelayedTextChangedTimeout = 1000;
-            this.offsetTextBox.Location = new System.Drawing.Point(642, 5);
-            this.offsetTextBox.Name = "offsetTextBox";
-            this.offsetTextBox.Size = new System.Drawing.Size(54, 20);
-            this.offsetTextBox.TabIndex = 4;
-            this.offsetTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.offsetTextBox.DelayedTextChanged += new System.EventHandler(this.offsetTextBox_TextChanged);
-            this.offsetTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.offsetTextBox_KeyPress);
-            // 
-            // searchFilterTextBox
-            // 
-            this.searchFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterTextBox, 2);
-            this.searchFilterTextBox.DelayedTextChangedTimeout = 1000;
-            this.searchFilterTextBox.Location = new System.Drawing.Point(85, 5);
-            this.searchFilterTextBox.Name = "searchFilterTextBox";
-            this.searchFilterTextBox.Size = new System.Drawing.Size(321, 20);
-            this.searchFilterTextBox.TabIndex = 1;
-            this.searchFilterTextBox.Text = "WHERE ";
-            this.searchFilterTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.searchFilterTextBox_KeyPress);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -576,6 +604,9 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem changeDateFormatToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem parquetEngineToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem defaultParquetEngineToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem multithreadedParquetEngineToolStripMenuItem;
     }
 }
 

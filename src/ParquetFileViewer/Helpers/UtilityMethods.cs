@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 
 namespace ParquetFileViewer.Helpers
 {
     public static class UtilityMethods
     {
-        public static DataTable ParquetReaderToDataTable(ParquetReader parquetReader, out int totalRecordCount, List<string> selectedFields, int offset, int recordCount)
+        public static DataTable ParquetReaderToDataTable(ParquetReader parquetReader, List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken)
         {
             //Get list of data fields and construct the DataTable
             DataTable dataTable = new DataTable();
@@ -28,55 +29,67 @@ namespace ParquetFileViewer.Helpers
             }
 
             //Read column by column to generate each row in the datatable
-            totalRecordCount = 0;
+            int totalRecordCountSoFar = 0;
+            int rowsLeftToRead = recordCount;
             for (int i = 0; i < parquetReader.RowGroupCount; i++)
             {
-                int rowsLeftToRead = recordCount;
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
                 using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
                 {
                     if (groupReader.RowCount > int.MaxValue)
                         throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}", groupReader.RowCount));
 
-                    int rowsPassedUntilThisRowGroup = totalRecordCount;
-                    totalRecordCount += (int)groupReader.RowCount;
+                    int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
+                    totalRecordCountSoFar += (int)groupReader.RowCount;
 
-                    if (offset >= totalRecordCount)
+                    if (offset >= totalRecordCountSoFar)
                         continue;
 
                     if (rowsLeftToRead > 0)
                     {
-                        int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCount - offset, recordCount), (int)groupReader.RowCount);
+                        int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCountSoFar - offset, rowsLeftToRead), (int)groupReader.RowCount);
                         rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
 
                         int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
 
-                        ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup);
+                        ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup, cancellationToken);
                     }
+                    else
+                        break;
                 }
             }
 
             return dataTable;
         }
 
-        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<Parquet.Data.DataField> fields, int skipRecords, int readRecords)
+        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<Parquet.Data.DataField> fields, 
+            int skipRecords, int readRecords, CancellationToken cancellationToken)
         {
             int rowBeginIndex = dataTable.Rows.Count;
             bool isFirstColumn = true;
 
             foreach (var field in fields)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
                 int rowIndex = rowBeginIndex;
 
                 int skippedRecords = 0;
                 foreach (var value in groupReader.ReadColumn(field).Data)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
                     if (skipRecords > skippedRecords)
                     {
                         skippedRecords++;
                         continue;
                     }
 
-                    if (rowIndex >= readRecords)
+                    if (rowIndex - rowBeginIndex >= readRecords)
                         break;
 
                     if (isFirstColumn)
@@ -163,6 +176,58 @@ namespace ParquetFileViewer.Helpers
             }
             else
                 return string.Empty;
+        }
+
+        public static IEnumerable<ICollection<T>> Split<T>(IEnumerable<T> src, int maxItems)
+        {
+            var list = new List<T>();
+            foreach (var t in src)
+            {
+                list.Add(t);
+                if (list.Count == maxItems)
+                {
+                    yield return list;
+                    list = new List<T>();
+                }
+            }
+
+            if (list.Count > 0)
+
+                yield return list;
+        }
+
+        public static DataTable MergeTables(IEnumerable<DataTable> additionalTables)
+        {
+            // Build combined table columns
+            DataTable merged = null;
+            foreach (DataTable dt in additionalTables)
+            {
+                if (merged == null)
+                    merged = dt;
+                else
+                    merged = AddTable(merged, dt);
+            }
+            return merged ?? new DataTable();
+        }
+
+        private static DataTable AddTable(DataTable baseTable, DataTable additionalTable)
+        {
+            // Build combined table columns
+            DataTable merged = baseTable.Clone(); // Include all columns from base table in result.
+            foreach (DataColumn col in additionalTable.Columns)
+            {
+                string newColumnName = col.ColumnName;
+                merged.Columns.Add(newColumnName, col.DataType);
+            }
+            // Add all rows from both tables
+            var bt = baseTable.AsEnumerable();
+            var at = additionalTable.AsEnumerable();
+            var mergedRows = bt.Zip(at, (r1, r2) => r1.ItemArray.Concat(r2.ItemArray).ToArray());
+            foreach (object[] rowFields in mergedRows)
+            {
+                merged.Rows.Add(rowFields);
+            }
+            return merged;
         }
     }
 }
