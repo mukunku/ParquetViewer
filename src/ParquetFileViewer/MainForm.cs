@@ -373,6 +373,27 @@ MULTIPLE CONDITIONS:
             System.Diagnostics.Process.Start(WikiURL);
         }
 
+        private void MainGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
+            if (e.Value == null || e.Value == DBNull.Value)
+            {
+                e.Paint(e.CellBounds, DataGridViewPaintParts.All
+                    & ~(DataGridViewPaintParts.ContentForeground));
+
+                var font = new Font(e.CellStyle.Font, FontStyle.Italic);
+                var color = SystemColors.ActiveCaptionText;
+                if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
+                    color = Color.White;
+
+                TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+                e.Handled = true;
+            }
+        }
+
         #endregion
 
         private void OpenFieldSelectionDialog()
@@ -668,6 +689,14 @@ MULTIPLE CONDITIONS:
         private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
             this.actualShownRecordCountLabel.Text = this.mainGridView.RowCount.ToString();
+
+            foreach(DataGridViewColumn column in ((DataGridView)sender).Columns)
+            {
+                if (column is DataGridViewCheckBoxColumn checkboxColumn)
+                {
+                    checkboxColumn.ThreeState = true; //handle NULLs for bools
+                }
+            }
         }
 
         private void OpenNewFile(string filePath)
