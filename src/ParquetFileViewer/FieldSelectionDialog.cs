@@ -13,9 +13,10 @@ namespace ParquetFileViewer
         private const int DynamicFieldCheckboxYIncrement = 30;
         public static readonly List<SchemaType> UnsupportedSchemaTypes = new List<SchemaType>() { SchemaType.List, SchemaType.Map, SchemaType.Struct };
 
-        public IEnumerable<string> PreSelectedFields { get; set; }
+        public List<string> PreSelectedFields { get; set; }
         public IEnumerable<Field> AvailableFields { get; set; }
         public List<string> NewSelectedFields { get; set; }
+        public List<string> PreserveSelectedFields { get; set; }
 
         public FieldsToLoadForm()
         {
@@ -29,19 +30,24 @@ namespace ParquetFileViewer
         {
             InitializeComponent();
             this.AvailableFields = availableFields;
-            this.PreSelectedFields = preSelectedFields ?? new List<string>();
+            this.PreSelectedFields = preSelectedFields.ToList() ?? new List<string>();
             this.NewSelectedFields = new List<string>();
         }
 
         private void FieldsToLoadForm_Load(object sender, EventArgs e)
         {
             this.CenterToParent();
+            this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
+        }
+
+        private void RenderFieldsCheckboxes(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields)
+        {
             this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
             this.fieldsPanel.Controls.Clear();
 
             try
             {
-                if (this.AvailableFields != null)
+                if (availableFields != null)
                 {
                     int locationX = 0;
                     int locationY = 5;
@@ -49,15 +55,15 @@ namespace ParquetFileViewer
                     HashSet<string> fieldNames = new HashSet<string>();
                     bool isClearingSelectAllCheckbox = false;
 
-                    foreach (Field field in this.AvailableFields)
+                    foreach (Field field in availableFields)
                     {
                         if (isFirst) //Add toggle all checkbox and some other setting changes
                         {
                             isFirst = false;
 
-                            if (this.PreSelectedFields != null)
+                            if (preSelectedFields != null)
                             {
-                                foreach (string preSelectedField in this.PreSelectedFields)
+                                foreach (string preSelectedField in preSelectedFields)
                                 {
                                     this.showSelectedFieldsRadioButton.Checked = true;
                                     break;
@@ -77,6 +83,10 @@ namespace ParquetFileViewer
                             selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
                             {
                                 var selectAllCheckBox = (CheckBox)checkboxSender;
+                                var showFilterControls = !(selectAllCheckBox.Enabled && selectAllCheckBox.Checked && string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text));
+                                this.filterColumnsTextbox.Enabled = showFilterControls;
+                                this.clearfilterColumnsButton.Enabled = showFilterControls;
+
                                 if (!isClearingSelectAllCheckbox)
                                 {
                                     foreach (Control control in this.fieldsPanel.Controls)
@@ -84,7 +94,10 @@ namespace ParquetFileViewer
                                         if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
                                         {
                                             if (checkbox.Enabled)
+                                            {
                                                 checkbox.Checked = selectAllCheckBox.Checked;
+                                                //this.PreSelectedFields.Remove((string)checkbox.Tag);
+                                            }
                                         }
                                     }
                                 }
@@ -102,7 +115,7 @@ namespace ParquetFileViewer
                                 Name = string.Concat("checkbox_", field.Name),
                                 Text = string.Concat(field.Name, isUnsupportedFieldType ? "(Unsupported)" : string.Empty),
                                 Tag = field.Name,
-                                Checked = this.PreSelectedFields.Contains(field.Name),
+                                Checked = preSelectedFields.Contains(field.Name),
                                 Location = new Point(locationX, locationY),
                                 AutoSize = true,
                                 Enabled = !isUnsupportedFieldType
@@ -110,6 +123,17 @@ namespace ParquetFileViewer
                             fieldCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
                             {
                                 var fieldCheckBox = (CheckBox)checkboxSender;
+
+                                if (fieldCheckBox.Checked)
+                                {
+                                    this.PreSelectedFields.Add((string)fieldCheckBox.Tag);
+                                }
+                                else
+                                {
+                                    this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                                }
+
+
                                 if (!fieldCheckBox.Checked)
                                 {
                                     foreach (Control control in this.fieldsPanel.Controls)
@@ -120,6 +144,7 @@ namespace ParquetFileViewer
                                             {
                                                 isClearingSelectAllCheckbox = true;
                                                 checkbox.Checked = false;
+                                                this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
                                                 isClearingSelectAllCheckbox = false;
                                                 break;
                                             }
@@ -150,6 +175,8 @@ namespace ParquetFileViewer
             if (((RadioButton)sender).Checked)
             {
                 this.fieldsPanel.Enabled = false;
+                this.filterColumnsTextbox.Enabled = false;
+                this.clearfilterColumnsButton.Enabled = false;
                 this.allFieldsRememberRadioButton.Checked = false;
                 this.showSelectedFieldsRadioButton.Checked = false;
             }
@@ -160,6 +187,8 @@ namespace ParquetFileViewer
             if (((RadioButton)sender).Checked)
             {
                 this.fieldsPanel.Enabled = false;
+                this.filterColumnsTextbox.Enabled = false;
+                this.clearfilterColumnsButton.Enabled = false;
                 this.allFieldsRadioButton.Checked = false;
                 this.showSelectedFieldsRadioButton.Checked = false;
             }
@@ -170,6 +199,8 @@ namespace ParquetFileViewer
             if (((RadioButton)sender).Checked)
             {
                 this.fieldsPanel.Enabled = true;
+                this.filterColumnsTextbox.Enabled = true;
+                this.clearfilterColumnsButton.Enabled = true;
                 this.allFieldsRadioButton.Checked = false;
                 this.allFieldsRememberRadioButton.Checked = false;
             }
@@ -224,6 +255,39 @@ namespace ParquetFileViewer
         private void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
         {
             MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+
+        private void filterColumnsTextbox_TextChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text))
+            {
+                IEnumerable<Field> filteredFields;
+                var filteredColumnsNames = this.filterColumnsTextbox.Text.Split(',').ToList();
+
+                if (filteredColumnsNames.Count == 1)
+                {
+                    var filter = filteredColumnsNames[0];
+                    filteredFields = this.AvailableFields.Where(w => w.Name.Contains(filter));
+                }
+                else
+                {
+                    char[] charsToTrim = { '"', ' ', '\'' };
+                    filteredColumnsNames = filteredColumnsNames.Select(s => s.Trim(charsToTrim)).ToList();
+                    filteredFields = this.AvailableFields.Where(w => filteredColumnsNames.Contains(w.Name));
+                }
+
+                this.RenderFieldsCheckboxes(filteredFields, this.PreSelectedFields);
+            }
+            else
+            {
+                this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
+            }
+        }
+
+        private void clearfilterColumnsButton_Click(object sender, EventArgs e)
+        {
+            this.filterColumnsTextbox.Text = string.Empty;
         }
     }
 }
