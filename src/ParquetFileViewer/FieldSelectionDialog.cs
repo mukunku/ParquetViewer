@@ -11,7 +11,7 @@ namespace ParquetFileViewer
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
         private const int DynamicFieldCheckboxYIncrement = 30;
-        public static readonly List<SchemaType> UnsupportedSchemaTypes = new List<SchemaType>() { SchemaType.List, SchemaType.Map, SchemaType.Struct };
+        public static readonly List<SchemaType> UnsupportedSchemaTypes = new List<SchemaType>() { /*SchemaType.List,*/ SchemaType.Map, SchemaType.Struct };
 
         public List<string> PreSelectedFields { get; set; }
         public IEnumerable<Field> AvailableFields { get; set; }
@@ -110,6 +110,12 @@ namespace ParquetFileViewer
                         if (!fieldNames.Contains(field.Name.ToLowerInvariant())) //Normally two fields with the same name shouldn't exist but lets make sure
                         {
                             bool isUnsupportedFieldType = UnsupportedSchemaTypes.Contains(field.SchemaType);
+                            string fieldCustomMessage = string.Empty;
+                            if (isUnsupportedFieldType)
+                                fieldCustomMessage = " (Unsupported)";
+                            else if (field.SchemaType == SchemaType.List)
+                                fieldCustomMessage = " (List)";
+
                             var fieldCheckbox = new CheckBox()
                             {
                                 Name = string.Concat("checkbox_", field.Name),

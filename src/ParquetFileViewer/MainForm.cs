@@ -1,11 +1,11 @@
 ﻿using Parquet;
+using ParquetFileViewer.ComplexParquetTypes;
 using ParquetFileViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -24,7 +24,6 @@ namespace ParquetFileViewer
         private const int loadingPanelWidth = 200;
         private const int loadingPanelHeight = 200;
         private const string QueryUselessPartRegex = "^WHERE ";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         private const string DefaultTableName = "MY_TABLE";
         private readonly string DefaultFormTitle;
 
@@ -123,7 +122,7 @@ namespace ParquetFileViewer
                 try
                 {
                     //Format date fields
-                    string dateFormat = AppSettings.UseISODateFormat ? ISO8601DateTimeFormat : string.Empty;
+                    string dateFormat = AppSettings.UseISODateFormat ? Constants.ISO8601_DATETIME_FORMAT : string.Empty;
                     foreach (DataGridViewColumn column in this.mainGridView.Columns)
                     {
                         if (column.ValueType == typeof(DateTime))
@@ -349,7 +348,11 @@ MULTIPLE CONDITIONS:
 
                         copyMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
                         {
-                            Clipboard.SetText(dgv[columnIndex, rowIndex].Value.ToString());
+                            string value = dgv[columnIndex, rowIndex].Value?.ToString();
+                            if (!string.IsNullOrEmpty(value))
+                                Clipboard.SetText(value);
+                            else
+                                Clipboard.Clear();
                         };
 
                         menu.MenuItems.Add(copyMenuItem);
@@ -385,12 +388,145 @@ MULTIPLE CONDITIONS:
 
                 var font = new Font(e.CellStyle.Font, FontStyle.Italic);
                 var color = SystemColors.ActiveCaptionText;
+
                 if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
                     color = Color.White;
 
                 TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
                 e.Handled = true;
+            }
+            else if (e.Value is ListType)
+            {
+                e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
+                e.CellStyle.ForeColor = Color.Blue;
+            }
+        }
+
+        private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string tableName = DefaultTableName;
+            try
+            {
+                tableName = Path.GetFileNameWithoutExtension(this.OpenFilePath);
+            }
+            catch { /* just in case */ }
+
+            try
+            {
+                if (this.mainDataSource?.Columns.Count > 0)
+                {
+                    var dataset = new DataSet();
+
+                    this.mainDataSource.TableName = tableName;
+                    dataset.Tables.Add(this.mainDataSource);
+
+                    var scriptAdapter = new CustomScriptBasedSchemaAdapter();
+                    string sql = scriptAdapter.GetSchemaScript(dataset, false);
+
+                    Clipboard.SetText(sql);
+                    MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                    MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void DefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                AppSettings.UseISODateFormat = false;
+                this.defaultToolStripMenuItem.Checked = true;
+                this.iSO8601ToolStripMenuItem.Checked = false;
+                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void ISO8601ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                AppSettings.UseISODateFormat = true;
+                this.defaultToolStripMenuItem.Checked = false;
+                this.iSO8601ToolStripMenuItem.Checked = true;
+                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void MainGridView_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        {
+            if (e.Column is DataGridViewColumn column)
+            {
+                //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
+                //The value of this field is not important as we do not use the FILL mode for column sizing.
+                column.FillWeight = 0.01f;
+            }
+        }
+
+        private void DefaultParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                AppSettings.ReadingEngine = ParquetEngine.Default;
+                this.defaultParquetEngineToolStripMenuItem.Checked = true;
+                this.multithreadedParquetEngineToolStripMenuItem.Checked = false;
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void MultithreadedParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                AppSettings.ReadingEngine = ParquetEngine.Default_Multithreaded;
+                this.defaultParquetEngineToolStripMenuItem.Checked = false;
+                this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void MainGridView_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.ColumnIndex < 0 || e.RowIndex < 0)
+                return;
+
+            if (sender is DataGridView dgv)
+            {
+                if (dgv.Columns[e.ColumnIndex].ValueType == typeof(ListType))
+                {
+                    //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
+                    if (IsCursorOverCellText(dgv, e.ColumnIndex, e.RowIndex))
+                        dgv.Cursor = Cursors.Hand; 
+                    else
+                        dgv.Cursor = Cursors.Default;
+                }
+            }
+        }
+
+        private void MainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            if (sender is DataGridView dgv)
+            {
+                dgv.Cursor = Cursors.Default;
             }
         }
 
@@ -690,7 +826,7 @@ MULTIPLE CONDITIONS:
         {
             this.actualShownRecordCountLabel.Text = this.mainGridView.RowCount.ToString();
 
-            foreach(DataGridViewColumn column in ((DataGridView)sender).Columns)
+            foreach (DataGridViewColumn column in ((DataGridView)sender).Columns)
             {
                 if (column is DataGridViewCheckBoxColumn checkboxColumn)
                 {
@@ -821,6 +957,20 @@ MULTIPLE CONDITIONS:
             }
         }
 
+        private bool IsCursorOverCellText(DataGridView dgv, int columnIndex, int rowIndex)
+        {
+            if (dgv[columnIndex, rowIndex] is DataGridViewCell cell)
+            {
+                var cursorPosition = dgv.PointToClient(Cursor.Position);
+                var cellAreaWithTextInIt =
+                    new Rectangle(dgv.GetCellDisplayRectangle(columnIndex, rowIndex, true).Location, cell.GetContentBounds(rowIndex).Size);
+
+                return cellAreaWithTextInIt.Contains(cursorPosition);
+            }
+
+            return false;
+        }
+
         #region Helper Types
         private struct ParquetReadArgs
         {
@@ -852,106 +1002,5 @@ MULTIPLE CONDITIONS:
             public FileType FileType;
         }
         #endregion
-
-        private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            string tableName = DefaultTableName;
-            try
-            {
-                tableName = Path.GetFileNameWithoutExtension(this.OpenFilePath);
-            }
-            catch { /* just in case */ }
-
-            try
-            {
-                if (this.mainDataSource?.Columns.Count > 0)
-                {
-                    var dataset = new DataSet();
-
-                    this.mainDataSource.TableName = tableName;
-                    dataset.Tables.Add(this.mainDataSource);
-
-                    var scriptAdapter = new CustomScriptBasedSchemaAdapter();
-                    string sql = scriptAdapter.GetSchemaScript(dataset, false);
-
-                    Clipboard.SetText(sql);
-                    MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                    MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
-
-        private void DefaultToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.UseISODateFormat = false;
-                this.defaultToolStripMenuItem.Checked = true;
-                this.iSO8601ToolStripMenuItem.Checked = false;
-                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
-
-        private void ISO8601ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.UseISODateFormat = true;
-                this.defaultToolStripMenuItem.Checked = false;
-                this.iSO8601ToolStripMenuItem.Checked = true;
-                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
-
-        private void MainGridView_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
-        {
-            if (e.Column is DataGridViewColumn column)
-            {
-                //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
-                //The value of this field is not important as we do not use the FILL mode for column sizing.
-                column.FillWeight = 0.01f;
-            }
-        }
-
-        private void DefaultParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.ReadingEngine = ParquetEngine.Default;
-                this.defaultParquetEngineToolStripMenuItem.Checked = true;
-                this.multithreadedParquetEngineToolStripMenuItem.Checked = false;
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
-
-        private void MultithreadedParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.ReadingEngine = ParquetEngine.Default_Multithreaded;
-                this.defaultParquetEngineToolStripMenuItem.Checked = false;
-                this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
     }
 }

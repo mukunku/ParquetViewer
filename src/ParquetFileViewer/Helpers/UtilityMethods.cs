@@ -1,5 +1,7 @@
 ﻿using Parquet;
+using ParquetFileViewer.ComplexParquetTypes;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -13,16 +15,27 @@ namespace ParquetFileViewer.Helpers
         {
             //Get list of data fields and construct the DataTable
             DataTable dataTable = new DataTable();
-            List<Parquet.Data.DataField> fields = new List<Parquet.Data.DataField>();
-            var dataFields = parquetReader.Schema.GetDataFields();
+            List<Parquet.Data.Field> fields = new List<Parquet.Data.Field>();
             foreach (string selectedField in selectedFields)
             {
-                var dataField = dataFields.FirstOrDefault(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
-                if (dataField != null)
+                var field = parquetReader.Schema.Fields.FirstOrDefault(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
+                if (field != null)
                 {
-                    fields.Add(dataField);
-                    DataColumn newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(dataField.DataType));
-                    dataTable.Columns.Add(newColumn);
+                    fields.Add(field);
+
+                    if (field is Parquet.Data.DataField df)
+                    {
+                        DataColumn newColumn = new DataColumn(df.Name, ParquetNetTypeToCSharpType(df.DataType, df.SchemaType));
+                        dataTable.Columns.Add(newColumn);
+                    }
+                    else if (field is Parquet.Data.ListField lf)
+                    {
+                        var dataField = (Parquet.Data.DataField)lf.Item;
+                        DataColumn newColumn = new DataColumn(lf.Name, ParquetNetTypeToCSharpType(dataField.DataType, lf.SchemaType));
+                        dataTable.Columns.Add(newColumn);
+                    }
+                    else
+                        throw new Exception($"Unsuported field type: {field.SchemaType.ToString()}");
                 }
                 else
                     throw new Exception(string.Format("Field '{0}' does not exist", selectedField));
@@ -64,7 +77,7 @@ namespace ParquetFileViewer.Helpers
             return dataTable;
         }
 
-        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<Parquet.Data.DataField> fields, 
+        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<Parquet.Data.Field> fields,
             int skipRecords, int readRecords, CancellationToken cancellationToken)
         {
             int rowBeginIndex = dataTable.Rows.Count;
@@ -75,37 +88,100 @@ namespace ParquetFileViewer.Helpers
                 if (cancellationToken.IsCancellationRequested)
                     break;
 
+                Parquet.Data.DataField dataField = null;
+                if (field is Parquet.Data.DataField)
+                    dataField = (Parquet.Data.DataField)field;
+                else if (field is Parquet.Data.ListField lf && lf.Item is Parquet.Data.DataField df)
+                    dataField = df;
+                else
+                    throw new Exception($"Cannot read field: {field.Name}");
+
                 int rowIndex = rowBeginIndex;
-
                 int skippedRecords = 0;
-                foreach (var value in groupReader.ReadColumn(field).Data)
+                var column = groupReader.ReadColumn(dataField);
+
+                if (column.HasRepetitions) //List or Array field (Are nested lists a thing? If they are... we're not handling them)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
+                    #region helper function
+                    Action<ArrayList> saveRow = (ArrayList rowToSave) => {
+                        if (isFirstColumn)
+                        {
+                            var newRow = dataTable.NewRow();
+                            dataTable.Rows.Add(newRow);
+                        }
 
-                    if (skipRecords > skippedRecords)
+                        var listType = ParquetNetTypeToCSharpType(column.Field.DataType, column.Field.SchemaType);
+                        if (rowToSave.Count == 1 && (rowToSave[0] == null || rowToSave[0] == DBNull.Value))
+                            dataTable.Rows[rowIndex][field.Name] = new ListType(Array.CreateInstance(listType, 0)); //single null element means empty array
+                        else
+                        {
+                            //var arr = Array.CreateInstance(listType, rowToSave.Count);
+                            //Array.Copy(rowToSave.ToArray(), 0, arr, 0, arr.Length);
+                            dataTable.Rows[rowIndex][field.Name] = new ListType(rowToSave.ToArray(listType));
+                        }
+
+                        rowIndex++;
+                    };
+                    #endregion
+
+                    int elementIndex = 0;
+                    var row = new ArrayList();
+                    foreach (var repititionLevel in column.RepetitionLevels)
                     {
-                        skippedRecords++;
-                        continue;
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+
+                        if (repititionLevel == 0) //new row
+                        {
+                            if (elementIndex != 0)
+                            {
+                                if (skipRecords > skippedRecords)
+                                    skippedRecords++; //skip this row
+                                else if (rowIndex - rowBeginIndex >= readRecords)
+                                    break; //we have all the rows we need
+                                else
+                                    saveRow(row);
+                            }
+
+                            row.Clear();
+                            row.Add(ProcessParquetValue(column.Data.GetValue(elementIndex), column.Field.DataType));
+                        }
+                        else //same row
+                        {
+                            row.Add(ProcessParquetValue(column.Data.GetValue(elementIndex), column.Field.DataType));
+                        }
+
+                        elementIndex++;
                     }
 
-                    if (rowIndex - rowBeginIndex >= readRecords)
-                        break;
-
-                    if (isFirstColumn)
+                    //process final row
+                    saveRow(row);
+                }
+                else
+                {
+                    foreach (var value in column.Data)
                     {
-                        var newRow = dataTable.NewRow();
-                        dataTable.Rows.Add(newRow);
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+
+                        if (skipRecords > skippedRecords)
+                        {
+                            skippedRecords++;
+                            continue;
+                        }
+
+                        if (rowIndex - rowBeginIndex >= readRecords)
+                            break;
+
+                        if (isFirstColumn)
+                        {
+                            var newRow = dataTable.NewRow();
+                            dataTable.Rows.Add(newRow);
+                        }
+
+                        dataTable.Rows[rowIndex][field.Name] = ProcessParquetValue(value, dataField.DataType);
+                        rowIndex++;
                     }
-
-                    if (value == null)
-                        dataTable.Rows[rowIndex][field.Name] = DBNull.Value;
-                    else if (field.DataType == Parquet.Data.DataType.DateTimeOffset)
-                        dataTable.Rows[rowIndex][field.Name] = ((DateTimeOffset)value).DateTime; //converts to local time!
-                    else
-                        dataTable.Rows[rowIndex][field.Name] = value;
-
-                    rowIndex++;
                 }
 
                 isFirstColumn = false;
@@ -113,10 +189,10 @@ namespace ParquetFileViewer.Helpers
         }
 
 
-        public static Type ParquetNetTypeToCSharpType(Parquet.Data.DataType type)
+        public static Type ParquetNetTypeToCSharpType(Parquet.Data.DataType dataType, Parquet.Data.SchemaType schemaType)
         {
-            Type columnType = null;
-            switch (type)
+            Type columnType;
+            switch (dataType)
             {
                 case Parquet.Data.DataType.Boolean:
                     columnType = typeof(bool);
@@ -157,6 +233,9 @@ namespace ParquetFileViewer.Helpers
                     columnType = typeof(string);
                     break;
             }
+
+            if (schemaType == Parquet.Data.SchemaType.List)
+                columnType = typeof(ListType); //wish we could just use an Array type but can't because datagridviews don't like it apparantly
 
             return columnType;
         }
@@ -228,6 +307,16 @@ namespace ParquetFileViewer.Helpers
                 merged.Rows.Add(rowFields);
             }
             return merged;
+        }
+
+        private static object ProcessParquetValue(object value, Parquet.Data.DataType dataType)
+        {
+            if (value == null)
+                return DBNull.Value;
+            else if (dataType == Parquet.Data.DataType.DateTimeOffset)
+                return ((DateTimeOffset)value).DateTime; //converts to local time!
+            else
+               return value;
         }
     }
 }
