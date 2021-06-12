@@ -37,6 +37,7 @@ namespace ParquetFileViewer
         private void FieldsToLoadForm_Load(object sender, EventArgs e)
         {
             this.CenterToParent();
+            this.Text = string.Concat(this.Text, this.AvailableFields?.Count() > 0 ? $" (count: {this.AvailableFields.Count()})" : string.Empty);
             this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
         }
 
@@ -96,7 +97,6 @@ namespace ParquetFileViewer
                                             if (checkbox.Enabled)
                                             {
                                                 checkbox.Checked = selectAllCheckBox.Checked;
-                                                //this.PreSelectedFields.Remove((string)checkbox.Tag);
                                             }
                                         }
                                     }
@@ -113,7 +113,7 @@ namespace ParquetFileViewer
                             var fieldCheckbox = new CheckBox()
                             {
                                 Name = string.Concat("checkbox_", field.Name),
-                                Text = string.Concat(field.Name, isUnsupportedFieldType ? "(Unsupported)" : string.Empty),
+                                Text = string.Concat(field.Name, isUnsupportedFieldType ? " (Unsupported)" : string.Empty),
                                 Tag = field.Name,
                                 Checked = preSelectedFields.Contains(field.Name),
                                 Location = new Point(locationX, locationY),
