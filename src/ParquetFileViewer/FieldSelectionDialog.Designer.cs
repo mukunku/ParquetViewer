@@ -32,21 +32,26 @@
             this.allFieldsRadioButton = new System.Windows.Forms.RadioButton();
             this.showSelectedFieldsRadioButton = new System.Windows.Forms.RadioButton();
             this.fieldsPanel = new System.Windows.Forms.Panel();
-            this.doneButton = new System.Windows.Forms.Button();
             this.allFieldsRememberRadioButton = new System.Windows.Forms.RadioButton();
+            this.doneButton = new System.Windows.Forms.Button();
+            this.filterColumnsTextbox = new System.Windows.Forms.TextBox();
+            this.clearfilterColumnsButton = new System.Windows.Forms.Button();
             this.mainTableLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainTableLayoutPanel
             // 
-            this.mainTableLayoutPanel.ColumnCount = 2;
+            this.mainTableLayoutPanel.ColumnCount = 3;
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.Controls.Add(this.allFieldsRadioButton, 0, 0);
             this.mainTableLayoutPanel.Controls.Add(this.showSelectedFieldsRadioButton, 0, 2);
-            this.mainTableLayoutPanel.Controls.Add(this.fieldsPanel, 1, 3);
-            this.mainTableLayoutPanel.Controls.Add(this.doneButton, 1, 4);
+            this.mainTableLayoutPanel.Controls.Add(this.fieldsPanel, 1, 4);
             this.mainTableLayoutPanel.Controls.Add(this.allFieldsRememberRadioButton, 0, 1);
+            this.mainTableLayoutPanel.Controls.Add(this.doneButton, 1, 5);
+            this.mainTableLayoutPanel.Controls.Add(this.filterColumnsTextbox, 1, 3);
+            this.mainTableLayoutPanel.Controls.Add(this.clearfilterColumnsButton, 2, 3);
             this.mainTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
             this.mainTableLayoutPanel.Name = "mainTableLayoutPanel";
@@ -54,6 +59,7 @@
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.mainTableLayoutPanel.Size = new System.Drawing.Size(429, 346);
@@ -92,24 +98,13 @@
             // fieldsPanel
             // 
             this.fieldsPanel.AutoScroll = true;
+            this.mainTableLayoutPanel.SetColumnSpan(this.fieldsPanel, 2);
             this.fieldsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fieldsPanel.Enabled = false;
-            this.fieldsPanel.Location = new System.Drawing.Point(23, 93);
+            this.fieldsPanel.Location = new System.Drawing.Point(23, 121);
             this.fieldsPanel.Name = "fieldsPanel";
-            this.fieldsPanel.Size = new System.Drawing.Size(403, 220);
+            this.fieldsPanel.Size = new System.Drawing.Size(403, 192);
             this.fieldsPanel.TabIndex = 2;
-            // 
-            // doneButton
-            // 
-            this.doneButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.doneButton.Location = new System.Drawing.Point(329, 319);
-            this.doneButton.Name = "doneButton";
-            this.doneButton.Size = new System.Drawing.Size(97, 24);
-            this.doneButton.TabIndex = 3;
-            this.doneButton.Text = "Done";
-            this.doneButton.UseVisualStyleBackColor = true;
-            this.doneButton.Click += new System.EventHandler(this.doneButton_Click);
             // 
             // allFieldsRememberRadioButton
             // 
@@ -124,6 +119,42 @@
             this.allFieldsRememberRadioButton.Text = "All Fields... (remember my choice)";
             this.allFieldsRememberRadioButton.UseVisualStyleBackColor = true;
             this.allFieldsRememberRadioButton.CheckedChanged += new System.EventHandler(this.AllFieldsRememberRadioButton_CheckedChanged);
+            // 
+            // doneButton
+            // 
+            this.doneButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.mainTableLayoutPanel.SetColumnSpan(this.doneButton, 2);
+            this.doneButton.Location = new System.Drawing.Point(329, 319);
+            this.doneButton.Name = "doneButton";
+            this.doneButton.Size = new System.Drawing.Size(97, 24);
+            this.doneButton.TabIndex = 3;
+            this.doneButton.Text = "Done";
+            this.doneButton.UseVisualStyleBackColor = true;
+            this.doneButton.Click += new System.EventHandler(this.doneButton_Click);
+            // 
+            // filterColumnsTextbox
+            // 
+            this.filterColumnsTextbox.Enabled = false;
+            this.filterColumnsTextbox.Location = new System.Drawing.Point(23, 93);
+            this.filterColumnsTextbox.Name = "filterColumnsTextbox";
+            this.filterColumnsTextbox.Size = new System.Drawing.Size(373, 20);
+            this.filterColumnsTextbox.TabIndex = 0;
+            this.filterColumnsTextbox.TextChanged += new System.EventHandler(this.filterColumnsTextbox_TextChanged);
+            // 
+            // clearfilterColumnsButton
+            // 
+            this.clearfilterColumnsButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.clearfilterColumnsButton.Enabled = false;
+            this.clearfilterColumnsButton.Location = new System.Drawing.Point(402, 93);
+            this.clearfilterColumnsButton.Name = "clearfilterColumnsButton";
+            this.clearfilterColumnsButton.Size = new System.Drawing.Size(24, 22);
+            this.clearfilterColumnsButton.TabIndex = 4;
+            this.clearfilterColumnsButton.Text = "X";
+            this.clearfilterColumnsButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.clearfilterColumnsButton.UseVisualStyleBackColor = true;
+            this.clearfilterColumnsButton.Click += new System.EventHandler(this.clearfilterColumnsButton_Click);
             // 
             // FieldsToLoadForm
             // 
@@ -150,5 +181,7 @@
         private System.Windows.Forms.Panel fieldsPanel;
         private System.Windows.Forms.Button doneButton;
         private System.Windows.Forms.RadioButton allFieldsRememberRadioButton;
+        private System.Windows.Forms.TextBox filterColumnsTextbox;
+        private System.Windows.Forms.Button clearfilterColumnsButton;
     }
 }
