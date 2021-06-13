@@ -242,7 +242,26 @@ namespace ParquetFileViewer
 
         private void cSVToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.ExportResults(FileType.CSV);
+            try
+            {
+                this.ExportResults(FileType.CSV, false);
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void CSVConvertFile_ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                this.ExportResults(FileType.CSV, true);
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -755,7 +774,12 @@ MULTIPLE CONDITIONS:
                 using (var writer = new StreamWriter(args.FilePath, false, System.Text.Encoding.UTF8))
                 {
                     if (args.FileType == FileType.CSV)
-                        this.WriteDataToCSVFile(writer, (BackgroundWorker)sender, e);
+                    {
+                        if (args.ProcessEntireFile)
+                            this.ConvertParquetFileToCSVFile(writer, (BackgroundWorker)sender, e);
+                        else
+                            this.WriteDataToCSVFile(writer, (BackgroundWorker)sender, e);
+                    }
                     else
                         throw new Exception(string.Format("Unsupported export type: '{0}'", args.FileType.ToString()));
                 }
@@ -822,6 +846,11 @@ MULTIPLE CONDITIONS:
             }
         }
 
+        private void ConvertParquetFileToCSVFile(StreamWriter writer, BackgroundWorker worker, DoWorkEventArgs e)
+        {
+            throw new NotImplementedException("TODO");
+        }
+
         private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.HideLoadingIcon();
@@ -840,7 +869,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void ExportResults(FileType fileType)
+        private void ExportResults(FileType fileType, bool processEntireFile)
         {
             if (this.mainGridView.RowCount > 0)
             {
@@ -851,7 +880,8 @@ MULTIPLE CONDITIONS:
                     var args = new ExportToFileArgs()
                     {
                         FilePath = this.exportFileDialog.FileName,
-                        FileType = fileType
+                        FileType = fileType,
+                        ProcessEntireFile = processEntireFile
                     };
                     this.ExportFileBackgroundWorker.RunWorkerAsync(args);
                     this.ShowLoadingIcon("Exporting Data", this.ExportFileBackgroundWorker);
@@ -888,6 +918,7 @@ MULTIPLE CONDITIONS:
         {
             public string FilePath;
             public FileType FileType;
+            public bool ProcessEntireFile;
         }
         #endregion
     }
