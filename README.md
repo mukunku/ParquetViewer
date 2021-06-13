@@ -17,7 +17,7 @@ Some Key Features:
 # Limitations
 This application can only open Parquet files located on the Windows machine the app is running on. It cannot connect to HDFS to read parquet data. 
 
-Complex types such as structs, arrays and maps are not supported at this time.
+Complex types such as structs and maps are not supported at this time. Lists/Arrays are supported as long as they are not nested.
 
 # Download
 Pre-compiled releases can be found here: https://github.com/mukunku/ParquetViewer/releases
