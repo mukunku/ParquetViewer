@@ -30,9 +30,15 @@ namespace ParquetFileViewer.Helpers
                     }
                     else if (field is Parquet.Data.ListField lf)
                     {
-                        var dataField = (Parquet.Data.DataField)lf.Item;
-                        DataColumn newColumn = new DataColumn(lf.Name, ParquetNetTypeToCSharpType(dataField.DataType, lf.SchemaType));
-                        dataTable.Columns.Add(newColumn);
+                        if (lf.Item is Parquet.Data.DataField dataField)
+                        {
+                            DataColumn newColumn = new DataColumn(lf.Name, ParquetNetTypeToCSharpType(dataField.DataType, lf.SchemaType));
+                            dataTable.Columns.Add(newColumn);
+                        }
+                        else if (lf.Item is Parquet.Data.ListField)
+                            throw new Exception($"Nested lists are unfortunately not supported. Field name: {lf.Name}");
+                        else
+                            throw new Exception($"Unsupported list field: {lf.Name}");
                     }
                     else
                         throw new Exception($"Unsuported field type: {field.SchemaType.ToString()}");
