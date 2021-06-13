@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ParquetFileViewer.CustomGridTypes;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -93,12 +94,24 @@ namespace ParquetFileViewer.Helpers
 
         protected string GetTypeFor(DataColumn column)
         {
-            string item = (string)TypeMap[column.DataType];
-            if (item == null)
+            string item = null;
+            if (column.DataType == typeof(ListType) && column.Table.Rows.Count > 0)
             {
-                throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
+                var listType = column.Table.Rows[0][column] as ListType;
+                if (listType != null)
+                    item = ((string)TypeMap[listType.Type]).Replace(" ", "[] ");
+                else
+                    item = ((string)TypeMap[typeof(string)]).Replace(" ", "[] ");
+
+                item = string.Concat(item, " /*Array*/");
             }
-            return string.Format(item, column.DataType == typeof(string) ? "MAX" : column.MaxLength.ToString(), (column.AllowDBNull ? string.Empty : "NOT "));
+            else
+                item = (string)TypeMap[column.DataType];
+
+            if (item == null)
+                throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
+
+            return string.Format(item, column.DataType == typeof(string) || column.MaxLength == -1 ? "MAX" : column.MaxLength.ToString(), (column.AllowDBNull ? string.Empty : "NOT "));
         }
 
         private string MakeList(DataColumn[] columns)
@@ -135,7 +148,7 @@ namespace ParquetFileViewer.Helpers
             {
                 if (!flag)
                 {
-                    stringBuilder.Append(" , ");
+                    stringBuilder.Append(", ");
                 }
                 string str = this.MakeSafe(column.ColumnName);
                 string typeFor = this.GetTypeFor(column);
@@ -175,7 +188,7 @@ namespace ParquetFileViewer.Helpers
             StringBuilder stringBuilder = new StringBuilder();
             string str = this.MakeSafe(string.Concat(markTablesAsLocalTemp ? "#" : string.Empty, this.TablePrefix, table.TableName));
             string str1 = this.MakeList(table.Columns);
-            stringBuilder.AppendFormat("CREATE TABLE {0} ({1});\n", str, str1);
+            stringBuilder.AppendFormat("CREATE TABLE {0} ({1}\n);\n", str, str1);
             return stringBuilder.ToString();
         }
     }

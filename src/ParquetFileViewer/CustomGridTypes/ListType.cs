@@ -1,22 +1,32 @@
 ﻿using System;
+using System.Collections;
 using System.Text;
 
-namespace ParquetFileViewer.ComplexParquetTypes
+namespace ParquetFileViewer.CustomGridTypes
 {
     public class ListType
     {
-        public Array Data { get; }
-        public Type Type
-        {
-            get
-            {
-                return this.Data?.GetType().GetElementType();
-            }
-        }
+        public IList Data { get; }
+        public Type Type { get; private set; }
 
         public ListType(Array data)
         {
             this.Data = data;
+            this.Type = this.Data?.GetType().GetElementType();
+        }
+
+        public ListType(ArrayList data)
+        {
+            this.Data = data;
+            this.Type = typeof(string); //default to string (will this ever happen?)
+            foreach(var d in data)
+            {
+                if (d != null && d != DBNull.Value)
+                {
+                    this.Type = d.GetType();
+                    break;
+                }
+            }
         }
 
         public override string ToString()

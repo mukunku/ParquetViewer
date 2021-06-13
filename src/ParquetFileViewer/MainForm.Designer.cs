@@ -39,7 +39,7 @@ namespace ParquetFileViewer
             this.searchFilterLabel = new System.Windows.Forms.LinkLabel();
             this.searchFilterTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.clearFilterButton = new System.Windows.Forms.Button();
-            this.mainGridView = new System.Windows.Forms.DataGridView();
+            this.mainGridView = new Controls.ParquetGridView();
             this.openParquetFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.mainMenuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -241,12 +241,7 @@ namespace ParquetFileViewer
             this.mainGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.mainGridView.Size = new System.Drawing.Size(803, 305);
             this.mainGridView.TabIndex = 6;
-            this.mainGridView.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.MainGridView_CellMouseLeave);
-            this.mainGridView.CellMouseMove += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.MainGridView_CellMouseMove);
-            this.mainGridView.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.MainGridView_CellPainting);
-            this.mainGridView.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.MainGridView_ColumnAdded);
             this.mainGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.mainGridView_DataBindingComplete);
-            this.mainGridView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.mainGridView_MouseClick);
             // 
             // openParquetFileDialog
             // 
@@ -570,7 +565,7 @@ namespace ParquetFileViewer
         private ParquetFileViewer.Controls.DelayedOnChangedTextBox recordCountTextBox;
         private System.Windows.Forms.Label showRecordsFromLabel;
         private ParquetFileViewer.Controls.DelayedOnChangedTextBox offsetTextBox;
-        private System.Windows.Forms.DataGridView mainGridView;
+        private Controls.ParquetGridView mainGridView;
         private System.Windows.Forms.MenuStrip mainMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;

@@ -1,5 +1,5 @@
 ﻿using Parquet;
-using ParquetFileViewer.ComplexParquetTypes;
+using ParquetFileViewer.CustomGridTypes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -114,11 +114,7 @@ namespace ParquetFileViewer.Helpers
                         if (rowToSave.Count == 1 && (rowToSave[0] == null || rowToSave[0] == DBNull.Value))
                             dataTable.Rows[rowIndex][field.Name] = new ListType(Array.CreateInstance(listType, 0)); //single null element means empty array
                         else
-                        {
-                            //var arr = Array.CreateInstance(listType, rowToSave.Count);
-                            //Array.Copy(rowToSave.ToArray(), 0, arr, 0, arr.Length);
-                            dataTable.Rows[rowIndex][field.Name] = new ListType(rowToSave.ToArray(listType));
-                        }
+                            dataTable.Rows[rowIndex][field.Name] = new ListType((ArrayList)rowToSave.Clone());
 
                         rowIndex++;
                     };
@@ -138,13 +134,24 @@ namespace ParquetFileViewer.Helpers
                                 if (skipRecords > skippedRecords)
                                     skippedRecords++; //skip this row
                                 else if (rowIndex - rowBeginIndex >= readRecords)
+                                {
+                                    row = null;
                                     break; //we have all the rows we need
+                                }
                                 else
                                     saveRow(row);
                             }
 
-                            row.Clear();
-                            row.Add(ProcessParquetValue(column.Data.GetValue(elementIndex), column.Field.DataType));
+                            if (rowIndex - rowBeginIndex >= readRecords) //check if NOW we have all we need
+                            {
+                                row = null;
+                                break;
+                            }
+                            else
+                            {
+                                row.Clear();
+                                row.Add(ProcessParquetValue(column.Data.GetValue(elementIndex), column.Field.DataType));
+                            }
                         }
                         else //same row
                         {
@@ -155,7 +162,8 @@ namespace ParquetFileViewer.Helpers
                     }
 
                     //process final row
-                    saveRow(row);
+                    if (row != null)
+                        saveRow(row);
                 }
                 else
                 {

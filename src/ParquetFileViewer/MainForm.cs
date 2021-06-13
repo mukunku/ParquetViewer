@@ -1,5 +1,5 @@
 ﻿using Parquet;
-using ParquetFileViewer.ComplexParquetTypes;
+using ParquetFileViewer.CustomGridTypes;
 using ParquetFileViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
@@ -331,41 +331,6 @@ MULTIPLE CONDITIONS:
     WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 = 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
         }
 
-        private void mainGridView_MouseClick(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                var dgv = (DataGridView)sender;
-                if (e.Button == MouseButtons.Right)
-                {
-                    int rowIndex = dgv.HitTest(e.X, e.Y).RowIndex;
-                    int columnIndex = dgv.HitTest(e.X, e.Y).ColumnIndex;
-
-                    if (rowIndex >= 0 && columnIndex >= 0)
-                    {
-                        ContextMenu menu = new ContextMenu();
-                        var copyMenuItem = new MenuItem("Copy");
-
-                        copyMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
-                        {
-                            string value = dgv[columnIndex, rowIndex].Value?.ToString();
-                            if (!string.IsNullOrEmpty(value))
-                                Clipboard.SetText(value);
-                            else
-                                Clipboard.Clear();
-                        };
-
-                        menu.MenuItems.Add(copyMenuItem);
-                        menu.Show(dgv, new Point(e.X, e.Y));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex, null, false);
-            }
-        }
-
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             (new AboutBox()).ShowDialog(this);
@@ -374,33 +339,6 @@ MULTIPLE CONDITIONS:
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start(WikiURL);
-        }
-
-        private void MainGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0)
-                return;
-
-            if (e.Value == null || e.Value == DBNull.Value)
-            {
-                e.Paint(e.CellBounds, DataGridViewPaintParts.All
-                    & ~(DataGridViewPaintParts.ContentForeground));
-
-                var font = new Font(e.CellStyle.Font, FontStyle.Italic);
-                var color = SystemColors.ActiveCaptionText;
-
-                if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
-                    color = Color.White;
-
-                TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-
-                e.Handled = true;
-            }
-            else if (e.Value is ListType)
-            {
-                e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
-                e.CellStyle.ForeColor = Color.Blue;
-            }
         }
 
         private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
@@ -466,16 +404,6 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void MainGridView_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
-        {
-            if (e.Column is DataGridViewColumn column)
-            {
-                //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
-                //The value of this field is not important as we do not use the FILL mode for column sizing.
-                column.FillWeight = 0.01f;
-            }
-        }
-
         private void DefaultParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
@@ -501,32 +429,6 @@ MULTIPLE CONDITIONS:
             catch (Exception ex)
             {
                 this.ShowError(ex);
-            }
-        }
-
-        private void MainGridView_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            if (e.ColumnIndex < 0 || e.RowIndex < 0)
-                return;
-
-            if (sender is DataGridView dgv)
-            {
-                if (dgv.Columns[e.ColumnIndex].ValueType == typeof(ListType))
-                {
-                    //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
-                    if (IsCursorOverCellText(dgv, e.ColumnIndex, e.RowIndex))
-                        dgv.Cursor = Cursors.Hand; 
-                    else
-                        dgv.Cursor = Cursors.Default;
-                }
-            }
-        }
-
-        private void MainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
-        {
-            if (sender is DataGridView dgv)
-            {
-                dgv.Cursor = Cursors.Default;
             }
         }
 
@@ -955,20 +857,6 @@ MULTIPLE CONDITIONS:
                     this.ShowLoadingIcon("Exporting Data", this.ExportFileBackgroundWorker);
                 }
             }
-        }
-
-        private bool IsCursorOverCellText(DataGridView dgv, int columnIndex, int rowIndex)
-        {
-            if (dgv[columnIndex, rowIndex] is DataGridViewCell cell)
-            {
-                var cursorPosition = dgv.PointToClient(Cursor.Position);
-                var cellAreaWithTextInIt =
-                    new Rectangle(dgv.GetCellDisplayRectangle(columnIndex, rowIndex, true).Location, cell.GetContentBounds(rowIndex).Size);
-
-                return cellAreaWithTextInIt.Contains(cursorPosition);
-            }
-
-            return false;
         }
 
         #region Helper Types
