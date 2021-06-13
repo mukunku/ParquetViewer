@@ -102,7 +102,7 @@
             this.ClientSize = new System.Drawing.Size(278, 348);
             this.Controls.Add(this.mainTableLayoutPanel);
             this.DoubleBuffered = true;
-            this.Icon = global::ParquetFileViewer.Properties.Resources.eye;
+            this.Icon = global::ParquetFileViewer.Properties.Resources.eye_with_logo;
             this.Name = "QuickPeekForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Quick Peek";

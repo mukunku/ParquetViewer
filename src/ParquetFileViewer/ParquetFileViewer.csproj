@@ -155,6 +155,7 @@
     <None Include="Resources\exclamation_icon.png" />
     <None Include="Resources\coffee.gif" />
     <None Include="Resources\eye.ico" />
+    <None Include="Resources\eye_with_logo.ico" />
     <Content Include="Resources\hourglass.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

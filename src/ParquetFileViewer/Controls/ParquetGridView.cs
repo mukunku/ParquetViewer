@@ -49,7 +49,7 @@ namespace ParquetFileViewer.Controls
                     var quickPeakForm = new QuickPeekForm(null, dt, uniqueTag, e.RowIndex, e.ColumnIndex);
                     quickPeakForm.TakeMeBackEvent += (object form, TakeMeBackEventArgs tag) =>
                     {
-                        if (this.Rows.Count > tag.SourceRowIndex) //Can't be too safe
+                        if (this.Rows.Count > tag.SourceRowIndex)
                         {
                             DataGridViewRow rowToReturnTo = null;
 
@@ -74,7 +74,10 @@ namespace ParquetFileViewer.Controls
                             if (rowToReturnTo != null)
                             {
                                 if (form is Form f)
+                                {
                                     f.Close();
+                                    f.Dispose();
+                                }
 
                                 this.ClearSelection();
                                 this.FirstDisplayedScrollingRowIndex = rowToReturnTo.Index;
