@@ -13,15 +13,17 @@ namespace ParquetFileViewer.Helpers
         {
             //Get list of data fields and construct the DataTable
             DataTable dataTable = new DataTable();
-            List<Parquet.Data.DataField> fields = new List<Parquet.Data.DataField>();
+            var fields = new List<(Parquet.Thrift.SchemaElement, Parquet.Data.DataField)>();
             var dataFields = parquetReader.Schema.GetDataFields();
             foreach (string selectedField in selectedFields)
             {
                 var dataField = dataFields.FirstOrDefault(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
                 if (dataField != null)
                 {
-                    fields.Add(dataField);
-                    DataColumn newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(dataField.DataType));
+                    var thriftSchema = parquetReader.ThriftMetadata.Schema.First(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
+
+                    fields.Add((thriftSchema, dataField));
+                    DataColumn newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(thriftSchema, dataField.DataType));
                     dataTable.Columns.Add(newColumn);
                 }
                 else
@@ -64,16 +66,19 @@ namespace ParquetFileViewer.Helpers
             return dataTable;
         }
 
-        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<Parquet.Data.DataField> fields, 
+        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<(Parquet.Thrift.SchemaElement, Parquet.Data.DataField)> fields,
             int skipRecords, int readRecords, CancellationToken cancellationToken)
         {
             int rowBeginIndex = dataTable.Rows.Count;
             bool isFirstColumn = true;
 
-            foreach (var field in fields)
+            foreach (var fieldTuple in fields)
             {
                 if (cancellationToken.IsCancellationRequested)
                     break;
+
+                var logicalType = fieldTuple.Item1.LogicalType;
+                var field = fieldTuple.Item2;
 
                 int rowIndex = rowBeginIndex;
 
@@ -101,7 +106,23 @@ namespace ParquetFileViewer.Helpers
                     if (value == null)
                         dataTable.Rows[rowIndex][field.Name] = DBNull.Value;
                     else if (field.DataType == Parquet.Data.DataType.DateTimeOffset)
-                        dataTable.Rows[rowIndex][field.Name] = ((DateTimeOffset)value).DateTime; //converts to local time!
+                        dataTable.Rows[rowIndex][field.Name] = ((DateTimeOffset)value).DateTime; 
+                    else if (field.DataType == Parquet.Data.DataType.Int64
+                        && logicalType.TIMESTAMP != null)
+                    {
+                        int divideBy = 0;
+                        if (logicalType.TIMESTAMP.Unit.NANOS != null)
+                            divideBy = 1000 * 1000;
+                        else if (logicalType.TIMESTAMP.Unit.MICROS != null)
+                            divideBy = 1000;
+                        else if (logicalType.TIMESTAMP.Unit.MILLIS != null)
+                            divideBy = 1;
+
+                        if (divideBy > 0)
+                            dataTable.Rows[rowIndex][field.Name] = DateTimeOffset.FromUnixTimeMilliseconds((long)value / divideBy).DateTime;
+                        else //Not sure if this 'else' is correct but adding just in case
+                            dataTable.Rows[rowIndex][field.Name] = DateTimeOffset.FromUnixTimeSeconds((long)value);
+                    }
                     else
                         dataTable.Rows[rowIndex][field.Name] = value;
 
@@ -113,7 +134,7 @@ namespace ParquetFileViewer.Helpers
         }
 
 
-        public static Type ParquetNetTypeToCSharpType(Parquet.Data.DataType type)
+        public static Type ParquetNetTypeToCSharpType(Parquet.Thrift.SchemaElement thriftSchema, Parquet.Data.DataType type)
         {
             Type columnType = null;
             switch (type)
@@ -147,7 +168,7 @@ namespace ParquetFileViewer.Helpers
                     columnType = typeof(int);
                     break;
                 case Parquet.Data.DataType.Int64:
-                    columnType = typeof(long);
+                    columnType = thriftSchema.LogicalType.TIMESTAMP != null ? typeof(DateTime) : typeof(long);
                     break;
                 case Parquet.Data.DataType.UnsignedByte:
                     columnType = typeof(byte);
