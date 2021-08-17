@@ -44,6 +44,8 @@ namespace ParquetFileViewer
                 this.openFilePath = value;
                 this.changeFieldsMenuStripButton.Enabled = false;
                 this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
+                this.saveAsToolStripMenuItem.Enabled = false;
+                this.metadataViewerToolStripMenuItem.Enabled = false;
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
                 this.MainDataSource.Clear();
@@ -57,7 +59,9 @@ namespace ParquetFileViewer
                 {
                     this.Text = string.Concat("Open File: ", value);
                     this.changeFieldsMenuStripButton.Enabled = true;
+                    this.saveAsToolStripMenuItem.Enabled = true;
                     this.getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
+                    this.metadataViewerToolStripMenuItem.Enabled = true;
                 }
             }
         }
@@ -949,6 +953,23 @@ MULTIPLE CONDITIONS:
                 this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
             }
             catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (Stream parquetStream = new FileStream(this.OpenFilePath, FileMode.Open, FileAccess.Read))
+                using (var parquetReader = new ParquetReader(parquetStream, new ParquetOptions() { TreatByteArrayAsString = true }))
+                using (var metadataViewer = new MetadataViewer(parquetReader))
+                {
+                    metadataViewer.ShowDialog(this);
+                }
+            }
+            catch(Exception ex)
             {
                 this.ShowError(ex);
             }

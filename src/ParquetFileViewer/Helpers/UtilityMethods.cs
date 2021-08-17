@@ -108,7 +108,7 @@ namespace ParquetFileViewer.Helpers
                     else if (field.DataType == Parquet.Data.DataType.DateTimeOffset)
                         dataTable.Rows[rowIndex][field.Name] = ((DateTimeOffset)value).DateTime; 
                     else if (field.DataType == Parquet.Data.DataType.Int64
-                        && logicalType.TIMESTAMP != null)
+                        && logicalType?.TIMESTAMP != null)
                     {
                         int divideBy = 0;
                         if (logicalType.TIMESTAMP.Unit.NANOS != null)
@@ -168,7 +168,7 @@ namespace ParquetFileViewer.Helpers
                     columnType = typeof(int);
                     break;
                 case Parquet.Data.DataType.Int64:
-                    columnType = thriftSchema.LogicalType.TIMESTAMP != null ? typeof(DateTime) : typeof(long);
+                    columnType = thriftSchema.LogicalType?.TIMESTAMP != null ? typeof(DateTime) : typeof(long);
                     break;
                 case Parquet.Data.DataType.UnsignedByte:
                     columnType = typeof(byte);
