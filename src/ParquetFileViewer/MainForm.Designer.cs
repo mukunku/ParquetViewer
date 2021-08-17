@@ -53,13 +53,15 @@ namespace ParquetFileViewer
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.changeFieldsMenuStripButton = new System.Windows.Forms.ToolStripMenuItem();
-            this.getSQLCreateTableScriptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.changeDateFormatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iSO8601ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.parquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.multithreadedParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.getSQLCreateTableScriptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.metadataViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -255,6 +257,7 @@ namespace ParquetFileViewer
             this.mainMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
+            this.toolsToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.mainMenuStrip.Location = new System.Drawing.Point(0, 0);
             this.mainMenuStrip.Name = "mainMenuStrip";
@@ -316,6 +319,8 @@ namespace ParquetFileViewer
             // 
             this.saveAsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cSVToolStripMenuItem});
+            this.saveAsToolStripMenuItem.Enabled = false;
+            this.saveAsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("saveAsToolStripMenuItem.Image")));
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
             this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.saveAsToolStripMenuItem.Text = "Save Results As";
@@ -345,7 +350,6 @@ namespace ParquetFileViewer
             // 
             this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.changeFieldsMenuStripButton,
-            this.getSQLCreateTableScriptToolStripMenuItem,
             this.changeDateFormatToolStripMenuItem,
             this.parquetEngineToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
@@ -359,14 +363,6 @@ namespace ParquetFileViewer
             this.changeFieldsMenuStripButton.Size = new System.Drawing.Size(217, 22);
             this.changeFieldsMenuStripButton.Text = "Add/Remove &Fields";
             this.changeFieldsMenuStripButton.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
-            // 
-            // getSQLCreateTableScriptToolStripMenuItem
-            // 
-            this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
-            this.getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
-            this.getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            this.getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
-            this.getSQLCreateTableScriptToolStripMenuItem.Click += new System.EventHandler(this.GetSQLCreateTableScriptToolStripMenuItem_Click);
             // 
             // changeDateFormatToolStripMenuItem
             // 
@@ -413,6 +409,32 @@ namespace ParquetFileViewer
             this.multithreadedParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.multithreadedParquetEngineToolStripMenuItem.Text = "Multithreaded (beta)";
             this.multithreadedParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.MultithreadedParquetEngineToolStripMenuItem_Click);
+            // 
+            // toolsToolStripMenuItem
+            // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.getSQLCreateTableScriptToolStripMenuItem,
+            this.metadataViewerToolStripMenuItem});
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
+            this.toolsToolStripMenuItem.Text = "Tools";
+            // 
+            // getSQLCreateTableScriptToolStripMenuItem
+            // 
+            this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
+            this.getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
+            this.getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
+            this.getSQLCreateTableScriptToolStripMenuItem.Click += new System.EventHandler(this.GetSQLCreateTableScriptToolStripMenuItem_Click);
+            // 
+            // metadataViewerToolStripMenuItem
+            // 
+            this.metadataViewerToolStripMenuItem.Enabled = false;
+            this.metadataViewerToolStripMenuItem.Name = "metadataViewerToolStripMenuItem";
+            this.metadataViewerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.M)));
+            this.metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
+            this.metadataViewerToolStripMenuItem.Click += new System.EventHandler(this.MetadataViewerToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -601,13 +623,15 @@ namespace ParquetFileViewer
         private System.Windows.Forms.SaveFileDialog exportFileDialog;
         private System.ComponentModel.BackgroundWorker ExportFileBackgroundWorker;
         private System.Windows.Forms.ToolStripMenuItem userGuideToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem getSQLCreateTableScriptToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem changeDateFormatToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem parquetEngineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem defaultParquetEngineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem multithreadedParquetEngineToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem getSQLCreateTableScriptToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem metadataViewerToolStripMenuItem;
     }
 }
 
