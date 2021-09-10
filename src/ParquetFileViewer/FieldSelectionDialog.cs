@@ -210,14 +210,10 @@ namespace ParquetFileViewer
         {
             try
             {
-                try
-                {
-                    if (this.allFieldsRememberRadioButton.Checked)
-                        AppSettings.AlwaysSelectAllFields = true;
-                    else
-                        AppSettings.AlwaysSelectAllFields = false;
-                }
-                catch { /* just in case */ }
+                if (this.allFieldsRememberRadioButton.Checked)
+                    AppSettings.AlwaysSelectAllFields = true;
+                else
+                    AppSettings.AlwaysSelectAllFields = false;
 
                 this.NewSelectedFields.Clear();
                 if (this.allFieldsRadioButton.Checked || this.allFieldsRememberRadioButton.Checked || ((CheckBox)(this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true)[0])).Checked)

@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -33,10 +32,7 @@ namespace ParquetFileViewer
         private string openFilePath;
         private string OpenFilePath
         {
-            get
-            {
-                return this.openFilePath;
-            }
+            get => this.openFilePath;
             set
             {
                 this.openFileSchema = null;
@@ -69,10 +65,7 @@ namespace ParquetFileViewer
         private List<string> selectedFields = null;
         private List<string> SelectedFields
         {
-            get
-            {
-                return this.selectedFields;
-            }
+            get => this.selectedFields;
             set
             {
                 this.selectedFields = value;
@@ -86,7 +79,7 @@ namespace ParquetFileViewer
         private int currentOffset = DefaultOffset;
         private int CurrentOffset
         {
-            get { return this.currentOffset; }
+            get => this.currentOffset;
             set
             {
                 this.currentOffset = value;
@@ -98,7 +91,7 @@ namespace ParquetFileViewer
         private int currentMaxRowCount = DefaultRowCount;
         private int CurrentMaxRowCount
         {
-            get { return this.currentMaxRowCount; }
+            get => this.currentMaxRowCount;
             set
             {
                 this.currentMaxRowCount = value;
@@ -118,7 +111,7 @@ namespace ParquetFileViewer
         private DataTable mainDataSource;
         private DataTable MainDataSource
         {
-            get { return this.mainDataSource; }
+            get => this.mainDataSource;
             set
             {
                 this.mainDataSource = value;
@@ -173,20 +166,16 @@ namespace ParquetFileViewer
                 this.OpenNewFile(this.fileToLoadOnLaunch);
             }
 
-            try
-            {
-                //Setup date format checkboxes
-                if (AppSettings.UseISODateFormat)
-                    this.iSO8601ToolStripMenuItem.Checked = true;
-                else
-                    this.defaultToolStripMenuItem.Checked = true;
+            //Setup date format checkboxes
+            if (AppSettings.UseISODateFormat)
+                this.iSO8601ToolStripMenuItem.Checked = true;
+            else
+                this.defaultToolStripMenuItem.Checked = true;
 
-                if (AppSettings.ReadingEngine == ParquetEngine.Default)
-                    this.defaultParquetEngineToolStripMenuItem.Checked = true;
-                else if (AppSettings.ReadingEngine == ParquetEngine.Default_Multithreaded)
-                    this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
-            }
-            catch { /* just in case */ }
+            if (AppSettings.ReadingEngine == ParquetEngine.Default)
+                this.defaultParquetEngineToolStripMenuItem.Checked = true;
+            else if (AppSettings.ReadingEngine == ParquetEngine.Default_Multithreaded)
+                this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
         }
 
         #region Event Handlers
@@ -694,7 +683,7 @@ MULTIPLE CONDITIONS:
         {
             this.actualShownRecordCountLabel.Text = this.mainGridView.RowCount.ToString();
 
-            foreach(DataGridViewColumn column in ((DataGridView)sender).Columns)
+            foreach (DataGridViewColumn column in ((DataGridView)sender).Columns)
             {
                 if (column is DataGridViewCheckBoxColumn checkboxColumn)
                 {
@@ -969,7 +958,7 @@ MULTIPLE CONDITIONS:
                     metadataViewer.ShowDialog(this);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 this.ShowError(ex);
             }

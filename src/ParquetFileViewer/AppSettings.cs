@@ -12,19 +12,30 @@ namespace ParquetFileViewer
         {
             get
             {
-                using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                try
                 {
-                    bool value = false;
-                    bool.TryParse(registryKey.GetValue(UseISODateFormatKey)?.ToString(), out value);
-                    return value;
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                    {
+                        bool value = false;
+                        bool.TryParse(registryKey.GetValue(UseISODateFormatKey)?.ToString(), out value);
+                        return value;
+                    }
+                }
+                catch
+                {
+                    return false;
                 }
             }
             set
             {
-                using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                try
                 {
-                    registryKey.SetValue(UseISODateFormatKey, value.ToString());
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                    {
+                        registryKey.SetValue(UseISODateFormatKey, value.ToString());
+                    }
                 }
+                catch { }
             }
         }
 
@@ -48,10 +59,14 @@ namespace ParquetFileViewer
             }
             set
             {
-                using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                try
                 {
-                    registryKey.SetValue(AlwaysSelectAllFieldsKey, value.ToString());
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                    {
+                        registryKey.SetValue(AlwaysSelectAllFieldsKey, value.ToString());
+                    }
                 }
+                catch { }
             }
         }
 
@@ -77,10 +92,14 @@ namespace ParquetFileViewer
             }
             set
             {
-                using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                try
                 {
-                    registryKey.SetValue(ParquetReadingEngineKey, value.ToString());
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("ParquetViewer"))
+                    {
+                        registryKey.SetValue(ParquetReadingEngineKey, value.ToString());
+                    }
                 }
+                catch { }
             }
         }
     }
