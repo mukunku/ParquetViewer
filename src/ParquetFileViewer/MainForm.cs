@@ -126,6 +126,10 @@ namespace ParquetFileViewer
                         if (column.ValueType == typeof(DateTime))
                             column.DefaultCellStyle.Format = dateFormat;
                     }
+
+                    //Adjust column sizes if required
+                    if (AppSettings.AutoSizeColumnsMode != DataGridViewAutoSizeColumnsMode.None)
+                        this.mainGridView.AutoResizeColumns(AppSettings.AutoSizeColumnsMode);
                 }
                 catch { }
             }
@@ -176,6 +180,15 @@ namespace ParquetFileViewer
                 this.defaultParquetEngineToolStripMenuItem.Checked = true;
             else if (AppSettings.ReadingEngine == ParquetEngine.Default_Multithreaded)
                 this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
+
+            foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
+            {
+                if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
+                {
+                    toolStripItem.Checked = true;
+                    break;
+                }
+            }
         }
 
         #region Event Handlers
@@ -956,6 +969,34 @@ MULTIPLE CONDITIONS:
                 using (var metadataViewer = new MetadataViewer(parquetReader))
                 {
                     metadataViewer.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void changeColumnSizingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                DataGridViewAutoSizeColumnsMode columnSizingMode;
+                if (sender is ToolStripMenuItem tsi && tsi.Tag != null
+                    && Enum.TryParse(tsi.Tag.ToString(), out columnSizingMode)
+                    && AppSettings.AutoSizeColumnsMode != columnSizingMode)
+                {
+                    AppSettings.AutoSizeColumnsMode = columnSizingMode;
+                    foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent().Items)
+                    {
+                        toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
+                    }
+
+                    var tempMainDataSource = this.MainDataSource;
+                    if (columnSizingMode == DataGridViewAutoSizeColumnsMode.None)
+                        this.MainDataSource = null; //Need to reload the entire grid to return to the default sizing
+
+                    this.MainDataSource = tempMainDataSource; //Will cause a refresh of the column rendering
                 }
             }
             catch (Exception ex)

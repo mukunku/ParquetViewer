@@ -26,7 +26,7 @@ namespace ParquetFileViewer
             Application.SetCompatibleTextRenderingDefault(false);
 
             //Form must be created after calling SetCompatibleTextRenderingDefault();
-            Form mainForm = null;
+            Form mainForm;
             if (string.IsNullOrWhiteSpace(fileToOpen))
                 mainForm = new MainForm();
             else

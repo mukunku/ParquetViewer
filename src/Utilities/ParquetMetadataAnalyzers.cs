@@ -1,9 +1,8 @@
-﻿using Apache.Arrow.Ipc;
-using Apache.Arrow.Types;
+﻿using System;
+using Apache.Arrow.Ipc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Parquet.Thrift;
-using System;
 
 namespace Utilities
 {
@@ -18,46 +17,6 @@ namespace Utilities
                 {
                     reader.ReadNextRecordBatch();
                     return JsonConvert.SerializeObject(reader.Schema, Formatting.Indented);
-
-                    var metadata = new JObject();
-                    var schema = new JObject();
-
-                    var fields = new JArray();
-                    if (reader.Schema?.Fields != null)
-                    {
-                        foreach (var _field in reader.Schema.Fields)
-                        {
-                            var field = new JObject();
-                            field[nameof(_field.Value.Name)] = _field.Value.Name;
-                            field[nameof(_field.Value.IsNullable)] = _field.Value.IsNullable;
-                            field[nameof(_field.Value.DataType)] = JObject.Parse(JsonConvert.SerializeObject(_field.Value.DataType));
-
-                            if (_field.Value.HasMetadata)
-                            {
-                                metadata = new JObject();
-                                foreach (var _fieldMetadata in _field.Value.Metadata)
-                                {
-                                    metadata[_fieldMetadata.Key] = _fieldMetadata.Value;
-                                }
-                                field[nameof(metadata)] = metadata;
-                            }
-
-                            fields.Add(field);
-                        }
-                    }
-                    schema[nameof(fields)] = fields;
-
-                    metadata = new JObject();
-                    if (reader.Schema?.Metadata != null)
-                    {
-                        foreach (var _metadata in reader.Schema.Metadata)
-                        {
-                            metadata[_metadata.Key] = _metadata.Value;
-                        }
-                    }
-                    schema[nameof(metadata)] = metadata;
-
-                    return schema.ToString(Formatting.Indented);
                 }
             }
             catch (Exception ex)
