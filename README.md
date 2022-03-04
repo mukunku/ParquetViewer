@@ -26,7 +26,7 @@ Pre-compiled releases can be found here: https://github.com/mukunku/ParquetViewe
 Visit the Wiki for details on how to use the utility: https://github.com/mukunku/ParquetViewer/wiki
 
 # Technical Details
-The latest version of this project was written in C# using Visual Studio 2019 and .NET 4.6.1
+The latest version of this project was written in C# using Visual Studio 2022 and .NET 4.7.2
 
 # Acknowledgements
 This utility would not be possible without: https://github.com/elastacloud/parquet-dotnet
