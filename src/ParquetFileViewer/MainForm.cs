@@ -350,16 +350,16 @@ MULTIPLE CONDITIONS:
 
                     if (rowIndex >= 0 && columnIndex >= 0)
                     {
-                        ContextMenu menu = new ContextMenu();
-                        var copyMenuItem = new MenuItem("Copy");
+                        //ContextMenu menu = new ContextMenu();
+                        //var copyMenuItem = new MenuItem("Copy");
 
-                        copyMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
-                        {
-                            Clipboard.SetText(dgv[columnIndex, rowIndex].Value.ToString());
-                        };
+                        //copyMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
+                        //{
+                        //    Clipboard.SetText(dgv[columnIndex, rowIndex].Value.ToString());
+                        //};
 
-                        menu.MenuItems.Add(copyMenuItem);
-                        menu.Show(dgv, new Point(e.X, e.Y));
+                        //menu.MenuItems.Add(copyMenuItem);
+                        //menu.Show(dgv, new Point(e.X, e.Y));
                     }
                 }
             }
