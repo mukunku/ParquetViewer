@@ -32,9 +32,12 @@ namespace ParquetFileViewer
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
+            this.recordCountTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.showRecordsFromLabel = new System.Windows.Forms.Label();
+            this.offsetTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.runQueryButton = new System.Windows.Forms.Button();
             this.searchFilterLabel = new System.Windows.Forms.LinkLabel();
+            this.searchFilterTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.clearFilterButton = new System.Windows.Forms.Button();
             this.mainGridView = new System.Windows.Forms.DataGridView();
             this.openParquetFileDialog = new System.Windows.Forms.OpenFileDialog();
@@ -79,9 +82,6 @@ namespace ParquetFileViewer
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.recordCountTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
-            this.offsetTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
-            this.searchFilterTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -91,16 +91,16 @@ namespace ParquetFileViewer
             // mainTableLayoutPanel
             // 
             this.mainTableLayoutPanel.ColumnCount = 10;
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 52F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 30F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 80F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 61F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 93F));
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 80F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 50F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 50F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 60F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 117F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 93F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 58F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 70F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 58F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 70F));
             this.mainTableLayoutPanel.Controls.Add(this.recordsToLabel, 8, 0);
             this.mainTableLayoutPanel.Controls.Add(this.recordCountTextBox, 9, 0);
             this.mainTableLayoutPanel.Controls.Add(this.showRecordsFromLabel, 6, 0);
@@ -112,36 +112,63 @@ namespace ParquetFileViewer
             this.mainTableLayoutPanel.Controls.Add(this.mainGridView, 0, 1);
             this.mainTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTableLayoutPanel.Location = new System.Drawing.Point(0, 24);
+            this.mainTableLayoutPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.mainTableLayoutPanel.Name = "mainTableLayoutPanel";
             this.mainTableLayoutPanel.RowCount = 4;
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.mainTableLayoutPanel.Size = new System.Drawing.Size(809, 361);
+            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 23F));
+            this.mainTableLayoutPanel.Size = new System.Drawing.Size(944, 420);
             this.mainTableLayoutPanel.TabIndex = 0;
             // 
             // recordsToLabel
             // 
             this.recordsToLabel.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.recordsToLabel.AutoSize = true;
-            this.recordsToLabel.Location = new System.Drawing.Point(704, 2);
+            this.recordsToLabel.Location = new System.Drawing.Point(820, 0);
+            this.recordsToLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.recordsToLabel.Name = "recordsToLabel";
-            this.recordsToLabel.Size = new System.Drawing.Size(42, 26);
+            this.recordsToLabel.Size = new System.Drawing.Size(50, 35);
             this.recordsToLabel.TabIndex = 3;
             this.recordsToLabel.Text = "Record Count:";
             this.recordsToLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // recordCountTextBox
+            // 
+            this.recordCountTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.recordCountTextBox.DelayedTextChangedTimeout = 1000;
+            this.recordCountTextBox.Location = new System.Drawing.Point(878, 6);
+            this.recordCountTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.recordCountTextBox.Name = "recordCountTextBox";
+            this.recordCountTextBox.Size = new System.Drawing.Size(62, 23);
+            this.recordCountTextBox.TabIndex = 5;
+            this.recordCountTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.recordCountTextBox.DelayedTextChanged += new System.EventHandler(this.recordsToTextBox_TextChanged);
+            this.recordCountTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.recordsToTextBox_KeyPress);
+            // 
             // showRecordsFromLabel
             // 
             this.showRecordsFromLabel.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.showRecordsFromLabel.AutoSize = true;
-            this.showRecordsFromLabel.Location = new System.Drawing.Point(594, 2);
+            this.showRecordsFromLabel.Location = new System.Drawing.Point(692, 0);
+            this.showRecordsFromLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.showRecordsFromLabel.Name = "showRecordsFromLabel";
-            this.showRecordsFromLabel.Size = new System.Drawing.Size(42, 26);
+            this.showRecordsFromLabel.Size = new System.Drawing.Size(50, 35);
             this.showRecordsFromLabel.TabIndex = 1;
             this.showRecordsFromLabel.Text = "Record Offset:";
             this.showRecordsFromLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // offsetTextBox
+            // 
+            this.offsetTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.offsetTextBox.DelayedTextChangedTimeout = 1000;
+            this.offsetTextBox.Location = new System.Drawing.Point(750, 6);
+            this.offsetTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.offsetTextBox.Name = "offsetTextBox";
+            this.offsetTextBox.Size = new System.Drawing.Size(62, 23);
+            this.offsetTextBox.TabIndex = 4;
+            this.offsetTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.offsetTextBox.DelayedTextChanged += new System.EventHandler(this.offsetTextBox_TextChanged);
+            this.offsetTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.offsetTextBox_KeyPress);
             // 
             // runQueryButton
             // 
@@ -149,13 +176,14 @@ namespace ParquetFileViewer
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.runQueryButton.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
             this.runQueryButton.Image = global::ParquetFileViewer.Properties.Resources.exclamation_icon;
             this.runQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.runQueryButton.Location = new System.Drawing.Point(412, 3);
+            this.runQueryButton.Location = new System.Drawing.Point(482, 3);
+            this.runQueryButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.runQueryButton.Name = "runQueryButton";
-            this.runQueryButton.Size = new System.Drawing.Size(94, 24);
+            this.runQueryButton.Size = new System.Drawing.Size(109, 29);
             this.runQueryButton.TabIndex = 2;
             this.runQueryButton.Text = "&Execute";
             this.runQueryButton.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
@@ -167,16 +195,30 @@ namespace ParquetFileViewer
             this.searchFilterLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.searchFilterLabel.AutoSize = true;
             this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterLabel, 2);
-            this.searchFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.searchFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point);
             this.searchFilterLabel.LinkColor = System.Drawing.Color.Navy;
-            this.searchFilterLabel.Location = new System.Drawing.Point(3, 8);
+            this.searchFilterLabel.Location = new System.Drawing.Point(4, 11);
+            this.searchFilterLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.searchFilterLabel.Name = "searchFilterLabel";
-            this.searchFilterLabel.Size = new System.Drawing.Size(76, 13);
+            this.searchFilterLabel.Size = new System.Drawing.Size(88, 13);
             this.searchFilterLabel.TabIndex = 7;
             this.searchFilterLabel.TabStop = true;
             this.searchFilterLabel.Text = "Filter Query:";
             this.searchFilterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.searchFilterLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.searchFilterLabel_Click);
+            // 
+            // searchFilterTextBox
+            // 
+            this.searchFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterTextBox, 2);
+            this.searchFilterTextBox.DelayedTextChangedTimeout = 1000;
+            this.searchFilterTextBox.Location = new System.Drawing.Point(100, 6);
+            this.searchFilterTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.searchFilterTextBox.Name = "searchFilterTextBox";
+            this.searchFilterTextBox.Size = new System.Drawing.Size(374, 23);
+            this.searchFilterTextBox.TabIndex = 1;
+            this.searchFilterTextBox.Text = "WHERE ";
+            this.searchFilterTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.searchFilterTextBox_KeyPress);
             // 
             // clearFilterButton
             // 
@@ -184,11 +226,12 @@ namespace ParquetFileViewer
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.clearFilterButton.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.clearFilterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.clearFilterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.clearFilterButton.ForeColor = System.Drawing.Color.Black;
-            this.clearFilterButton.Location = new System.Drawing.Point(512, 3);
+            this.clearFilterButton.Location = new System.Drawing.Point(599, 3);
+            this.clearFilterButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.clearFilterButton.Name = "clearFilterButton";
-            this.clearFilterButton.Size = new System.Drawing.Size(74, 24);
+            this.clearFilterButton.Size = new System.Drawing.Size(85, 29);
             this.clearFilterButton.TabIndex = 3;
             this.clearFilterButton.Text = "Clear";
             this.clearFilterButton.UseVisualStyleBackColor = true;
@@ -204,12 +247,13 @@ namespace ParquetFileViewer
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 10);
-            this.mainGridView.Location = new System.Drawing.Point(3, 33);
+            this.mainGridView.Location = new System.Drawing.Point(4, 38);
+            this.mainGridView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.mainGridView.Name = "mainGridView";
             this.mainGridView.ReadOnly = true;
             this.mainTableLayoutPanel.SetRowSpan(this.mainGridView, 2);
             this.mainGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.mainGridView.Size = new System.Drawing.Size(803, 305);
+            this.mainGridView.Size = new System.Drawing.Size(936, 356);
             this.mainGridView.TabIndex = 6;
             this.mainGridView.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.MainGridView_CellPainting);
             this.mainGridView.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.MainGridView_ColumnAdded);
@@ -229,7 +273,8 @@ namespace ParquetFileViewer
             this.helpToolStripMenuItem});
             this.mainMenuStrip.Location = new System.Drawing.Point(0, 0);
             this.mainMenuStrip.Name = "mainMenuStrip";
-            this.mainMenuStrip.Size = new System.Drawing.Size(809, 24);
+            this.mainMenuStrip.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
+            this.mainMenuStrip.Size = new System.Drawing.Size(944, 24);
             this.mainMenuStrip.TabIndex = 1;
             this.mainMenuStrip.Text = "menuStrip1";
             // 
@@ -482,7 +527,7 @@ namespace ParquetFileViewer
             // 
             // actualShownRecordCountLabel
             // 
-            this.actualShownRecordCountLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.actualShownRecordCountLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.actualShownRecordCountLabel.Name = "actualShownRecordCountLabel";
             this.actualShownRecordCountLabel.Size = new System.Drawing.Size(14, 17);
             this.actualShownRecordCountLabel.Text = "0";
@@ -496,7 +541,7 @@ namespace ParquetFileViewer
             // springStatusBarLabel
             // 
             this.springStatusBarLabel.Name = "springStatusBarLabel";
-            this.springStatusBarLabel.Size = new System.Drawing.Size(559, 17);
+            this.springStatusBarLabel.Size = new System.Drawing.Size(692, 17);
             this.springStatusBarLabel.Spring = true;
             // 
             // showingStatusBarLabel
@@ -507,7 +552,7 @@ namespace ParquetFileViewer
             // 
             // recordCountStatusBarLabel
             // 
-            this.recordCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.recordCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.recordCountStatusBarLabel.Name = "recordCountStatusBarLabel";
             this.recordCountStatusBarLabel.Size = new System.Drawing.Size(14, 17);
             this.recordCountStatusBarLabel.Text = "0";
@@ -520,7 +565,7 @@ namespace ParquetFileViewer
             // 
             // totalRowCountStatusBarLabel
             // 
-            this.totalRowCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.totalRowCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.totalRowCountStatusBarLabel.Name = "totalRowCountStatusBarLabel";
             this.totalRowCountStatusBarLabel.Size = new System.Drawing.Size(14, 17);
             this.totalRowCountStatusBarLabel.Text = "0";
@@ -536,9 +581,10 @@ namespace ParquetFileViewer
             this.recordCountStatusBarLabel,
             this.outOfStatusBarLabel,
             this.totalRowCountStatusBarLabel});
-            this.mainStatusStrip.Location = new System.Drawing.Point(0, 363);
+            this.mainStatusStrip.Location = new System.Drawing.Point(0, 422);
             this.mainStatusStrip.Name = "mainStatusStrip";
-            this.mainStatusStrip.Size = new System.Drawing.Size(809, 22);
+            this.mainStatusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
+            this.mainStatusStrip.Size = new System.Drawing.Size(944, 22);
             this.mainStatusStrip.TabIndex = 2;
             this.mainStatusStrip.Text = "statusStrip1";
             // 
@@ -555,54 +601,19 @@ namespace ParquetFileViewer
             this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
             this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
             // 
-            // recordCountTextBox
-            // 
-            this.recordCountTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.recordCountTextBox.DelayedTextChangedTimeout = 1000;
-            this.recordCountTextBox.Location = new System.Drawing.Point(752, 5);
-            this.recordCountTextBox.Name = "recordCountTextBox";
-            this.recordCountTextBox.Size = new System.Drawing.Size(54, 20);
-            this.recordCountTextBox.TabIndex = 5;
-            this.recordCountTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.recordCountTextBox.DelayedTextChanged += new System.EventHandler(this.recordsToTextBox_TextChanged);
-            this.recordCountTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.recordsToTextBox_KeyPress);
-            // 
-            // offsetTextBox
-            // 
-            this.offsetTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.offsetTextBox.DelayedTextChangedTimeout = 1000;
-            this.offsetTextBox.Location = new System.Drawing.Point(642, 5);
-            this.offsetTextBox.Name = "offsetTextBox";
-            this.offsetTextBox.Size = new System.Drawing.Size(54, 20);
-            this.offsetTextBox.TabIndex = 4;
-            this.offsetTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.offsetTextBox.DelayedTextChanged += new System.EventHandler(this.offsetTextBox_TextChanged);
-            this.offsetTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.offsetTextBox_KeyPress);
-            // 
-            // searchFilterTextBox
-            // 
-            this.searchFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterTextBox, 2);
-            this.searchFilterTextBox.DelayedTextChangedTimeout = 1000;
-            this.searchFilterTextBox.Location = new System.Drawing.Point(85, 5);
-            this.searchFilterTextBox.Name = "searchFilterTextBox";
-            this.searchFilterTextBox.Size = new System.Drawing.Size(321, 20);
-            this.searchFilterTextBox.TabIndex = 1;
-            this.searchFilterTextBox.Text = "WHERE ";
-            this.searchFilterTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.searchFilterTextBox_KeyPress);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(809, 385);
+            this.ClientSize = new System.Drawing.Size(944, 444);
             this.Controls.Add(this.mainStatusStrip);
             this.Controls.Add(this.mainTableLayoutPanel);
             this.Controls.Add(this.mainMenuStrip);
             this.Icon = global::ParquetFileViewer.Properties.Resources.parquet_icon_32x32;
             this.MainMenuStrip = this.mainMenuStrip;
-            this.MinimumSize = new System.Drawing.Size(680, 350);
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.MinimumSize = new System.Drawing.Size(791, 398);
             this.Name = "MainForm";
             this.Text = "New Parquet File";
             this.Load += new System.EventHandler(this.MainForm_Load);
