@@ -52,7 +52,7 @@ namespace ParquetFileViewer
                 }
                 else
                 {
-                    this.Text = string.Concat("Open File: ", value);
+                    this.Text = string.Concat($"File: ", value);
                     this.changeFieldsMenuStripButton.Enabled = true;
                     this.saveAsToolStripMenuItem.Enabled = true;
                     this.getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
@@ -135,6 +135,8 @@ namespace ParquetFileViewer
         }
         private Panel loadingPanel = null;
         private Parquet.Data.Schema openFileSchema;
+
+        private ToolTip dateOnlyFormatWarningToolTip = new ToolTip();
         #endregion
 
         public MainForm()
@@ -378,22 +380,41 @@ MULTIPLE CONDITIONS:
 
         private void MainGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0)
-                return;
-
-            if (e.Value == null || e.Value == DBNull.Value)
+            //Add warnings to date field headers if the user is using a "Date Only" date format.
+            //We want to be helpful so people don't accidentally leave a date only format on and think they are missing time information in their data.
+            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
             {
-                e.Paint(e.CellBounds, DataGridViewPaintParts.All
-                    & ~(DataGridViewPaintParts.ContentForeground));
+                bool isDateTimeCell = ((DataGridView)sender).Columns[e.ColumnIndex].ValueType == typeof(DateTime);
+                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
+                if (isDateTimeCell && isUserUsingDateOnlyFormat)
+                {
+                    var img = Properties.Resources.exclamation_icon_yellow;
+                    Rectangle r1 = new Rectangle(e.CellBounds.Left + e.CellBounds.Width - img.Width, 4, img.Width, img.Height);
+                    Rectangle r2 = new Rectangle(0, 0, img.Width, img.Height);
+                    string header = ((DataGridView)sender).Columns[e.ColumnIndex].HeaderText;
+                    e.PaintBackground(e.CellBounds, true); 
+                    e.PaintContent(e.CellBounds);
+                    e.Graphics.DrawImage(img, r1, r2, GraphicsUnit.Pixel);
 
-                var font = new Font(e.CellStyle.Font, FontStyle.Italic);
-                var color = SystemColors.ActiveCaptionText;
-                if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
-                    color = Color.White;
+                    e.Handled = true;
+                }
+            }
+            else if (e.RowIndex >= 0 &&     e.ColumnIndex >= 0)
+            {
+                if (e.Value == null || e.Value == DBNull.Value)
+                {
+                    e.Paint(e.CellBounds, DataGridViewPaintParts.All
+                        & ~(DataGridViewPaintParts.ContentForeground));
 
-                TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                    var font = new Font(e.CellStyle.Font, FontStyle.Italic);
+                    var color = SystemColors.ActiveCaptionText;
+                    if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
+                        color = Color.White;
 
-                e.Handled = true;
+                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+                    e.Handled = true;
+                }
             }
         }
 
@@ -670,7 +691,6 @@ MULTIPLE CONDITIONS:
                     }
 
                     var result = (ParquetReadResult)e.Result;
-                    result.Result.Rows[0][1] = new DateTime(2000, 1, 1, 0, 0, 0, 0);
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + result.Result.Rows.Count);
                     this.totalRowCountStatusBarLabel.Text = result.TotalNumberOfRecordsInFile.ToString();
                     this.actualShownRecordCountLabel.Text = result.Result.Rows.Count.ToString();
@@ -1057,6 +1077,33 @@ MULTIPLE CONDITIONS:
             {
                 this.ShowError(ex);
             }
+        }
+
+        private void mainGridView_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
+            {
+                bool isDateTimeCell = ((DataGridView)sender).Columns[e.ColumnIndex].ValueType == typeof(DateTime);
+                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
+                if (isDateTimeCell && isUserUsingDateOnlyFormat)
+                {
+                    var relativeMousePosition = this.PointToClient(Cursor.Position);
+                    this.dateOnlyFormatWarningToolTip.Show($"Date only format enabled. To see time values: Edit -> Date Format", 
+                        this, relativeMousePosition, 10000);
+                }
+            }
+        }
+
+        private void mainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            this.dateOnlyFormatWarningToolTip.Hide(this);
+        }
+
+        private int mouseLastX, mouseLastY;
+        private void MainForm_MouseMove(object sender, MouseEventArgs e)
+        {
+            mouseLastX = e.X;
+            mouseLastY = e.Y;
         }
     }
 }

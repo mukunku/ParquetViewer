@@ -13,6 +13,7 @@ namespace ParquetFileViewer
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
 
+        //TODO: Cleanup this setting after sufficient time has passed.
         [Obsolete($"We have more date formats now so use {nameof(DateTimeDisplayFormat)} instead.")]
         public static bool UseISODateFormat
         {
@@ -57,7 +58,6 @@ namespace ParquetFileViewer
                         if (value is null)
                         {
                             //Fallback to legacy site setting until everyone switches over to this new site setting
-                            //TODO: Cleanup this fallback after sufficient time has passed.
                             var useIsoFormat = false;
                             if (bool.TryParse(registryKey.GetValue(UseISODateFormatKey)?.ToString(), out useIsoFormat))
                             {

@@ -5,10 +5,12 @@ namespace ParquetFileViewer.Helpers
 {
     public static class ExtensionMethods
     {
+        private const string DefaultDateTimeFormat = "g";
         private const string DateOnlyDateTimeFormat = "d";
         private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         private const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+        private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
         /// <summary>
         /// Returns a list of all column names within a given datatable
@@ -36,7 +38,21 @@ namespace ParquetFileViewer.Helpers
             DateFormat.ISO8601_DateOnly => ISO8601DateOnlyFormat,
             DateFormat.Default_DateOnly => DateOnlyDateTimeFormat,
             DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
-            DateFormat.Default or _ => null,
+            DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
+            DateFormat.Default => DefaultDateTimeFormat,
+            _ => null
+        };
+
+        /// <summary>
+        /// Returns true if the date format does not contain a time component
+        /// </summary>
+        /// <param name="dateFormat">Date format to check</param>
+        /// <returns>True if the date format has time information</returns>
+        public static bool IsDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
+        {
+            DateFormat.ISO8601_DateOnly => true,
+            DateFormat.Default_DateOnly => true,
+            _ => false
         };
     }
 }

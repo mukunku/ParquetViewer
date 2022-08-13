@@ -17,6 +17,7 @@
         Default_DateOnly,
         ISO8601,
         ISO8601_DateOnly,
-        ISO8601_Alt1
+        ISO8601_Alt1,
+        ISO8601_Alt2
     }
 }

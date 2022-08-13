@@ -57,6 +57,8 @@ namespace ParquetFileViewer
             this.defaultDateOnlyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iSO8601ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iSO8601DateOnlyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.iSO8601Alt1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.iSO8601Alt2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.columnSizingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.columnHeadersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,7 +85,6 @@ namespace ParquetFileViewer
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.iSO8601Alt1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -257,6 +258,8 @@ namespace ParquetFileViewer
             this.mainGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.mainGridView.Size = new System.Drawing.Size(936, 356);
             this.mainGridView.TabIndex = 6;
+            this.mainGridView.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.mainGridView_CellMouseEnter);
+            this.mainGridView.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.mainGridView_CellMouseLeave);
             this.mainGridView.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.MainGridView_CellPainting);
             this.mainGridView.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.MainGridView_ColumnAdded);
             this.mainGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.mainGridView_DataBindingComplete);
@@ -380,7 +383,8 @@ namespace ParquetFileViewer
             this.defaultDateOnlyToolStripMenuItem,
             this.iSO8601ToolStripMenuItem,
             this.iSO8601DateOnlyToolStripMenuItem,
-            this.iSO8601Alt1ToolStripMenuItem});
+            this.iSO8601Alt1ToolStripMenuItem,
+            this.iSO8601Alt2ToolStripMenuItem});
             this.changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             this.changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.changeDateFormatToolStripMenuItem.Text = "Date Format";
@@ -416,6 +420,22 @@ namespace ParquetFileViewer
             this.iSO8601DateOnlyToolStripMenuItem.Tag = "3";
             this.iSO8601DateOnlyToolStripMenuItem.Text = "ISO 8601 (Date Only)";
             this.iSO8601DateOnlyToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
+            // 
+            // iSO8601Alt1ToolStripMenuItem
+            // 
+            this.iSO8601Alt1ToolStripMenuItem.Name = "iSO8601Alt1ToolStripMenuItem";
+            this.iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.iSO8601Alt1ToolStripMenuItem.Tag = "4";
+            this.iSO8601Alt1ToolStripMenuItem.Text = "ISO 8601 (Alt 1)";
+            this.iSO8601Alt1ToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
+            // 
+            // iSO8601Alt2ToolStripMenuItem
+            // 
+            this.iSO8601Alt2ToolStripMenuItem.Name = "iSO8601Alt2ToolStripMenuItem";
+            this.iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.iSO8601Alt2ToolStripMenuItem.Tag = "5";
+            this.iSO8601Alt2ToolStripMenuItem.Text = "ISO 8601 (Alt 2)";
+            this.iSO8601Alt2ToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
             // 
             // columnSizingToolStripMenuItem
             // 
@@ -617,14 +637,6 @@ namespace ParquetFileViewer
             this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
             this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
             // 
-            // iSO8601Alt1ToolStripMenuItem
-            // 
-            this.iSO8601Alt1ToolStripMenuItem.Name = "iSO8601Alt1ToolStripMenuItem";
-            this.iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.iSO8601Alt1ToolStripMenuItem.Tag = "4";
-            this.iSO8601Alt1ToolStripMenuItem.Text = "ISO 8601 (Alt 1)";
-            this.iSO8601Alt1ToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -644,6 +656,7 @@ namespace ParquetFileViewer
             this.SizeChanged += new System.EventHandler(this.MainForm_SizeChanged);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.MainForm_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.MainForm_DragEnter);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseMove);
             this.mainTableLayoutPanel.ResumeLayout(false);
             this.mainTableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).EndInit();
@@ -712,6 +725,7 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem defaultDateOnlyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601DateOnlyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem iSO8601Alt2ToolStripMenuItem;
     }
 }
 
