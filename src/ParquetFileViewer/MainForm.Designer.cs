@@ -1,4 +1,4 @@
-﻿
+
 namespace ParquetFileViewer
 {
     partial class MainForm
@@ -82,6 +82,8 @@ namespace ParquetFileViewer
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
+            this.exportTimeWithCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.excelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -331,7 +333,8 @@ namespace ParquetFileViewer
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cSVToolStripMenuItem});
+            this.cSVToolStripMenuItem,
+            this.excelToolStripMenuItem});
             this.saveAsToolStripMenuItem.Enabled = false;
             this.saveAsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("saveAsToolStripMenuItem.Image")));
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
@@ -686,6 +689,8 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersContentToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportTimeWithCSVToolStripMenuItem;
     }
 }
 

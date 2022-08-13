@@ -11,6 +11,7 @@ namespace ParquetFileViewer
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
         private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
+        private const string ExportTimeKey = "ExportTime";
 
         public static bool UseISODateFormat
         {
@@ -134,6 +135,37 @@ namespace ParquetFileViewer
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         registryKey.SetValue(AutoSizeColumnsModeKey, (int)value);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        public static bool ExportTime
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        bool value = false;
+                        bool.TryParse(registryKey.GetValue(ExportTimeKey)?.ToString(), out value);
+                        return value;
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            set
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        registryKey.SetValue(ExportTimeKey, value.ToString());
                     }
                 }
                 catch { }

@@ -1,4 +1,5 @@
-﻿using Parquet;
+﻿using ClosedXML.Excel;
+using Parquet;
 using ParquetFileViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
@@ -176,6 +177,12 @@ namespace ParquetFileViewer
             else
                 this.defaultToolStripMenuItem.Checked = true;
 
+            //Setup export time checkbox
+            if (AppSettings.ExportTime)
+                this.exportTimeWithCSVToolStripMenuItem.Checked = true;
+            else
+                this.exportTimeWithCSVToolStripMenuItem.Checked = false;
+
             if (AppSettings.ReadingEngine == ParquetEngine.Default)
                 this.defaultParquetEngineToolStripMenuItem.Checked = true;
             else if (AppSettings.ReadingEngine == ParquetEngine.Default_Multithreaded)
@@ -250,6 +257,11 @@ namespace ParquetFileViewer
         private void cSVToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.ExportResults(FileType.CSV);
+        }
+
+        private void excelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.ExportResults(FileType.XLSX);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -719,13 +731,17 @@ MULTIPLE CONDITIONS:
             bool encouteredException = false;
             try
             {
-                using (var writer = new StreamWriter(args.FilePath, false, System.Text.Encoding.UTF8))
+                if (args.FileType == FileType.CSV)
                 {
-                    if (args.FileType == FileType.CSV)
+                    using (var writer = new StreamWriter(args.FilePath, false, System.Text.Encoding.UTF8))
                         this.WriteDataToCSVFile(writer, (BackgroundWorker)sender, e);
-                    else
-                        throw new Exception(string.Format("Unsupported export type: '{0}'", args.FileType.ToString()));
                 }
+                else if (args.FileType == FileType.XLSX)
+                {
+                    this.WriteDataToExcelFile(args.FilePath, (BackgroundWorker)sender, e);
+                }
+                else
+                    throw new Exception(string.Format("Unsupported export type: '{0}'", args.FileType.ToString()));
             }
             catch (Exception)
             {
@@ -749,6 +765,7 @@ MULTIPLE CONDITIONS:
         {
             StringBuilder rowBuilder = new StringBuilder();
             bool isFirst = true;
+            bool exportTime = AppSettings.ExportTime;
             foreach (DataColumn column in this.MainDataSource.Columns)
             {
                 if (!isFirst)
@@ -781,15 +798,29 @@ MULTIPLE CONDITIONS:
                         rowBuilder.Append(",");
                     else
                         isFirst = false;
-
-                    rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString())); //Default formatting for all data types for now
+                    if (!exportTime && value.GetType() == typeof(DateTime))
+                    {
+                        DateTime dateToDisplay = (DateTime)value;
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dateToDisplay.ToString("d")));
+                    }
+                    else
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString())); //Default formatting for all data types for now
                 }
 
                 writer.WriteLine(rowBuilder.ToString());
             }
         }
 
-        private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void WriteDataToExcelFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                workbook.Worksheets.Add(this.MainDataSource.DefaultView.ToTable(), "data");
+                workbook.SaveAs(path);
+            }
+        }
+
+            private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.HideLoadingIcon();
             try
@@ -812,7 +843,8 @@ MULTIPLE CONDITIONS:
             if (this.mainGridView.RowCount > 0)
             {
                 this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
-                this.exportFileDialog.FilterIndex = (int)fileType;
+                this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx";
+                this.exportFileDialog.FilterIndex = (int)fileType + 1;
                 if (this.exportFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     var args = new ExportToFileArgs()
@@ -848,7 +880,8 @@ MULTIPLE CONDITIONS:
 
         private enum FileType
         {
-            CSV = 0//should match Filter Index in the exportFileDialog control's Filter property
+            CSV = 0,//should match Filter Index in the exportFileDialog control's Filter property
+            XLSX = 1
         }
 
         private struct ExportToFileArgs
@@ -997,6 +1030,19 @@ MULTIPLE CONDITIONS:
 
                     this.MainDataSource = tempMainDataSource; //Will cause a refresh of the column rendering
                 }
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
+        }
+
+        private void exportTimeWithCSVToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                AppSettings.ExportTime = !AppSettings.ExportTime;
+                this.exportTimeWithCSVToolStripMenuItem.Checked = !this.exportTimeWithCSVToolStripMenuItem.Checked;
             }
             catch (Exception ex)
             {
