@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\packages\Costura.Fody.4.1.0\build\Costura.Fody.props" Condition="Exists('..\packages\Costura.Fody.4.1.0\build\Costura.Fody.props')" />
   <PropertyGroup>
     <TargetFramework>net6.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
@@ -7,9 +6,18 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	<SelfContained>false</SelfContained>
+	<PublishSingleFile>true</PublishSingleFile>
+	<PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\parquet_icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>full</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="Controls\DelayedOnChangedTextBox.cs">
@@ -29,5 +37,4 @@
     </PackageReference>
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <Import Project="..\packages\Fody.6.5.0\build\Fody.targets" Condition="Exists('..\packages\Fody.6.5.0\build\Fody.targets')" />
 </Project>
