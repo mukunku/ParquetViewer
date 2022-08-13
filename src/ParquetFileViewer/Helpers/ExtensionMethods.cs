@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 
 namespace ParquetFileViewer.Helpers
@@ -53,6 +54,13 @@ namespace ParquetFileViewer.Helpers
             DateFormat.ISO8601_DateOnly => true,
             DateFormat.Default_DateOnly => true,
             _ => false
+        };
+
+        public static string GetExtension(this FileType fileType) => fileType switch
+        {
+            FileType.CSV => ".csv",
+            FileType.XLS => ".xls",
+            _ => throw new ArgumentOutOfRangeException(nameof(fileType))
         };
     }
 }

@@ -20,4 +20,10 @@
         ISO8601_Alt1,
         ISO8601_Alt2
     }
+
+    public enum FileType
+    {
+        CSV = 0,
+        XLS
+    }
 }

@@ -156,7 +156,7 @@ namespace ParquetFileViewer
                 pi.SetValue(this.mainGridView, true, null);
             }
 
-            
+
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -394,14 +394,14 @@ MULTIPLE CONDITIONS:
                     Rectangle r1 = new Rectangle(e.CellBounds.Left + e.CellBounds.Width - img.Width, 4, img.Width, img.Height);
                     Rectangle r2 = new Rectangle(0, 0, img.Width, img.Height);
                     string header = ((DataGridView)sender).Columns[e.ColumnIndex].HeaderText;
-                    e.PaintBackground(e.CellBounds, true); 
+                    e.PaintBackground(e.CellBounds, true);
                     e.PaintContent(e.CellBounds);
                     e.Graphics.DrawImage(img, r1, r2, GraphicsUnit.Pixel);
 
                     e.Handled = true;
                 }
             }
-            else if (e.RowIndex >= 0 &&     e.ColumnIndex >= 0)
+            else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 if (e.Value == null || e.Value == DBNull.Value)
                 {
@@ -833,17 +833,36 @@ MULTIPLE CONDITIONS:
 
         private void WriteDataToExcelFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
         {
+            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
             using var fs = new FileStream(path, FileMode.OpenOrCreate);
             var excelWriter = new ExcelWriter(fs);
             excelWriter.BeginWrite();
 
+            //Write headers
+            for (int i = 0; i < this.MainDataSource.Columns.Count; i++)
+            {
+                excelWriter.WriteCell(0, i, this.MainDataSource.Columns[i].ColumnName);
+            }
+
+            //Write data
             for (int i = 0; i < this.MainDataSource.DefaultView.Count; i++)
             {
                 for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
                 {
-                    excelWriter.WriteCell(i, j, this.mainDataSource.DefaultView[i][j]?.ToString() ?? string.Empty);
+                    var value = this.mainDataSource.DefaultView[i][j];
+
+                    if (value is DateTime dt)
+                    {
+                        excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
+                    }
+                    else
+                    {
+                        excelWriter.WriteCell(i + 1, j, value?.ToString() ?? string.Empty);
+                    }
                 }
             }
+
+            excelWriter.EndWrite();
         }
 
         private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -864,19 +883,21 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void ExportResults(FileType fileType)
+        private void ExportResults(FileType defaultFileType)
         {
             if (this.mainGridView.RowCount > 0)
             {
                 this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
                 this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
-                this.exportFileDialog.FilterIndex = (int)fileType + 1;
+                this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
                 if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                 {
+                    string filePath = this.exportFileDialog.FileName;
+                    var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
                     var args = new ExportToFileArgs()
                     {
-                        FilePath = this.exportFileDialog.FileName,
-                        FileType = fileType
+                        FilePath = filePath,
+                        FileType = selectedFileType
                     };
                     this.ExportFileBackgroundWorker.RunWorkerAsync(args);
                     this.ShowLoadingIcon("Exporting Data", this.ExportFileBackgroundWorker);
@@ -904,11 +925,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private enum FileType
-        {
-            CSV = 0, //should match Filter Index in the exportFileDialog control's Filter property
-            XLS = 1
-        }
+
 
         private struct ExportToFileArgs
         {
@@ -960,7 +977,7 @@ MULTIPLE CONDITIONS:
                     AppSettings.DateTimeDisplayFormat = selectedDateFormat;
                     this.RefreshDateFormatMenuItemSelection();
                     this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
-                }               
+                }
             }
             catch (Exception ex)
             {
@@ -1091,7 +1108,7 @@ MULTIPLE CONDITIONS:
                 if (isDateTimeCell && isUserUsingDateOnlyFormat)
                 {
                     var relativeMousePosition = this.PointToClient(Cursor.Position);
-                    this.dateOnlyFormatWarningToolTip.Show($"Date only format enabled. To see time values: Edit -> Date Format", 
+                    this.dateOnlyFormatWarningToolTip.Show($"Date only format enabled. To see time values: Edit -> Date Format",
                         this, relativeMousePosition, 10000);
                 }
             }
