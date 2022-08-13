@@ -285,5 +285,13 @@ namespace ParquetFileViewer
         {
             this.filterColumnsTextbox.Text = string.Empty;
         }
+
+        private void FieldsToLoadForm_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                this.Close();
+            }
+        }
     }
 }

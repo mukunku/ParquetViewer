@@ -1,5 +1,4 @@
-﻿using ClosedXML.Excel;
-using Parquet;
+﻿using Parquet;
 using ParquetFileViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
@@ -24,7 +23,6 @@ namespace ParquetFileViewer
         private const int loadingPanelWidth = 200;
         private const int loadingPanelHeight = 200;
         private const string QueryUselessPartRegex = "^WHERE ";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         private const string DefaultTableName = "MY_TABLE";
         private readonly string DefaultFormTitle;
 
@@ -121,7 +119,7 @@ namespace ParquetFileViewer
                 try
                 {
                     //Format date fields
-                    string dateFormat = AppSettings.UseISODateFormat ? ISO8601DateTimeFormat : string.Empty;
+                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                     foreach (DataGridViewColumn column in this.mainGridView.Columns)
                     {
                         if (column.ValueType == typeof(DateTime))
@@ -155,6 +153,8 @@ namespace ParquetFileViewer
                 System.Reflection.PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 pi.SetValue(this.mainGridView, true, null);
             }
+
+            
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -172,16 +172,7 @@ namespace ParquetFileViewer
             }
 
             //Setup date format checkboxes
-            if (AppSettings.UseISODateFormat)
-                this.iSO8601ToolStripMenuItem.Checked = true;
-            else
-                this.defaultToolStripMenuItem.Checked = true;
-
-            //Setup export time checkbox
-            if (AppSettings.ExportTime)
-                this.exportTimeWithCSVToolStripMenuItem.Checked = true;
-            else
-                this.exportTimeWithCSVToolStripMenuItem.Checked = false;
+            this.RefreshDateFormatMenuItemSelection();
 
             if (AppSettings.ReadingEngine == ParquetEngine.Default)
                 this.defaultParquetEngineToolStripMenuItem.Checked = true;
@@ -254,14 +245,9 @@ namespace ParquetFileViewer
             }
         }
 
-        private void cSVToolStripMenuItem_Click(object sender, EventArgs e)
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.ExportResults(FileType.CSV);
-        }
-
-        private void excelToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.ExportResults(FileType.XLSX);
+            this.ExportResults(default);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -684,6 +670,7 @@ MULTIPLE CONDITIONS:
                     }
 
                     var result = (ParquetReadResult)e.Result;
+                    result.Result.Rows[0][1] = new DateTime(2000, 1, 1, 0, 0, 0, 0);
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + result.Result.Rows.Count);
                     this.totalRowCountStatusBarLabel.Text = result.TotalNumberOfRecordsInFile.ToString();
                     this.actualShownRecordCountLabel.Text = result.Result.Rows.Count.ToString();
@@ -736,7 +723,7 @@ MULTIPLE CONDITIONS:
                     using (var writer = new StreamWriter(args.FilePath, false, System.Text.Encoding.UTF8))
                         this.WriteDataToCSVFile(writer, (BackgroundWorker)sender, e);
                 }
-                else if (args.FileType == FileType.XLSX)
+                else if (args.FileType == FileType.XLS)
                 {
                     this.WriteDataToExcelFile(args.FilePath, (BackgroundWorker)sender, e);
                 }
@@ -765,13 +752,16 @@ MULTIPLE CONDITIONS:
         {
             StringBuilder rowBuilder = new StringBuilder();
             bool isFirst = true;
-            bool exportTime = AppSettings.ExportTime;
             foreach (DataColumn column in this.MainDataSource.Columns)
             {
                 if (!isFirst)
+                {
                     rowBuilder.Append(",");
+                }
                 else
+                {
                     isFirst = false;
+                }
 
                 rowBuilder.Append(
                     column.ColumnName
@@ -792,19 +782,26 @@ MULTIPLE CONDITIONS:
                 }
 
                 isFirst = true;
+                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                 foreach (object value in row.Row.ItemArray)
                 {
                     if (!isFirst)
-                        rowBuilder.Append(",");
-                    else
-                        isFirst = false;
-                    if (!exportTime && value.GetType() == typeof(DateTime))
                     {
-                        DateTime dateToDisplay = (DateTime)value;
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dateToDisplay.ToString("d")));
+                        rowBuilder.Append(',');
                     }
                     else
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString())); //Default formatting for all data types for now
+                    {
+                        isFirst = false;
+                    }
+
+                    if (value is DateTime dt)
+                    {
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
+                    }
+                    else
+                    {
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString()));
+                    }
                 }
 
                 writer.WriteLine(rowBuilder.ToString());
@@ -813,14 +810,20 @@ MULTIPLE CONDITIONS:
 
         private void WriteDataToExcelFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
         {
-            using (var workbook = new XLWorkbook())
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            var excelWriter = new ExcelWriter(fs);
+            excelWriter.BeginWrite();
+
+            for (int i = 0; i < this.MainDataSource.DefaultView.Count; i++)
             {
-                workbook.Worksheets.Add(this.MainDataSource.DefaultView.ToTable(), "data");
-                workbook.SaveAs(path);
+                for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
+                {
+                    excelWriter.WriteCell(i, j, this.mainDataSource.DefaultView[i][j]?.ToString() ?? string.Empty);
+                }
             }
         }
 
-            private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.HideLoadingIcon();
             try
@@ -843,9 +846,9 @@ MULTIPLE CONDITIONS:
             if (this.mainGridView.RowCount > 0)
             {
                 this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
-                this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xlsx)|*.xlsx";
+                this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
                 this.exportFileDialog.FilterIndex = (int)fileType + 1;
-                if (this.exportFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     var args = new ExportToFileArgs()
                     {
@@ -880,8 +883,8 @@ MULTIPLE CONDITIONS:
 
         private enum FileType
         {
-            CSV = 0,//should match Filter Index in the exportFileDialog control's Filter property
-            XLSX = 1
+            CSV = 0, //should match Filter Index in the exportFileDialog control's Filter property
+            XLS = 1
         }
 
         private struct ExportToFileArgs
@@ -924,14 +927,17 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void DefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DateFormatMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                AppSettings.UseISODateFormat = false;
-                this.defaultToolStripMenuItem.Checked = true;
-                this.iSO8601ToolStripMenuItem.Checked = false;
-                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+                if (sender is ToolStripMenuItem item)
+                {
+                    var selectedDateFormat = (DateFormat)(int.Parse((string)item.Tag));
+                    AppSettings.DateTimeDisplayFormat = selectedDateFormat;
+                    this.RefreshDateFormatMenuItemSelection();
+                    this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+                }               
             }
             catch (Exception ex)
             {
@@ -939,18 +945,34 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void ISO8601ToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Checks <see cref="AppSettings.DateTimeDisplayFormat"/> and checks/unchecks 
+        /// the appropriate date format options located in the menu bar.
+        /// </summary>
+        private void RefreshDateFormatMenuItemSelection()
         {
-            try
+            this.defaultToolStripMenuItem.Checked = false;
+            this.defaultDateOnlyToolStripMenuItem.Checked = false;
+            this.iSO8601ToolStripMenuItem.Checked = false;
+            this.iSO8601DateOnlyToolStripMenuItem.Checked = false;
+
+            switch (AppSettings.DateTimeDisplayFormat)
             {
-                AppSettings.UseISODateFormat = true;
-                this.defaultToolStripMenuItem.Checked = false;
-                this.iSO8601ToolStripMenuItem.Checked = true;
-                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
+                case DateFormat.Default:
+                    this.defaultToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.Default_DateOnly:
+                    this.defaultDateOnlyToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.ISO8601:
+                    this.iSO8601ToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.ISO8601_DateOnly:
+                    this.iSO8601DateOnlyToolStripMenuItem.Checked = true;
+                    break;
+                default:
+                    break;
+
             }
         }
 
@@ -1030,19 +1052,6 @@ MULTIPLE CONDITIONS:
 
                     this.MainDataSource = tempMainDataSource; //Will cause a refresh of the column rendering
                 }
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
-
-        private void exportTimeWithCSVToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.ExportTime = !AppSettings.ExportTime;
-                this.exportTimeWithCSVToolStripMenuItem.Checked = !this.exportTimeWithCSVToolStripMenuItem.Checked;
             }
             catch (Exception ex)
             {

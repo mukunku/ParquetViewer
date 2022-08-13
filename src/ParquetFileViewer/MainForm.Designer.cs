@@ -48,14 +48,15 @@ namespace ParquetFileViewer
             this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.changeFieldsMenuStripButton = new System.Windows.Forms.ToolStripMenuItem();
             this.changeDateFormatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.defaultDateOnlyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iSO8601ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.iSO8601DateOnlyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.columnSizingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.columnHeadersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -82,8 +83,7 @@ namespace ParquetFileViewer
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.exportTimeWithCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.excelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.iSO8601Alt1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -300,7 +300,7 @@ namespace ParquetFileViewer
             this.newToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
             this.newToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.newToolStripMenuItem.Text = "&New";
             this.newToolStripMenuItem.Click += new System.EventHandler(this.newToolStripMenuItem_Click);
             // 
@@ -310,14 +310,14 @@ namespace ParquetFileViewer
             this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.openToolStripMenuItem.Text = "&Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // toolStripSeparator
             // 
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(151, 6);
+            this.toolStripSeparator.Size = new System.Drawing.Size(223, 6);
             // 
             // saveToolStripMenuItem
             // 
@@ -326,39 +326,31 @@ namespace ParquetFileViewer
             this.saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Visible = false;
             // 
             // saveAsToolStripMenuItem
             // 
-            this.saveAsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cSVToolStripMenuItem,
-            this.excelToolStripMenuItem});
+            this.saveAsToolStripMenuItem.AutoSize = false;
             this.saveAsToolStripMenuItem.Enabled = false;
             this.saveAsToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("saveAsToolStripMenuItem.Image")));
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
-            this.saveAsToolStripMenuItem.Text = "Save Results As";
-            // 
-            // cSVToolStripMenuItem
-            // 
-            this.cSVToolStripMenuItem.Name = "cSVToolStripMenuItem";
-            this.cSVToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            this.saveAsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
             | System.Windows.Forms.Keys.S)));
-            this.cSVToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.cSVToolStripMenuItem.Text = "CSV";
-            this.cSVToolStripMenuItem.Click += new System.EventHandler(this.cSVToolStripMenuItem_Click);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.saveAsToolStripMenuItem.Text = "Save Results As";
+            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(151, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(223, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -385,7 +377,10 @@ namespace ParquetFileViewer
             // 
             this.changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.defaultToolStripMenuItem,
-            this.iSO8601ToolStripMenuItem});
+            this.defaultDateOnlyToolStripMenuItem,
+            this.iSO8601ToolStripMenuItem,
+            this.iSO8601DateOnlyToolStripMenuItem,
+            this.iSO8601Alt1ToolStripMenuItem});
             this.changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             this.changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.changeDateFormatToolStripMenuItem.Text = "Date Format";
@@ -393,16 +388,34 @@ namespace ParquetFileViewer
             // defaultToolStripMenuItem
             // 
             this.defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.defaultToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.defaultToolStripMenuItem.Tag = "0";
             this.defaultToolStripMenuItem.Text = "Default";
-            this.defaultToolStripMenuItem.Click += new System.EventHandler(this.DefaultToolStripMenuItem_Click);
+            this.defaultToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
+            // 
+            // defaultDateOnlyToolStripMenuItem
+            // 
+            this.defaultDateOnlyToolStripMenuItem.Name = "defaultDateOnlyToolStripMenuItem";
+            this.defaultDateOnlyToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.defaultDateOnlyToolStripMenuItem.Tag = "1";
+            this.defaultDateOnlyToolStripMenuItem.Text = "Default (Date Only)";
+            this.defaultDateOnlyToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
             // 
             // iSO8601ToolStripMenuItem
             // 
             this.iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            this.iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.iSO8601ToolStripMenuItem.Tag = "2";
             this.iSO8601ToolStripMenuItem.Text = "ISO 8601";
-            this.iSO8601ToolStripMenuItem.Click += new System.EventHandler(this.ISO8601ToolStripMenuItem_Click);
+            this.iSO8601ToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
+            // 
+            // iSO8601DateOnlyToolStripMenuItem
+            // 
+            this.iSO8601DateOnlyToolStripMenuItem.Name = "iSO8601DateOnlyToolStripMenuItem";
+            this.iSO8601DateOnlyToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.iSO8601DateOnlyToolStripMenuItem.Tag = "3";
+            this.iSO8601DateOnlyToolStripMenuItem.Text = "ISO 8601 (Date Only)";
+            this.iSO8601DateOnlyToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
             // 
             // columnSizingToolStripMenuItem
             // 
@@ -604,6 +617,14 @@ namespace ParquetFileViewer
             this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
             this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
             // 
+            // iSO8601Alt1ToolStripMenuItem
+            // 
+            this.iSO8601Alt1ToolStripMenuItem.Name = "iSO8601Alt1ToolStripMenuItem";
+            this.iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.iSO8601Alt1ToolStripMenuItem.Tag = "4";
+            this.iSO8601Alt1ToolStripMenuItem.Text = "ISO 8601 (Alt 1)";
+            this.iSO8601Alt1ToolStripMenuItem.Click += new System.EventHandler(this.DateFormatMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -657,7 +678,6 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem changeFieldsMenuStripButton;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem cSVToolStripMenuItem;
         private ParquetFileViewer.Controls.DelayedOnChangedTextBox searchFilterTextBox;
         private System.ComponentModel.BackgroundWorker FileSchemaBackgroundWorker;
         private System.ComponentModel.BackgroundWorker ReadDataBackgroundWorker;
@@ -689,8 +709,9 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersContentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem excelToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exportTimeWithCSVToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem defaultDateOnlyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem iSO8601DateOnlyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
     }
 }
 
