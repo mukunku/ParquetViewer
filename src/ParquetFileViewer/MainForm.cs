@@ -332,10 +332,12 @@ DATETIME:
     WHERE field_name >= #01/01/2000#
 NUMERIC:
     WHERE field_name <= 123.4
-STRING:     
-    WHERE field_name = 'string value'
+STRING:
+    WHERE field_name LIKE '%value%' 
+    WHERE field_name = 'equals value'
+    WHERE field_name <> 'not equals'
 MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 = 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
+    WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
         }
 
         private void mainGridView_MouseClick(object sender, MouseEventArgs e)
