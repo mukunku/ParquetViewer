@@ -1,6 +1,4 @@
-﻿using Parquet;
-using ParquetFileViewer.Helpers;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,6 +10,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Parquet;
+using ParquetFileViewer.Helpers;
 
 namespace ParquetFileViewer
 {
@@ -740,8 +740,7 @@ MULTIPLE CONDITIONS:
             {
                 if (args.FileType == FileType.CSV)
                 {
-                    using (var writer = new StreamWriter(args.FilePath, false, System.Text.Encoding.UTF8))
-                        this.WriteDataToCSVFile(writer, (BackgroundWorker)sender, e);
+                    this.WriteDataToCSVFile(args.FilePath, (BackgroundWorker)sender, e);
                 }
                 else if (args.FileType == FileType.XLS)
                 {
@@ -768,9 +767,11 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void WriteDataToCSVFile(StreamWriter writer, BackgroundWorker worker, DoWorkEventArgs e)
+        private void WriteDataToCSVFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
         {
-            StringBuilder rowBuilder = new StringBuilder();
+            using var writer = new StreamWriter(path, false, Encoding.UTF8);
+
+            var rowBuilder = new StringBuilder();
             bool isFirst = true;
             foreach (DataColumn column in this.MainDataSource.Columns)
             {
@@ -1097,13 +1098,6 @@ MULTIPLE CONDITIONS:
         private void mainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
         {
             this.dateOnlyFormatWarningToolTip.Hide(this);
-        }
-
-        private int mouseLastX, mouseLastY;
-        private void MainForm_MouseMove(object sender, MouseEventArgs e)
-        {
-            mouseLastX = e.X;
-            mouseLastY = e.Y;
         }
     }
 }
