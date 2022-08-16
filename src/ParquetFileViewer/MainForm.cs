@@ -995,6 +995,8 @@ MULTIPLE CONDITIONS:
             this.defaultDateOnlyToolStripMenuItem.Checked = false;
             this.iSO8601ToolStripMenuItem.Checked = false;
             this.iSO8601DateOnlyToolStripMenuItem.Checked = false;
+            this.iSO8601Alt1ToolStripMenuItem.Checked = false;
+            this.iSO8601Alt2ToolStripMenuItem.Checked = false;
 
             switch (AppSettings.DateTimeDisplayFormat)
             {
@@ -1010,9 +1012,14 @@ MULTIPLE CONDITIONS:
                 case DateFormat.ISO8601_DateOnly:
                     this.iSO8601DateOnlyToolStripMenuItem.Checked = true;
                     break;
+                case DateFormat.ISO8601_Alt1:
+                    this.iSO8601Alt1ToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.ISO8601_Alt2:
+                    this.iSO8601Alt2ToolStripMenuItem.Checked = true;
+                    break;
                 default:
                     break;
-
             }
         }
 
