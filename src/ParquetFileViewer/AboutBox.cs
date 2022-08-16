@@ -96,5 +96,13 @@ namespace ParquetFileViewer
             }
         }
         #endregion
+
+        private void AboutBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                this.Close();
+            }
+        }
     }
 }
