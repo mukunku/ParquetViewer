@@ -1,13 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Apache.Arrow" Version="5.0.0" />
+    <PackageReference Include="Apache.Arrow" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Parquet.Net" Version="3.8.6" />
+    <PackageReference Include="Parquet.Net" Version="3.9.1" />
   </ItemGroup>
 
 </Project>

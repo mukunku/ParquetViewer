@@ -1,6 +1,4 @@
-﻿using Parquet;
-using ParquetFileViewer.Helpers;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,6 +10,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Parquet;
+using ParquetFileViewer.Helpers;
 
 namespace ParquetFileViewer
 {
@@ -23,7 +23,6 @@ namespace ParquetFileViewer
         private const int loadingPanelWidth = 200;
         private const int loadingPanelHeight = 200;
         private const string QueryUselessPartRegex = "^WHERE ";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         private const string DefaultTableName = "MY_TABLE";
         private readonly string DefaultFormTitle;
 
@@ -53,7 +52,7 @@ namespace ParquetFileViewer
                 }
                 else
                 {
-                    this.Text = string.Concat("Open File: ", value);
+                    this.Text = string.Concat($"File: ", value);
                     this.changeFieldsMenuStripButton.Enabled = true;
                     this.saveAsToolStripMenuItem.Enabled = true;
                     this.getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
@@ -120,7 +119,7 @@ namespace ParquetFileViewer
                 try
                 {
                     //Format date fields
-                    string dateFormat = AppSettings.UseISODateFormat ? ISO8601DateTimeFormat : string.Empty;
+                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                     foreach (DataGridViewColumn column in this.mainGridView.Columns)
                     {
                         if (column.ValueType == typeof(DateTime))
@@ -136,6 +135,8 @@ namespace ParquetFileViewer
         }
         private Panel loadingPanel = null;
         private Parquet.Data.Schema openFileSchema;
+
+        private ToolTip dateOnlyFormatWarningToolTip = new ToolTip();
         #endregion
 
         public MainForm()
@@ -154,6 +155,8 @@ namespace ParquetFileViewer
                 System.Reflection.PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 pi.SetValue(this.mainGridView, true, null);
             }
+
+
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -171,10 +174,7 @@ namespace ParquetFileViewer
             }
 
             //Setup date format checkboxes
-            if (AppSettings.UseISODateFormat)
-                this.iSO8601ToolStripMenuItem.Checked = true;
-            else
-                this.defaultToolStripMenuItem.Checked = true;
+            this.RefreshDateFormatMenuItemSelection();
 
             if (AppSettings.ReadingEngine == ParquetEngine.Default)
                 this.defaultParquetEngineToolStripMenuItem.Checked = true;
@@ -247,9 +247,9 @@ namespace ParquetFileViewer
             }
         }
 
-        private void cSVToolStripMenuItem_Click(object sender, EventArgs e)
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.ExportResults(FileType.CSV);
+            this.ExportResults(default);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -332,10 +332,12 @@ DATETIME:
     WHERE field_name >= #01/01/2000#
 NUMERIC:
     WHERE field_name <= 123.4
-STRING:     
-    WHERE field_name = 'string value'
+STRING:
+    WHERE field_name LIKE '%value%' 
+    WHERE field_name = 'equals value'
+    WHERE field_name <> 'not equals'
 MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 = 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
+    WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
         }
 
         private void mainGridView_MouseClick(object sender, MouseEventArgs e)
@@ -350,15 +352,14 @@ MULTIPLE CONDITIONS:
 
                     if (rowIndex >= 0 && columnIndex >= 0)
                     {
-                        ContextMenu menu = new ContextMenu();
-                        var copyMenuItem = new MenuItem("Copy");
-
-                        copyMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
+                        var toolStripMenuItem = new ToolStripMenuItem("Copy");
+                        toolStripMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
                         {
-                            Clipboard.SetText(dgv[columnIndex, rowIndex].Value.ToString());
+                            Clipboard.SetDataObject(dgv.GetClipboardContent());
                         };
 
-                        menu.MenuItems.Add(copyMenuItem);
+                        var menu = new ContextMenuStrip();
+                        menu.Items.Add(toolStripMenuItem);
                         menu.Show(dgv, new Point(e.X, e.Y));
                     }
                 }
@@ -381,22 +382,41 @@ MULTIPLE CONDITIONS:
 
         private void MainGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0)
-                return;
-
-            if (e.Value == null || e.Value == DBNull.Value)
+            //Add warnings to date field headers if the user is using a "Date Only" date format.
+            //We want to be helpful so people don't accidentally leave a date only format on and think they are missing time information in their data.
+            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
             {
-                e.Paint(e.CellBounds, DataGridViewPaintParts.All
-                    & ~(DataGridViewPaintParts.ContentForeground));
+                bool isDateTimeCell = ((DataGridView)sender).Columns[e.ColumnIndex].ValueType == typeof(DateTime);
+                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
+                if (isDateTimeCell && isUserUsingDateOnlyFormat)
+                {
+                    var img = Properties.Resources.exclamation_icon_yellow;
+                    Rectangle r1 = new Rectangle(e.CellBounds.Left + e.CellBounds.Width - img.Width, 4, img.Width, img.Height);
+                    Rectangle r2 = new Rectangle(0, 0, img.Width, img.Height);
+                    string header = ((DataGridView)sender).Columns[e.ColumnIndex].HeaderText;
+                    e.PaintBackground(e.CellBounds, true);
+                    e.PaintContent(e.CellBounds);
+                    e.Graphics.DrawImage(img, r1, r2, GraphicsUnit.Pixel);
 
-                var font = new Font(e.CellStyle.Font, FontStyle.Italic);
-                var color = SystemColors.ActiveCaptionText;
-                if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
-                    color = Color.White;
+                    e.Handled = true;
+                }
+            }
+            else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                if (e.Value == null || e.Value == DBNull.Value)
+                {
+                    e.Paint(e.CellBounds, DataGridViewPaintParts.All
+                        & ~(DataGridViewPaintParts.ContentForeground));
 
-                TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                    var font = new Font(e.CellStyle.Font, FontStyle.Italic);
+                    var color = SystemColors.ActiveCaptionText;
+                    if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
+                        color = Color.White;
 
-                e.Handled = true;
+                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+                    e.Handled = true;
+                }
             }
         }
 
@@ -720,13 +740,16 @@ MULTIPLE CONDITIONS:
             bool encouteredException = false;
             try
             {
-                using (var writer = new StreamWriter(args.FilePath, false, System.Text.Encoding.UTF8))
+                if (args.FileType == FileType.CSV)
                 {
-                    if (args.FileType == FileType.CSV)
-                        this.WriteDataToCSVFile(writer, (BackgroundWorker)sender, e);
-                    else
-                        throw new Exception(string.Format("Unsupported export type: '{0}'", args.FileType.ToString()));
+                    this.WriteDataToCSVFile(args.FilePath, (BackgroundWorker)sender, e);
                 }
+                else if (args.FileType == FileType.XLS)
+                {
+                    this.WriteDataToExcelFile(args.FilePath, (BackgroundWorker)sender, e);
+                }
+                else
+                    throw new Exception(string.Format("Unsupported export type: '{0}'", args.FileType.ToString()));
             }
             catch (Exception)
             {
@@ -746,16 +769,22 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void WriteDataToCSVFile(StreamWriter writer, BackgroundWorker worker, DoWorkEventArgs e)
+        private void WriteDataToCSVFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
         {
-            StringBuilder rowBuilder = new StringBuilder();
+            using var writer = new StreamWriter(path, false, Encoding.UTF8);
+
+            var rowBuilder = new StringBuilder();
             bool isFirst = true;
             foreach (DataColumn column in this.MainDataSource.Columns)
             {
                 if (!isFirst)
+                {
                     rowBuilder.Append(",");
+                }
                 else
+                {
                     isFirst = false;
+                }
 
                 rowBuilder.Append(
                     column.ColumnName
@@ -776,18 +805,64 @@ MULTIPLE CONDITIONS:
                 }
 
                 isFirst = true;
+                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                 foreach (object value in row.Row.ItemArray)
                 {
                     if (!isFirst)
-                        rowBuilder.Append(",");
+                    {
+                        rowBuilder.Append(',');
+                    }
                     else
+                    {
                         isFirst = false;
+                    }
 
-                    rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString())); //Default formatting for all data types for now
+                    if (value is DateTime dt)
+                    {
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
+                    }
+                    else
+                    {
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString()));
+                    }
                 }
 
                 writer.WriteLine(rowBuilder.ToString());
             }
+        }
+
+        private void WriteDataToExcelFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
+        {
+            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            var excelWriter = new ExcelWriter(fs);
+            excelWriter.BeginWrite();
+
+            //Write headers
+            for (int i = 0; i < this.MainDataSource.Columns.Count; i++)
+            {
+                excelWriter.WriteCell(0, i, this.MainDataSource.Columns[i].ColumnName);
+            }
+
+            //Write data
+            for (int i = 0; i < this.MainDataSource.DefaultView.Count; i++)
+            {
+                for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
+                {
+                    var value = this.mainDataSource.DefaultView[i][j];
+
+                    if (value is DateTime dt)
+                    {
+                        excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
+                    }
+                    else
+                    {
+                        excelWriter.WriteCell(i + 1, j, value?.ToString() ?? string.Empty);
+                    }
+                }
+            }
+
+            excelWriter.EndWrite();
         }
 
         private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -808,18 +883,21 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void ExportResults(FileType fileType)
+        private void ExportResults(FileType defaultFileType)
         {
             if (this.mainGridView.RowCount > 0)
             {
                 this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
-                this.exportFileDialog.FilterIndex = (int)fileType;
-                if (this.exportFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
+                this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+                if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                 {
+                    string filePath = this.exportFileDialog.FileName;
+                    var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
                     var args = new ExportToFileArgs()
                     {
-                        FilePath = this.exportFileDialog.FileName,
-                        FileType = fileType
+                        FilePath = filePath,
+                        FileType = selectedFileType
                     };
                     this.ExportFileBackgroundWorker.RunWorkerAsync(args);
                     this.ShowLoadingIcon("Exporting Data", this.ExportFileBackgroundWorker);
@@ -847,10 +925,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private enum FileType
-        {
-            CSV = 0//should match Filter Index in the exportFileDialog control's Filter property
-        }
+
 
         private struct ExportToFileArgs
         {
@@ -892,14 +967,17 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void DefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DateFormatMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                AppSettings.UseISODateFormat = false;
-                this.defaultToolStripMenuItem.Checked = true;
-                this.iSO8601ToolStripMenuItem.Checked = false;
-                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+                if (sender is ToolStripMenuItem item)
+                {
+                    var selectedDateFormat = (DateFormat)(int.Parse((string)item.Tag));
+                    AppSettings.DateTimeDisplayFormat = selectedDateFormat;
+                    this.RefreshDateFormatMenuItemSelection();
+                    this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+                }
             }
             catch (Exception ex)
             {
@@ -907,18 +985,41 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void ISO8601ToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Checks <see cref="AppSettings.DateTimeDisplayFormat"/> and checks/unchecks 
+        /// the appropriate date format options located in the menu bar.
+        /// </summary>
+        private void RefreshDateFormatMenuItemSelection()
         {
-            try
+            this.defaultToolStripMenuItem.Checked = false;
+            this.defaultDateOnlyToolStripMenuItem.Checked = false;
+            this.iSO8601ToolStripMenuItem.Checked = false;
+            this.iSO8601DateOnlyToolStripMenuItem.Checked = false;
+            this.iSO8601Alt1ToolStripMenuItem.Checked = false;
+            this.iSO8601Alt2ToolStripMenuItem.Checked = false;
+
+            switch (AppSettings.DateTimeDisplayFormat)
             {
-                AppSettings.UseISODateFormat = true;
-                this.defaultToolStripMenuItem.Checked = false;
-                this.iSO8601ToolStripMenuItem.Checked = true;
-                this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
+                case DateFormat.Default:
+                    this.defaultToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.Default_DateOnly:
+                    this.defaultDateOnlyToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.ISO8601:
+                    this.iSO8601ToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.ISO8601_DateOnly:
+                    this.iSO8601DateOnlyToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.ISO8601_Alt1:
+                    this.iSO8601Alt1ToolStripMenuItem.Checked = true;
+                    break;
+                case DateFormat.ISO8601_Alt2:
+                    this.iSO8601Alt2ToolStripMenuItem.Checked = true;
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -1003,6 +1104,26 @@ MULTIPLE CONDITIONS:
             {
                 this.ShowError(ex);
             }
+        }
+
+        private void mainGridView_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
+            {
+                bool isDateTimeCell = ((DataGridView)sender).Columns[e.ColumnIndex].ValueType == typeof(DateTime);
+                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
+                if (isDateTimeCell && isUserUsingDateOnlyFormat)
+                {
+                    var relativeMousePosition = this.PointToClient(Cursor.Position);
+                    this.dateOnlyFormatWarningToolTip.Show($"Date only format enabled. To see time values: Edit -> Date Format",
+                        this, relativeMousePosition, 10000);
+                }
+            }
+        }
+
+        private void mainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            this.dateOnlyFormatWarningToolTip.Hide(this);
         }
     }
 }

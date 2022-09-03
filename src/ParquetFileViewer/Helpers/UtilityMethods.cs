@@ -41,7 +41,7 @@ namespace ParquetFileViewer.Helpers
                 using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
                 {
                     if (groupReader.RowCount > int.MaxValue)
-                        throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}", groupReader.RowCount));
+                        throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
 
                     int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
                     totalRecordCountSoFar += (int)groupReader.RowCount;

@@ -7,7 +7,23 @@
 
     public enum ParquetEngine
     {
-        Default,
+        Default = 0,
         Default_Multithreaded
+    }
+
+    public enum DateFormat
+    {
+        Default = 0,
+        Default_DateOnly,
+        ISO8601,
+        ISO8601_DateOnly,
+        ISO8601_Alt1,
+        ISO8601_Alt2
+    }
+
+    public enum FileType
+    {
+        CSV = 0,
+        XLS
     }
 }
