@@ -72,8 +72,6 @@ namespace ParquetFileViewer
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.FileSchemaBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.ReadDataBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.showingRecordCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.actualShownRecordCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.recordsTextLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -84,7 +82,6 @@ namespace ParquetFileViewer
             this.totalRowCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -543,18 +540,6 @@ namespace ParquetFileViewer
             this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // FileSchemaBackgroundWorker
-            // 
-            this.FileSchemaBackgroundWorker.WorkerSupportsCancellation = true;
-            this.FileSchemaBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.FileSchemaBackgroundWorker_DoWork);
-            this.FileSchemaBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.FileSchemaBackgroundWorker_RunWorkerCompleted);
-            // 
-            // ReadDataBackgroundWorker
-            // 
-            this.ReadDataBackgroundWorker.WorkerSupportsCancellation = true;
-            this.ReadDataBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ReadDataBackgroundWorker_DoWork);
-            this.ReadDataBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ReadDataBackgroundWorker_RunWorkerCompleted);
-            // 
             // showingRecordCountStatusBarLabel
             // 
             this.showingRecordCountStatusBarLabel.Name = "showingRecordCountStatusBarLabel";
@@ -631,12 +616,6 @@ namespace ParquetFileViewer
             this.exportFileDialog.RestoreDirectory = true;
             this.exportFileDialog.Title = "Choose Save Location";
             // 
-            // ExportFileBackgroundWorker
-            // 
-            this.ExportFileBackgroundWorker.WorkerSupportsCancellation = true;
-            this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
-            this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -691,8 +670,6 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private ParquetFileViewer.Controls.DelayedOnChangedTextBox searchFilterTextBox;
-        private System.ComponentModel.BackgroundWorker FileSchemaBackgroundWorker;
-        private System.ComponentModel.BackgroundWorker ReadDataBackgroundWorker;
         private System.Windows.Forms.Button runQueryButton;
         private System.Windows.Forms.Button clearFilterButton;
         private System.Windows.Forms.ToolStripStatusLabel showingRecordCountStatusBarLabel;
@@ -706,7 +683,6 @@ namespace ParquetFileViewer
         private System.Windows.Forms.StatusStrip mainStatusStrip;
         private System.Windows.Forms.LinkLabel searchFilterLabel;
         private System.Windows.Forms.SaveFileDialog exportFileDialog;
-        private System.ComponentModel.BackgroundWorker ExportFileBackgroundWorker;
         private System.Windows.Forms.ToolStripMenuItem userGuideToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem changeDateFormatToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem;

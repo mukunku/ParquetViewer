@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ParquetFileViewer.Helpers
 {
     public static class UtilityMethods
     {
-        public static DataTable ParquetReaderToDataTable(ParquetReader parquetReader, List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken)
+        public static async Task<DataTable> ParquetReaderToDataTable(ParquetReader parquetReader, List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken)
         {
             //Get list of data fields and construct the DataTable
             DataTable dataTable = new DataTable();
@@ -56,7 +57,7 @@ namespace ParquetFileViewer.Helpers
 
                         int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
 
-                        ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup, cancellationToken);
+                        await ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup, cancellationToken);
                     }
                     else
                         break;
@@ -66,7 +67,7 @@ namespace ParquetFileViewer.Helpers
             return dataTable;
         }
 
-        private static void ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<(Parquet.Thrift.SchemaElement, Parquet.Data.DataField)> fields,
+        private static async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<(Parquet.Thrift.SchemaElement, Parquet.Data.DataField)> fields,
             int skipRecords, int readRecords, CancellationToken cancellationToken)
         {
             int rowBeginIndex = dataTable.Rows.Count;
@@ -83,7 +84,7 @@ namespace ParquetFileViewer.Helpers
                 int rowIndex = rowBeginIndex;
 
                 int skippedRecords = 0;
-                foreach (var value in groupReader.ReadColumn(field).Data)
+                foreach (var value in (await groupReader.ReadColumnAsync(field)).Data)
                 {
                     if (cancellationToken.IsCancellationRequested)
                         break;

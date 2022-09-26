@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Parquet;
@@ -155,8 +156,6 @@ namespace ParquetFileViewer
                 System.Reflection.PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 pi.SetValue(this.mainGridView, true, null);
             }
-
-
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -167,27 +166,34 @@ namespace ParquetFileViewer
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
-            if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
+            try
             {
-                this.OpenNewFile(this.fileToLoadOnLaunch);
-            }
-
-            //Setup date format checkboxes
-            this.RefreshDateFormatMenuItemSelection();
-
-            if (AppSettings.ReadingEngine == ParquetEngine.Default)
-                this.defaultParquetEngineToolStripMenuItem.Checked = true;
-            else if (AppSettings.ReadingEngine == ParquetEngine.Default_Multithreaded)
-                this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
-
-            foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
-            {
-                if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
+                //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
+                if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
                 {
-                    toolStripItem.Checked = true;
-                    break;
+                    this.OpenNewFile(this.fileToLoadOnLaunch);
                 }
+
+                //Setup date format checkboxes
+                this.RefreshDateFormatMenuItemSelection();
+
+                if (AppSettings.ReadingEngine == ParquetEngine.Default)
+                    this.defaultParquetEngineToolStripMenuItem.Checked = true;
+                else if (AppSettings.ReadingEngine == ParquetEngine.Default_Multithreaded)
+                    this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
+
+                foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
+                {
+                    if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
+                    {
+                        toolStripItem.Checked = true;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
             }
         }
 
@@ -219,8 +225,7 @@ namespace ParquetFileViewer
 
         private void recordsToTextBox_TextChanged(object sender, EventArgs e)
         {
-            int recordCount = 0;
-            if (int.TryParse(((TextBox)sender).Text, out recordCount))
+            if (int.TryParse(((TextBox)sender).Text, out var recordCount))
                 this.CurrentMaxRowCount = recordCount;
             else
                 ((TextBox)sender).Text = this.CurrentMaxRowCount.ToString();
@@ -249,7 +254,14 @@ namespace ParquetFileViewer
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.ExportResults(default);
+            try
+            {
+                this.ExportResults(default);
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -259,7 +271,14 @@ namespace ParquetFileViewer
 
         private void redoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.OpenFieldSelectionDialog();
+            try
+            {
+                this.OpenFieldSelectionDialog(true);
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
         }
 
         private void MainForm_SizeChanged(object sender, EventArgs e)
@@ -422,45 +441,141 @@ MULTIPLE CONDITIONS:
 
         #endregion
 
-        private void OpenFieldSelectionDialog()
+        private async void OpenFieldSelectionDialog(bool forceOpenDialog)
         {
-            if (!string.IsNullOrWhiteSpace(this.OpenFilePath) && !this.FileSchemaBackgroundWorker.IsBusy)
+            if (string.IsNullOrWhiteSpace(this.OpenFilePath))
             {
-                if (this.openFileSchema == null)
+                return;
+            }
+
+            if (this.openFileSchema == null)
+            {
+                var cancellationToken = this.ShowLoadingIcon("Analyzing File");
+
+                try
                 {
-                    this.ShowLoadingIcon("Analyzing File", this.FileSchemaBackgroundWorker);
-                    this.FileSchemaBackgroundWorker.RunWorkerAsync();
+                    var schema = await Task.Run(async () =>
+                    {
+                        var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }, cancellationToken);
+                        return parquetReader.Schema;
+                    }, cancellationToken);
+
+                    this.openFileSchema = schema;
+                }
+                catch (Exception ex)
+                {
+                    if (this.openFileSchema == null)
+                    {
+                        //cancel file open
+                        this.OpenFilePath = null;
+                    }
+
+                    if (ex is not OperationCanceledException)
+                        throw;
+
+                    return;
+                }
+                finally
+                {
+                    this.HideLoadingIcon();
+                }
+            }
+
+            var fields = this.openFileSchema.Fields;
+            if (fields != null && fields.Count > 0)
+            {
+                if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
+                {
+                    this.SelectedFields = fields.Where(f => !FieldsToLoadForm.UnsupportedSchemaTypes.Contains(f.SchemaType)).Select(f => f.Name).ToList();
                 }
                 else
-                    this.FileSchemaBackgroundWorker_RunWorkerCompleted(-1, new System.ComponentModel.RunWorkerCompletedEventArgs(this.openFileSchema, null, false));
+                {
+                    var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
+                    if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
+                    {
+                        if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
+                            this.SelectedFields = fieldSelectionForm.NewSelectedFields;
+                        else
+                            this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
+                    }
+                }
+            }
+            else
+            {
+                throw new FileLoadException("The selected file doesn't have any fields");
             }
         }
 
-        private void LoadFileToGridview()
+        private async void LoadFileToGridview()
         {
             try
             {
-                if (this.IsAnyFileOpen && !this.ReadDataBackgroundWorker.IsBusy)
+                if (this.IsAnyFileOpen)
                 {
-                    if (File.Exists(this.OpenFilePath))
-                    {
-                        ParquetReadArgs args = new ParquetReadArgs();
-                        args.Count = this.CurrentMaxRowCount;
-                        args.Offset = this.CurrentOffset;
-                        args.Fields = this.SelectedFields.ToArray();
-
-                        this.ShowLoadingIcon("Loading Data", this.ReadDataBackgroundWorker);
-                        this.ReadDataBackgroundWorker.RunWorkerAsync();
-                    }
-                    else
+                    if (!File.Exists(this.OpenFilePath))
                     {
                         throw new Exception(string.Format("The specified file no longer exists: {0}{1}Please try opening a new file", this.OpenFilePath, Environment.NewLine));
                     }
+
+                    var cancellationToken = this.ShowLoadingIcon("Loading Data");
+                    var finalResult = await Task.Run(async () =>
+                    {
+                        var results = new ConcurrentDictionary<int, ParquetReadResult>();
+                        if (AppSettings.ReadingEngine == ParquetEngine.Default)
+                        {
+                            using (var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }))
+                            {
+                                DataTable result = await UtilityMethods.ParquetReaderToDataTable(parquetReader, this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
+                                results.TryAdd(1, new ParquetReadResult(result, parquetReader.ThriftMetadata.Num_rows));
+                            }
+                        }
+                        else
+                        {
+                            int i = 0;
+                            var fieldGroups = new List<(int, List<string>)>();
+                            foreach (List<string> fields in UtilityMethods.Split(this.SelectedFields, (int)(this.selectedFields.Count / Environment.ProcessorCount)))
+                            {
+                                fieldGroups.Add((i++, fields));
+                            }
+
+                            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, CancellationToken = cancellationToken };
+                            await Parallel.ForEachAsync(fieldGroups, options,
+                                async (fieldGroup, _cancellationToken) =>
+                                {
+                                    using (var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }))
+                                    {
+                                        DataTable result = await UtilityMethods.ParquetReaderToDataTable(parquetReader, fieldGroup.Item2, this.CurrentOffset, this.CurrentMaxRowCount, _cancellationToken);
+                                        results.TryAdd(fieldGroup.Item1, new ParquetReadResult(result, parquetReader.ThriftMetadata.Num_rows));
+                                    }
+                                });
+                        }
+
+                        if (results.IsEmpty)
+                        {
+                            throw new FileLoadException("Something went wrong while processing this file. If the issue persists please open a bug ticket on the repo.");
+                        }
+
+                        DataTable mergedDataTables = UtilityMethods.MergeTables(results.OrderBy(f => f.Key).Select(f => f.Value.Result).AsEnumerable());
+                        ParquetReadResult finalResult = new ParquetReadResult(mergedDataTables, results.First().Value.TotalNumberOfRecordsInFile);
+
+                        return finalResult;
+                    }, cancellationToken);
+
+                    this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Result.Rows.Count);
+                    this.totalRowCountStatusBarLabel.Text = finalResult.TotalNumberOfRecordsInFile.ToString();
+                    this.actualShownRecordCountLabel.Text = finalResult.Result.Rows.Count.ToString();
+
+                    this.MainDataSource = finalResult.Result;
                 }
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                if (ex is not OperationCanceledException)
+                    this.ShowError(ex);
+            }
+            finally
+            {
+                this.HideLoadingIcon();
             }
         }
 
@@ -469,8 +584,9 @@ MULTIPLE CONDITIONS:
             MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        private void ShowLoadingIcon(string message, BackgroundWorker worker)
+        private CancellationToken ShowLoadingIcon(string message)
         {
+            var cancellationToken = new CancellationTokenSource();
             this.loadingPanel = new Panel();
             this.loadingPanel.Size = new Size(loadingPanelWidth, loadingPanelHeight);
             this.loadingPanel.Location = this.GetFormCenter(loadingPanelWidth / 2, loadingPanelHeight / 2);
@@ -496,12 +612,11 @@ MULTIPLE CONDITIONS:
                 Name = "cancelloadingbutton",
                 Text = "Cancel",
                 Dock = DockStyle.Bottom,
-                Enabled = worker != null && worker.WorkerSupportsCancellation
+                Enabled = cancellationToken.Token.CanBeCanceled
             };
             cancelButton.Click += (object buttonSender, EventArgs buttonClickEventArgs) =>
             {
-                if (worker != null && worker.IsBusy)
-                    worker.CancelAsync();
+                cancellationToken.Cancel();
 
                 ((Button)buttonSender).Enabled = false;
                 ((Button)buttonSender).Text = "Cancelling...";
@@ -518,6 +633,8 @@ MULTIPLE CONDITIONS:
 
             this.mainTableLayoutPanel.Enabled = false;
             this.mainMenuStrip.Enabled = false;
+
+            return cancellationToken.Token;
         }
 
         private void HideLoadingIcon()
@@ -530,186 +647,9 @@ MULTIPLE CONDITIONS:
                 this.loadingPanel.Dispose();
         }
 
-        private void FileSchemaBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var schema = (Parquet.Data.Schema)e.Argument;
-            if (schema != null)
-                e.Result = schema;
-            else
-            {
-                //Parquet.NET doesn't have any async methods or readers that allow sequential reading so we need to use the ThreadPool to support cancellation.
-                var task = Task<ParquetReader>.Run(() =>
-                {
-                    //Unfortunately there's no way to quickly get the metadata from a parquet file without reading an actual data row
-                    using (var parquetReader = ParquetReader.OpenFromFile(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }))
-                    {
-                        return parquetReader.Schema;
-                    }
-                });
-
-                while (!task.IsCompleted && !((BackgroundWorker)sender).CancellationPending)
-                {
-                    task.Wait(1000);
-                }
-
-                e.Cancel = ((BackgroundWorker)sender).CancellationPending;
-
-                if (task.IsCompleted)
-                    e.Result = task.Result;
-            }
-        }
-
-        private void FileSchemaBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            this.HideLoadingIcon();
-            try
-            {
-                if (e.Cancelled)
-                {
-                    if (this.openFileSchema == null)
-                    {
-                        //cancel file open
-                        this.OpenFilePath = null;
-                    }
-                    return;
-                }
-
-                if (e.Error == null)
-                {
-                    this.openFileSchema = (Parquet.Data.Schema)e.Result;
-                    var fields = this.openFileSchema.Fields;
-                    if (fields != null && fields.Count > 0)
-                    {
-                        if (AppSettings.AlwaysSelectAllFields && sender?.GetType() != typeof(int)) //We send -1 from the field selection tooltip item so we can force the field selection form to be shown
-                        {
-                            this.SelectedFields = fields.Where(f => !FieldsToLoadForm.UnsupportedSchemaTypes.Contains(f.SchemaType)).Select(f => f.Name).ToList();
-                        }
-                        else
-                        {
-                            var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? new string[0]);
-                            if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
-                            {
-                                if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
-                                    this.SelectedFields = fieldSelectionForm.NewSelectedFields;
-                                else
-                                    this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
-                            }
-                        }
-                    }
-                    else
-                        throw new FileLoadException("The selected file doesn't have any fields");
-                }
-                else
-                    throw e.Error;
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
-
         private Point GetFormCenter(int offsetX, int offsetY)
         {
             return new Point((this.Size.Width / 2) - offsetX, (this.Size.Height / 2) - offsetY);
-        }
-
-        private void ReadDataBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            //Parquet.NET doesn't have any async methods or readers that allow sequential records reading so we need to use the ThreadPool to support cancellation.
-            Task task = null;
-            var results = new ConcurrentDictionary<int, ParquetReadResult>();
-            var cancellationToken = new System.Threading.CancellationTokenSource();
-            if (AppSettings.ReadingEngine == ParquetEngine.Default)
-            {
-                task = Task.Run(() =>
-                {
-                    using (var parquetReader = ParquetReader.OpenFromFile(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }))
-                    {
-                        DataTable result = UtilityMethods.ParquetReaderToDataTable(parquetReader, this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken.Token);
-                        results.TryAdd(1, new ParquetReadResult(result, parquetReader.ThriftMetadata.Num_rows));
-                    }
-                });
-            }
-            else
-            {
-                int i = 0;
-                var fieldGroups = new List<(int, List<string>)>();
-                foreach (List<string> fields in UtilityMethods.Split(this.SelectedFields, (int)(this.selectedFields.Count / Environment.ProcessorCount)))
-                {
-                    fieldGroups.Add((i++, fields));
-                }
-
-                task = ParallelAsync.ForeachAsync(fieldGroups, Environment.ProcessorCount,
-                    async fieldGroup =>
-                    {
-                        await Task.Run(() =>
-                        {
-                            using (Stream parquetStream = new FileStream(this.OpenFilePath, FileMode.Open, FileAccess.Read))
-                            using (var parquetReader = new ParquetReader(parquetStream, new ParquetOptions() { TreatByteArrayAsString = true }))
-                            {
-                                DataTable result = UtilityMethods.ParquetReaderToDataTable(parquetReader, fieldGroup.Item2, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken.Token);
-                                results.TryAdd(fieldGroup.Item1, new ParquetReadResult(result, parquetReader.ThriftMetadata.Num_rows));
-                            }
-                        });
-                    });
-            }
-
-            while (!task.IsCompleted && !((BackgroundWorker)sender).CancellationPending)
-            {
-                task.Wait(1000);
-            }
-
-            if (((BackgroundWorker)sender).CancellationPending)
-            {
-                cancellationToken.Cancel();
-                e.Cancel = true;
-            }
-
-            if (task.IsCompleted)
-            {
-                if (results.Count > 0)
-                {
-                    DataTable mergedDataTables = UtilityMethods.MergeTables(results.OrderBy(f => f.Key).Select(f => f.Value.Result).AsEnumerable());
-                    ParquetReadResult finalResult = new ParquetReadResult(mergedDataTables, results.First().Value.TotalNumberOfRecordsInFile);
-                    e.Result = finalResult;
-                }
-                else
-                {
-                    //The code should never reach here
-                    e.Result = new ParquetReadResult(new DataTable(), 0);
-                }
-            }
-        }
-
-        private void ReadDataBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            try
-            {
-                if (e.Error == null)
-                {
-                    if (e.Cancelled)
-                    {
-                        return;
-                    }
-
-                    var result = (ParquetReadResult)e.Result;
-                    this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + result.Result.Rows.Count);
-                    this.totalRowCountStatusBarLabel.Text = result.TotalNumberOfRecordsInFile.ToString();
-                    this.actualShownRecordCountLabel.Text = result.Result.Rows.Count.ToString();
-
-                    this.MainDataSource = result.Result;
-                }
-                else
-                    throw e.Error;
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-            finally
-            {
-                this.HideLoadingIcon();
-            }
         }
 
         private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
@@ -731,45 +671,10 @@ MULTIPLE CONDITIONS:
             this.offsetTextBox.Text = string.IsNullOrWhiteSpace(this.offsetTextBox.Text) ? DefaultOffset.ToString() : this.offsetTextBox.Text;
             this.recordCountTextBox.Text = string.IsNullOrWhiteSpace(this.recordCountTextBox.Text) ? DefaultRowCount.ToString() : this.recordCountTextBox.Text;
 
-            this.OpenFieldSelectionDialog();
+            this.OpenFieldSelectionDialog(false);
         }
 
-        private void ExportFileBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var args = (ExportToFileArgs)e.Argument;
-            bool encouteredException = false;
-            try
-            {
-                if (args.FileType == FileType.CSV)
-                {
-                    this.WriteDataToCSVFile(args.FilePath, (BackgroundWorker)sender, e);
-                }
-                else if (args.FileType == FileType.XLS)
-                {
-                    this.WriteDataToExcelFile(args.FilePath, (BackgroundWorker)sender, e);
-                }
-                else
-                    throw new Exception(string.Format("Unsupported export type: '{0}'", args.FileType.ToString()));
-            }
-            catch (Exception)
-            {
-                encouteredException = true;
-                throw;
-            }
-            finally
-            {
-                if (e.Cancel || encouteredException)
-                {
-                    try
-                    {
-                        File.Delete(args.FilePath);
-                    }
-                    catch (Exception) { /*Swallow for now*/ }
-                }
-            }
-        }
-
-        private void WriteDataToCSVFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
+        private void WriteDataToCSVFile(string path, CancellationToken cancellationToken)
         {
             using var writer = new StreamWriter(path, false, Encoding.UTF8);
 
@@ -798,9 +703,8 @@ MULTIPLE CONDITIONS:
             {
                 rowBuilder.Clear();
 
-                if (worker.CancellationPending)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    e.Cancel = true;
                     break;
                 }
 
@@ -831,7 +735,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void WriteDataToExcelFile(string path, BackgroundWorker worker, DoWorkEventArgs e)
+        private void WriteDataToExcelFile(string path, CancellationToken cancellationToken)
         {
             string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
             using var fs = new FileStream(path, FileMode.OpenOrCreate);
@@ -847,6 +751,11 @@ MULTIPLE CONDITIONS:
             //Write data
             for (int i = 0; i < this.MainDataSource.DefaultView.Count; i++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
                 {
                     var value = this.mainDataSource.DefaultView[i][j];
@@ -865,54 +774,69 @@ MULTIPLE CONDITIONS:
             excelWriter.EndWrite();
         }
 
-        private void ExportFileBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private async void ExportResults(FileType defaultFileType)
         {
-            this.HideLoadingIcon();
+            string filePath = null;
             try
             {
-                if (e.Cancelled)
-                    MessageBox.Show("Export has been cancelled", "Export Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                else if (e.Error != null)
-                    throw e.Error;
-                else
-                    MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                this.ShowError(ex);
-            }
-        }
-
-        private void ExportResults(FileType defaultFileType)
-        {
-            if (this.mainGridView.RowCount > 0)
-            {
-                this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
-                this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
-                this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
-                if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
+                if (this.mainGridView.RowCount > 0)
                 {
-                    string filePath = this.exportFileDialog.FileName;
-                    var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
-                    var args = new ExportToFileArgs()
+                    this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
+                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
+                    this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+                    if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                     {
-                        FilePath = filePath,
-                        FileType = selectedFileType
-                    };
-                    this.ExportFileBackgroundWorker.RunWorkerAsync(args);
-                    this.ShowLoadingIcon("Exporting Data", this.ExportFileBackgroundWorker);
+                        filePath = this.exportFileDialog.FileName;
+                        var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
+
+                        var cancellationToken = this.ShowLoadingIcon("Exporting Data");
+                        if (selectedFileType == FileType.CSV)
+                        {
+                            await Task.Run(() => this.WriteDataToCSVFile(filePath, cancellationToken));
+                        }
+                        else if (selectedFileType == FileType.XLS)
+                        {
+                            await Task.Run(() => this.WriteDataToExcelFile(filePath, cancellationToken));
+                        }
+                        else
+                        {
+                            throw new Exception(string.Format("Unsupported export type: '{0}'", selectedFileType.ToString()));
+                        }
+
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            CleanupFile(filePath);
+                            MessageBox.Show("Export has been cancelled", "Export Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                CleanupFile(filePath);
+                throw;
+            }
+            finally
+            {
+                this.HideLoadingIcon();
+            }
+
+            void CleanupFile(string filePath)
+            {
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(filePath))
+                        File.Delete(filePath);
+                }
+                catch (Exception) { /*Swallow*/ }
             }
         }
 
         #region Helper Types
-        private struct ParquetReadArgs
-        {
-            public long Count;
-            public long Offset;
-            public string[] Fields;
-        }
-
         private class ParquetReadResult
         {
             public long TotalNumberOfRecordsInFile { get; private set; }
@@ -923,14 +847,6 @@ MULTIPLE CONDITIONS:
                 this.TotalNumberOfRecordsInFile = totalNumberOfRecordsInFile;
                 this.Result = result;
             }
-        }
-
-
-
-        private struct ExportToFileArgs
-        {
-            public string FilePath;
-            public FileType FileType;
         }
         #endregion
 
@@ -1061,16 +977,14 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                using (Stream parquetStream = new FileStream(this.OpenFilePath, FileMode.Open, FileAccess.Read))
-                using (var parquetReader = new ParquetReader(parquetStream, new ParquetOptions() { TreatByteArrayAsString = true }))
-                using (var metadataViewer = new MetadataViewer(parquetReader))
-                {
-                    metadataViewer.ShowDialog(this);
-                }
+                using var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true });
+                using var metadataViewer = new MetadataViewer(parquetReader);
+
+                metadataViewer.ShowDialog(this);
             }
             catch (Exception ex)
             {
