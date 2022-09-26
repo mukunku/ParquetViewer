@@ -7,7 +7,15 @@
   <ItemGroup>
     <PackageReference Include="Apache.Arrow" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Parquet.Net" Version="3.9.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="IronSnappy">
+      <HintPath>..\lib\IronSnappy.dll</HintPath>
+    </Reference>
+    <Reference Include="Parquet">
+      <HintPath>..\lib\Parquet.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
