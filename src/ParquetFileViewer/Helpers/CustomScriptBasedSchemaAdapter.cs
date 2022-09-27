@@ -14,24 +14,26 @@ namespace ParquetFileViewer.Helpers
 
         static CustomScriptBasedSchemaAdapter()
         {
-            Hashtable hashtable = new Hashtable();
-            hashtable.Add(typeof(ulong), "bigint {1}NULL");
-            hashtable.Add(typeof(long), "bigint {1}NULL");
-            hashtable.Add(typeof(bool), "bit {1}NULL");
-            hashtable.Add(typeof(char), "char {1}NULL");
-            hashtable.Add(typeof(DateTime), "datetime {1}NULL");
-            hashtable.Add(typeof(double), "float {1}NULL");
-            hashtable.Add(typeof(uint), "int {1}NULL");
-            hashtable.Add(typeof(int), "int {1}NULL");
-            hashtable.Add(typeof(Guid), "uniqueidentifier {1}NULL");
-            hashtable.Add(typeof(ushort), "smallint {1}NULL");
-            hashtable.Add(typeof(short), "smallint {1}NULL");
-            hashtable.Add(typeof(decimal), "real {1}NULL");
-            hashtable.Add(typeof(byte), "tinyint {1}NULL");
-            hashtable.Add(typeof(sbyte), "tinyint {1}NULL");
-            hashtable.Add(typeof(string), "nvarchar({0}) {1}NULL");
-            hashtable.Add(typeof(TimeSpan), "int {1}NULL");
-            hashtable.Add(typeof(byte[]), "varbinary {1}NULL");
+            Hashtable hashtable = new Hashtable
+            {
+                { typeof(ulong), "BIGINT {1}NULL" },
+                { typeof(long), "BIGINT {1}NULL" },
+                { typeof(bool), "BIT {1}NULL" },
+                { typeof(char), "CHAR {1}NULL" },
+                { typeof(DateTime), "DATETIME {1}NULL" },
+                { typeof(double), "FLOAT {1}NULL" },
+                { typeof(uint), "INT {1}NULL" },
+                { typeof(int), "INT {1}NULL" },
+                { typeof(Guid), "UNIQUEIDENTIFIER {1}NULL" },
+                { typeof(ushort), "SMALLINT {1}NULL" },
+                { typeof(short), "SMALLINT {1}NULL" },
+                { typeof(decimal), "REAL {1}NULL" },
+                { typeof(byte), "TINYINT {1}NULL" },
+                { typeof(sbyte), "TINYINT {1}NULL" },
+                { typeof(string), "NVARCHAR({0}) {1}NULL" },
+                { typeof(TimeSpan), "INT {1}NULL" },
+                { typeof(byte[]), "VARBINARY {1}NULL" }
+            };
             TypeMap = hashtable;
         }
 
@@ -132,7 +134,7 @@ namespace ParquetFileViewer.Helpers
             {
                 if (!flag)
                 {
-                    stringBuilder.Append(" , ");
+                    stringBuilder.Append(", ");
                 }
                 string str = this.MakeSafe(column.ColumnName);
                 string typeFor = this.GetTypeFor(column);
@@ -163,7 +165,7 @@ namespace ParquetFileViewer.Helpers
         protected string MakeSafe(string inputValue)
         {
             string str = inputValue.Trim();
-            string str1 = string.Format("[{0}]", str.Substring(0, Math.Min(128, str.Length)));
+            string str1 = string.Format("[{0}]", str[..Math.Min(128, str.Length)]);
             return str1;
         }
 
@@ -172,7 +174,7 @@ namespace ParquetFileViewer.Helpers
             StringBuilder stringBuilder = new StringBuilder();
             string str = this.MakeSafe(string.Concat(markTablesAsLocalTemp ? "#" : string.Empty, this.TablePrefix, table.TableName));
             string str1 = this.MakeList(table.Columns);
-            stringBuilder.AppendFormat("CREATE TABLE {0} ({1});\n", str, str1);
+            stringBuilder.AppendFormat("CREATE TABLE {0} ({1}\n);", str, str1);
             return stringBuilder.ToString();
         }
     }

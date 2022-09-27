@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -144,8 +144,8 @@ namespace ParquetFileViewer
         {
             InitializeComponent();
             this.DefaultFormTitle = this.Text;
-            this.offsetTextBox.Text = DefaultOffset.ToString();
-            this.recordCountTextBox.Text = DefaultRowCount.ToString();
+            this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
+            this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
             this.OpenFilePath = null;
 
@@ -396,7 +396,7 @@ MULTIPLE CONDITIONS:
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(WikiURL);
+            Process.Start(new ProcessStartInfo(WikiURL) { UseShellExecute = true });
         }
 
         private void MainGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
@@ -668,8 +668,18 @@ MULTIPLE CONDITIONS:
         private void OpenNewFile(string filePath)
         {
             this.OpenFilePath = filePath;
-            this.offsetTextBox.Text = string.IsNullOrWhiteSpace(this.offsetTextBox.Text) ? DefaultOffset.ToString() : this.offsetTextBox.Text;
-            this.recordCountTextBox.Text = string.IsNullOrWhiteSpace(this.recordCountTextBox.Text) ? DefaultRowCount.ToString() : this.recordCountTextBox.Text;
+
+            if (!DefaultOffset.ToString().Equals(this.offsetTextBox.Text)) //Without this 'if' SetTextQuiet doesn't work correctly!
+            {
+                this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
+                this.currentMaxRowCount = DefaultRowCount;
+            }
+
+            if (!DefaultRowCount.ToString().Equals(this.recordCountTextBox.Text)) //Without this 'if' SetTextQuiet doesn't work correctly!
+            {
+                this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
+                this.currentOffset = DefaultOffset;
+            }
 
             this.OpenFieldSelectionDialog(false);
         }
@@ -852,15 +862,9 @@ MULTIPLE CONDITIONS:
 
         private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string tableName = DefaultTableName;
             try
             {
-                tableName = Path.GetFileNameWithoutExtension(this.OpenFilePath);
-            }
-            catch { /* just in case */ }
-
-            try
-            {
+                string tableName = Path.GetFileNameWithoutExtension(this.OpenFilePath) ?? DefaultTableName;
                 if (this.mainDataSource?.Columns.Count > 0)
                 {
                     var dataset = new DataSet();

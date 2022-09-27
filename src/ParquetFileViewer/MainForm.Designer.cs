@@ -37,7 +37,7 @@ namespace ParquetFileViewer
             this.offsetTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.runQueryButton = new System.Windows.Forms.Button();
             this.searchFilterLabel = new System.Windows.Forms.LinkLabel();
-            this.searchFilterTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
+            this.searchFilterTextBox = new System.Windows.Forms.TextBox();
             this.clearFilterButton = new System.Windows.Forms.Button();
             this.mainGridView = new System.Windows.Forms.DataGridView();
             this.openParquetFileDialog = new System.Windows.Forms.OpenFileDialog();
@@ -211,7 +211,6 @@ namespace ParquetFileViewer
             // 
             this.searchFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterTextBox, 2);
-            this.searchFilterTextBox.DelayedTextChangedTimeout = 1000;
             this.searchFilterTextBox.Location = new System.Drawing.Point(100, 6);
             this.searchFilterTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.searchFilterTextBox.Name = "searchFilterTextBox";
@@ -669,7 +668,7 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem changeFieldsMenuStripButton;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private ParquetFileViewer.Controls.DelayedOnChangedTextBox searchFilterTextBox;
+        private System.Windows.Forms.TextBox searchFilterTextBox;
         private System.Windows.Forms.Button runQueryButton;
         private System.Windows.Forms.Button clearFilterButton;
         private System.Windows.Forms.ToolStripStatusLabel showingRecordCountStatusBarLabel;
