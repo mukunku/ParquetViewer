@@ -29,4 +29,4 @@ Visit the Wiki for details on how to use the utility: https://github.com/mukunku
 The latest version of this project was written in C# using Visual Studio 2022 v17.4 and .NET 6
 
 # Acknowledgements
-This utility would not be possible without: https://github.com/elastacloud/parquet-dotnet
+This utility would not be possible without: https://github.com/aloneguid/parquet-dotnet
