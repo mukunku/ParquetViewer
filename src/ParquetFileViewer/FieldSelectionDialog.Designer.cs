@@ -44,7 +44,7 @@
             this.mainTableLayoutPanel.ColumnCount = 3;
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 23F));
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 34F));
             this.mainTableLayoutPanel.Controls.Add(this.allFieldsRadioButton, 0, 0);
             this.mainTableLayoutPanel.Controls.Add(this.showSelectedFieldsRadioButton, 0, 2);
             this.mainTableLayoutPanel.Controls.Add(this.fieldsPanel, 1, 4);
@@ -145,6 +145,7 @@
             this.filterColumnsTextbox.Location = new System.Drawing.Point(27, 108);
             this.filterColumnsTextbox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.filterColumnsTextbox.Name = "filterColumnsTextbox";
+            this.filterColumnsTextbox.PlaceholderText = "search by name";
             this.filterColumnsTextbox.Size = new System.Drawing.Size(434, 23);
             this.filterColumnsTextbox.TabIndex = 0;
             this.filterColumnsTextbox.TextChanged += new System.EventHandler(this.filterColumnsTextbox_TextChanged);
@@ -154,10 +155,11 @@
             this.clearfilterColumnsButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.clearfilterColumnsButton.Enabled = false;
-            this.clearfilterColumnsButton.Location = new System.Drawing.Point(469, 108);
+            this.clearfilterColumnsButton.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.clearfilterColumnsButton.Location = new System.Drawing.Point(470, 108);
             this.clearfilterColumnsButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.clearfilterColumnsButton.Name = "clearfilterColumnsButton";
-            this.clearfilterColumnsButton.Size = new System.Drawing.Size(27, 26);
+            this.clearfilterColumnsButton.Size = new System.Drawing.Size(26, 26);
             this.clearfilterColumnsButton.TabIndex = 4;
             this.clearfilterColumnsButton.Text = "X";
             this.clearfilterColumnsButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
