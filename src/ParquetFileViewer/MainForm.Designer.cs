@@ -371,6 +371,7 @@ namespace ParquetFileViewer
             this.changeFieldsMenuStripButton.Size = new System.Drawing.Size(217, 22);
             this.changeFieldsMenuStripButton.Text = "Add/Remove &Fields";
             this.changeFieldsMenuStripButton.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
+            this.changeFieldsMenuStripButton.Image = global::ParquetFileViewer.Properties.Resources.list_icon_32x32.ToBitmap();
             // 
             // changeDateFormatToolStripMenuItem
             // 
@@ -384,6 +385,7 @@ namespace ParquetFileViewer
             this.changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             this.changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.changeDateFormatToolStripMenuItem.Text = "Date Format";
+            this.changeDateFormatToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.calendar_icon.ToBitmap();
             // 
             // defaultToolStripMenuItem
             // 
@@ -506,6 +508,7 @@ namespace ParquetFileViewer
             this.getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
             this.getSQLCreateTableScriptToolStripMenuItem.Click += new System.EventHandler(this.GetSQLCreateTableScriptToolStripMenuItem_Click);
+            this.getSQLCreateTableScriptToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.sql_server_icon.ToBitmap();
             // 
             // metadataViewerToolStripMenuItem
             // 
@@ -515,6 +518,7 @@ namespace ParquetFileViewer
             this.metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             this.metadataViewerToolStripMenuItem.Click += new System.EventHandler(this.MetadataViewerToolStripMenuItem_Click);
+            this.metadataViewerToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.text_file_icon.ToBitmap();
             // 
             // helpToolStripMenuItem
             // 

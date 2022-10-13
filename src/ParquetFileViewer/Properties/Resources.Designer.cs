@@ -127,7 +127,43 @@ namespace ParquetFileViewer.Properties {
         /// </summary>
         internal static System.Drawing.Icon text_file_icon {
             get {
-                object obj = ResourceManager.GetObject("text_file_icon", resourceCulture);
+                object obj = ResourceManager.GetObject("text_file_icon_16x16", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon sql_server_icon
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("sql_server_icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon plus_minus_icon
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("plus_minus_icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon calendar_icon
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("calendar_icon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
