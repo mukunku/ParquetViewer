@@ -669,17 +669,10 @@ MULTIPLE CONDITIONS:
         {
             this.OpenFilePath = filePath;
 
-            if (!DefaultOffset.ToString().Equals(this.offsetTextBox.Text)) //Without this 'if' SetTextQuiet doesn't work correctly!
-            {
-                this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-                this.currentMaxRowCount = DefaultRowCount;
-            }
-
-            if (!DefaultRowCount.ToString().Equals(this.recordCountTextBox.Text)) //Without this 'if' SetTextQuiet doesn't work correctly!
-            {
-                this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
-                this.currentOffset = DefaultOffset;
-            }
+            this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
+            this.currentMaxRowCount = DefaultRowCount;
+            this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
+            this.currentOffset = DefaultOffset;
 
             this.OpenFieldSelectionDialog(false);
         }
@@ -694,7 +687,7 @@ MULTIPLE CONDITIONS:
             {
                 if (!isFirst)
                 {
-                    rowBuilder.Append(",");
+                    rowBuilder.Append(',');
                 }
                 else
                 {

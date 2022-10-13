@@ -61,8 +61,11 @@ namespace ParquetFileViewer.Controls
         /// <param name="text">New value to set as the textbox's text</param>
         public void SetTextQuiet(string text)
         {
-            this._skipNextTextChange = true;
-            this.Text = text;
+            if (!this.Text.Equals(text)) //don't change value if it's the same because OnTextChanged won't get triggered
+            {
+                this._skipNextTextChange = true;
+                this.Text = text;
+            }
         }
 
         private void InitializeDelayedTextChangedEvent()
