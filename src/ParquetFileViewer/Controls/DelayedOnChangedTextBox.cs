@@ -5,7 +5,8 @@ namespace ParquetFileViewer.Controls
 {
     public class DelayedOnChangedTextBox : TextBox
     {
-        private Timer m_delayedTextChangedTimer;
+        private bool _skipNextTextChange = false;
+        private Timer _delayedTextChangedTimer;
 
         public event EventHandler DelayedTextChanged;
 
@@ -23,11 +24,11 @@ namespace ParquetFileViewer.Controls
 
         protected override void Dispose(bool disposing)
         {
-            if (m_delayedTextChangedTimer != null)
+            if (_delayedTextChangedTimer != null)
             {
-                m_delayedTextChangedTimer.Stop();
+                _delayedTextChangedTimer.Stop();
                 if (disposing)
-                    m_delayedTextChangedTimer.Dispose();
+                    _delayedTextChangedTimer.Dispose();
             }
 
             base.Dispose(disposing);
@@ -42,23 +43,44 @@ namespace ParquetFileViewer.Controls
 
         protected override void OnTextChanged(EventArgs e)
         {
-            this.InitializeDelayedTextChangedEvent();
+            if (this._skipNextTextChange)
+            {
+                _skipNextTextChange = false; 
+            }
+            else
+            {
+                this.InitializeDelayedTextChangedEvent();
+            }
+
             base.OnTextChanged(e);
+        }
+
+        /// <summary>
+        /// Sets the Text value of the textbox without triggering the text changed event
+        /// </summary>
+        /// <param name="text">New value to set as the textbox's text</param>
+        public void SetTextQuiet(string text)
+        {
+            if (!this.Text.Equals(text)) //don't change value if it's the same because OnTextChanged won't get triggered
+            {
+                this._skipNextTextChange = true;
+                this.Text = text;
+            }
         }
 
         private void InitializeDelayedTextChangedEvent()
         {
-            if (m_delayedTextChangedTimer != null)
-                m_delayedTextChangedTimer.Stop();
+            if (_delayedTextChangedTimer != null)
+                _delayedTextChangedTimer.Stop();
 
-            if (m_delayedTextChangedTimer == null || m_delayedTextChangedTimer.Interval != this.DelayedTextChangedTimeout)
+            if (_delayedTextChangedTimer == null || _delayedTextChangedTimer.Interval != this.DelayedTextChangedTimeout)
             {
-                m_delayedTextChangedTimer = new Timer();
-                m_delayedTextChangedTimer.Tick += new EventHandler(HandleDelayedTextChangedTimerTick);
-                m_delayedTextChangedTimer.Interval = this.DelayedTextChangedTimeout;
+                _delayedTextChangedTimer = new Timer();
+                _delayedTextChangedTimer.Tick += new EventHandler(HandleDelayedTextChangedTimerTick);
+                _delayedTextChangedTimer.Interval = this.DelayedTextChangedTimeout;
             }
 
-            m_delayedTextChangedTimer.Start();
+            _delayedTextChangedTimer.Start();
         }
 
         private void HandleDelayedTextChangedTimerTick(object sender, EventArgs e)

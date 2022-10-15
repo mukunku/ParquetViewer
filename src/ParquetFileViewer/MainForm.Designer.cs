@@ -37,7 +37,7 @@ namespace ParquetFileViewer
             this.offsetTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
             this.runQueryButton = new System.Windows.Forms.Button();
             this.searchFilterLabel = new System.Windows.Forms.LinkLabel();
-            this.searchFilterTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
+            this.searchFilterTextBox = new System.Windows.Forms.TextBox();
             this.clearFilterButton = new System.Windows.Forms.Button();
             this.mainGridView = new System.Windows.Forms.DataGridView();
             this.openParquetFileDialog = new System.Windows.Forms.OpenFileDialog();
@@ -72,8 +72,6 @@ namespace ParquetFileViewer
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.FileSchemaBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.ReadDataBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.showingRecordCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.actualShownRecordCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.recordsTextLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -84,7 +82,6 @@ namespace ParquetFileViewer
             this.totalRowCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.ExportFileBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -214,7 +211,6 @@ namespace ParquetFileViewer
             // 
             this.searchFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterTextBox, 2);
-            this.searchFilterTextBox.DelayedTextChangedTimeout = 1000;
             this.searchFilterTextBox.Location = new System.Drawing.Point(100, 6);
             this.searchFilterTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.searchFilterTextBox.Name = "searchFilterTextBox";
@@ -375,6 +371,7 @@ namespace ParquetFileViewer
             this.changeFieldsMenuStripButton.Size = new System.Drawing.Size(217, 22);
             this.changeFieldsMenuStripButton.Text = "Add/Remove &Fields";
             this.changeFieldsMenuStripButton.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
+            this.changeFieldsMenuStripButton.Image = global::ParquetFileViewer.Properties.Resources.list_icon_32x32.ToBitmap();
             // 
             // changeDateFormatToolStripMenuItem
             // 
@@ -388,6 +385,7 @@ namespace ParquetFileViewer
             this.changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             this.changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.changeDateFormatToolStripMenuItem.Text = "Date Format";
+            this.changeDateFormatToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.calendar_icon.ToBitmap();
             // 
             // defaultToolStripMenuItem
             // 
@@ -510,6 +508,7 @@ namespace ParquetFileViewer
             this.getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
             this.getSQLCreateTableScriptToolStripMenuItem.Click += new System.EventHandler(this.GetSQLCreateTableScriptToolStripMenuItem_Click);
+            this.getSQLCreateTableScriptToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.sql_server_icon.ToBitmap();
             // 
             // metadataViewerToolStripMenuItem
             // 
@@ -519,6 +518,7 @@ namespace ParquetFileViewer
             this.metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             this.metadataViewerToolStripMenuItem.Click += new System.EventHandler(this.MetadataViewerToolStripMenuItem_Click);
+            this.metadataViewerToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.text_file_icon.ToBitmap();
             // 
             // helpToolStripMenuItem
             // 
@@ -542,18 +542,6 @@ namespace ParquetFileViewer
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // FileSchemaBackgroundWorker
-            // 
-            this.FileSchemaBackgroundWorker.WorkerSupportsCancellation = true;
-            this.FileSchemaBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.FileSchemaBackgroundWorker_DoWork);
-            this.FileSchemaBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.FileSchemaBackgroundWorker_RunWorkerCompleted);
-            // 
-            // ReadDataBackgroundWorker
-            // 
-            this.ReadDataBackgroundWorker.WorkerSupportsCancellation = true;
-            this.ReadDataBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ReadDataBackgroundWorker_DoWork);
-            this.ReadDataBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ReadDataBackgroundWorker_RunWorkerCompleted);
             // 
             // showingRecordCountStatusBarLabel
             // 
@@ -631,12 +619,6 @@ namespace ParquetFileViewer
             this.exportFileDialog.RestoreDirectory = true;
             this.exportFileDialog.Title = "Choose Save Location";
             // 
-            // ExportFileBackgroundWorker
-            // 
-            this.ExportFileBackgroundWorker.WorkerSupportsCancellation = true;
-            this.ExportFileBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ExportFileBackgroundWorker_DoWork);
-            this.ExportFileBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ExportFileBackgroundWorker_RunWorkerCompleted);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -690,9 +672,7 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem changeFieldsMenuStripButton;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private ParquetFileViewer.Controls.DelayedOnChangedTextBox searchFilterTextBox;
-        private System.ComponentModel.BackgroundWorker FileSchemaBackgroundWorker;
-        private System.ComponentModel.BackgroundWorker ReadDataBackgroundWorker;
+        private System.Windows.Forms.TextBox searchFilterTextBox;
         private System.Windows.Forms.Button runQueryButton;
         private System.Windows.Forms.Button clearFilterButton;
         private System.Windows.Forms.ToolStripStatusLabel showingRecordCountStatusBarLabel;
@@ -706,7 +686,6 @@ namespace ParquetFileViewer
         private System.Windows.Forms.StatusStrip mainStatusStrip;
         private System.Windows.Forms.LinkLabel searchFilterLabel;
         private System.Windows.Forms.SaveFileDialog exportFileDialog;
-        private System.ComponentModel.BackgroundWorker ExportFileBackgroundWorker;
         private System.Windows.Forms.ToolStripMenuItem userGuideToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem changeDateFormatToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem;

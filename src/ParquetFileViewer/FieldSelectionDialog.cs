@@ -253,7 +253,6 @@ namespace ParquetFileViewer
             MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-
         private void filterColumnsTextbox_TextChanged(object sender, EventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text))
@@ -264,7 +263,7 @@ namespace ParquetFileViewer
                 if (filteredColumnsNames.Count == 1)
                 {
                     var filter = filteredColumnsNames[0];
-                    filteredFields = this.AvailableFields.Where(w => w.Name.Contains(filter));
+                    filteredFields = this.AvailableFields.Where(w => w.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
                 }
                 else
                 {
