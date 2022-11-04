@@ -9,6 +9,7 @@
 	<SelfContained>false</SelfContained>
 	<PublishSingleFile>true</PublishSingleFile>
 	<PublishReadyToRun>false</PublishReadyToRun>
+	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\parquet_icon.ico</ApplicationIcon>
