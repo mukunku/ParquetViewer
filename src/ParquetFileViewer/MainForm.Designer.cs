@@ -91,7 +91,7 @@ namespace ParquetFileViewer
             // mainTableLayoutPanel
             // 
             this.mainTableLayoutPanel.ColumnCount = 10;
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 61F));
+            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 70F));
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 93F));
             this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -200,10 +200,10 @@ namespace ParquetFileViewer
             this.searchFilterLabel.Location = new System.Drawing.Point(4, 11);
             this.searchFilterLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.searchFilterLabel.Name = "searchFilterLabel";
-            this.searchFilterLabel.Size = new System.Drawing.Size(88, 13);
+            this.searchFilterLabel.Size = new System.Drawing.Size(97, 13);
             this.searchFilterLabel.TabIndex = 7;
             this.searchFilterLabel.TabStop = true;
-            this.searchFilterLabel.Text = "Filter Query:";
+            this.searchFilterLabel.Text = "Filter Query (?):";
             this.searchFilterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.searchFilterLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.searchFilterLabel_Click);
             // 
@@ -211,10 +211,10 @@ namespace ParquetFileViewer
             // 
             this.searchFilterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterTextBox, 2);
-            this.searchFilterTextBox.Location = new System.Drawing.Point(100, 6);
+            this.searchFilterTextBox.Location = new System.Drawing.Point(109, 6);
             this.searchFilterTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.searchFilterTextBox.Name = "searchFilterTextBox";
-            this.searchFilterTextBox.Size = new System.Drawing.Size(374, 23);
+            this.searchFilterTextBox.Size = new System.Drawing.Size(365, 23);
             this.searchFilterTextBox.TabIndex = 1;
             this.searchFilterTextBox.Text = "WHERE ";
             this.searchFilterTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.searchFilterTextBox_KeyPress);
@@ -366,12 +366,12 @@ namespace ParquetFileViewer
             // 
             // changeFieldsMenuStripButton
             // 
+            this.changeFieldsMenuStripButton.Image = ((System.Drawing.Image)(resources.GetObject("changeFieldsMenuStripButton.Image")));
             this.changeFieldsMenuStripButton.Name = "changeFieldsMenuStripButton";
             this.changeFieldsMenuStripButton.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
             this.changeFieldsMenuStripButton.Size = new System.Drawing.Size(217, 22);
             this.changeFieldsMenuStripButton.Text = "Add/Remove &Fields";
             this.changeFieldsMenuStripButton.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
-            this.changeFieldsMenuStripButton.Image = global::ParquetFileViewer.Properties.Resources.list_icon_32x32.ToBitmap();
             // 
             // changeDateFormatToolStripMenuItem
             // 
@@ -382,10 +382,10 @@ namespace ParquetFileViewer
             this.iSO8601DateOnlyToolStripMenuItem,
             this.iSO8601Alt1ToolStripMenuItem,
             this.iSO8601Alt2ToolStripMenuItem});
+            this.changeDateFormatToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("changeDateFormatToolStripMenuItem.Image")));
             this.changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             this.changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.changeDateFormatToolStripMenuItem.Text = "Date Format";
-            this.changeDateFormatToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.calendar_icon.ToBitmap();
             // 
             // defaultToolStripMenuItem
             // 
@@ -504,11 +504,11 @@ namespace ParquetFileViewer
             // getSQLCreateTableScriptToolStripMenuItem
             // 
             this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
+            this.getSQLCreateTableScriptToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("getSQLCreateTableScriptToolStripMenuItem.Image")));
             this.getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
             this.getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
             this.getSQLCreateTableScriptToolStripMenuItem.Click += new System.EventHandler(this.GetSQLCreateTableScriptToolStripMenuItem_Click);
-            this.getSQLCreateTableScriptToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.sql_server_icon.ToBitmap();
             // 
             // metadataViewerToolStripMenuItem
             // 
@@ -518,7 +518,6 @@ namespace ParquetFileViewer
             this.metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             this.metadataViewerToolStripMenuItem.Click += new System.EventHandler(this.MetadataViewerToolStripMenuItem_Click);
-            this.metadataViewerToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.text_file_icon.ToBitmap();
             // 
             // helpToolStripMenuItem
             // 
@@ -532,14 +531,14 @@ namespace ParquetFileViewer
             // userGuideToolStripMenuItem
             // 
             this.userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.userGuideToolStripMenuItem.Text = "User Guide";
             this.userGuideToolStripMenuItem.Click += new System.EventHandler(this.userGuideToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
