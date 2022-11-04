@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Parquet Viewer")]
-[assembly: AssemblyDescription("Simple windows desktop application for viewing Apache Parquet files\r\nhttps://github.com/mukunku/ParquetViewer\r\n\r\nSpecial thanks to: https://github.com/elastacloud/parquet-dotnet")]
+[assembly: AssemblyDescription("Simple windows desktop application for viewing Apache Parquet files\r\nhttps://github.com/mukunku/ParquetViewer\r\n\r\nSpecial thanks to: https://github.com/aloneguid/parquet-dotnet")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Author: Mukunku")]
 [assembly: AssemblyProduct("Parquet Viewer")]
