@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Parquet;
+using Parquet.Data.Rows;
 using ParquetFileViewer.Helpers;
 
 namespace ParquetFileViewer
@@ -432,7 +433,8 @@ MULTIPLE CONDITIONS:
                     if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
                         color = Color.White;
 
-                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, 
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
 
                     e.Handled = true;
                 }
