@@ -69,7 +69,19 @@ namespace ParquetFileViewer
             set
             {
                 this.selectedFields = value;
-                if (value != null && value.Count > 0)
+
+                //Check for duplicate fields (We don't support case sensitive field names unfortunately)
+                var duplicateFields = this.selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+                if (duplicateFields?.Count() > 0)
+                {
+                    this.selectedFields = this.selectedFields.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
+
+                    MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
+                            $"\r\n\r\nCase sensitive field names are not currently supported.", "Duplicate fields detected",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+                if (value?.Count > 0)
                 {
                     LoadFileToGridview();
                 }
@@ -546,7 +558,7 @@ MULTIPLE CONDITIONS:
                         {
                             int i = 0;
                             var fieldGroups = new List<(int, List<string>)>();
-                            foreach (List<string> fields in UtilityMethods.Split(this.SelectedFields, (int)(this.selectedFields.Count / Environment.ProcessorCount)))
+                            foreach (List<string> fields in UtilityMethods.Split(this.SelectedFields, (int)(this.SelectedFields.Count / Environment.ProcessorCount)))
                             {
                                 fieldGroups.Add((i++, fields));
                             }

@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace ParquetFileViewer.Helpers
 {
@@ -13,7 +14,7 @@ namespace ParquetFileViewer.Helpers
         public static async Task<DataTable> ParquetReaderToDataTable(ParquetReader parquetReader, List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken)
         {
             //Get list of data fields and construct the DataTable
-            DataTable dataTable = new DataTable();
+            var dataTable = new DataTable();
             var fields = new List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)>();
             var dataFields = parquetReader.Schema.GetDataFields();
             foreach (string selectedField in selectedFields)
@@ -25,7 +26,14 @@ namespace ParquetFileViewer.Helpers
 
                     fields.Add((thriftSchema, dataField));
                     DataColumn newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(thriftSchema, dataField.DataType));
-                    dataTable.Columns.Add(newColumn);
+
+                    //We don't support case sensitive field names unfortunately
+                    if (dataTable.Columns.Contains(newColumn.ColumnName))
+                    {
+                        throw new NotSupportedException("Duplicate column detected. Column names are case insensitive and must be unique.");
+                    }
+
+                    dataTable.Columns.Add(newColumn); 
                 }
                 else
                     throw new Exception(string.Format("Field '{0}' does not exist", selectedField));
