@@ -14,7 +14,7 @@ namespace ParquetFileViewer.Helpers
         {
             //Get list of data fields and construct the DataTable
             DataTable dataTable = new DataTable();
-            var fields = new List<(Parquet.Thrift.SchemaElement, Parquet.Data.DataField)>();
+            var fields = new List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)>();
             var dataFields = parquetReader.Schema.GetDataFields();
             foreach (string selectedField in selectedFields)
             {
@@ -67,7 +67,7 @@ namespace ParquetFileViewer.Helpers
             return dataTable;
         }
 
-        private static async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<(Parquet.Thrift.SchemaElement, Parquet.Data.DataField)> fields,
+        private static async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)> fields,
             int skipRecords, int readRecords, CancellationToken cancellationToken)
         {
             int rowBeginIndex = dataTable.Rows.Count;
@@ -106,9 +106,9 @@ namespace ParquetFileViewer.Helpers
 
                     if (value == null)
                         dataTable.Rows[rowIndex][field.Name] = DBNull.Value;
-                    else if (field.DataType == Parquet.Data.DataType.DateTimeOffset)
-                        dataTable.Rows[rowIndex][field.Name] = ((DateTimeOffset)value).DateTime; 
-                    else if (field.DataType == Parquet.Data.DataType.Int64
+                    else if (field.DataType == Parquet.Schema.DataType.DateTimeOffset)
+                        dataTable.Rows[rowIndex][field.Name] = (DateTime)value; 
+                    else if (field.DataType == Parquet.Schema.DataType.Int64
                         && logicalType?.TIMESTAMP != null)
                     {
                         int divideBy = 0;
@@ -135,46 +135,48 @@ namespace ParquetFileViewer.Helpers
         }
 
 
-        public static Type ParquetNetTypeToCSharpType(Parquet.Thrift.SchemaElement thriftSchema, Parquet.Data.DataType type)
+        public static Type ParquetNetTypeToCSharpType(Parquet.Thrift.SchemaElement thriftSchema, Parquet.Schema.DataType type)
         {
             Type columnType = null;
             switch (type)
             {
-                case Parquet.Data.DataType.Boolean:
+                case Parquet.Schema.DataType.Boolean:
                     columnType = typeof(bool);
                     break;
-                case Parquet.Data.DataType.Byte:
+                case Parquet.Schema.DataType.Byte:
                     columnType = typeof(sbyte);
                     break;
-                case Parquet.Data.DataType.ByteArray:
+                case Parquet.Schema.DataType.ByteArray:
                     columnType = typeof(sbyte[]);
                     break;
-                case Parquet.Data.DataType.DateTimeOffset:
+                case Parquet.Schema.DataType.DateTimeOffset:
                     //Let's treat DateTimeOffsets as DateTime
                     columnType = typeof(DateTime);
                     break;
-                case Parquet.Data.DataType.Decimal:
+                case Parquet.Schema.DataType.Decimal:
                     columnType = typeof(decimal);
                     break;
-                case Parquet.Data.DataType.Double:
+                case Parquet.Schema.DataType.Double:
                     columnType = typeof(double);
                     break;
-                case Parquet.Data.DataType.Float:
+                case Parquet.Schema.DataType.Float:
                     columnType = typeof(float);
                     break;
-                case Parquet.Data.DataType.Short:
-                case Parquet.Data.DataType.Int16:
-                case Parquet.Data.DataType.Int32:
-                case Parquet.Data.DataType.UnsignedInt16:
+                case Parquet.Schema.DataType.Int16:
+                case Parquet.Schema.DataType.Int32:
                     columnType = typeof(int);
                     break;
-                case Parquet.Data.DataType.Int64:
+                case Parquet.Schema.DataType.UnsignedInt16:
+                case Parquet.Schema.DataType.UnsignedInt32:
+                    columnType = typeof(uint);
+                    break;
+                case Parquet.Schema.DataType.Int64:
                     columnType = thriftSchema.LogicalType?.TIMESTAMP != null ? typeof(DateTime) : typeof(long);
                     break;
-                case Parquet.Data.DataType.UnsignedByte:
+                case Parquet.Schema.DataType.SignedByte: //Should this be unsigned byte? (https://github.com/aloneguid/parquet-dotnet/issues/244)
                     columnType = typeof(byte);
                     break;
-                case Parquet.Data.DataType.String:
+                case Parquet.Schema.DataType.String:
                 default:
                     columnType = typeof(string);
                     break;

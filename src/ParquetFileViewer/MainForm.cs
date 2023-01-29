@@ -12,7 +12,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Parquet;
-using Parquet.Data.Rows;
 using ParquetFileViewer.Helpers;
 
 namespace ParquetFileViewer
@@ -143,9 +142,9 @@ namespace ParquetFileViewer
             }
         }
         private Panel loadingPanel = null;
-        private Parquet.Data.Schema openFileSchema;
+        private Parquet.Schema.ParquetSchema openFileSchema;
 
-        private ToolTip dateOnlyFormatWarningToolTip = new ToolTip();
+        private ToolTip dateOnlyFormatWarningToolTip = new();
         #endregion
 
         public MainForm()
@@ -496,7 +495,7 @@ MULTIPLE CONDITIONS:
             }
 
             var fields = this.openFileSchema.Fields;
-            if (fields != null && fields.Count > 0)
+            if (fields != null && fields.Count() > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
