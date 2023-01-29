@@ -29,6 +29,7 @@ namespace ParquetFileViewer
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
@@ -82,6 +83,7 @@ namespace ParquetFileViewer
             this.totalRowCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.rememberRecordCountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -195,12 +197,12 @@ namespace ParquetFileViewer
             this.searchFilterLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.searchFilterLabel.AutoSize = true;
             this.mainTableLayoutPanel.SetColumnSpan(this.searchFilterLabel, 2);
-            this.searchFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point);
+            this.searchFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point);
             this.searchFilterLabel.LinkColor = System.Drawing.Color.Navy;
-            this.searchFilterLabel.Location = new System.Drawing.Point(4, 11);
+            this.searchFilterLabel.Location = new System.Drawing.Point(4, 9);
             this.searchFilterLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.searchFilterLabel.Name = "searchFilterLabel";
-            this.searchFilterLabel.Size = new System.Drawing.Size(97, 13);
+            this.searchFilterLabel.Size = new System.Drawing.Size(97, 16);
             this.searchFilterLabel.TabIndex = 7;
             this.searchFilterLabel.TabStop = true;
             this.searchFilterLabel.Text = "Filter Query (?):";
@@ -244,12 +246,23 @@ namespace ParquetFileViewer
             this.mainGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.mainGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 10);
+            this.mainGridView.EnableHeadersVisualStyles = false;
             this.mainGridView.Location = new System.Drawing.Point(4, 38);
             this.mainGridView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.mainGridView.Name = "mainGridView";
             this.mainGridView.ReadOnly = true;
+            this.mainGridView.RowHeadersWidth = 24;
             this.mainTableLayoutPanel.SetRowSpan(this.mainGridView, 2);
             this.mainGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.mainGridView.Size = new System.Drawing.Size(936, 356);
@@ -359,7 +372,8 @@ namespace ParquetFileViewer
             this.changeFieldsMenuStripButton,
             this.changeDateFormatToolStripMenuItem,
             this.columnSizingToolStripMenuItem,
-            this.parquetEngineToolStripMenuItem});
+            this.parquetEngineToolStripMenuItem,
+            this.rememberRecordCountToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "&Edit";
@@ -531,14 +545,14 @@ namespace ParquetFileViewer
             // userGuideToolStripMenuItem
             // 
             this.userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.userGuideToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.userGuideToolStripMenuItem.Text = "User Guide";
             this.userGuideToolStripMenuItem.Click += new System.EventHandler(this.userGuideToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -617,6 +631,15 @@ namespace ParquetFileViewer
             this.exportFileDialog.Filter = "CSV files|*.csv";
             this.exportFileDialog.RestoreDirectory = true;
             this.exportFileDialog.Title = "Choose Save Location";
+            // 
+            // rememberRecordCountToolStripMenuItem
+            // 
+            this.rememberRecordCountToolStripMenuItem.Checked = true;
+            this.rememberRecordCountToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.rememberRecordCountToolStripMenuItem.Name = "rememberRecordCountToolStripMenuItem";
+            this.rememberRecordCountToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.rememberRecordCountToolStripMenuItem.Text = "Remember Record Count";
+            this.rememberRecordCountToolStripMenuItem.Click += new System.EventHandler(this.rememberRecordCountToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -703,6 +726,7 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem iSO8601DateOnlyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt2ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rememberRecordCountToolStripMenuItem;
     }
 }
 

@@ -10,6 +10,7 @@ namespace ParquetFileViewer
         private const string UseISODateFormatKey = "UseISODateFormat";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
         private const string DefaultRowCountKey = "DefaultRowCount";
+        private const string RememberLastRowCountKey = "RememberLastRowCount";
         private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
@@ -102,8 +103,7 @@ namespace ParquetFileViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        bool value = false;
-                        bool.TryParse(registryKey.GetValue(AlwaysSelectAllFieldsKey)?.ToString(), out value);
+                        bool.TryParse(registryKey.GetValue(AlwaysSelectAllFieldsKey)?.ToString(), out var value);
                         return value;
                     }
                 }
@@ -125,22 +125,24 @@ namespace ParquetFileViewer
             }
         }
 
-        public static int DefaultRowCount
+        public static int? LastRowCount
         {
             get
             {
                 try
                 {
+                    if (!RememberLastRowCount)
+                        return null;
+
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        int value = 1000;
-                        int.TryParse(registryKey.GetValue(DefaultRowCountKey)?.ToInt32(), out value);
-                        return value;
+                        int.TryParse(registryKey.GetValue(DefaultRowCountKey)?.ToString(), out var value);
+                        return value <= 0 ? null : value;
                     }
                 }
                 catch
                 {
-                    return 1000;
+                    return null;
                 }
             }
             set
@@ -149,7 +151,37 @@ namespace ParquetFileViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        registryKey.SetValue(DefaultRowCountKey, value.ToInt32());
+                        registryKey.SetValue(DefaultRowCountKey, value.ToString());
+                    }
+                }
+                catch { }
+            }
+        }
+
+        public static bool RememberLastRowCount
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        bool.TryParse(registryKey.GetValue(RememberLastRowCountKey)?.ToString(), out var value);
+                        return value;
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            set
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        registryKey.SetValue(RememberLastRowCountKey, value.ToString());
                     }
                 }
                 catch { }
