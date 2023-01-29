@@ -9,6 +9,7 @@ namespace ParquetFileViewer
         private const string RegistrySubKey = "ParquetViewer";
         private const string UseISODateFormatKey = "UseISODateFormat";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
+        private const string DefaultRowCountKey = "DefaultRowCount";
         private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
@@ -118,6 +119,37 @@ namespace ParquetFileViewer
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         registryKey.SetValue(AlwaysSelectAllFieldsKey, value.ToString());
+                    }
+                }
+                catch { }
+            }
+        }
+
+        public static int DefaultRowCount
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        int value = 1000;
+                        int.TryParse(registryKey.GetValue(DefaultRowCountKey)?.ToInt32(), out value);
+                        return value;
+                    }
+                }
+                catch
+                {
+                    return 1000;
+                }
+            }
+            set
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        registryKey.SetValue(DefaultRowCountKey, value.ToInt32());
                     }
                 }
                 catch { }
