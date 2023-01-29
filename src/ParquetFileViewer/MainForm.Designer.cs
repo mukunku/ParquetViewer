@@ -29,7 +29,7 @@ namespace ParquetFileViewer
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
@@ -83,6 +83,7 @@ namespace ParquetFileViewer
             this.totalRowCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.rememberRecordCountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -246,14 +247,14 @@ namespace ParquetFileViewer
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mainGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 10);
             this.mainGridView.EnableHeadersVisualStyles = false;
@@ -371,7 +372,8 @@ namespace ParquetFileViewer
             this.changeFieldsMenuStripButton,
             this.changeDateFormatToolStripMenuItem,
             this.columnSizingToolStripMenuItem,
-            this.parquetEngineToolStripMenuItem});
+            this.parquetEngineToolStripMenuItem,
+            this.rememberRecordCountToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "&Edit";
@@ -525,7 +527,6 @@ namespace ParquetFileViewer
             // metadataViewerToolStripMenuItem
             // 
             this.metadataViewerToolStripMenuItem.Enabled = false;
-            this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
             this.metadataViewerToolStripMenuItem.Name = "metadataViewerToolStripMenuItem";
             this.metadataViewerToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.M)));
             this.metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
@@ -631,6 +632,15 @@ namespace ParquetFileViewer
             this.exportFileDialog.RestoreDirectory = true;
             this.exportFileDialog.Title = "Choose Save Location";
             // 
+            // rememberRecordCountToolStripMenuItem
+            // 
+            this.rememberRecordCountToolStripMenuItem.Checked = true;
+            this.rememberRecordCountToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.rememberRecordCountToolStripMenuItem.Name = "rememberRecordCountToolStripMenuItem";
+            this.rememberRecordCountToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.rememberRecordCountToolStripMenuItem.Text = "Remember Record Count";
+            this.rememberRecordCountToolStripMenuItem.Click += new System.EventHandler(this.rememberRecordCountToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -716,6 +726,7 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem iSO8601DateOnlyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt2ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rememberRecordCountToolStripMenuItem;
     }
 }
 

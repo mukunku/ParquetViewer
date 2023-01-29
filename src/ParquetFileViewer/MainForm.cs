@@ -21,7 +21,7 @@ namespace ParquetFileViewer
     {
         private const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
         private const int DefaultOffset = 0;
-        private const int DefaultRowCount = 1000;
+        private const int DefaultRowCountValue = 1000;
         private const int loadingPanelWidth = 200;
         private const int loadingPanelHeight = 200;
         private const string QueryUselessPartRegex = "^WHERE ";
@@ -89,17 +89,23 @@ namespace ParquetFileViewer
             }
         }
 
-        private int currentMaxRowCount = AppSettings.DefaultRowCount;
+        private int currentMaxRowCount = DefaultRowCount;
         private int CurrentMaxRowCount
         {
             get => this.currentMaxRowCount;
             set
             {
                 this.currentMaxRowCount = value;
-                AppSettings.DefaultRowCount = value;
+                DefaultRowCount = value;
                 if (this.IsAnyFileOpen)
                     LoadFileToGridview();
             }
+        }
+
+        private static int DefaultRowCount
+        {
+            get => AppSettings.LastRowCount ?? DefaultRowCountValue;
+            set => AppSettings.LastRowCount = value;
         }
 
         private bool IsAnyFileOpen
@@ -147,7 +153,7 @@ namespace ParquetFileViewer
             InitializeComponent();
             this.DefaultFormTitle = this.Text;
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-            this.recordCountTextBox.SetTextQuiet(AppSettings.DefaultRowCount.ToString());
+            this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
             this.OpenFilePath = null;
 
@@ -192,6 +198,11 @@ namespace ParquetFileViewer
                         break;
                     }
                 }
+
+                if (AppSettings.RememberLastRowCount)
+                    this.rememberRecordCountToolStripMenuItem.Checked = true;
+                else
+                    this.rememberRecordCountToolStripMenuItem.Checked = false;
             }
             catch (Exception ex)
             {
@@ -673,8 +684,8 @@ MULTIPLE CONDITIONS:
             this.OpenFilePath = filePath;
 
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-            this.currentMaxRowCount = AppSettings.DefaultRowCount;
-            this.recordCountTextBox.SetTextQuiet(AppSettings.DefaultRowCount.ToString());
+            this.currentMaxRowCount = DefaultRowCount;
+            this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.currentOffset = DefaultOffset;
 
             this.OpenFieldSelectionDialog(false);
@@ -1038,6 +1049,20 @@ MULTIPLE CONDITIONS:
         private void mainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
         {
             this.dateOnlyFormatWarningToolTip.Hide(this);
+        }
+
+        private void rememberRecordCountToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                this.rememberRecordCountToolStripMenuItem.Checked = !this.rememberRecordCountToolStripMenuItem.Checked;
+                AppSettings.RememberLastRowCount = this.rememberRecordCountToolStripMenuItem.Checked;
+                AppSettings.LastRowCount = this.CurrentMaxRowCount;
+            }
+            catch (Exception ex)
+            {
+                this.ShowError(ex);
+            }
         }
     }
 }
