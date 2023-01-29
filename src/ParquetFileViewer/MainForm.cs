@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -88,13 +88,14 @@ namespace ParquetFileViewer
             }
         }
 
-        private int currentMaxRowCount = DefaultRowCount;
+        private int currentMaxRowCount = AppSettings.DefaultRowCount;
         private int CurrentMaxRowCount
         {
             get => this.currentMaxRowCount;
             set
             {
                 this.currentMaxRowCount = value;
+                AppSettings.DefaultRowCount = value;
                 if (this.IsAnyFileOpen)
                     LoadFileToGridview();
             }
@@ -145,7 +146,7 @@ namespace ParquetFileViewer
             InitializeComponent();
             this.DefaultFormTitle = this.Text;
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-            this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
+            this.recordCountTextBox.SetTextQuiet(AppSettings.DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
             this.OpenFilePath = null;
 
@@ -670,8 +671,8 @@ MULTIPLE CONDITIONS:
             this.OpenFilePath = filePath;
 
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-            this.currentMaxRowCount = DefaultRowCount;
-            this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
+            this.currentMaxRowCount = AppSettings.DefaultRowCount;
+            this.recordCountTextBox.SetTextQuiet(AppSettings.DefaultRowCount.ToString());
             this.currentOffset = DefaultOffset;
 
             this.OpenFieldSelectionDialog(false);
