@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Apache.Arrow.Ipc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -32,6 +34,7 @@ namespace Utilities
                 var jsonObject = new JObject();
                 jsonObject[nameof(thriftMetadata.Version)] = thriftMetadata.Version;
                 jsonObject[nameof(thriftMetadata.Num_rows)] = thriftMetadata.Num_rows;
+                jsonObject["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? 0;
                 jsonObject[nameof(thriftMetadata.Created_by)] = thriftMetadata.Created_by;
 
                 var schemas = new JArray();
@@ -54,6 +57,33 @@ namespace Utilities
                     schemas.Add(schemaObject);
                 }
                 jsonObject[nameof(thriftMetadata.Schema)] = schemas;
+
+                var rowGroups = new JArray();
+                foreach(var rowGroup in thriftMetadata.Row_groups ?? Enumerable.Empty<RowGroup>())
+                {
+                    var rowGroupObject = new JObject();
+                    rowGroupObject[nameof(rowGroup.Ordinal)] = rowGroup.Ordinal;
+                    rowGroupObject[nameof(rowGroup.Num_rows)] = rowGroup.Num_rows;
+                    
+                    var sortingColumns = new JArray();
+                    foreach(var sortingColumn in rowGroup.Sorting_columns ?? Enumerable.Empty<SortingColumn>())
+                    {
+                        var sortingColumnObject = new JObject();
+                        sortingColumnObject[nameof(sortingColumn.Column_idx)] = sortingColumn.Column_idx;
+                        sortingColumnObject[nameof(sortingColumn.Descending)] = sortingColumn.Descending;
+                        sortingColumnObject[nameof(sortingColumn.Nulls_first)] = sortingColumn.Nulls_first;
+
+                        sortingColumns.Add(sortingColumnObject);
+                    }
+
+                    rowGroupObject[nameof(rowGroup.Sorting_columns)] = sortingColumns;
+                    rowGroupObject[nameof(rowGroup.File_offset)] = rowGroup.File_offset;
+                    rowGroupObject[nameof(rowGroup.Total_byte_size)] = rowGroup.Total_byte_size;
+                    rowGroupObject[nameof(rowGroup.Total_compressed_size)] = rowGroup.Total_compressed_size;
+
+                    rowGroups.Add(rowGroupObject);
+                }
+                jsonObject[nameof(thriftMetadata.Row_groups)] = rowGroups;
 
                 return jsonObject.ToString(Formatting.Indented);
             }

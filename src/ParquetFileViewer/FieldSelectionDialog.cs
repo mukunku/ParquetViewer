@@ -1,4 +1,5 @@
 ﻿using Parquet.Data;
+using Parquet.Schema;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -52,9 +53,9 @@ namespace ParquetFileViewer
                     int locationX = 0;
                     int locationY = 5;
                     bool isFirst = true;
-                    HashSet<string> fieldNames = new HashSet<string>();
                     bool isClearingSelectAllCheckbox = false;
 
+                    var checkboxControls = new List<CheckBox>();
                     foreach (Field field in availableFields)
                     {
                         if (isFirst) //Add toggle all checkbox and some other setting changes
@@ -96,7 +97,6 @@ namespace ParquetFileViewer
                                             if (checkbox.Enabled)
                                             {
                                                 checkbox.Checked = selectAllCheckBox.Checked;
-                                                //this.PreSelectedFields.Remove((string)checkbox.Tag);
                                             }
                                         }
                                     }
@@ -107,57 +107,62 @@ namespace ParquetFileViewer
                             locationY += DynamicFieldCheckboxYIncrement;
                         }
 
-                        if (!fieldNames.Contains(field.Name.ToLowerInvariant())) //Normally two fields with the same name shouldn't exist but lets make sure
+                        bool isUnsupportedFieldType = UnsupportedSchemaTypes.Contains(field.SchemaType);
+                        var fieldCheckbox = new CheckBox()
                         {
-                            bool isUnsupportedFieldType = UnsupportedSchemaTypes.Contains(field.SchemaType);
-                            var fieldCheckbox = new CheckBox()
+                            Name = string.Concat("checkbox_", field.Name),
+                            Text = string.Concat(field.Name, isUnsupportedFieldType ? "(Unsupported)" : string.Empty),
+                            Tag = field.Name,
+                            Checked = preSelectedFields.Contains(field.Name),
+                            Location = new Point(locationX, locationY),
+                            AutoSize = true,
+                            Enabled = !isUnsupportedFieldType
+                        };
+                        fieldCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+                        {
+                            var fieldCheckBox = (CheckBox)checkboxSender;
+
+                            if (fieldCheckBox.Checked)
                             {
-                                Name = string.Concat("checkbox_", field.Name),
-                                Text = string.Concat(field.Name, isUnsupportedFieldType ? "(Unsupported)" : string.Empty),
-                                Tag = field.Name,
-                                Checked = preSelectedFields.Contains(field.Name),
-                                Location = new Point(locationX, locationY),
-                                AutoSize = true,
-                                Enabled = !isUnsupportedFieldType
-                            };
-                            fieldCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+                                this.PreSelectedFields.Add((string)fieldCheckBox.Tag);
+                            }
+                            else
                             {
-                                var fieldCheckBox = (CheckBox)checkboxSender;
-
-                                if (fieldCheckBox.Checked)
-                                {
-                                    this.PreSelectedFields.Add((string)fieldCheckBox.Tag);
-                                }
-                                else
-                                {
-                                    this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
-                                }
+                                this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                            }
 
 
-                                if (!fieldCheckBox.Checked)
+                            if (!fieldCheckBox.Checked)
+                            {
+                                foreach (Control control in this.fieldsPanel.Controls)
                                 {
-                                    foreach (Control control in this.fieldsPanel.Controls)
+                                    if (control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
                                     {
-                                        if (control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                        if (checkbox.Enabled && checkbox.Checked)
                                         {
-                                            if (checkbox.Enabled && checkbox.Checked)
-                                            {
-                                                isClearingSelectAllCheckbox = true;
-                                                checkbox.Checked = false;
-                                                this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
-                                                isClearingSelectAllCheckbox = false;
-                                                break;
-                                            }
+                                            isClearingSelectAllCheckbox = true;
+                                            checkbox.Checked = false;
+                                            this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                                            isClearingSelectAllCheckbox = false;
+                                            break;
                                         }
                                     }
                                 }
-                            };
-                            this.fieldsPanel.Controls.Add(fieldCheckbox);
+                            }
+                        };
+                        checkboxControls.Add(fieldCheckbox);
 
-                            locationY += DynamicFieldCheckboxYIncrement;
-                            fieldNames.Add(field.Name.ToLowerInvariant());
-                        }
+                        locationY += DynamicFieldCheckboxYIncrement;
                     }
+
+                    //Disable fields with dupe names because we don't support case sensitive fields right now
+                    var duplicateFields = checkboxControls?.GroupBy(f => f.Text.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+                    foreach(var duplicateField in duplicateFields)
+                    {
+                        duplicateField.Enabled = false;
+                    }
+
+                    this.fieldsPanel.Controls.AddRange(checkboxControls.ToArray<Control>());
                 }
             }
             catch (Exception ex)
