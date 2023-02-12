@@ -44,8 +44,7 @@ namespace ParquetFileViewer.Helpers
             int rowsLeftToRead = recordCount;
             for (int i = 0; i < parquetReader.RowGroupCount; i++)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                cancellationToken.ThrowIfCancellationRequested();
 
                 using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
                 {
@@ -83,8 +82,7 @@ namespace ParquetFileViewer.Helpers
 
             foreach (var fieldTuple in fields)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var logicalType = fieldTuple.Item1.LogicalType;
                 var field = fieldTuple.Item2;
@@ -94,8 +92,7 @@ namespace ParquetFileViewer.Helpers
                 int skippedRecords = 0;
                 foreach (var value in (await groupReader.ReadColumnAsync(field)).Data)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     if (skipRecords > skippedRecords)
                     {
@@ -141,7 +138,6 @@ namespace ParquetFileViewer.Helpers
                 isFirstColumn = false;
             }
         }
-
 
         public static Type ParquetNetTypeToCSharpType(Parquet.Thrift.SchemaElement thriftSchema, Parquet.Schema.DataType type)
         {

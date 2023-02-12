@@ -577,7 +577,7 @@ MULTIPLE CONDITIONS:
 
                         if (results.IsEmpty)
                         {
-                            throw new FileLoadException("Something went wrong while processing this file. If the issue persists please open a bug ticket on the repo.");
+                            throw new FileLoadException("Something went wrong while processing this file. If the issue persists please open a bug ticket on the repo. Help -> About");
                         }
 
                         DataTable mergedDataTables = UtilityMethods.MergeTables(results.OrderBy(f => f.Key).Select(f => f.Value.Result).AsEnumerable());
