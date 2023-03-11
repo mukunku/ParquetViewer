@@ -54,7 +54,7 @@ namespace ParquetFileViewer
             var metadataResult = new List<(string TabName, string Text)>();
             if (parquetEngine.ThriftMetadata != null)
             {
-                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine.ThriftMetadata);
+                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine.ThriftMetadata, parquetEngine.RecordCount);
                 metadataResult.Add((THRIFT_METADATA, json));
             }
             else
@@ -86,7 +86,7 @@ namespace ParquetFileViewer
             if (e.Error != null)
             {
                 MessageBox.Show($"Something went wrong while reading the file's metadata: " +
-                    $"{Environment.NewLine}{e.Error.ToString()}", "Metadata Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    $"{Environment.NewLine}{e.Error}", "Metadata Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {

@@ -555,6 +555,7 @@ namespace ParquetFileViewer
             this.metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             this.metadataViewerToolStripMenuItem.Click += new System.EventHandler(this.MetadataViewerToolStripMenuItem_Click);
+            this.metadataViewerToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.text_file_icon.ToBitmap();
             // 
             // helpToolStripMenuItem
             // 

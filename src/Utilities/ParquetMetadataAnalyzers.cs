@@ -27,14 +27,14 @@ namespace Utilities
             }
         }
 
-        public static string ThriftMetadataToJSON(FileMetaData thriftMetadata)
+        public static string ThriftMetadataToJSON(FileMetaData thriftMetadata, long recordCount)
         {
             try
             {
                 var jsonObject = new JObject();
                 jsonObject[nameof(thriftMetadata.Version)] = thriftMetadata.Version;
-                jsonObject[nameof(thriftMetadata.Num_rows)] = thriftMetadata.Num_rows;
-                jsonObject["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? 0;
+                jsonObject[nameof(thriftMetadata.Num_rows)] = recordCount;
+                jsonObject["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? 0; //TODO: Fix for Open Folder case
                 jsonObject[nameof(thriftMetadata.Created_by)] = thriftMetadata.Created_by;
 
                 var schemas = new JArray();
