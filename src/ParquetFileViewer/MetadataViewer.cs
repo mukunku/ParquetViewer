@@ -11,11 +11,11 @@ namespace ParquetFileViewer
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
         private static readonly string PANDAS_SCHEMA = "pandas";
-        private Parquet.ParquetReader parquetReader;
+        private Helpers.ParquetEngine parquetEngine;
 
-        public MetadataViewer(Parquet.ParquetReader parquetReader) : this()
+        public MetadataViewer(Helpers.ParquetEngine parquetEngine) : this()
         {
-            this.parquetReader = parquetReader;
+            this.parquetEngine = parquetEngine;
         }
 
         public MetadataViewer()
@@ -52,17 +52,17 @@ namespace ParquetFileViewer
         private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var metadataResult = new List<(string TabName, string Text)>();
-            if (parquetReader.ThriftMetadata != null)
+            if (parquetEngine.ThriftMetadata != null)
             {
-                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetReader.ThriftMetadata);
+                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine.ThriftMetadata);
                 metadataResult.Add((THRIFT_METADATA, json));
             }
             else
                 metadataResult.Add((THRIFT_METADATA, "No thrift metadata available"));
 
-            if (this.parquetReader.CustomMetadata != null)
+            if (parquetEngine.CustomMetadata != null)
             {
-                foreach (var _customMetadata in this.parquetReader.CustomMetadata)
+                foreach (var _customMetadata in parquetEngine.CustomMetadata)
                 {
                     string value = _customMetadata.Value;
                     if (PANDAS_SCHEMA.Equals(_customMetadata.Key))

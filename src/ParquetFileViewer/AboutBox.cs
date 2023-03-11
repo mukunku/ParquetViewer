@@ -36,7 +36,7 @@ namespace ParquetFileViewer
             }
         }
 
-        public string AssemblyVersion
+        public static string AssemblyVersion
         {
             get
             {

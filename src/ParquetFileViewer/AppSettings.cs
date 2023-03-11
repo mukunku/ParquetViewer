@@ -14,6 +14,7 @@ namespace ParquetFileViewer
         private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
+        private const string WarningBypassedOnVersionKey = "WarningBypassedOnVersion";
 
         //TODO: Cleanup this setting after sufficient time has passed.
         [Obsolete($"We have more date formats now so use {nameof(DateTimeDisplayFormat)} instead.")]
@@ -248,6 +249,35 @@ namespace ParquetFileViewer
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         registryKey.SetValue(AutoSizeColumnsModeKey, (int)value);
+                    }
+                }
+                catch { }
+            }
+        }
+    
+        public static string WarningBypassedOnVersion
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        return registryKey.GetValue(WarningBypassedOnVersionKey)?.ToString();
+                    }
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            set
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        registryKey.SetValue(WarningBypassedOnVersionKey, value);
                     }
                 }
                 catch { }

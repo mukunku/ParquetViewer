@@ -5,43 +5,70 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace ParquetFileViewer.Helpers
 {
     public static class UtilityMethods
     {
-        public static async Task<DataTable> ParquetReaderToDataTable(ParquetReader parquetReader, List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken)
+        public static async Task<(DataTable Data, long TotalRecordCount)> ReadFileOrFolder(string fileOrFolderPath, List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken)
         {
-            //Get list of data fields and construct the DataTable
-            var dataTable = new DataTable();
+            var engine = await ParquetEngine.OpenFileOrFolderAsync(fileOrFolderPath);
+            var dataTable = await ProcessEngine(engine, selectedFields, offset, recordCount, cancellationToken);
+            return (dataTable, engine.RecordCount);
+        }
+
+        public static async Task<DataTable> ProcessEngine(ParquetEngine engine, List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken)
+        {
+            long recordsLeftToRead = recordCount;
+            DataTable dataTable = null;
             var fields = new List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)>();
-            var dataFields = parquetReader.Schema.GetDataFields();
-            foreach (string selectedField in selectedFields)
+            foreach (var reader in engine.GetReaders(offset))
             {
-                var dataField = dataFields.FirstOrDefault(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
-                if (dataField != null)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                //Build datatable once
+                if (dataTable is null)
                 {
-                    var thriftSchema = parquetReader.ThriftMetadata.Schema.First(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
-
-                    fields.Add((thriftSchema, dataField));
-                    DataColumn newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(thriftSchema, dataField.DataType));
-
-                    //We don't support case sensitive field names unfortunately
-                    if (dataTable.Columns.Contains(newColumn.ColumnName))
+                    dataTable = new DataTable();
+                    var dataFields = reader.ParquetReader.Schema.GetDataFields();
+                    foreach (string selectedField in selectedFields)
                     {
-                        throw new NotSupportedException("Duplicate column detected. Column names are case insensitive and must be unique.");
-                    }
+                        var dataField = dataFields.FirstOrDefault(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
+                        if (dataField != null)
+                        {
+                            var thriftSchema = reader.ParquetReader.ThriftMetadata.Schema.First(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
 
-                    dataTable.Columns.Add(newColumn); 
+                            fields.Add((thriftSchema, dataField));
+                            var newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(thriftSchema, dataField.DataType));
+
+                            //We don't support case sensitive field names unfortunately
+                            if (dataTable.Columns.Contains(newColumn.ColumnName))
+                            {
+                                throw new NotSupportedException("Duplicate column detected. Column names are case insensitive and must be unique.");
+                            }
+
+                            dataTable.Columns.Add(newColumn);
+                        }
+                        else
+                            throw new Exception(string.Format("Field '{0}' does not exist", selectedField));
+                    }
                 }
-                else
-                    throw new Exception(string.Format("Field '{0}' does not exist", selectedField));
+
+                if (recordsLeftToRead <= 0)
+                    break;
+
+                recordsLeftToRead = await ParquetReaderToDataTable(dataTable, fields, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken);
             }
 
+            return dataTable ?? new();
+        }
+
+        private static async Task<long> ParquetReaderToDataTable(DataTable dataTable, List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)> fields, ParquetReader parquetReader, 
+            long offset, long recordCount, CancellationToken cancellationToken)
+        {
             //Read column by column to generate each row in the datatable
             int totalRecordCountSoFar = 0;
-            int rowsLeftToRead = recordCount;
+            long rowsLeftToRead = recordCount;
             for (int i = 0; i < parquetReader.RowGroupCount; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -57,25 +84,23 @@ namespace ParquetFileViewer.Helpers
                     if (offset >= totalRecordCountSoFar)
                         continue;
 
-                    if (rowsLeftToRead > 0)
-                    {
-                        int numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCountSoFar - offset, rowsLeftToRead), (int)groupReader.RowCount);
-                        rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
-
-                        int recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
-
-                        await ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup, cancellationToken);
-                    }
-                    else
+                    if (rowsLeftToRead <= 0)
                         break;
+
+                    long numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCountSoFar - offset, rowsLeftToRead), groupReader.RowCount);
+                    rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
+
+                    long recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
+
+                    await ProcessRowGroup(dataTable, groupReader, fields, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup, cancellationToken);
                 }
             }
 
-            return dataTable;
+            return rowsLeftToRead;
         }
 
         private static async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)> fields,
-            int skipRecords, int readRecords, CancellationToken cancellationToken)
+            long skipRecords, long readRecords, CancellationToken cancellationToken)
         {
             int rowBeginIndex = dataTable.Rows.Count;
             bool isFirstColumn = true;
@@ -112,7 +137,7 @@ namespace ParquetFileViewer.Helpers
                     if (value == null)
                         dataTable.Rows[rowIndex][field.Name] = DBNull.Value;
                     else if (field.DataType == Parquet.Schema.DataType.DateTimeOffset)
-                        dataTable.Rows[rowIndex][field.Name] = (DateTime)value; 
+                        dataTable.Rows[rowIndex][field.Name] = (DateTime)value;
                     else if (field.DataType == Parquet.Schema.DataType.Int64
                         && logicalType?.TIMESTAMP != null)
                     {

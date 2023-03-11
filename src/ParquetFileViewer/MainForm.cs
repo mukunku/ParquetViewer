@@ -1,3 +1,5 @@
+using Parquet;
+using ParquetFileViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,8 +13,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Parquet;
-using ParquetFileViewer.Helpers;
 
 namespace ParquetFileViewer
 {
@@ -21,23 +21,24 @@ namespace ParquetFileViewer
         private const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
-        private const int loadingPanelWidth = 200;
-        private const int loadingPanelHeight = 200;
+        private const int LoadingPanelWidth = 200;
+        private const int LoadingPanelHeight = 200;
+        private const int PerformanceWarningCellCount = 350000;
         private const string QueryUselessPartRegex = "^WHERE ";
         private const string DefaultTableName = "MY_TABLE";
         private readonly string DefaultFormTitle;
 
         #region Members
-        private string fileToLoadOnLaunch = null;
-        private string openFilePath;
-        private string OpenFilePath
+        private readonly string fileToLoadOnLaunch = null;
+        private string openFileOrFolderPath;
+        private string OpenFileOrFolderPath
         {
-            get => this.openFilePath;
+            get => this.openFileOrFolderPath;
             set
             {
                 this.openFileSchema = null;
                 this.SelectedFields = null;
-                this.openFilePath = value;
+                this.openFileOrFolderPath = value;
                 this.changeFieldsMenuStripButton.Enabled = false;
                 this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
                 this.saveAsToolStripMenuItem.Enabled = false;
@@ -123,7 +124,7 @@ namespace ParquetFileViewer
         {
             get
             {
-                return !string.IsNullOrWhiteSpace(this.OpenFilePath) && this.SelectedFields != null;
+                return !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath) && this.SelectedFields != null;
             }
         }
 
@@ -133,6 +134,25 @@ namespace ParquetFileViewer
             get => this.mainDataSource;
             set
             {
+                //Check for performance issues
+                int? cellsToRender = value?.Columns.Count * value?.Rows.Count;
+                if (cellsToRender > PerformanceWarningCellCount && AppSettings.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.AllCells)
+                {
+                    //Don't spam the user so ask only once per app update
+                    if (AppSettings.WarningBypassedOnVersion != AboutBox.AssemblyVersion)
+                    {
+                        var choice = MessageBox.Show(this, $"Looks like you're loading a lot of data with column sizing set to 'Fit Headers & Content'. This might cause significant load times. " +
+                            Environment.NewLine + Environment.NewLine + $"If you experience performance issues try changing the default column sizing: Edit -> Column Sizing" +
+                            Environment.NewLine + Environment.NewLine + "Continue loading file anyway?", "Performance Warning",
+                            MessageBoxButtons.OKCancel);
+
+                        if (choice == DialogResult.Cancel)
+                            return;
+                        else
+                            AppSettings.WarningBypassedOnVersion = AboutBox.AssemblyVersion;
+                    }
+                }
+
                 this.mainDataSource = value;
                 this.mainGridView.DataSource = this.mainDataSource;
 
@@ -145,6 +165,8 @@ namespace ParquetFileViewer
                         if (column.ValueType == typeof(DateTime))
                             column.DefaultCellStyle.Format = dateFormat;
                     }
+
+                    
 
                     //Adjust column sizes if required
                     if (AppSettings.AutoSizeColumnsMode != DataGridViewAutoSizeColumnsMode.None)
@@ -166,7 +188,7 @@ namespace ParquetFileViewer
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
-            this.OpenFilePath = null;
+            this.OpenFileOrFolderPath = null;
 
             //Set DGV to be double buffered for smoother loading and scrolling
             if (!SystemInformation.TerminalServerSession)
@@ -190,7 +212,7 @@ namespace ParquetFileViewer
                 //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
                 if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
                 {
-                    this.OpenNewFile(this.fileToLoadOnLaunch);
+                    this.OpenNewFileOrFolder(this.fileToLoadOnLaunch);
                 }
 
                 //Setup date format checkboxes
@@ -217,7 +239,7 @@ namespace ParquetFileViewer
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -240,39 +262,56 @@ namespace ParquetFileViewer
 
         private void offsetTextBox_TextChanged(object sender, EventArgs e)
         {
-            int offset = 0;
-            if (int.TryParse(((TextBox)sender).Text, out offset))
+            var textbox = sender as TextBox;
+            if (int.TryParse(textbox.Text, out var offset))
                 this.CurrentOffset = offset;
             else
-                ((TextBox)sender).Text = this.CurrentOffset.ToString();
+                textbox.Text = this.CurrentOffset.ToString();
         }
 
         private void recordsToTextBox_TextChanged(object sender, EventArgs e)
         {
-            if (int.TryParse(((TextBox)sender).Text, out var recordCount))
+            var textbox = sender as TextBox;
+            if (int.TryParse(textbox.Text, out var recordCount))
                 this.CurrentMaxRowCount = recordCount;
             else
-                ((TextBox)sender).Text = this.CurrentMaxRowCount.ToString();
+                textbox.Text = this.CurrentMaxRowCount.ToString();
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.OpenFilePath = null;
+            this.OpenFileOrFolderPath = null;
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                if (this.openParquetFileDialog.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                if (this.openParquetFileDialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    this.OpenNewFile(this.openParquetFileDialog.FileName);
+                    this.OpenNewFileOrFolder(this.openParquetFileDialog.FileName);
                 }
             }
             catch (Exception ex)
             {
-                this.OpenFilePath = null;
-                this.ShowError(ex);
+                this.OpenFileOrFolderPath = null;
+                ShowError(ex);
+            }
+        }
+
+        private void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (this.openFolderDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    this.OpenNewFileOrFolder(this.openFolderDialog.SelectedPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.OpenFileOrFolderPath = null;
+                ShowError(ex);
             }
         }
 
@@ -284,7 +323,7 @@ namespace ParquetFileViewer
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -301,14 +340,14 @@ namespace ParquetFileViewer
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
         private void MainForm_SizeChanged(object sender, EventArgs e)
         {
             if (this.loadingPanel != null)
-                this.loadingPanel.Location = this.GetFormCenter(loadingPanelWidth / 2, loadingPanelHeight / 2);
+                this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);
         }
 
         private void runQueryButton_Click(object sender, EventArgs e)
@@ -325,7 +364,7 @@ namespace ParquetFileViewer
                 catch (Exception ex)
                 {
                     this.MainDataSource.DefaultView.RowFilter = null;
-                    this.ShowError(ex, "The query doesn't seem to be valid. Please try again.", false);
+                    ShowError(ex, "The query doesn't seem to be valid. Please try again.", false);
                 }
             }
         }
@@ -350,13 +389,13 @@ namespace ParquetFileViewer
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 if (files != null && files.Length > 0)
                 {
-                    this.OpenNewFile(files[0]);
+                    this.OpenNewFileOrFolder(files[0]);
                 }
             }
             catch (Exception ex)
             {
-                this.OpenFilePath = null;
-                this.ShowError(ex);
+                this.OpenFileOrFolderPath = null;
+                ShowError(ex);
             }
         }
 
@@ -409,7 +448,7 @@ MULTIPLE CONDITIONS:
             }
             catch (Exception ex)
             {
-                this.ShowError(ex, null, false);
+                ShowError(ex, null, false);
             }
         }
 
@@ -456,7 +495,7 @@ MULTIPLE CONDITIONS:
                     if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
                         color = Color.White;
 
-                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color, 
+                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color,
                         TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
 
                     e.Handled = true;
@@ -468,7 +507,7 @@ MULTIPLE CONDITIONS:
 
         private async void OpenFieldSelectionDialog(bool forceOpenDialog)
         {
-            if (string.IsNullOrWhiteSpace(this.OpenFilePath))
+            if (string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath))
             {
                 return;
             }
@@ -481,8 +520,8 @@ MULTIPLE CONDITIONS:
                 {
                     var schema = await Task.Run(async () =>
                     {
-                        var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }, cancellationToken);
-                        return parquetReader.Schema;
+                        var parquetEngine = await Helpers.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath);
+                        return parquetEngine.Schema;
                     }, cancellationToken);
 
                     this.openFileSchema = schema;
@@ -492,7 +531,7 @@ MULTIPLE CONDITIONS:
                     if (this.openFileSchema == null)
                     {
                         //cancel file open
-                        this.OpenFilePath = null;
+                        this.OpenFileOrFolderPath = null;
                     }
 
                     if (ex is not OperationCanceledException)
@@ -507,7 +546,7 @@ MULTIPLE CONDITIONS:
             }
 
             var fields = this.openFileSchema.Fields;
-            if (fields != null && fields.Count() > 0)
+            if (fields != null && fields.Count > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
@@ -537,9 +576,9 @@ MULTIPLE CONDITIONS:
             {
                 if (this.IsAnyFileOpen)
                 {
-                    if (!File.Exists(this.OpenFilePath))
+                    if (!File.Exists(this.OpenFileOrFolderPath) && !Directory.Exists(this.OpenFileOrFolderPath))
                     {
-                        throw new Exception(string.Format("The specified file no longer exists: {0}{1}Please try opening a new file", this.OpenFilePath, Environment.NewLine));
+                        throw new Exception(string.Format("The specified file/folder no longer exists: {0}{1}Please try opening a new file or folder", this.OpenFileOrFolderPath, Environment.NewLine));
                     }
 
                     var cancellationToken = this.ShowLoadingIcon("Loading Data");
@@ -548,30 +587,26 @@ MULTIPLE CONDITIONS:
                         var results = new ConcurrentDictionary<int, ParquetReadResult>();
                         if (AppSettings.ReadingEngine == ParquetEngine.Default)
                         {
-                            using (var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }))
-                            {
-                                DataTable result = await UtilityMethods.ParquetReaderToDataTable(parquetReader, this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
-                                results.TryAdd(1, new ParquetReadResult(result, parquetReader.ThriftMetadata.Num_rows));
-                            }
+                            var (data, totalRecordCount) = await UtilityMethods.ReadFileOrFolder(this.OpenFileOrFolderPath, this.SelectedFields, this.CurrentOffset, 
+                                this.CurrentMaxRowCount, cancellationToken);
+                            results.TryAdd(1, new ParquetReadResult(data, totalRecordCount));
                         }
                         else
                         {
                             int i = 0;
                             var fieldGroups = new List<(int, List<string>)>();
-                            foreach (List<string> fields in UtilityMethods.Split(this.SelectedFields, (int)(this.SelectedFields.Count / Environment.ProcessorCount)))
+                            foreach (var fields in UtilityMethods.Split(this.SelectedFields, (int)(this.SelectedFields.Count / Environment.ProcessorCount)))
                             {
-                                fieldGroups.Add((i++, fields));
+                                fieldGroups.Add((i++, fields.ToList()));
                             }
 
                             var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, CancellationToken = cancellationToken };
                             await Parallel.ForEachAsync(fieldGroups, options,
                                 async (fieldGroup, _cancellationToken) =>
                                 {
-                                    using (var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true }))
-                                    {
-                                        DataTable result = await UtilityMethods.ParquetReaderToDataTable(parquetReader, fieldGroup.Item2, this.CurrentOffset, this.CurrentMaxRowCount, _cancellationToken);
-                                        results.TryAdd(fieldGroup.Item1, new ParquetReadResult(result, parquetReader.ThriftMetadata.Num_rows));
-                                    }
+                                    var (data, totalRecordCount) = await UtilityMethods.ReadFileOrFolder(this.OpenFileOrFolderPath, fieldGroup.Item2, this.CurrentOffset,
+                                        this.CurrentMaxRowCount, _cancellationToken);
+                                    results.TryAdd(fieldGroup.Item1, new ParquetReadResult(data, totalRecordCount));
                                 });
                         }
 
@@ -596,7 +631,7 @@ MULTIPLE CONDITIONS:
             catch (Exception ex)
             {
                 if (ex is not OperationCanceledException)
-                    this.ShowError(ex);
+                    ShowError(ex);
             }
             finally
             {
@@ -604,7 +639,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
+        private static void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
         {
             MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -613,8 +648,8 @@ MULTIPLE CONDITIONS:
         {
             var cancellationToken = new CancellationTokenSource();
             this.loadingPanel = new Panel();
-            this.loadingPanel.Size = new Size(loadingPanelWidth, loadingPanelHeight);
-            this.loadingPanel.Location = this.GetFormCenter(loadingPanelWidth / 2, loadingPanelHeight / 2);
+            this.loadingPanel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
+            this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);
 
             this.loadingPanel.Controls.Add(new Label()
             {
@@ -690,9 +725,9 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void OpenNewFile(string filePath)
+        private void OpenNewFileOrFolder(string fileOrFolderPath)
         {
-            this.OpenFilePath = filePath;
+            this.OpenFileOrFolderPath = fileOrFolderPath;
 
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
             this.currentMaxRowCount = DefaultRowCount;
@@ -882,7 +917,15 @@ MULTIPLE CONDITIONS:
         {
             try
             {
-                string tableName = Path.GetFileNameWithoutExtension(this.OpenFilePath) ?? DefaultTableName;
+
+                var openFileOrFolderPath = this.OpenFileOrFolderPath;
+                if (openFileOrFolderPath?.EndsWith("/") == true)
+                {
+                    //trim trailing slash '/'
+                    openFileOrFolderPath = openFileOrFolderPath[..^1];
+                }
+
+                string tableName = Path.GetFileNameWithoutExtension(openFileOrFolderPath) ?? DefaultTableName;
                 if (this.mainDataSource?.Columns.Count > 0)
                 {
                     var dataset = new DataSet();
@@ -901,7 +944,7 @@ MULTIPLE CONDITIONS:
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -919,7 +962,7 @@ MULTIPLE CONDITIONS:
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -981,7 +1024,7 @@ MULTIPLE CONDITIONS:
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -995,7 +1038,7 @@ MULTIPLE CONDITIONS:
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -1003,14 +1046,13 @@ MULTIPLE CONDITIONS:
         {
             try
             {
-                using var parquetReader = await ParquetReader.CreateAsync(this.OpenFilePath, new ParquetOptions() { TreatByteArrayAsString = true });
-                using var metadataViewer = new MetadataViewer(parquetReader);
-
+                var parquetEngine = await Helpers.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath);
+                using var metadataViewer = new MetadataViewer(parquetEngine);
                 metadataViewer.ShowDialog(this);
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -1038,7 +1080,7 @@ MULTIPLE CONDITIONS:
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
 
@@ -1072,7 +1114,7 @@ MULTIPLE CONDITIONS:
             }
             catch (Exception ex)
             {
-                this.ShowError(ex);
+                ShowError(ex);
             }
         }
     }

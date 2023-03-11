@@ -29,7 +29,7 @@ namespace ParquetFileViewer
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
@@ -46,6 +46,7 @@ namespace ParquetFileViewer
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -67,6 +68,7 @@ namespace ParquetFileViewer
             this.parquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.multithreadedParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rememberRecordCountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.getSQLCreateTableScriptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.metadataViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,7 +85,7 @@ namespace ParquetFileViewer
             this.totalRowCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.mainStatusStrip = new System.Windows.Forms.StatusStrip();
             this.exportFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.rememberRecordCountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFolderDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainGridView)).BeginInit();
             this.mainMenuStrip.SuspendLayout();
@@ -247,14 +249,14 @@ namespace ParquetFileViewer
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mainGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 10);
             this.mainGridView.EnableHeadersVisualStyles = false;
@@ -276,7 +278,7 @@ namespace ParquetFileViewer
             // 
             // openParquetFileDialog
             // 
-            this.openParquetFileDialog.Filter = "Parquet Files|*.parquet;*.snappy;*.gz";
+            this.openParquetFileDialog.Filter = "Parquet Files|*.parquet;*.snappy;*.gz;*.gzip";
             // 
             // mainMenuStrip
             // 
@@ -297,6 +299,7 @@ namespace ParquetFileViewer
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newToolStripMenuItem,
             this.openToolStripMenuItem,
+            this.openFolderToolStripMenuItem,
             this.toolStripSeparator,
             this.saveToolStripMenuItem,
             this.saveAsToolStripMenuItem,
@@ -323,8 +326,18 @@ namespace ParquetFileViewer
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.openToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            this.openToolStripMenuItem.Text = "&Open";
+            this.openToolStripMenuItem.Text = "&Open File";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // openFolderToolStripMenuItem
+            // 
+            this.openFolderToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("openFolderToolStripMenuItem.Image")));
+            this.openFolderToolStripMenuItem.Name = "openFolderToolStripMenuItem";
+            this.openFolderToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
+            | System.Windows.Forms.Keys.O)));
+            this.openFolderToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.openFolderToolStripMenuItem.Text = "&Open Folder";
+            this.openFolderToolStripMenuItem.Click += new System.EventHandler(this.openFolderToolStripMenuItem_Click);
             // 
             // toolStripSeparator
             // 
@@ -362,8 +375,9 @@ namespace ParquetFileViewer
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.W)));
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            this.exitToolStripMenuItem.Text = "E&xit";
+            this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // editToolStripMenuItem
@@ -506,6 +520,15 @@ namespace ParquetFileViewer
             this.multithreadedParquetEngineToolStripMenuItem.Text = "Multithreaded";
             this.multithreadedParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.MultithreadedParquetEngineToolStripMenuItem_Click);
             // 
+            // rememberRecordCountToolStripMenuItem
+            // 
+            this.rememberRecordCountToolStripMenuItem.Checked = true;
+            this.rememberRecordCountToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.rememberRecordCountToolStripMenuItem.Name = "rememberRecordCountToolStripMenuItem";
+            this.rememberRecordCountToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.rememberRecordCountToolStripMenuItem.Text = "Remember Record Count";
+            this.rememberRecordCountToolStripMenuItem.Click += new System.EventHandler(this.rememberRecordCountToolStripMenuItem_Click);
+            // 
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -632,14 +655,10 @@ namespace ParquetFileViewer
             this.exportFileDialog.RestoreDirectory = true;
             this.exportFileDialog.Title = "Choose Save Location";
             // 
-            // rememberRecordCountToolStripMenuItem
+            // openFolderDialog
             // 
-            this.rememberRecordCountToolStripMenuItem.Checked = true;
-            this.rememberRecordCountToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.rememberRecordCountToolStripMenuItem.Name = "rememberRecordCountToolStripMenuItem";
-            this.rememberRecordCountToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            this.rememberRecordCountToolStripMenuItem.Text = "Remember Record Count";
-            this.rememberRecordCountToolStripMenuItem.Click += new System.EventHandler(this.rememberRecordCountToolStripMenuItem_Click);
+            this.openFolderDialog.ShowNewFolderButton = false;
+            this.openFolderDialog.Description = "Select a folder with parquet files";
             // 
             // MainForm
             // 
@@ -727,6 +746,8 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt2ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem rememberRecordCountToolStripMenuItem;
+        private System.Windows.Forms.FolderBrowserDialog openFolderDialog;
+        private System.Windows.Forms.ToolStripMenuItem openFolderToolStripMenuItem;
     }
 }
 
