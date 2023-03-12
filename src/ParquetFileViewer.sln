@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetFileViewer", "Parque
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Tests", "ParquetViewer.Tests\ParquetViewer.Tests.csproj", "{16D10BC9-08BF-4248-8975-1B54C42EB2C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParquetViewer.Engine", "ParquetViewer.Engine\ParquetViewer.Engine.csproj", "{77900356-25F3-4A24-B638-845C784C1175}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Engine", "ParquetViewer.Engine\ParquetViewer.Engine.csproj", "{77900356-25F3-4A24-B638-845C784C1175}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
