@@ -170,7 +170,7 @@ namespace ParquetViewer
             }
         }
 
-        private ParquetViewer.Engine.ParquetEngine _openParquetEngine = null;
+        private Engine.ParquetEngine _openParquetEngine = null;
         #endregion
 
         public MainForm()
