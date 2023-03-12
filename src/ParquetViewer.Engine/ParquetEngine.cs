@@ -145,7 +145,7 @@ namespace ParquetViewer.Engine
 
         private static IEnumerable<string> ListParquetFiles(string folderPath)
         {
-            var parquetFiles = Directory.EnumerateFiles(folderPath)
+            var parquetFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)
                 .Where(file =>
                         file.EndsWith(".parquet") ||
                         file.EndsWith(".parquet.gzip") ||
