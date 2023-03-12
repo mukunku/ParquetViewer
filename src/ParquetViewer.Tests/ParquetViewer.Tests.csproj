@@ -54,6 +54,18 @@
     <None Update="Data\MANY_COLUMNS_PERFORMANCE_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\PARTITIONED_PARQUET_FILE_TEST1\bldgtype=B\bd8c129da60e412db4b21800b9e0b983.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\PARTITIONED_PARQUET_FILE_TEST1\bldgtype=M\7405c310a7484964a45695e6b7bf507f.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\PARTITIONED_PARQUET_FILE_TEST1\bldgtype=R\25f774cc6eaf48189d6995e99edfb594.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\PARTITIONED_PARQUET_FILE_TEST1\bldgtype=X\4527cef6cc044c939656ec2a4cfcc992.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Data\RANDOM_TEST_FILE1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

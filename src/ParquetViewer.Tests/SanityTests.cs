@@ -1,3 +1,4 @@
+using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
 
 namespace ParquetViewer.Tests
@@ -91,6 +92,22 @@ namespace ParquetViewer.Tests
         {
             var ex = await Assert.ThrowsAsync<MultipleSchemasFoundException>(() => ParquetEngine.OpenFileOrFolderAsync("Data", default));
             Assert.Equal("Multiple schemas found in directory.", ex.Message);
+        }
+
+        [Fact]
+        public async Task PARTITIONED_PARQUET_FILE_TEST()
+        {
+            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST1", default);
+
+            Assert.Equal(2000, parquetEngine.RecordCount);
+            Assert.Equal(9, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.Equal("SHAPEFILE_JSON", dataTable.Rows[0][0]);
+            Assert.Equal("5022121000", dataTable.Rows[200][2]);
+            Assert.Equal((double)450, dataTable.Rows[500][3]);
+            Assert.Equal("B000CTP5G2P2", dataTable.Rows[1999][8]);
+            Assert.Equal("USA", dataTable.Rows[500][1]);
         }
 
         [Fact(Skip = "Skipping because I need to convert this to the multi-threaded parquet engine implementation to reduce the run time.")]
