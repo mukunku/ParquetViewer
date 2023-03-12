@@ -43,13 +43,15 @@ namespace ParquetViewer
                 this.MainDataSource.Clear();
                 this.MainDataSource.Columns.Clear();
 
-                if (string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {
                     this.Text = this.DefaultFormTitle;
                 }
                 else
                 {
-                    this.Text = string.Concat($"File: ", value);
+                    this.Text = string.Concat(
+                        File.Exists(this._openFileOrFolderPath) ? $"File: " : "Folder: ",
+                        this._openFileOrFolderPath);
                     this.changeFieldsMenuStripButton.Enabled = true;
                     this.saveAsToolStripMenuItem.Enabled = true;
                     this.getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
@@ -179,6 +181,9 @@ namespace ParquetViewer
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
             this.OpenFileOrFolderPath = null;
+
+            //Have to set this here because it gets deleted from the .Designer.cs file for some reason
+            this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap(); 
 
             //Set DGV to be double buffered for smoother loading and scrolling
             if (!SystemInformation.TerminalServerSession)
