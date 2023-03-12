@@ -29,7 +29,7 @@ namespace ParquetFileViewer
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
@@ -77,7 +77,7 @@ namespace ParquetFileViewer
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showingRecordCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.actualShownRecordCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.recordsTextLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.recordsTextStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.springStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.showingStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.recordCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -249,14 +249,14 @@ namespace ParquetFileViewer
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mainGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 10);
             this.mainGridView.EnableHeadersVisualStyles = false;
@@ -593,16 +593,16 @@ namespace ParquetFileViewer
             this.actualShownRecordCountLabel.Size = new System.Drawing.Size(14, 17);
             this.actualShownRecordCountLabel.Text = "0";
             // 
-            // recordsTextLabel
+            // recordsTextStatusBarLabel
             // 
-            this.recordsTextLabel.Name = "recordsTextLabel";
-            this.recordsTextLabel.Size = new System.Drawing.Size(44, 17);
-            this.recordsTextLabel.Text = "Results";
+            this.recordsTextStatusBarLabel.Name = "recordsTextStatusBarLabel";
+            this.recordsTextStatusBarLabel.Size = new System.Drawing.Size(44, 17);
+            this.recordsTextStatusBarLabel.Text = "Results";
             // 
             // springStatusBarLabel
             // 
             this.springStatusBarLabel.Name = "springStatusBarLabel";
-            this.springStatusBarLabel.Size = new System.Drawing.Size(692, 17);
+            this.springStatusBarLabel.Size = new System.Drawing.Size(617, 17);
             this.springStatusBarLabel.Spring = true;
             // 
             // showingStatusBarLabel
@@ -636,7 +636,7 @@ namespace ParquetFileViewer
             this.mainStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showingRecordCountStatusBarLabel,
             this.actualShownRecordCountLabel,
-            this.recordsTextLabel,
+            this.recordsTextStatusBarLabel,
             this.springStatusBarLabel,
             this.showingStatusBarLabel,
             this.recordCountStatusBarLabel,
@@ -658,8 +658,8 @@ namespace ParquetFileViewer
             // 
             // openFolderDialog
             // 
-            this.openFolderDialog.ShowNewFolderButton = false;
             this.openFolderDialog.Description = "Select a folder with parquet files";
+            this.openFolderDialog.ShowNewFolderButton = false;
             // 
             // MainForm
             // 
@@ -719,7 +719,7 @@ namespace ParquetFileViewer
         private System.Windows.Forms.Button clearFilterButton;
         private System.Windows.Forms.ToolStripStatusLabel showingRecordCountStatusBarLabel;
         private System.Windows.Forms.ToolStripStatusLabel actualShownRecordCountLabel;
-        private System.Windows.Forms.ToolStripStatusLabel recordsTextLabel;
+        private System.Windows.Forms.ToolStripStatusLabel recordsTextStatusBarLabel;
         private System.Windows.Forms.ToolStripStatusLabel springStatusBarLabel;
         private System.Windows.Forms.ToolStripStatusLabel showingStatusBarLabel;
         private System.Windows.Forms.ToolStripStatusLabel recordCountStatusBarLabel;

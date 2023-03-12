@@ -343,7 +343,7 @@ namespace ParquetFileViewer
                                 {
                                     using var parquetEngine = await this._openParquetEngine.CloneAsync(cancellationToken);
                                     var dataTable = await parquetEngine.ReadRowsAsync(fieldGroup.SubSetOfFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
-                                    results.TryAdd(fieldGroup.Index, dataTable);// new ParquetReadResult(dataTable, (long)dataTabe.ExtendedProperties[Helpers.ParquetEngine.TotalRecordCountExtendedPropertyKey]));
+                                    results.TryAdd(fieldGroup.Index, dataTable);
                                 });
                         }
 
@@ -388,55 +388,6 @@ namespace ParquetFileViewer
             {
                 this.HideLoadingIcon();
             }
-        }
-
-        private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("No valid Parquet files found in folder. Invalid Parquet files:");
-            foreach (var skippedFile in ex.SkippedFiles)
-            {
-                sb.AppendLine($"-{skippedFile.FileName}");
-            }
-            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
-        }
-
-        private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("Some files could not be loaded. Invalid Parquet files:");
-            foreach (var skippedFile in ex.SkippedFiles)
-            {
-                sb.AppendLine($"-{skippedFile.FileName}");
-            }
-            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
-        }
-
-        private static void HandleFileReadException(FileReadException ex)
-        {
-            ShowError(new Exception($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
-                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}", ex));
-        }
-
-        private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("Multiple schemas detected. ");
-
-            int schemaIndex = 1;
-            const int topCount = 5;
-            foreach (var schema in ex.Schemas)
-            {
-                sb.AppendLine($"SCHEMA-{schemaIndex++} FIELDS (TOP 5):");
-                for (var i = 0; i < topCount; i++)
-                {
-                    if (i == schema.Fields.Count)
-                        break;
-
-                    sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
-                }
-            }
-            ShowError(new Exception(sb.ToString(), ex));
         }
 
         private void OpenNewFileOrFolder(string fileOrFolderPath)

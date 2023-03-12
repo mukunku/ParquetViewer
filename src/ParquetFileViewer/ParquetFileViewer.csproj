@@ -32,7 +32,7 @@
     <PackageReference Include="Apache.Arrow" Version="11.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Parquet.Net" Version="4.4.4" />
+    <PackageReference Include="Parquet.Net" Version="4.5.4" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
 </Project>
