@@ -1,5 +1,3 @@
-
-
 namespace ParquetViewer.Tests
 {
     public class SanityTests
@@ -86,17 +84,16 @@ namespace ParquetViewer.Tests
             Assert.Equal("Duplicate column detected. Column names are case insensitive and must be unique.", ex.Message);
         }
 
-        [Fact]
+        [Fact(Skip = "Skipping because this test takes close to a minute.")]
         public async Task MANY_COLUMNS_PERFORMANCE_TEST1()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING1.parquet", default);
+            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MANY_COLUMNS_PERFORMANCE_TEST1.parquet", default);
 
-            Assert.Equal(14610, parquetEngine.RecordCount);
-            Assert.Equal(12, parquetEngine.Fields.Count);
+            var stopWatch = Stopwatch.StartNew();
+            await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            stopWatch.Stop();
 
-            var ex = await Assert.ThrowsAsync<NotSupportedException>(() => parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default));
-            Assert.Equal("Duplicate column detected. Column names are case insensitive and must be unique.", ex.Message);
+            Assert.InRange(stopWatch.ElapsedMilliseconds, 0, 65000);
         }
-        
     }
 }
