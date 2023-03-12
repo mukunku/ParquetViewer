@@ -107,14 +107,15 @@ namespace ParquetViewer
             }
         }
 
-        private void MainForm_DragDrop(object sender, DragEventArgs e)
+        private async void MainForm_DragDrop(object sender, DragEventArgs e)
         {
             try
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 if (files != null && files.Length > 0)
                 {
-                    this.OpenNewFileOrFolder(files[0]);
+                    this.Cursor = Cursors.WaitCursor;
+                    await this.OpenNewFileOrFolder(files[0]);
                 }
             }
             catch (Exception ex)

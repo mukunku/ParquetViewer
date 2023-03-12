@@ -30,6 +30,7 @@ namespace ParquetViewer
             this.loadingPanel = new Panel();
             this.loadingPanel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
             this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);
+            //this.loadingPanel.BorderStyle = BorderStyle.FixedSingle;
 
             this.loadingPanel.Controls.Add(new Label()
             {
@@ -64,8 +65,6 @@ namespace ParquetViewer
             this.loadingPanel.Controls.Add(cancelButton);
             cancelButton.BringToFront();
 
-            Cursor.Current = Cursors.WaitCursor;
-
             this.Controls.Add(this.loadingPanel);
 
             this.loadingPanel.BringToFront();
@@ -81,7 +80,6 @@ namespace ParquetViewer
         {
             this.mainTableLayoutPanel.Enabled = true;
             this.mainMenuStrip.Enabled = true;
-            Cursor.Current = Cursors.Default;
 
             if (this.loadingPanel != null)
                 this.loadingPanel.Dispose();

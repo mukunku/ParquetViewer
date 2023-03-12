@@ -228,7 +228,7 @@ namespace ParquetViewer
             }
         }
 
-        private async void OpenFieldSelectionDialog(bool forceOpenDialog)
+        private async Task OpenFieldSelectionDialog(bool forceOpenDialog)
         {
             if (string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath))
             {
@@ -237,7 +237,7 @@ namespace ParquetViewer
 
             if (this._openParquetEngine == null)
             {
-                var cancellationToken = this.ShowLoadingIcon("Analyzing File");
+                var cancellationToken = this.ShowLoadingIcon("Loading Fields");
 
                 try
                 {
@@ -245,6 +245,7 @@ namespace ParquetViewer
                 }
                 catch (Exception ex)
                 {
+                    this.HideLoadingIcon();
 
                     if (this._openParquetEngine == null)
                     {
@@ -273,10 +274,6 @@ namespace ParquetViewer
 
                     return;
                 }
-                finally
-                {
-                    this.HideLoadingIcon();
-                }
             }
 
             var fields = this._openParquetEngine.Schema.Fields;
@@ -284,17 +281,37 @@ namespace ParquetViewer
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
-                    this.SelectedFields = fields.Where(f => !FieldsToLoadForm.UnsupportedSchemaTypes.Contains(f.SchemaType)).Select(f => f.Name).ToList();
+                    this.HideLoadingIcon();
+                    this.Cursor = Cursors.WaitCursor;
+
+                    try
+                    {
+                        this.SelectedFields = fields.Where(f => !FieldsToLoadForm.UnsupportedSchemaTypes.Contains(f.SchemaType)).Select(f => f.Name).ToList();
+                    }
+                    finally
+                    {
+                        this.Cursor = Cursors.Default;
+                    }
                 }
                 else
                 {
-                    var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
-                    if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
+                    await Task.Delay(125); //Give the UI thread some time to render the loading icon
+                    this.Cursor = Cursors.WaitCursor;
+                    try
                     {
-                        if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
-                            this.SelectedFields = fieldSelectionForm.NewSelectedFields;
-                        else
-                            this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
+                        this.HideLoadingIcon();
+                        var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
+                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
+                        {              
+                            if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
+                                this.SelectedFields = fieldSelectionForm.NewSelectedFields;
+                            else
+                                this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
+                        }
+                    }
+                    finally
+                    {
+                        this.Cursor = Cursors.Default;
                     }
                 }
             }
@@ -396,7 +413,7 @@ namespace ParquetViewer
             }
         }
 
-        private void OpenNewFileOrFolder(string fileOrFolderPath)
+        private Task OpenNewFileOrFolder(string fileOrFolderPath)
         {
             this.OpenFileOrFolderPath = fileOrFolderPath;
 
@@ -405,7 +422,7 @@ namespace ParquetViewer
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.currentOffset = DefaultOffset;
 
-            this.OpenFieldSelectionDialog(false);
+            return this.OpenFieldSelectionDialog(false);
         }
 
         private void runQueryButton_Click(object sender, EventArgs e)

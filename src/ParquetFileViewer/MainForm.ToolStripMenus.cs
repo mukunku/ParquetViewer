@@ -17,13 +17,13 @@ namespace ParquetViewer
             this.OpenFileOrFolderPath = null;
         }
 
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 if (this.openParquetFileDialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    this.OpenNewFileOrFolder(this.openParquetFileDialog.FileName);
+                    await this.OpenNewFileOrFolder(this.openParquetFileDialog.FileName);
                 }
             }
             catch (Exception ex)
@@ -33,13 +33,13 @@ namespace ParquetViewer
             }
         }
 
-        private void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 if (this.openFolderDialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    this.OpenNewFileOrFolder(this.openFolderDialog.SelectedPath);
+                    await this.OpenNewFileOrFolder(this.openFolderDialog.SelectedPath);
                 }
             }
             catch (Exception ex)
@@ -66,11 +66,11 @@ namespace ParquetViewer
             this.Close();
         }
 
-        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void changeFieldsMenuStripButton_Click(object sender, EventArgs e)
         {
             try
             {
-                this.OpenFieldSelectionDialog(true);
+                await this.OpenFieldSelectionDialog(true);
             }
             catch (Exception ex)
             {

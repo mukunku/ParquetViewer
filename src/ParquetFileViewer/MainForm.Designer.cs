@@ -397,7 +397,7 @@ namespace ParquetViewer
             this.changeFieldsMenuStripButton.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
             this.changeFieldsMenuStripButton.Size = new System.Drawing.Size(217, 22);
             this.changeFieldsMenuStripButton.Text = "Add/Remove &Fields";
-            this.changeFieldsMenuStripButton.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
+            this.changeFieldsMenuStripButton.Click += new System.EventHandler(this.changeFieldsMenuStripButton_Click);
             // 
             // changeDateFormatToolStripMenuItem
             // 

@@ -1,6 +1,4 @@
-﻿using Parquet.Data;
-using Parquet.Schema;
-using ParquetViewer;
+﻿using Parquet.Schema;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
