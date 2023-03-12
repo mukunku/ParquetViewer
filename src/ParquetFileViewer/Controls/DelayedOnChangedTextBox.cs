@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace ParquetFileViewer.Controls
+namespace ParquetViewer.Controls
 {
     public class DelayedOnChangedTextBox : TextBox
     {
@@ -13,13 +13,13 @@ namespace ParquetFileViewer.Controls
         public DelayedOnChangedTextBox()
             : base()
         {
-            this.DelayedTextChangedTimeout = 1 * 1000;
+            DelayedTextChangedTimeout = 1 * 1000;
         }
 
         public DelayedOnChangedTextBox(int secondsDelay)
             : base()
         {
-            this.DelayedTextChangedTimeout = secondsDelay * 1000;
+            DelayedTextChangedTimeout = secondsDelay * 1000;
         }
 
         protected override void Dispose(bool disposing)
@@ -38,18 +38,18 @@ namespace ParquetFileViewer.Controls
 
         protected virtual void OnDelayedTextChanged(EventArgs e)
         {
-            this.DelayedTextChanged?.Invoke(this, e);
+            DelayedTextChanged?.Invoke(this, e);
         }
 
         protected override void OnTextChanged(EventArgs e)
         {
-            if (this._skipNextTextChange)
+            if (_skipNextTextChange)
             {
-                _skipNextTextChange = false; 
+                _skipNextTextChange = false;
             }
             else
             {
-                this.InitializeDelayedTextChangedEvent();
+                InitializeDelayedTextChangedEvent();
             }
 
             base.OnTextChanged(e);
@@ -61,10 +61,10 @@ namespace ParquetFileViewer.Controls
         /// <param name="text">New value to set as the textbox's text</param>
         public void SetTextQuiet(string text)
         {
-            if (!this.Text.Equals(text)) //don't change value if it's the same because OnTextChanged won't get triggered
+            if (!Text.Equals(text)) //don't change value if it's the same because OnTextChanged won't get triggered
             {
-                this._skipNextTextChange = true;
-                this.Text = text;
+                _skipNextTextChange = true;
+                Text = text;
             }
         }
 
@@ -73,11 +73,11 @@ namespace ParquetFileViewer.Controls
             if (_delayedTextChangedTimer != null)
                 _delayedTextChangedTimer.Stop();
 
-            if (_delayedTextChangedTimer == null || _delayedTextChangedTimer.Interval != this.DelayedTextChangedTimeout)
+            if (_delayedTextChangedTimer == null || _delayedTextChangedTimer.Interval != DelayedTextChangedTimeout)
             {
                 _delayedTextChangedTimer = new Timer();
                 _delayedTextChangedTimer.Tick += new EventHandler(HandleDelayedTextChangedTimerTick);
-                _delayedTextChangedTimer.Interval = this.DelayedTextChangedTimeout;
+                _delayedTextChangedTimer.Interval = DelayedTextChangedTimeout;
             }
 
             _delayedTextChangedTimer.Start();
@@ -88,7 +88,7 @@ namespace ParquetFileViewer.Controls
             Timer timer = sender as Timer;
             timer.Stop();
 
-            this.OnDelayedTextChanged(EventArgs.Empty);
+            OnDelayedTextChanged(EventArgs.Empty);
         }
     }
 }

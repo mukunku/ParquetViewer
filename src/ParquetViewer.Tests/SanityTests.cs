@@ -19,5 +19,9 @@ namespace ParquetViewer.Tests
             Assert.True((bool)dataTable.Rows[20][336]);
             Assert.Equal(DBNull.Value, dataTable.Rows[21][334]);
         }
+
+        //TODO: Add rest of tests
+
+        //Also get rid of multi threaded engine. Only if there's 1000+ columns
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ParquetFileViewer.Helpers;
+using ParquetViewer;
 using System;
 using System.Data;
 using System.Diagnostics;
@@ -104,34 +105,6 @@ namespace ParquetFileViewer
                 }
                 else
                     MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void DefaultParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.ReadingEngine = ParquetEngine.Default;
-                this.defaultParquetEngineToolStripMenuItem.Checked = true;
-                this.multithreadedParquetEngineToolStripMenuItem.Checked = false;
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void MultithreadedParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.ReadingEngine = ParquetEngine.Default_Multithreaded;
-                this.defaultParquetEngineToolStripMenuItem.Checked = false;
-                this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
             }
             catch (Exception ex)
             {

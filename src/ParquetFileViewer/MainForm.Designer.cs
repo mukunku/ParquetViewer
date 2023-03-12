@@ -1,4 +1,6 @@
 
+using ParquetViewer.Controls;
+
 namespace ParquetFileViewer
 {
     partial class MainForm
@@ -65,9 +67,6 @@ namespace ParquetFileViewer
             this.defaultToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.columnHeadersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.columnHeadersContentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.parquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.defaultParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.multithreadedParquetEngineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rememberRecordCountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.getSQLCreateTableScriptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -386,7 +385,6 @@ namespace ParquetFileViewer
             this.changeFieldsMenuStripButton,
             this.changeDateFormatToolStripMenuItem,
             this.columnSizingToolStripMenuItem,
-            this.parquetEngineToolStripMenuItem,
             this.rememberRecordCountToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
@@ -497,29 +495,6 @@ namespace ParquetFileViewer
             this.columnHeadersContentToolStripMenuItem.Text = "Fit Headers && Content";
             this.columnHeadersContentToolStripMenuItem.Click += new System.EventHandler(this.changeColumnSizingToolStripMenuItem_Click);
             // 
-            // parquetEngineToolStripMenuItem
-            // 
-            this.parquetEngineToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.defaultParquetEngineToolStripMenuItem,
-            this.multithreadedParquetEngineToolStripMenuItem});
-            this.parquetEngineToolStripMenuItem.Name = "parquetEngineToolStripMenuItem";
-            this.parquetEngineToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            this.parquetEngineToolStripMenuItem.Text = "Parquet Engine";
-            // 
-            // defaultParquetEngineToolStripMenuItem
-            // 
-            this.defaultParquetEngineToolStripMenuItem.Name = "defaultParquetEngineToolStripMenuItem";
-            this.defaultParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.defaultParquetEngineToolStripMenuItem.Text = "Default";
-            this.defaultParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.DefaultParquetEngineToolStripMenuItem_Click);
-            // 
-            // multithreadedParquetEngineToolStripMenuItem
-            // 
-            this.multithreadedParquetEngineToolStripMenuItem.Name = "multithreadedParquetEngineToolStripMenuItem";
-            this.multithreadedParquetEngineToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.multithreadedParquetEngineToolStripMenuItem.Text = "Multithreaded";
-            this.multithreadedParquetEngineToolStripMenuItem.Click += new System.EventHandler(this.MultithreadedParquetEngineToolStripMenuItem_Click);
-            // 
             // rememberRecordCountToolStripMenuItem
             // 
             this.rememberRecordCountToolStripMenuItem.Checked = true;
@@ -601,7 +576,7 @@ namespace ParquetFileViewer
             // springStatusBarLabel
             // 
             this.springStatusBarLabel.Name = "springStatusBarLabel";
-            this.springStatusBarLabel.Size = new System.Drawing.Size(661, 17);
+            this.springStatusBarLabel.Size = new System.Drawing.Size(692, 17);
             this.springStatusBarLabel.Spring = true;
             // 
             // showingStatusBarLabel
@@ -697,9 +672,9 @@ namespace ParquetFileViewer
         private System.Windows.Forms.TableLayoutPanel mainTableLayoutPanel;
         private System.Windows.Forms.OpenFileDialog openParquetFileDialog;
         private System.Windows.Forms.Label recordsToLabel;
-        private ParquetFileViewer.Controls.DelayedOnChangedTextBox recordCountTextBox;
+        private DelayedOnChangedTextBox recordCountTextBox;
         private System.Windows.Forms.Label showRecordsFromLabel;
-        private ParquetFileViewer.Controls.DelayedOnChangedTextBox offsetTextBox;
+        private DelayedOnChangedTextBox offsetTextBox;
         private System.Windows.Forms.DataGridView mainGridView;
         private System.Windows.Forms.MenuStrip mainMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
@@ -732,9 +707,6 @@ namespace ParquetFileViewer
         private System.Windows.Forms.ToolStripMenuItem changeDateFormatToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem parquetEngineToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem defaultParquetEngineToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem multithreadedParquetEngineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem getSQLCreateTableScriptToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem metadataViewerToolStripMenuItem;

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using ParquetFileViewer;
+using System;
 using System.IO;
 using System.Windows.Forms;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     static class Program
     {

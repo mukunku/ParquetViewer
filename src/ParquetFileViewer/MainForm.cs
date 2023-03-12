@@ -1,5 +1,6 @@
-using ParquetFileViewer.Helpers;
+using ParquetViewer;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace ParquetFileViewer
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
         private const int PerformanceWarningCellCount = 350000;
+        private const int MultiThreadedParquetEngineColumnCountThreshold = 1000;
         private readonly string DefaultFormTitle;
 
         #region Members
@@ -63,7 +65,7 @@ namespace ParquetFileViewer
             get => this.selectedFields;
             set
             {
-                this.selectedFields = value?.Take(500).ToList();
+                this.selectedFields = value?.ToList();
 
                 //Check for duplicate fields (We don't support case sensitive field names unfortunately)
                 var duplicateFields = this.selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
@@ -207,11 +209,6 @@ namespace ParquetFileViewer
                 //Setup date format checkboxes
                 this.RefreshDateFormatMenuItemSelection();
 
-                if (AppSettings.ReadingEngine == ParquetEngine.Default)
-                    this.defaultParquetEngineToolStripMenuItem.Checked = true;
-                else if (AppSettings.ReadingEngine == ParquetEngine.Default_Multithreaded)
-                    this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
-
                 foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
                 {
                     if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
@@ -324,13 +321,18 @@ namespace ParquetFileViewer
                     var finalResult = await Task.Run(async () =>
                     {
                         var results = new ConcurrentDictionary<int, DataTable>();
-                        if (AppSettings.ReadingEngine == ParquetEngine.Default)
+                        if (this.SelectedFields.Count < MultiThreadedParquetEngineColumnCountThreshold)
                         {
                             var dataTable = await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
                             results.TryAdd(1, dataTable);
                         }
                         else
                         {
+                            //In my experience the multi-threaded parquet engine is only beneficial when processing more than 1k fields. In 
+                            //all other cases the single threaded was faster. I'm not sure if this applies to all users' experience but I want
+                            //the app to be able to adapt to the user's needs automatically, instead of people knowing which parquet engine is
+                            //best for their use case.
+
                             int i = 0;
                             var fieldGroups = new List<(int Index, List<string> SubSetOfFields)>();
                             foreach (var fields in UtilityMethods.Split(this.SelectedFields, Environment.ProcessorCount))

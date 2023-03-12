@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 
-namespace ParquetFileViewer.Helpers
+namespace ParquetViewer.Helpers
 {
     public static class ExtensionMethods
     {

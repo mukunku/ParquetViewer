@@ -5,7 +5,7 @@ using Parquet.Thrift;
 using System;
 using System.Linq;
 
-namespace ParquetFileViewer.Helpers
+namespace ParquetViewer.Helpers
 {
     public static class ParquetMetadataAnalyzers
     {
@@ -61,14 +61,14 @@ namespace ParquetFileViewer.Helpers
                 jsonObject[nameof(thriftMetadata.Schema)] = schemas;
 
                 var rowGroups = new JArray();
-                foreach(var rowGroup in thriftMetadata.Row_groups ?? Enumerable.Empty<RowGroup>())
+                foreach (var rowGroup in thriftMetadata.Row_groups ?? Enumerable.Empty<RowGroup>())
                 {
                     var rowGroupObject = new JObject();
                     rowGroupObject[nameof(rowGroup.Ordinal)] = rowGroup.Ordinal;
                     rowGroupObject[nameof(rowGroup.Num_rows)] = rowGroup.Num_rows;
-                    
+
                     var sortingColumns = new JArray();
-                    foreach(var sortingColumn in rowGroup.Sorting_columns ?? Enumerable.Empty<SortingColumn>())
+                    foreach (var sortingColumn in rowGroup.Sorting_columns ?? Enumerable.Empty<SortingColumn>())
                     {
                         var sortingColumnObject = new JObject();
                         sortingColumnObject[nameof(sortingColumn.Column_idx)] = sortingColumn.Column_idx;
@@ -100,7 +100,7 @@ namespace ParquetFileViewer.Helpers
             try
             {
                 //Pandas is already json; so just make it pretty.
-                return JValue.Parse(pandas).ToString(Formatting.Indented);
+                return JToken.Parse(pandas).ToString(Formatting.Indented);
             }
             catch (Exception)
             {

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Data;
 using System.Text;
 
-namespace ParquetFileViewer.Helpers
+namespace ParquetViewer.Helpers
 {
     public class CustomScriptBasedSchemaAdapter
     {
@@ -41,10 +41,10 @@ namespace ParquetFileViewer.Helpers
         {
             if (databaseName == null || databaseName.Trim().Length == 0)
             {
-                throw new ArgumentException(string.Format("The database name passed is {0}", (databaseName == null ? "null" : "empty")), "databaseName");
+                throw new ArgumentException(string.Format("The database name passed is {0}", databaseName == null ? "null" : "empty"), "databaseName");
             }
 
-            return string.Format("IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'{0}') BEGIN CREATE DATABASE {1};\n END\n", databaseName, this.MakeSafe(databaseName));
+            return string.Format("IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'{0}') BEGIN CREATE DATABASE {1};\n END\n", databaseName, MakeSafe(databaseName));
         }
 
         public string GetSchemaScript(DataSet dataSet, bool markTablesAsLocalTemp)
@@ -58,7 +58,7 @@ namespace ParquetFileViewer.Helpers
             {
                 try
                 {
-                    stringBuilder.Append(this.MakeTable(table, markTablesAsLocalTemp));
+                    stringBuilder.Append(MakeTable(table, markTablesAsLocalTemp));
                 }
                 catch (ArgumentException argumentException)
                 {
@@ -67,20 +67,20 @@ namespace ParquetFileViewer.Helpers
             }
             foreach (DataTable dataTable in dataSet.Tables)
             {
-                if ((int)dataTable.PrimaryKey.Length <= 0)
+                if (dataTable.PrimaryKey.Length <= 0)
                 {
                     continue;
                 }
-                string str = this.MakeSafe(string.Concat(this.TablePrefix, dataTable.TableName));
-                string str1 = this.MakeSafe(string.Concat("PK_", this.TablePrefix, dataTable.TableName));
-                string str2 = this.MakeList(dataTable.PrimaryKey);
+                string str = MakeSafe(string.Concat(TablePrefix, dataTable.TableName));
+                string str1 = MakeSafe(string.Concat("PK_", TablePrefix, dataTable.TableName));
+                string str2 = MakeList(dataTable.PrimaryKey);
                 stringBuilder.AppendFormat("IF OBJECT_ID('{1}', 'PK') IS NULL BEGIN ALTER TABLE {0} WITH NOCHECK ADD CONSTRAINT {1} PRIMARY KEY CLUSTERED ({2}); END\n", str, str1, str2);
             }
             foreach (DataRelation relation in dataSet.Relations)
             {
                 try
                 {
-                    stringBuilder.Append(this.MakeRelation(relation));
+                    stringBuilder.Append(MakeRelation(relation));
                 }
                 catch (ArgumentException argumentException1)
                 {
@@ -97,26 +97,26 @@ namespace ParquetFileViewer.Helpers
             {
                 throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
             }
-            return string.Format(item, column.DataType == typeof(string) ? "MAX" : column.MaxLength.ToString(), (column.AllowDBNull ? string.Empty : "NOT "));
+            return string.Format(item, column.DataType == typeof(string) ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
         }
 
         private string MakeList(DataColumn[] columns)
         {
-            if (columns == null || (int)columns.Length < 1)
+            if (columns == null || columns.Length < 1)
             {
                 throw new ArgumentException("Invalid column list!", "columns");
             }
             StringBuilder stringBuilder = new StringBuilder();
             bool flag = true;
             DataColumn[] dataColumnArray = columns;
-            for (int i = 0; i < (int)dataColumnArray.Length; i++)
+            for (int i = 0; i < dataColumnArray.Length; i++)
             {
                 DataColumn dataColumn = dataColumnArray[i];
                 if (!flag)
                 {
                     stringBuilder.Append(", ");
                 }
-                stringBuilder.Append(this.MakeSafe(dataColumn.ColumnName));
+                stringBuilder.Append(MakeSafe(dataColumn.ColumnName));
                 flag = false;
             }
             return stringBuilder.ToString();
@@ -136,8 +136,8 @@ namespace ParquetFileViewer.Helpers
                 {
                     stringBuilder.Append(", ");
                 }
-                string str = this.MakeSafe(column.ColumnName);
-                string typeFor = this.GetTypeFor(column);
+                string str = MakeSafe(column.ColumnName);
+                string typeFor = GetTypeFor(column);
                 stringBuilder.Append($"{Environment.NewLine} {str} {typeFor}");
                 flag = false;
             }
@@ -151,15 +151,15 @@ namespace ParquetFileViewer.Helpers
                 throw new ArgumentException("Invalid argument value (null)", "relation");
             }
 
-            string childTable = this.MakeSafe(string.Concat(this.TablePrefix, relation.ChildTable.TableName));
-            string parentTable = this.MakeSafe(string.Concat(this.TablePrefix, relation.ParentTable.TableName));
-            string fkRelationName = this.MakeSafe(string.Concat(this.TablePrefix, relation.RelationName)); //Add prefix so same tables can be created using different prefixes. Otherwise collisions occur
-            string childTableFKColumns = this.MakeList(relation.ChildColumns);
-            string parentTableFKColumns = this.MakeList(relation.ParentColumns);
+            string childTable = MakeSafe(string.Concat(TablePrefix, relation.ChildTable.TableName));
+            string parentTable = MakeSafe(string.Concat(TablePrefix, relation.ParentTable.TableName));
+            string fkRelationName = MakeSafe(string.Concat(TablePrefix, relation.RelationName)); //Add prefix so same tables can be created using different prefixes. Otherwise collisions occur
+            string childTableFKColumns = MakeList(relation.ChildColumns);
+            string parentTableFKColumns = MakeList(relation.ParentColumns);
 
             return $"IF OBJECT_ID('{fkRelationName}', 'F') IS NULL BEGIN ALTER TABLE {childTable} " +
                 $"ADD CONSTRAINT {fkRelationName} FOREIGN KEY ({childTableFKColumns}) REFERENCES {parentTable} ({parentTableFKColumns})" +
-                $"{(this.CascadeDeletes ? " ON DELETE CASCADE" : string.Empty)}; END\n";
+                $"{(CascadeDeletes ? " ON DELETE CASCADE" : string.Empty)}; END\n";
         }
 
         protected string MakeSafe(string inputValue)
@@ -172,8 +172,8 @@ namespace ParquetFileViewer.Helpers
         private string MakeTable(DataTable table, bool markTablesAsLocalTemp)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            string str = this.MakeSafe(string.Concat(markTablesAsLocalTemp ? "#" : string.Empty, this.TablePrefix, table.TableName));
-            string str1 = this.MakeList(table.Columns);
+            string str = MakeSafe(string.Concat(markTablesAsLocalTemp ? "#" : string.Empty, TablePrefix, table.TableName));
+            string str1 = MakeList(table.Columns);
             stringBuilder.AppendFormat("CREATE TABLE {0} ({1}\n);", str, str1);
             return stringBuilder.ToString();
         }

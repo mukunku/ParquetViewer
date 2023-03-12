@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace ParquetFileViewer.Helpers
+namespace ParquetViewer.Helpers
 {
     /// <summary>
     /// Produces Excel file without using Excel
@@ -63,7 +63,7 @@ namespace ParquetFileViewer.Helpers
             clData[2] = (ushort)row;
             clData[3] = (ushort)col;
             WriteUshortArray(clData);
-            int iValue = (value << 2) | 2;
+            int iValue = value << 2 | 2;
             writer.Write(iValue);
         }
 

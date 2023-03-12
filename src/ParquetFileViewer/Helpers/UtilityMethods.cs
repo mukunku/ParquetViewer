@@ -2,7 +2,7 @@
 using System.Data;
 using System.Linq;
 
-namespace ParquetFileViewer.Helpers
+namespace ParquetViewer.Helpers
 {
     public static class UtilityMethods
     {
@@ -25,7 +25,7 @@ namespace ParquetFileViewer.Helpers
 
         public static IEnumerable<IList<T>> Split<T>(ICollection<T> src, int splitIntoPieces)
         {
-            int maxItems = (int)(src.Count / splitIntoPieces);
+            int maxItems = src.Count / splitIntoPieces;
             int remainder = src.Count % splitIntoPieces;
             bool pieceDone = false;
 

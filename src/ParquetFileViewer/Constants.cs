@@ -1,4 +1,4 @@
-﻿namespace ParquetFileViewer
+﻿namespace ParquetViewer
 {
     public static class Constants
     {

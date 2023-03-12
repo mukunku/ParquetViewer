@@ -1,12 +1,6 @@
 ﻿using Parquet;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ParquetViewer.Engine
 {

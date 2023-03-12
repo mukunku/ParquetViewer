@@ -1,4 +1,5 @@
-﻿using ParquetFileViewer.Helpers;
+﻿using ParquetViewer;
+using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

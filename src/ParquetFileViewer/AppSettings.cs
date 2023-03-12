@@ -2,7 +2,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     public static class AppSettings
     {
@@ -189,6 +189,7 @@ namespace ParquetFileViewer
             }
         }
 
+        [Obsolete("This setting is no longer being used. We try to automatically switch between engines now.")]
         public static ParquetEngine ReadingEngine
         {
             get
@@ -198,7 +199,7 @@ namespace ParquetFileViewer
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         ParquetEngine value = default;
-                        if (!Enum.TryParse<ParquetEngine>(registryKey.GetValue(ParquetReadingEngineKey)?.ToString(), out value))
+                        if (!Enum.TryParse(registryKey.GetValue(ParquetReadingEngineKey)?.ToString(), out value))
                             value = default;
 
                         return value;
@@ -254,7 +255,7 @@ namespace ParquetFileViewer
                 catch { }
             }
         }
-    
+
         public static string WarningBypassedOnVersion
         {
             get

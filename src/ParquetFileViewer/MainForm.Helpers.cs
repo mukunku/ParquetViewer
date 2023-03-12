@@ -1,5 +1,7 @@
 ﻿using ParquetFileViewer.Helpers;
+using ParquetViewer;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Helpers;
 using System;
 using System.Data;
 using System.Drawing;
