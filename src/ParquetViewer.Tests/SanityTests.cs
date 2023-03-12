@@ -31,7 +31,7 @@ namespace ParquetViewer.Tests
             var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
             Assert.Equal("36/2015-16", dataTable.Rows[0][0]);
             Assert.Equal(new DateTime(2015, 07, 14, 0, 0, 0), dataTable.Rows[1][2]);
-            Assert.Equal(new DateTime(2015, 07, 19, 0, 0, 0), dataTable.Rows[9][1]);
+            Assert.Equal(new DateTime(2015, 07, 19, 18, 30, 0), dataTable.Rows[9][1]);
         }
 
         [Fact]

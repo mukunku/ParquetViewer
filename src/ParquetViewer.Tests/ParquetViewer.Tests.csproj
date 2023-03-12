@@ -45,13 +45,22 @@
     <None Update="Data\DECIMALS_AND_BOOLS_TEST.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\DECIMALS_AND_BOOLS_TEST1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Data\DECIMALS_TEST.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\MANY_COLUMNS_PERFORMANCE_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Data\RANDOM_TEST_FILE1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Data\SAME_COLUMN_NAME_DIFFERENT_CASING.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\SAME_COLUMN_NAME_DIFFERENT_CASING1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
