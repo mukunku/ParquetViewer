@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ParquetFileViewer.Helpers
@@ -24,20 +25,28 @@ namespace ParquetFileViewer.Helpers
 
         public ParquetSchema Schema => _parquetFiles?.FirstOrDefault()?.Schema ?? new();
 
-        private ParquetEngine(List<ParquetReader> parquetFiles)
+        public string OpenFileOrFolderPath { get; }
+
+        private ParquetEngine(string fileOrFolderPath, List<ParquetReader> parquetFiles)
         {
             _parquetFiles = parquetFiles ?? new List<ParquetReader>();
+            OpenFileOrFolderPath = fileOrFolderPath;
         }
 
-        public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath)
+        public Task<ParquetEngine> CloneAsync(CancellationToken cancellationToken)
+        {
+            return OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
+        }
+
+        public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath, CancellationToken cancellationToken)
         {
             if (File.Exists(fileOrFolderPath)) //Handles null
             {
-                return OpenFileAsync(fileOrFolderPath);
+                return OpenFileAsync(fileOrFolderPath, cancellationToken);
             }
             else if (Directory.Exists(fileOrFolderPath)) //Handles null
             {
-                return OpenFolderAsync(fileOrFolderPath);
+                return OpenFolderAsync(fileOrFolderPath, cancellationToken);
             }
             else
             {
@@ -45,27 +54,25 @@ namespace ParquetFileViewer.Helpers
             }
         }
 
-        public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath)
+        public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath, CancellationToken cancellationToken)
         {
             if (!File.Exists(parquetFilePath)) //Handles null
             {
                 throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
             }
 
-            ParquetReader parquetReader;
             try
             {
-                parquetReader = await ParquetReader.CreateAsync(parquetFilePath);
+                var parquetReader = await ParquetReader.CreateAsync(parquetFilePath, null, cancellationToken);
+                return new ParquetEngine(parquetFilePath, new List<ParquetReader> { parquetReader });
             }
             catch (Exception ex)
             {
                 throw new FileReadException(ex);
             }
-
-            return new ParquetEngine(new List<ParquetReader> { parquetReader });
         }
 
-        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath)
+        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath, CancellationToken cancellationToken)
         {
             if (!Directory.Exists(folderPath)) //Handles null
             {
@@ -73,12 +80,14 @@ namespace ParquetFileViewer.Helpers
             }
 
             var skippedFiles = new Dictionary<string, Exception>();
-            var fileGroups = new Dictionary<Parquet.Schema.ParquetSchema, List<ParquetReader>>();
+            var fileGroups = new Dictionary<ParquetSchema, List<ParquetReader>>();
             foreach (var file in ListParquetFiles(folderPath))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
-                    var parquetReader = await ParquetReader.CreateAsync(file);
+                    var parquetReader = await ParquetReader.CreateAsync(file, null, cancellationToken);
                     if (!fileGroups.ContainsKey(parquetReader.Schema))
                     {
                         fileGroups.Add(parquetReader.Schema, new List<ParquetReader>());
@@ -120,10 +129,12 @@ namespace ParquetFileViewer.Helpers
                 throw new SomeFilesSkippedException(skippedFiles);
             }
 
-            return new ParquetEngine(fileGroups.Values.First());
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return new ParquetEngine(folderPath, fileGroups.Values.First());
         }
 
-        public IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)
+        private IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)
         {
             foreach (var parquetFile in _parquetFiles)
             {

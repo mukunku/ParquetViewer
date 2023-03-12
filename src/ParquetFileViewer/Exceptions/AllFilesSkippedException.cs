@@ -19,6 +19,11 @@ namespace ParquetFileViewer.Exceptions
                     SkippedFiles.Add(new(skippedFile.Key, skippedFile.Value));
                 }
             }
+
+            if (SkippedFiles.Count == 0)
+            {
+                throw new ArgumentException("No files were skipped", nameof(skippedFiles));
+            }
         }
     }
 }

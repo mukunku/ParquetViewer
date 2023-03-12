@@ -1,16 +1,13 @@
-using Parquet;
+using ParquetFileViewer.Exceptions;
 using ParquetFileViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -21,24 +18,21 @@ namespace ParquetFileViewer
         private const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
-        private const int LoadingPanelWidth = 200;
-        private const int LoadingPanelHeight = 200;
         private const int PerformanceWarningCellCount = 350000;
-        private const string QueryUselessPartRegex = "^WHERE ";
-        private const string DefaultTableName = "MY_TABLE";
         private readonly string DefaultFormTitle;
 
         #region Members
         private readonly string fileToLoadOnLaunch = null;
-        private string openFileOrFolderPath;
+
+        private string _openFileOrFolderPath;
         private string OpenFileOrFolderPath
         {
-            get => this.openFileOrFolderPath;
+            get => this._openFileOrFolderPath;
             set
             {
-                this.openFileSchema = null;
+                this._openFileOrFolderPath = value;
+                this._openParquetEngine = null;
                 this.SelectedFields = null;
-                this.openFileOrFolderPath = value;
                 this.changeFieldsMenuStripButton.Enabled = false;
                 this.getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
                 this.saveAsToolStripMenuItem.Enabled = false;
@@ -101,6 +95,12 @@ namespace ParquetFileViewer
             }
         }
 
+        private static int DefaultRowCount
+        {
+            get => AppSettings.LastRowCount ?? DefaultRowCountValue;
+            set => AppSettings.LastRowCount = value;
+        }
+
         private int currentMaxRowCount = DefaultRowCount;
         private int CurrentMaxRowCount
         {
@@ -114,19 +114,10 @@ namespace ParquetFileViewer
             }
         }
 
-        private static int DefaultRowCount
-        {
-            get => AppSettings.LastRowCount ?? DefaultRowCountValue;
-            set => AppSettings.LastRowCount = value;
-        }
-
         private bool IsAnyFileOpen
-        {
-            get
-            {
-                return !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath) && this.SelectedFields != null;
-            }
-        }
+            => !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath)
+                && this.SelectedFields is not null
+                && this._openParquetEngine is not null;
 
         private DataTable mainDataSource;
         private DataTable MainDataSource
@@ -166,7 +157,7 @@ namespace ParquetFileViewer
                             column.DefaultCellStyle.Format = dateFormat;
                     }
 
-                    
+
 
                     //Adjust column sizes if required
                     if (AppSettings.AutoSizeColumnsMode != DataGridViewAutoSizeColumnsMode.None)
@@ -175,10 +166,8 @@ namespace ParquetFileViewer
                 catch { }
             }
         }
-        private Panel loadingPanel = null;
-        private Parquet.Schema.ParquetSchema openFileSchema;
 
-        private ToolTip dateOnlyFormatWarningToolTip = new();
+        private Helpers.ParquetEngine _openParquetEngine = null;
         #endregion
 
         public MainForm()
@@ -243,268 +232,6 @@ namespace ParquetFileViewer
             }
         }
 
-        #region Event Handlers
-        private void offsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
-            {
-                e.Handled = true;
-            }
-        }
-
-        private void recordsToTextBox_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
-            {
-                e.Handled = true;
-            }
-        }
-
-        private void offsetTextBox_TextChanged(object sender, EventArgs e)
-        {
-            var textbox = sender as TextBox;
-            if (int.TryParse(textbox.Text, out var offset))
-                this.CurrentOffset = offset;
-            else
-                textbox.Text = this.CurrentOffset.ToString();
-        }
-
-        private void recordsToTextBox_TextChanged(object sender, EventArgs e)
-        {
-            var textbox = sender as TextBox;
-            if (int.TryParse(textbox.Text, out var recordCount))
-                this.CurrentMaxRowCount = recordCount;
-            else
-                textbox.Text = this.CurrentMaxRowCount.ToString();
-        }
-
-        private void newToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.OpenFileOrFolderPath = null;
-        }
-
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (this.openParquetFileDialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    this.OpenNewFileOrFolder(this.openParquetFileDialog.FileName);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.OpenFileOrFolderPath = null;
-                ShowError(ex);
-            }
-        }
-
-        private void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (this.openFolderDialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    this.OpenNewFileOrFolder(this.openFolderDialog.SelectedPath);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.OpenFileOrFolderPath = null;
-                ShowError(ex);
-            }
-        }
-
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                this.ExportResults(default);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                this.OpenFieldSelectionDialog(true);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void MainForm_SizeChanged(object sender, EventArgs e)
-        {
-            if (this.loadingPanel != null)
-                this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);
-        }
-
-        private void runQueryButton_Click(object sender, EventArgs e)
-        {
-            if (this.IsAnyFileOpen)
-            {
-                string queryText = this.searchFilterTextBox.Text ?? string.Empty;
-                queryText = Regex.Replace(queryText, QueryUselessPartRegex, string.Empty).Trim();
-
-                try
-                {
-                    this.MainDataSource.DefaultView.RowFilter = queryText;
-                }
-                catch (Exception ex)
-                {
-                    this.MainDataSource.DefaultView.RowFilter = null;
-                    ShowError(ex, "The query doesn't seem to be valid. Please try again.", false);
-                }
-            }
-        }
-
-        private void clearFilterButton_Click(object sender, EventArgs e)
-        {
-            this.MainDataSource.DefaultView.RowFilter = null;
-        }
-
-        private void searchFilterTextBox_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == Convert.ToChar(Keys.Return))
-            {
-                this.runQueryButton_Click(this.runQueryButton, null);
-            }
-        }
-
-        private void MainForm_DragDrop(object sender, DragEventArgs e)
-        {
-            try
-            {
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length > 0)
-                {
-                    this.OpenNewFileOrFolder(files[0]);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.OpenFileOrFolderPath = null;
-                ShowError(ex);
-            }
-        }
-
-        private void MainForm_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                e.Effect = DragDropEffects.Copy;
-        }
-
-        private void searchFilterLabel_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show(@"NULL CHECK: 
-    WHERE field_name IS NULL
-    WHERE field_name IS NOT NULL
-DATETIME:   
-    WHERE field_name >= #01/01/2000#
-NUMERIC:
-    WHERE field_name <= 123.4
-STRING:
-    WHERE field_name LIKE '%value%' 
-    WHERE field_name = 'equals value'
-    WHERE field_name <> 'not equals'
-MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
-        }
-
-        private void mainGridView_MouseClick(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                var dgv = (DataGridView)sender;
-                if (e.Button == MouseButtons.Right)
-                {
-                    int rowIndex = dgv.HitTest(e.X, e.Y).RowIndex;
-                    int columnIndex = dgv.HitTest(e.X, e.Y).ColumnIndex;
-
-                    if (rowIndex >= 0 && columnIndex >= 0)
-                    {
-                        var toolStripMenuItem = new ToolStripMenuItem("Copy");
-                        toolStripMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
-                        {
-                            Clipboard.SetDataObject(dgv.GetClipboardContent());
-                        };
-
-                        var menu = new ContextMenuStrip();
-                        menu.Items.Add(toolStripMenuItem);
-                        menu.Show(dgv, new Point(e.X, e.Y));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex, null, false);
-            }
-        }
-
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            (new AboutBox()).ShowDialog(this);
-        }
-
-        private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start(new ProcessStartInfo(WikiURL) { UseShellExecute = true });
-        }
-
-        private void MainGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
-        {
-            //Add warnings to date field headers if the user is using a "Date Only" date format.
-            //We want to be helpful so people don't accidentally leave a date only format on and think they are missing time information in their data.
-            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
-            {
-                bool isDateTimeCell = ((DataGridView)sender).Columns[e.ColumnIndex].ValueType == typeof(DateTime);
-                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
-                if (isDateTimeCell && isUserUsingDateOnlyFormat)
-                {
-                    var img = Properties.Resources.exclamation_icon_yellow;
-                    Rectangle r1 = new Rectangle(e.CellBounds.Left + e.CellBounds.Width - img.Width, 4, img.Width, img.Height);
-                    Rectangle r2 = new Rectangle(0, 0, img.Width, img.Height);
-                    string header = ((DataGridView)sender).Columns[e.ColumnIndex].HeaderText;
-                    e.PaintBackground(e.CellBounds, true);
-                    e.PaintContent(e.CellBounds);
-                    e.Graphics.DrawImage(img, r1, r2, GraphicsUnit.Pixel);
-
-                    e.Handled = true;
-                }
-            }
-            else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
-            {
-                if (e.Value == null || e.Value == DBNull.Value)
-                {
-                    e.Paint(e.CellBounds, DataGridViewPaintParts.All
-                        & ~(DataGridViewPaintParts.ContentForeground));
-
-                    var font = new Font(e.CellStyle.Font, FontStyle.Italic);
-                    var color = SystemColors.ActiveCaptionText;
-                    if (this.mainGridView.SelectedCells.Contains(((DataGridView)sender)[e.ColumnIndex, e.RowIndex]))
-                        color = Color.White;
-
-                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color,
-                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
-
-                    e.Handled = true;
-                }
-            }
-        }
-
-        #endregion
-
         private async void OpenFieldSelectionDialog(bool forceOpenDialog)
         {
             if (string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath))
@@ -512,29 +239,40 @@ MULTIPLE CONDITIONS:
                 return;
             }
 
-            if (this.openFileSchema == null)
+            if (this._openParquetEngine == null)
             {
                 var cancellationToken = this.ShowLoadingIcon("Analyzing File");
 
                 try
                 {
-                    var schema = await Task.Run(async () =>
-                    {
-                        var parquetEngine = await Helpers.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath);
-                        return parquetEngine.Schema;
-                    }, cancellationToken);
-
-                    this.openFileSchema = schema;
+                    this._openParquetEngine = await Helpers.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    if (this.openFileSchema == null)
+
+                    if (this._openParquetEngine == null)
                     {
                         //cancel file open
                         this.OpenFileOrFolderPath = null;
                     }
 
-                    if (ex is not OperationCanceledException)
+                    if (ex is AllFilesSkippedException afse)
+                    {
+                        HandleAllFilesSkippedException(afse);
+                    }
+                    else if (ex is SomeFilesSkippedException sfse)
+                    {
+                        HandleSomeFilesSkippedException(sfse);
+                    }
+                    else if (ex is FileReadException fre)
+                    {
+                        HandleFileReadException(fre);
+                    }
+                    else if (ex is MultipleSchemasFoundException msfe)
+                    {
+                        HandleMultipleSchemasFoundException(msfe);
+                    }
+                    else if (ex is not OperationCanceledException)
                         throw;
 
                     return;
@@ -545,7 +283,7 @@ MULTIPLE CONDITIONS:
                 }
             }
 
-            var fields = this.openFileSchema.Fields;
+            var fields = this._openParquetEngine.Schema.Fields;
             if (fields != null && fields.Count > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
@@ -584,18 +322,17 @@ MULTIPLE CONDITIONS:
                     var cancellationToken = this.ShowLoadingIcon("Loading Data");
                     var finalResult = await Task.Run(async () =>
                     {
-                        var results = new ConcurrentDictionary<int, ParquetReadResult>();
+                        var results = new ConcurrentDictionary<int, DataTable>();
                         if (AppSettings.ReadingEngine == ParquetEngine.Default)
                         {
-                            var (data, totalRecordCount) = await UtilityMethods.ReadFileOrFolder(this.OpenFileOrFolderPath, this.SelectedFields, this.CurrentOffset, 
-                                this.CurrentMaxRowCount, cancellationToken);
-                            results.TryAdd(1, new ParquetReadResult(data, totalRecordCount));
+                            var dataTable = await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
+                            results.TryAdd(1, dataTable);
                         }
                         else
                         {
                             int i = 0;
-                            var fieldGroups = new List<(int, List<string>)>();
-                            foreach (var fields in UtilityMethods.Split(this.SelectedFields, (int)(this.SelectedFields.Count / Environment.ProcessorCount)))
+                            var fieldGroups = new List<(int Index, List<string> SubSetOfFields)>();
+                            foreach (var fields in UtilityMethods.Split(this.SelectedFields, Environment.ProcessorCount))
                             {
                                 fieldGroups.Add((i++, fields.ToList()));
                             }
@@ -604,9 +341,9 @@ MULTIPLE CONDITIONS:
                             await Parallel.ForEachAsync(fieldGroups, options,
                                 async (fieldGroup, _cancellationToken) =>
                                 {
-                                    var (data, totalRecordCount) = await UtilityMethods.ReadFileOrFolder(this.OpenFileOrFolderPath, fieldGroup.Item2, this.CurrentOffset,
-                                        this.CurrentMaxRowCount, _cancellationToken);
-                                    results.TryAdd(fieldGroup.Item1, new ParquetReadResult(data, totalRecordCount));
+                                    using var parquetEngine = await this._openParquetEngine.CloneAsync(cancellationToken);
+                                    var dataTable = await parquetEngine.ReadRowsAsync(fieldGroup.SubSetOfFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
+                                    results.TryAdd(fieldGroup.Index, dataTable);// new ParquetReadResult(dataTable, (long)dataTabe.ExtendedProperties[Helpers.ParquetEngine.TotalRecordCountExtendedPropertyKey]));
                                 });
                         }
 
@@ -615,18 +352,32 @@ MULTIPLE CONDITIONS:
                             throw new FileLoadException("Something went wrong while processing this file. If the issue persists please open a bug ticket on the repo. Help -> About");
                         }
 
-                        DataTable mergedDataTables = UtilityMethods.MergeTables(results.OrderBy(f => f.Key).Select(f => f.Value.Result).AsEnumerable());
-                        ParquetReadResult finalResult = new ParquetReadResult(mergedDataTables, results.First().Value.TotalNumberOfRecordsInFile);
-
-                        return finalResult;
+                        DataTable mergedDataTables = UtilityMethods.MergeTables(results.OrderBy(f => f.Key).Select(f => f.Value).AsEnumerable());
+                        return mergedDataTables;
                     }, cancellationToken);
 
-                    this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Result.Rows.Count);
-                    this.totalRowCountStatusBarLabel.Text = finalResult.TotalNumberOfRecordsInFile.ToString();
-                    this.actualShownRecordCountLabel.Text = finalResult.Result.Rows.Count.ToString();
+                    this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
+                    this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Helpers.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
+                    this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
-                    this.MainDataSource = finalResult.Result;
+                    this.MainDataSource = finalResult;
                 }
+            }
+            catch (AllFilesSkippedException ex)
+            {
+                HandleAllFilesSkippedException(ex);
+            }
+            catch (SomeFilesSkippedException ex)
+            {
+                HandleSomeFilesSkippedException(ex);
+            }
+            catch (FileReadException ex)
+            {
+                HandleFileReadException(ex);
+            }
+            catch (MultipleSchemasFoundException ex)
+            {
+                HandleMultipleSchemasFoundException(ex);
             }
             catch (Exception ex)
             {
@@ -639,90 +390,53 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private static void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
+        private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
         {
-            MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            var sb = new StringBuilder();
+            sb.AppendLine("No valid Parquet files found in folder. Invalid Parquet files:");
+            foreach (var skippedFile in ex.SkippedFiles)
+            {
+                sb.AppendLine($"-{skippedFile.FileName}");
+            }
+            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
         }
 
-        private CancellationToken ShowLoadingIcon(string message)
+        private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
         {
-            var cancellationToken = new CancellationTokenSource();
-            this.loadingPanel = new Panel();
-            this.loadingPanel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
-            this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);
-
-            this.loadingPanel.Controls.Add(new Label()
+            var sb = new StringBuilder();
+            sb.AppendLine("Some files could not be loaded. Invalid Parquet files:");
+            foreach (var skippedFile in ex.SkippedFiles)
             {
-                Name = "loadingmessagelabel",
-                Text = message,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Top
-            });
-
-            var pictureBox = new PictureBox()
-            {
-                Name = "loadingpicturebox",
-                Image = Properties.Resources.hourglass,
-                Size = new Size(200, 200)
-            };
-            this.loadingPanel.Controls.Add(pictureBox);
-
-            Button cancelButton = new Button()
-            {
-                Name = "cancelloadingbutton",
-                Text = "Cancel",
-                Dock = DockStyle.Bottom,
-                Enabled = cancellationToken.Token.CanBeCanceled
-            };
-            cancelButton.Click += (object buttonSender, EventArgs buttonClickEventArgs) =>
-            {
-                cancellationToken.Cancel();
-
-                ((Button)buttonSender).Enabled = false;
-                ((Button)buttonSender).Text = "Cancelling...";
-            };
-            this.loadingPanel.Controls.Add(cancelButton);
-            cancelButton.BringToFront();
-
-            Cursor.Current = Cursors.WaitCursor;
-
-            this.Controls.Add(this.loadingPanel);
-
-            this.loadingPanel.BringToFront();
-            this.loadingPanel.Show();
-
-            this.mainTableLayoutPanel.Enabled = false;
-            this.mainMenuStrip.Enabled = false;
-
-            return cancellationToken.Token;
+                sb.AppendLine($"-{skippedFile.FileName}");
+            }
+            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
         }
 
-        private void HideLoadingIcon()
+        private static void HandleFileReadException(FileReadException ex)
         {
-            this.mainTableLayoutPanel.Enabled = true;
-            this.mainMenuStrip.Enabled = true;
-            Cursor.Current = Cursors.Default;
-
-            if (this.loadingPanel != null)
-                this.loadingPanel.Dispose();
+            ShowError(new Exception($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
+                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}", ex));
         }
 
-        private Point GetFormCenter(int offsetX, int offsetY)
+        private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
         {
-            return new Point((this.Size.Width / 2) - offsetX, (this.Size.Height / 2) - offsetY);
-        }
+            var sb = new StringBuilder();
+            sb.AppendLine("Multiple schemas detected. ");
 
-        private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
-        {
-            this.actualShownRecordCountLabel.Text = this.mainGridView.RowCount.ToString();
-
-            foreach (DataGridViewColumn column in ((DataGridView)sender).Columns)
+            int schemaIndex = 1;
+            const int topCount = 5;
+            foreach (var schema in ex.Schemas)
             {
-                if (column is DataGridViewCheckBoxColumn checkboxColumn)
+                sb.AppendLine($"SCHEMA-{schemaIndex++} FIELDS (TOP 5):");
+                for (var i = 0; i < topCount; i++)
                 {
-                    checkboxColumn.ThreeState = true; //handle NULLs for bools
+                    if (i == schema.Fields.Count)
+                        break;
+
+                    sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
                 }
             }
+            ShowError(new Exception(sb.ToString(), ex));
         }
 
         private void OpenNewFileOrFolder(string fileOrFolderPath)
@@ -737,233 +451,28 @@ MULTIPLE CONDITIONS:
             this.OpenFieldSelectionDialog(false);
         }
 
-        private void WriteDataToCSVFile(string path, CancellationToken cancellationToken)
+        private void runQueryButton_Click(object sender, EventArgs e)
         {
-            using var writer = new StreamWriter(path, false, Encoding.UTF8);
-
-            var rowBuilder = new StringBuilder();
-            bool isFirst = true;
-            foreach (DataColumn column in this.MainDataSource.Columns)
+            if (this.IsAnyFileOpen)
             {
-                if (!isFirst)
-                {
-                    rowBuilder.Append(',');
-                }
-                else
-                {
-                    isFirst = false;
-                }
+                string queryText = this.searchFilterTextBox.Text ?? string.Empty;
+                queryText = Regex.Replace(queryText, QueryUselessPartRegex, string.Empty).Trim();
 
-                rowBuilder.Append(
-                    column.ColumnName
-                        .Replace("\r", string.Empty)
-                        .Replace("\n", string.Empty)
-                        .Replace(",", string.Empty));
-            }
-            writer.WriteLine(rowBuilder.ToString());
-
-            foreach (DataRowView row in this.MainDataSource.DefaultView)
-            {
-                rowBuilder.Clear();
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                isFirst = true;
-                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                foreach (object value in row.Row.ItemArray)
-                {
-                    if (!isFirst)
-                    {
-                        rowBuilder.Append(',');
-                    }
-                    else
-                    {
-                        isFirst = false;
-                    }
-
-                    if (value is DateTime dt)
-                    {
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
-                    }
-                    else
-                    {
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString()));
-                    }
-                }
-
-                writer.WriteLine(rowBuilder.ToString());
-            }
-        }
-
-        private void WriteDataToExcelFile(string path, CancellationToken cancellationToken)
-        {
-            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-            using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            var excelWriter = new ExcelWriter(fs);
-            excelWriter.BeginWrite();
-
-            //Write headers
-            for (int i = 0; i < this.MainDataSource.Columns.Count; i++)
-            {
-                excelWriter.WriteCell(0, i, this.MainDataSource.Columns[i].ColumnName);
-            }
-
-            //Write data
-            for (int i = 0; i < this.MainDataSource.DefaultView.Count; i++)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
-                {
-                    var value = this.mainDataSource.DefaultView[i][j];
-
-                    if (value is DateTime dt)
-                    {
-                        excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
-                    }
-                    else
-                    {
-                        excelWriter.WriteCell(i + 1, j, value?.ToString() ?? string.Empty);
-                    }
-                }
-            }
-
-            excelWriter.EndWrite();
-        }
-
-        private async void ExportResults(FileType defaultFileType)
-        {
-            string filePath = null;
-            try
-            {
-                if (this.mainGridView.RowCount > 0)
-                {
-                    this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
-                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
-                    this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
-                    if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        filePath = this.exportFileDialog.FileName;
-                        var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
-
-                        var cancellationToken = this.ShowLoadingIcon("Exporting Data");
-                        if (selectedFileType == FileType.CSV)
-                        {
-                            await Task.Run(() => this.WriteDataToCSVFile(filePath, cancellationToken));
-                        }
-                        else if (selectedFileType == FileType.XLS)
-                        {
-                            await Task.Run(() => this.WriteDataToExcelFile(filePath, cancellationToken));
-                        }
-                        else
-                        {
-                            throw new Exception(string.Format("Unsupported export type: '{0}'", selectedFileType.ToString()));
-                        }
-
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            CleanupFile(filePath);
-                            MessageBox.Show("Export has been cancelled", "Export Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        else
-                        {
-                            MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                CleanupFile(filePath);
-                throw;
-            }
-            finally
-            {
-                this.HideLoadingIcon();
-            }
-
-            void CleanupFile(string filePath)
-            {
                 try
                 {
-                    if (!string.IsNullOrWhiteSpace(filePath))
-                        File.Delete(filePath);
+                    this.MainDataSource.DefaultView.RowFilter = queryText;
                 }
-                catch (Exception) { /*Swallow*/ }
+                catch (Exception ex)
+                {
+                    this.MainDataSource.DefaultView.RowFilter = null;
+                    ShowError(ex, "The query doesn't seem to be valid. Please try again.", false);
+                }
             }
         }
 
-        #region Helper Types
-        private class ParquetReadResult
+        private void clearFilterButton_Click(object sender, EventArgs e)
         {
-            public long TotalNumberOfRecordsInFile { get; private set; }
-            public DataTable Result { get; private set; }
-
-            public ParquetReadResult(DataTable result, long totalNumberOfRecordsInFile)
-            {
-                this.TotalNumberOfRecordsInFile = totalNumberOfRecordsInFile;
-                this.Result = result;
-            }
-        }
-        #endregion
-
-        private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-
-                var openFileOrFolderPath = this.OpenFileOrFolderPath;
-                if (openFileOrFolderPath?.EndsWith("/") == true)
-                {
-                    //trim trailing slash '/'
-                    openFileOrFolderPath = openFileOrFolderPath[..^1];
-                }
-
-                string tableName = Path.GetFileNameWithoutExtension(openFileOrFolderPath) ?? DefaultTableName;
-                if (this.mainDataSource?.Columns.Count > 0)
-                {
-                    var dataset = new DataSet();
-
-                    this.mainDataSource.TableName = tableName;
-                    dataset.Tables.Add(this.mainDataSource);
-
-                    var scriptAdapter = new CustomScriptBasedSchemaAdapter();
-                    string sql = scriptAdapter.GetSchemaScript(dataset, false);
-
-                    Clipboard.SetText(sql);
-                    MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                    MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void DateFormatMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (sender is ToolStripMenuItem item)
-                {
-                    var selectedDateFormat = (DateFormat)(int.Parse((string)item.Tag));
-                    AppSettings.DateTimeDisplayFormat = selectedDateFormat;
-                    this.RefreshDateFormatMenuItemSelection();
-                    this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
+            this.MainDataSource.DefaultView.RowFilter = null;
         }
 
         /// <summary>
@@ -1001,120 +510,6 @@ MULTIPLE CONDITIONS:
                     break;
                 default:
                     break;
-            }
-        }
-
-        private void MainGridView_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
-        {
-            if (e.Column is DataGridViewColumn column)
-            {
-                //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
-                //The value of this field is not important as we do not use the FILL mode for column sizing.
-                column.FillWeight = 0.01f;
-            }
-        }
-
-        private void DefaultParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.ReadingEngine = ParquetEngine.Default;
-                this.defaultParquetEngineToolStripMenuItem.Checked = true;
-                this.multithreadedParquetEngineToolStripMenuItem.Checked = false;
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void MultithreadedParquetEngineToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                AppSettings.ReadingEngine = ParquetEngine.Default_Multithreaded;
-                this.defaultParquetEngineToolStripMenuItem.Checked = false;
-                this.multithreadedParquetEngineToolStripMenuItem.Checked = true;
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private async void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                var parquetEngine = await Helpers.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath);
-                using var metadataViewer = new MetadataViewer(parquetEngine);
-                metadataViewer.ShowDialog(this);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void changeColumnSizingToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                DataGridViewAutoSizeColumnsMode columnSizingMode;
-                if (sender is ToolStripMenuItem tsi && tsi.Tag != null
-                    && Enum.TryParse(tsi.Tag.ToString(), out columnSizingMode)
-                    && AppSettings.AutoSizeColumnsMode != columnSizingMode)
-                {
-                    AppSettings.AutoSizeColumnsMode = columnSizingMode;
-                    foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent().Items)
-                    {
-                        toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
-                    }
-
-                    var tempMainDataSource = this.MainDataSource;
-                    if (columnSizingMode == DataGridViewAutoSizeColumnsMode.None)
-                        this.MainDataSource = null; //Need to reload the entire grid to return to the default sizing
-
-                    this.MainDataSource = tempMainDataSource; //Will cause a refresh of the column rendering
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
-
-        private void mainGridView_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
-            {
-                bool isDateTimeCell = ((DataGridView)sender).Columns[e.ColumnIndex].ValueType == typeof(DateTime);
-                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
-                if (isDateTimeCell && isUserUsingDateOnlyFormat)
-                {
-                    var relativeMousePosition = this.PointToClient(Cursor.Position);
-                    this.dateOnlyFormatWarningToolTip.Show($"Date only format enabled. To see time values: Edit -> Date Format",
-                        this, relativeMousePosition, 10000);
-                }
-            }
-        }
-
-        private void mainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
-        {
-            this.dateOnlyFormatWarningToolTip.Hide(this);
-        }
-
-        private void rememberRecordCountToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                this.rememberRecordCountToolStripMenuItem.Checked = !this.rememberRecordCountToolStripMenuItem.Checked;
-                AppSettings.RememberLastRowCount = this.rememberRecordCountToolStripMenuItem.Checked;
-                AppSettings.LastRowCount = this.CurrentMaxRowCount;
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
             }
         }
     }
