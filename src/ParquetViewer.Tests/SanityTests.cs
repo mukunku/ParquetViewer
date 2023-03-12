@@ -1,3 +1,5 @@
+using ParquetViewer.Engine.Exceptions;
+
 namespace ParquetViewer.Tests
 {
     public class SanityTests
@@ -82,6 +84,13 @@ namespace ParquetViewer.Tests
 
             var ex = await Assert.ThrowsAsync<NotSupportedException>(() => parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default));
             Assert.Equal("Duplicate column detected. Column names are case insensitive and must be unique.", ex.Message);
+        }
+
+        [Fact]
+        public async Task MULTIPLE_SCHEMAS_DETECTED_TEST()
+        {
+            var ex = await Assert.ThrowsAsync<MultipleSchemasFoundException>(() => ParquetEngine.OpenFileOrFolderAsync("Data", default));
+            Assert.Equal("Multiple schemas found in directory.", ex.Message);
         }
 
         [Fact(Skip = "Skipping because I need to convert this to the multi-threaded parquet engine implementation to reduce the run time.")]
