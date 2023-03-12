@@ -1,4 +1,4 @@
-﻿namespace ParquetFileViewer
+﻿namespace ParquetViewer
 {
     partial class FieldsToLoadForm
     {
@@ -172,7 +172,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(500, 399);
             this.Controls.Add(this.mainTableLayoutPanel);
-            this.Icon = global::ParquetFileViewer.Properties.Resources.list_icon_32x32;
+            this.Icon = global::ParquetViewer.Properties.Resources.list_icon_32x32;
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.MinimumSize = new System.Drawing.Size(248, 282);

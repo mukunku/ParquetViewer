@@ -1,12 +1,12 @@
-﻿using ParquetFileViewer.Helpers;
-using ParquetViewer;
+﻿using ParquetViewer;
+using ParquetViewer.Helpers;
 using System;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     public partial class MainForm
     {

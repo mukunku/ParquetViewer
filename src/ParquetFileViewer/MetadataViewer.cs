@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ParquetViewer.Helpers;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     public partial class MetadataViewer : Form
     {

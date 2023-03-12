@@ -1,4 +1,3 @@
-using ParquetViewer;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
@@ -12,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     public partial class MainForm : Form
     {
@@ -242,7 +241,7 @@ namespace ParquetFileViewer
 
                 try
                 {
-                    this._openParquetEngine = await ParquetViewer.Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
+                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
                 }
                 catch (Exception ex)
                 {

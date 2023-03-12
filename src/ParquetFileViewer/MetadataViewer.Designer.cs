@@ -1,4 +1,4 @@
-﻿namespace ParquetFileViewer
+﻿namespace ParquetViewer
 {
     partial class MetadataViewer
     {
@@ -99,7 +99,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 583);
             this.Controls.Add(this.tableLayoutPanel);
-            this.Icon = global::ParquetFileViewer.Properties.Resources.text_file_icon;
+            this.Icon = global::ParquetViewer.Properties.Resources.text_file_icon;
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "MetadataViewer";

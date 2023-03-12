@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     partial class AboutBox : Form
     {

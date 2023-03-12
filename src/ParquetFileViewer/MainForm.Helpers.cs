@@ -1,5 +1,4 @@
-﻿using ParquetFileViewer.Helpers;
-using ParquetViewer;
+﻿using ParquetViewer;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
@@ -12,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     public partial class MainForm
     {

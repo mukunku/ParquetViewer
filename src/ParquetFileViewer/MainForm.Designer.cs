@@ -1,7 +1,7 @@
 
 using ParquetViewer.Controls;
 
-namespace ParquetFileViewer
+namespace ParquetViewer
 {
     partial class MainForm
     {
@@ -35,9 +35,9 @@ namespace ParquetFileViewer
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
-            this.recordCountTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
+            this.recordCountTextBox = new ParquetViewer.Controls.DelayedOnChangedTextBox();
             this.showRecordsFromLabel = new System.Windows.Forms.Label();
-            this.offsetTextBox = new ParquetFileViewer.Controls.DelayedOnChangedTextBox();
+            this.offsetTextBox = new ParquetViewer.Controls.DelayedOnChangedTextBox();
             this.runQueryButton = new System.Windows.Forms.Button();
             this.searchFilterLabel = new System.Windows.Forms.LinkLabel();
             this.searchFilterTextBox = new System.Windows.Forms.TextBox();
@@ -181,7 +181,7 @@ namespace ParquetFileViewer
             this.runQueryButton.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
-            this.runQueryButton.Image = global::ParquetFileViewer.Properties.Resources.exclamation_icon;
+            this.runQueryButton.Image = global::ParquetViewer.Properties.Resources.exclamation_icon;
             this.runQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.runQueryButton.Location = new System.Drawing.Point(482, 3);
             this.runQueryButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -645,7 +645,7 @@ namespace ParquetFileViewer
             this.Controls.Add(this.mainStatusStrip);
             this.Controls.Add(this.mainTableLayoutPanel);
             this.Controls.Add(this.mainMenuStrip);
-            this.Icon = global::ParquetFileViewer.Properties.Resources.parquet_icon_32x32;
+            this.Icon = global::ParquetViewer.Properties.Resources.parquet_icon_32x32;
             this.MainMenuStrip = this.mainMenuStrip;
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.MinimumSize = new System.Drawing.Size(791, 398);

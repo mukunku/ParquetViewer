@@ -1,4 +1,4 @@
-﻿namespace ParquetFileViewer
+﻿namespace ParquetViewer
 {
     partial class AboutBox
     {
@@ -68,7 +68,7 @@
             // logoPictureBox
             // 
             this.logoPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.logoPictureBox.Image = global::ParquetFileViewer.Properties.Resources.coffee;
+            this.logoPictureBox.Image = global::ParquetViewer.Properties.Resources.coffee;
             this.logoPictureBox.Location = new System.Drawing.Point(4, 3);
             this.logoPictureBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.logoPictureBox.Name = "logoPictureBox";
