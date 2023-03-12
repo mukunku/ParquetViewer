@@ -1,5 +1,4 @@
-﻿using ParquetViewer;
-using ParquetViewer.Engine.Exceptions;
+﻿using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Data;
@@ -14,7 +13,7 @@ using System.Windows.Forms;
 namespace ParquetViewer
 {
     public partial class MainForm
-    {
+    {   
         private Panel loadingPanel = null;
         private const int LoadingPanelWidth = 200;
         private const int LoadingPanelHeight = 200;
@@ -29,8 +28,7 @@ namespace ParquetViewer
             var cancellationToken = new CancellationTokenSource();
             this.loadingPanel = new Panel();
             this.loadingPanel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
-            this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);
-            //this.loadingPanel.BorderStyle = BorderStyle.FixedSingle;
+            this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);            
 
             this.loadingPanel.Controls.Add(new Label()
             {
