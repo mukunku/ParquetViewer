@@ -84,7 +84,7 @@ namespace ParquetViewer.Tests
             Assert.Equal("Duplicate column detected. Column names are case insensitive and must be unique.", ex.Message);
         }
 
-        [Fact(Skip = "Skipping because this test takes close to a minute.")]
+        [Fact(Skip = "Skipping because I need to convert this to the multi-threaded parquet engine implementation to reduce the run time.")]
         public async Task MANY_COLUMNS_PERFORMANCE_TEST1()
         {
             var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MANY_COLUMNS_PERFORMANCE_TEST1.parquet", default);
