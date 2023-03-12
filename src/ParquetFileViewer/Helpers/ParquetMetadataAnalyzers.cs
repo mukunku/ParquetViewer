@@ -34,6 +34,7 @@ namespace ParquetFileViewer.Helpers
                 jsonObject[nameof(thriftMetadata.Version)] = thriftMetadata.Version;
                 jsonObject[nameof(thriftMetadata.Num_rows)] = recordCount;
                 jsonObject["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? 0; //TODO: Fix for Open Folder case
+                jsonObject["Num_fields"] = thriftMetadata.Schema.Count;
                 jsonObject[nameof(thriftMetadata.Created_by)] = thriftMetadata.Created_by;
 
                 var schemas = new JArray();
@@ -42,16 +43,18 @@ namespace ParquetFileViewer.Helpers
                     if ("schema".Equals(schema.Name) && schemas.Count == 0)
                         continue;
 
-                    var schemaObject = new JObject();
-                    schemaObject[nameof(schema.Field_id)] = schema.Field_id;
-                    schemaObject[nameof(schema.Name)] = schema.Name;
-                    schemaObject[nameof(schema.Type)] = schema.Type.ToString();
-                    schemaObject[nameof(schema.Type_length)] = schema.Type_length;
-                    schemaObject[nameof(schema.LogicalType)] = schema.LogicalType?.ToString();
-                    schemaObject[nameof(schema.Scale)] = schema.Scale;
-                    schemaObject[nameof(schema.Precision)] = schema.Precision;
-                    schemaObject[nameof(schema.Repetition_type)] = schema.Repetition_type.ToString();
-                    schemaObject[nameof(schema.Converted_type)] = schema.Converted_type.ToString();
+                    var schemaObject = new JObject
+                    {
+                        [nameof(schema.Field_id)] = schema.Field_id,
+                        [nameof(schema.Name)] = schema.Name,
+                        [nameof(schema.Type)] = schema.Type.ToString(),
+                        [nameof(schema.Type_length)] = schema.Type_length,
+                        [nameof(schema.LogicalType)] = schema.LogicalType?.ToString(),
+                        [nameof(schema.Scale)] = schema.Scale,
+                        [nameof(schema.Precision)] = schema.Precision,
+                        [nameof(schema.Repetition_type)] = schema.Repetition_type.ToString(),
+                        [nameof(schema.Converted_type)] = schema.Converted_type.ToString()
+                    };
 
                     schemas.Add(schemaObject);
                 }

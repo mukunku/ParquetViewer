@@ -16,9 +16,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>full</DebugType>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="Controls\DelayedOnChangedTextBox.cs">
@@ -29,10 +31,13 @@
     <Content Include="Resources\hourglass.gif" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Apache.Arrow" Version="11.0.0" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Parquet.Net" Version="4.5.4" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="Apache.Arrow" />
+    <PackageReference Include="Microsoft.CSharp" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Parquet.Net" />
+    <PackageReference Include="System.Data.DataSetExtensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />
   </ItemGroup>
 </Project>

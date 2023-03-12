@@ -11,9 +11,9 @@ namespace ParquetFileViewer
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
         private static readonly string PANDAS_SCHEMA = "pandas";
-        private Helpers.ParquetEngine parquetEngine;
+        private ParquetViewer.Engine.ParquetEngine parquetEngine;
 
-        public MetadataViewer(Helpers.ParquetEngine parquetEngine) : this()
+        public MetadataViewer(ParquetViewer.Engine.ParquetEngine parquetEngine) : this()
         {
             this.parquetEngine = parquetEngine;
         }

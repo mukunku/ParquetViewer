@@ -32,7 +32,7 @@ namespace ParquetFileViewer
                         return titleAttribute.Title;
                     }
                 }
-                return System.IO.Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().CodeBase);
+                return "ParquetViewer.exe";
             }
         }
 

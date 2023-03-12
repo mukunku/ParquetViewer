@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -63,7 +64,7 @@ namespace ParquetFileViewer
             get => this.selectedFields;
             set
             {
-                this.selectedFields = value;
+                this.selectedFields = value?.Take(500).ToList();
 
                 //Check for duplicate fields (We don't support case sensitive field names unfortunately)
                 var duplicateFields = this.selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
@@ -167,7 +168,7 @@ namespace ParquetFileViewer
             }
         }
 
-        private Helpers.ParquetEngine _openParquetEngine = null;
+        private ParquetViewer.Engine.ParquetEngine _openParquetEngine = null;
         #endregion
 
         public MainForm()
@@ -245,7 +246,7 @@ namespace ParquetFileViewer
 
                 try
                 {
-                    this._openParquetEngine = await Helpers.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
+                    this._openParquetEngine = await ParquetViewer.Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -310,6 +311,7 @@ namespace ParquetFileViewer
 
         private async void LoadFileToGridview()
         {
+            var stopwatch = Stopwatch.StartNew();
             try
             {
                 if (this.IsAnyFileOpen)
@@ -357,7 +359,7 @@ namespace ParquetFileViewer
                     }, cancellationToken);
 
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
-                    this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Helpers.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
+                    this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[ParquetViewer.Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
                     this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                     this.MainDataSource = finalResult;
@@ -386,6 +388,10 @@ namespace ParquetFileViewer
             }
             finally
             {
+                //Little secret performance counter
+                stopwatch.Stop();
+                this.showingStatusBarLabel.ToolTipText = $"Load time: {stopwatch.Elapsed.ToString("mm\\:ss\\.ff")}";
+
                 this.HideLoadingIcon();
             }
         }

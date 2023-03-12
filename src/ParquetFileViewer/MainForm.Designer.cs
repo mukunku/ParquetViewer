@@ -29,7 +29,7 @@ namespace ParquetFileViewer
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.recordsToLabel = new System.Windows.Forms.Label();
@@ -249,14 +249,14 @@ namespace ParquetFileViewer
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mainGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 10);
             this.mainGridView.EnableHeadersVisualStyles = false;
@@ -555,7 +555,6 @@ namespace ParquetFileViewer
             this.metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             this.metadataViewerToolStripMenuItem.Click += new System.EventHandler(this.MetadataViewerToolStripMenuItem_Click);
-            this.metadataViewerToolStripMenuItem.Image = global::ParquetFileViewer.Properties.Resources.text_file_icon.ToBitmap();
             // 
             // helpToolStripMenuItem
             // 
@@ -602,7 +601,7 @@ namespace ParquetFileViewer
             // springStatusBarLabel
             // 
             this.springStatusBarLabel.Name = "springStatusBarLabel";
-            this.springStatusBarLabel.Size = new System.Drawing.Size(617, 17);
+            this.springStatusBarLabel.Size = new System.Drawing.Size(661, 17);
             this.springStatusBarLabel.Spring = true;
             // 
             // showingStatusBarLabel
@@ -645,6 +644,7 @@ namespace ParquetFileViewer
             this.mainStatusStrip.Location = new System.Drawing.Point(0, 422);
             this.mainStatusStrip.Name = "mainStatusStrip";
             this.mainStatusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
+            this.mainStatusStrip.ShowItemToolTips = true;
             this.mainStatusStrip.Size = new System.Drawing.Size(944, 22);
             this.mainStatusStrip.TabIndex = 2;
             this.mainStatusStrip.Text = "statusStrip1";
