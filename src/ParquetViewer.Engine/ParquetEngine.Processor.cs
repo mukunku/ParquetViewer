@@ -208,7 +208,7 @@ namespace ParquetViewer.Engine
                 case Parquet.Schema.DataType.Int64:
                     columnType = thriftSchema.LogicalType?.TIMESTAMP != null ? typeof(DateTime) : typeof(long);
                     break;
-                case Parquet.Schema.DataType.SignedByte: //Should this be unsigned byte? (https://github.com/aloneguid/parquet-dotnet/issues/244)
+                case Parquet.Schema.DataType.SignedByte:
                     columnType = typeof(byte);
                     break;
                 case Parquet.Schema.DataType.String:

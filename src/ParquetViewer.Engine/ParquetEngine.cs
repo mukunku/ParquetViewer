@@ -155,7 +155,7 @@ namespace ParquetViewer.Engine
             if (parquetFiles.Count() == 0)
             {
                 //Check for extensionless files
-                parquetFiles = Directory.EnumerateFiles(folderPath);
+                parquetFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories);
             }
 
             return parquetFiles.OrderBy(filename => filename);

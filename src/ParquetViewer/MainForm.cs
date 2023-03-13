@@ -412,7 +412,7 @@ namespace ParquetViewer
             {
                 //Little secret performance counter
                 stopwatch.Stop();
-                this.showingStatusBarLabel.ToolTipText = $"Load time: {stopwatch.Elapsed.ToString("mm\\:ss\\.ff")}";
+                this.showingStatusBarLabel.ToolTipText = $"Load time: {stopwatch.Elapsed:mm\\:ss\\.ff}";
 
                 this.HideLoadingIcon();
             }
