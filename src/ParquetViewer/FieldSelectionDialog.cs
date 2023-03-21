@@ -110,7 +110,7 @@ namespace ParquetViewer
                         var fieldCheckbox = new CheckBox()
                         {
                             Name = string.Concat("checkbox_", field.Name),
-                            Text = string.Concat(field.Name, isUnsupportedFieldType ? "(Unsupported)" : string.Empty),
+                            Text = string.Concat(field.Name, isUnsupportedFieldType ? " (Unsupported)" : string.Empty),
                             Tag = field.Name,
                             Checked = preSelectedFields.Contains(field.Name),
                             Location = new Point(locationX, locationY),

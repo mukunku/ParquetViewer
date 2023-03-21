@@ -1,12 +1,7 @@
-﻿using ParquetViewer;
+﻿using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -49,12 +44,6 @@ namespace ParquetViewer
                 this.CurrentMaxRowCount = recordCount;
             else
                 textbox.Text = this.CurrentMaxRowCount.ToString();
-        }
-
-        private void MainForm_SizeChanged(object sender, EventArgs e)
-        {
-            if (this.loadingPanel != null)
-                this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);
         }
 
         private void MainGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
@@ -219,6 +208,14 @@ MULTIPLE CONDITIONS:
         private void mainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
         {
             this.dateOnlyFormatWarningToolTip.Hide(this);
+        }
+
+        private void showingStatusBarLabel_Click(object sender, EventArgs e)
+        {
+#if DEBUG
+            Clipboard.SetText(PerfWatch.PrintAndReset());
+            MessageBox.Show("Copied perf info to clipboard");
+#endif
         }
     }
 }

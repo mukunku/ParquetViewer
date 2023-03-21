@@ -2,7 +2,6 @@
 using ParquetViewer.Helpers;
 using System;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,84 +12,34 @@ using System.Windows.Forms;
 namespace ParquetViewer
 {
     public partial class MainForm
-    {   
-        private Panel loadingPanel = null;
-        private const int LoadingPanelWidth = 200;
-        private const int LoadingPanelHeight = 200;
+    {
+        private LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
+        {
+            var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
+            loadingIcon.OnShow += (object sender, EventArgs e) => 
+            {
+                this.mainTableLayoutPanel.Enabled = false;
+                this.mainMenuStrip.Enabled = false;
+            };
+            loadingIcon.OnHide += (object sender, EventArgs e) =>
+            {
+                this.mainTableLayoutPanel.Enabled = true;
+                this.mainMenuStrip.Enabled = true;
+            };
+
+            loadingIcon.Show();
+            return loadingIcon;
+        }
 
         private static void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
         {
             MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        private CancellationToken ShowLoadingIcon(string message)
-        {
-            var cancellationToken = new CancellationTokenSource();
-            this.loadingPanel = new Panel();
-            this.loadingPanel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
-            this.loadingPanel.Location = this.GetFormCenter(LoadingPanelWidth / 2, LoadingPanelHeight / 2);            
-
-            this.loadingPanel.Controls.Add(new Label()
-            {
-                Name = "loadingmessagelabel",
-                Text = message,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Top
-            });
-
-            var pictureBox = new PictureBox()
-            {
-                Name = "loadingpicturebox",
-                Image = Properties.Resources.hourglass,
-                Size = new Size(200, 200)
-            };
-            this.loadingPanel.Controls.Add(pictureBox);
-
-            Button cancelButton = new Button()
-            {
-                Name = "cancelloadingbutton",
-                Text = "Cancel",
-                Dock = DockStyle.Bottom,
-                Enabled = cancellationToken.Token.CanBeCanceled
-            };
-            cancelButton.Click += (object buttonSender, EventArgs buttonClickEventArgs) =>
-            {
-                cancellationToken.Cancel();
-
-                ((Button)buttonSender).Enabled = false;
-                ((Button)buttonSender).Text = "Cancelling...";
-            };
-            this.loadingPanel.Controls.Add(cancelButton);
-            cancelButton.BringToFront();
-
-            this.Controls.Add(this.loadingPanel);
-
-            this.loadingPanel.BringToFront();
-            this.loadingPanel.Show();
-
-            this.mainTableLayoutPanel.Enabled = false;
-            this.mainMenuStrip.Enabled = false;
-
-            return cancellationToken.Token;
-        }
-
-        private void HideLoadingIcon()
-        {
-            this.mainTableLayoutPanel.Enabled = true;
-            this.mainMenuStrip.Enabled = true;
-
-            if (this.loadingPanel != null)
-                this.loadingPanel.Dispose();
-        }
-
-        private Point GetFormCenter(int offsetX, int offsetY)
-        {
-            return new Point((this.Size.Width / 2) - offsetX, (this.Size.Height / 2) - offsetY);
-        }
-
         private async void ExportResults(FileType defaultFileType)
         {
             string filePath = null;
+            LoadingIcon loadingIcon = null;
             try
             {
                 if (this.mainGridView.RowCount > 0)
@@ -103,21 +52,21 @@ namespace ParquetViewer
                         filePath = this.exportFileDialog.FileName;
                         var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
 
-                        var cancellationToken = this.ShowLoadingIcon("Exporting Data");
+                        loadingIcon = this.ShowLoadingIcon("Exporting Data");
                         if (selectedFileType == FileType.CSV)
                         {
-                            await Task.Run(() => this.WriteDataToCSVFile(filePath, cancellationToken));
+                            await Task.Run(() => this.WriteDataToCSVFile(filePath, loadingIcon.CancellationToken));
                         }
                         else if (selectedFileType == FileType.XLS)
                         {
-                            await Task.Run(() => this.WriteDataToExcelFile(filePath, cancellationToken));
+                            await Task.Run(() => this.WriteDataToExcelFile(filePath, loadingIcon.CancellationToken));
                         }
                         else
                         {
                             throw new Exception(string.Format("Unsupported export type: '{0}'", selectedFileType.ToString()));
                         }
 
-                        if (cancellationToken.IsCancellationRequested)
+                        if (loadingIcon.CancellationToken.IsCancellationRequested)
                         {
                             CleanupFile(filePath);
                             MessageBox.Show("Export has been cancelled", "Export Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -136,7 +85,7 @@ namespace ParquetViewer
             }
             finally
             {
-                this.HideLoadingIcon();
+                loadingIcon?.Dispose();
             }
 
             void CleanupFile(string filePath)

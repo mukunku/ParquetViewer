@@ -18,7 +18,7 @@ namespace ParquetViewer
         private const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
-        private const int PerformanceWarningCellCount = 350000;
+        private const int PerformanceWarningCellCount = 50000000; //This might not be needed anymore now that we have fast auto column sizing
         private const int MultiThreadedParquetEngineColumnCountThreshold = 1000;
         private readonly string DefaultFormTitle;
 
@@ -160,10 +160,10 @@ namespace ParquetViewer
                             column.DefaultCellStyle.Format = dateFormat;
                     }
 
-
-
                     //Adjust column sizes if required
-                    if (AppSettings.AutoSizeColumnsMode != DataGridViewAutoSizeColumnsMode.None)
+                    if (AppSettings.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.AllCells)
+                        this.mainGridView.FastAutoSizeColumns();
+                    else if (AppSettings.AutoSizeColumnsMode != DataGridViewAutoSizeColumnsMode.None)
                         this.mainGridView.AutoResizeColumns(AppSettings.AutoSizeColumnsMode);
                 }
                 catch { }
@@ -183,7 +183,7 @@ namespace ParquetViewer
             this.OpenFileOrFolderPath = null;
 
             //Have to set this here because it gets deleted from the .Designer.cs file for some reason
-            this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap(); 
+            this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
 
             //Set DGV to be double buffered for smoother loading and scrolling
             if (!SystemInformation.TerminalServerSession)
@@ -240,17 +240,18 @@ namespace ParquetViewer
                 return;
             }
 
+            LoadingIcon loadingIcon = null;
             if (this._openParquetEngine == null)
             {
-                var cancellationToken = this.ShowLoadingIcon("Loading Fields");
+                loadingIcon = this.ShowLoadingIcon("Loading Fields");
 
                 try
                 {
-                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
+                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, loadingIcon.CancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    this.HideLoadingIcon();
+                    loadingIcon.Dispose();
 
                     if (this._openParquetEngine == null)
                     {
@@ -286,7 +287,7 @@ namespace ParquetViewer
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
-                    this.HideLoadingIcon();
+                    loadingIcon?.Dispose();
                     this.Cursor = Cursors.WaitCursor;
 
                     try
@@ -304,10 +305,10 @@ namespace ParquetViewer
                     this.Cursor = Cursors.WaitCursor;
                     try
                     {
-                        this.HideLoadingIcon();
+                        loadingIcon?.Dispose();
                         var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
                         if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
-                        {              
+                        {
                             if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
                                 this.SelectedFields = fieldSelectionForm.NewSelectedFields;
                             else
@@ -329,6 +330,7 @@ namespace ParquetViewer
         private async void LoadFileToGridview()
         {
             var stopwatch = Stopwatch.StartNew();
+            LoadingIcon loadingIcon = null;
             try
             {
                 if (this.IsAnyFileOpen)
@@ -338,13 +340,15 @@ namespace ParquetViewer
                         throw new Exception(string.Format("The specified file/folder no longer exists: {0}{1}Please try opening a new file or folder", this.OpenFileOrFolderPath, Environment.NewLine));
                     }
 
-                    var cancellationToken = this.ShowLoadingIcon("Loading Data");
+                    long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine.RecordCount - this.CurrentOffset);
+                    loadingIcon = this.ShowLoadingIcon("Loading Data", cellCount);
+
                     var finalResult = await Task.Run(async () =>
                     {
                         var results = new ConcurrentDictionary<int, DataTable>();
                         if (this.SelectedFields.Count < MultiThreadedParquetEngineColumnCountThreshold)
                         {
-                            var dataTable = await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
+                            var dataTable = await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
                             results.TryAdd(1, dataTable);
                         }
                         else
@@ -361,12 +365,12 @@ namespace ParquetViewer
                                 fieldGroups.Add((i++, fields.ToList()));
                             }
 
-                            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, CancellationToken = cancellationToken };
+                            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, CancellationToken = loadingIcon.CancellationToken };
                             await Parallel.ForEachAsync(fieldGroups, options,
                                 async (fieldGroup, _cancellationToken) =>
                                 {
-                                    using var parquetEngine = await this._openParquetEngine.CloneAsync(cancellationToken);
-                                    var dataTable = await parquetEngine.ReadRowsAsync(fieldGroup.SubSetOfFields, this.CurrentOffset, this.CurrentMaxRowCount, cancellationToken);
+                                    using var parquetEngine = await this._openParquetEngine.CloneAsync(loadingIcon.CancellationToken);
+                                    var dataTable = await parquetEngine.ReadRowsAsync(fieldGroup.SubSetOfFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
                                     results.TryAdd(fieldGroup.Index, dataTable);
                                 });
                         }
@@ -378,7 +382,7 @@ namespace ParquetViewer
 
                         DataTable mergedDataTables = UtilityMethods.MergeTables(results.OrderBy(f => f.Key).Select(f => f.Value).AsEnumerable());
                         return mergedDataTables;
-                    }, cancellationToken);
+                    }, loadingIcon.CancellationToken);
 
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
                     this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[ParquetViewer.Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
@@ -414,7 +418,7 @@ namespace ParquetViewer
                 stopwatch.Stop();
                 this.showingStatusBarLabel.ToolTipText = $"Load time: {stopwatch.Elapsed:mm\\:ss\\.ff}";
 
-                this.HideLoadingIcon();
+                loadingIcon?.Dispose();
             }
         }
 

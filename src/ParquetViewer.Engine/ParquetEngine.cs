@@ -34,17 +34,26 @@ namespace ParquetViewer.Engine
 
         public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath, CancellationToken cancellationToken)
         {
-            if (File.Exists(fileOrFolderPath)) //Handles null
+            PerfWatch.Milestone(nameof(OpenFileOrFolderAsync));
+
+            try
             {
-                return OpenFileAsync(fileOrFolderPath, cancellationToken);
+                if (File.Exists(fileOrFolderPath)) //Handles null
+                {
+                    return OpenFileAsync(fileOrFolderPath, cancellationToken);
+                }
+                else if (Directory.Exists(fileOrFolderPath)) //Handles null
+                {
+                    return OpenFolderAsync(fileOrFolderPath, cancellationToken);
+                }
+                else
+                {
+                    throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
+                }
             }
-            else if (Directory.Exists(fileOrFolderPath)) //Handles null
+            finally
             {
-                return OpenFolderAsync(fileOrFolderPath, cancellationToken);
-            }
-            else
-            {
-                throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
+                PerfWatch.Milestone(nameof(OpenFileOrFolderAsync));
             }
         }
 
