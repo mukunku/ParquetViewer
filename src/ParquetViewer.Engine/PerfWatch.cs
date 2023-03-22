@@ -81,7 +81,7 @@ namespace ParquetViewer.Engine
 
             public void Milestone(string message)
             {
-                Milestones.Add((DateTime.UtcNow, message/*, Environment.CurrentManagedThreadId*/));
+                Milestones.Add((DateTime.UtcNow, message));
             }
         }
     }

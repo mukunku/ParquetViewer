@@ -30,12 +30,14 @@ namespace ParquetViewer.Helpers
         {
             try
             {
-                var jsonObject = new JObject();
-                jsonObject[nameof(thriftMetadata.Version)] = thriftMetadata.Version;
-                jsonObject[nameof(thriftMetadata.Num_rows)] = recordCount;
-                jsonObject["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? 0; //TODO: Fix for Open Folder case
-                jsonObject["Num_fields"] = thriftMetadata.Schema.Where(s => !s.Name.Equals("schema")).Count();
-                jsonObject[nameof(thriftMetadata.Created_by)] = thriftMetadata.Created_by;
+                var jsonObject = new JObject
+                {
+                    [nameof(thriftMetadata.Version)] = thriftMetadata.Version,
+                    [nameof(thriftMetadata.Num_rows)] = recordCount,
+                    ["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? 0, //TODO: Fix for Open Folder case
+                    ["Num_fields"] = thriftMetadata.Schema.Where(s => !s.Name.Equals("schema")).Count(),
+                    [nameof(thriftMetadata.Created_by)] = thriftMetadata.Created_by
+                };
 
                 var schemas = new JArray();
                 foreach (var schema in thriftMetadata.Schema)
