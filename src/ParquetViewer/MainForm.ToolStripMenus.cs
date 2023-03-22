@@ -1,5 +1,4 @@
-﻿using ParquetViewer;
-using ParquetViewer.Helpers;
+﻿using ParquetViewer.Helpers;
 using System;
 using System.Data;
 using System.Diagnostics;
@@ -177,7 +176,7 @@ namespace ParquetViewer
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start(new ProcessStartInfo(WikiURL) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(Constants.WikiURL) { UseShellExecute = true });
         }
 
         private void DateFormatMenuItem_Click(object sender, EventArgs e)

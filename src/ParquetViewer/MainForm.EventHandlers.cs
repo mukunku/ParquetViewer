@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Engine;
+﻿using Parquet.Serialization;
+using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
 using System.Drawing;

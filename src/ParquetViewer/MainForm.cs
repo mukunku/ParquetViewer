@@ -15,10 +15,9 @@ namespace ParquetViewer
 {
     public partial class MainForm : Form
     {
-        private const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
-        private const int PerformanceWarningCellCount = 50000000; //This might not be needed anymore now that we have fast auto column sizing
+        private const int PerformanceWarningCellCount = int.MaxValue; //Disabling this for now because it might not be needed anymore now that we have fast auto column sizing
         private const int MultiThreadedParquetEngineColumnCountThreshold = 1000;
         private readonly string DefaultFormTitle;
 

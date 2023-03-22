@@ -36,6 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Data\COLUMN_ENDING_IN_PERIOD_TEST1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Data\DATETIME_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -49,9 +52,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Data\DECIMALS_TEST.parquet">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\MANY_COLUMNS_PERFORMANCE_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Data\PARTITIONED_PARQUET_FILE_TEST1\bldgtype=B\bd8c129da60e412db4b21800b9e0b983.parquet">

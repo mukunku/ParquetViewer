@@ -24,8 +24,6 @@ namespace ParquetViewer.Engine
                     PerfWatch.Milestone(nameof(dataTable));
 
                     dataTable = new DataTable();
-                    dataTable.BeginLoadData();
-
                     var dataFields = reader.ParquetReader.Schema.GetDataFields();
 
                     foreach (string selectedField in selectedFields)
@@ -50,6 +48,7 @@ namespace ParquetViewer.Engine
                             throw new Exception(string.Format("Field '{0}' does not exist", selectedField));
                     }
 
+                    dataTable.BeginLoadData(); //might help boost performance a bit
                     PerfWatch.Milestone(nameof(dataFields));
                 }
 
@@ -126,18 +125,19 @@ namespace ParquetViewer.Engine
                 int rowIndex = rowBeginIndex;
 
                 int skippedRecords = 0;
-                Parquet.Data.DataColumn x = null;
+                Parquet.Data.DataColumn dataColumn = null;
                 try
                 {
-                    x = await groupReader.ReadColumnAsync(field);
+                    dataColumn = await groupReader.ReadColumnAsync(field);
                     PerfWatch.Milestone(fieldTuple.Item2.Name, "LOAD");
                 }
-                catch(Exception ex)
+                catch(Exception)
                 {
                     throw;
                 }
 
-                foreach (var value in x.Data)
+                var fieldIndex = dataTable.Columns[field.Name].Ordinal;
+                foreach (var value in dataColumn.Data)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -156,10 +156,10 @@ namespace ParquetViewer.Engine
                         dataTable.Rows.Add(newRow);
                     }
 
-                    if (value == null)
-                        dataTable.Rows[rowIndex][field.Name] = DBNull.Value;
+                    if (value is null)
+                        dataTable.Rows[rowIndex][fieldIndex] = DBNull.Value;
                     else if (field.DataType == Parquet.Schema.DataType.DateTimeOffset)
-                        dataTable.Rows[rowIndex][field.Name] = (DateTime)value;
+                        dataTable.Rows[rowIndex][fieldIndex] = (DateTime)value;
                     else if (field.DataType == Parquet.Schema.DataType.Int64
                         && logicalType?.TIMESTAMP != null)
                     {
@@ -172,12 +172,12 @@ namespace ParquetViewer.Engine
                             divideBy = 1;
 
                         if (divideBy > 0)
-                            dataTable.Rows[rowIndex][field.Name] = DateTimeOffset.FromUnixTimeMilliseconds((long)value / divideBy).DateTime;
+                            dataTable.Rows[rowIndex][fieldIndex] = DateTimeOffset.FromUnixTimeMilliseconds((long)value / divideBy).DateTime;
                         else //Not sure if this 'else' is correct but adding just in case
-                            dataTable.Rows[rowIndex][field.Name] = DateTimeOffset.FromUnixTimeSeconds((long)value);
+                            dataTable.Rows[rowIndex][fieldIndex] = DateTimeOffset.FromUnixTimeSeconds((long)value);
                     }
                     else
-                        dataTable.Rows[rowIndex][field.Name] = value;
+                        dataTable.Rows[rowIndex][fieldIndex] = value;
 
                     rowIndex++;
                     progress?.Report(1);

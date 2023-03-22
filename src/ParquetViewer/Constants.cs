@@ -3,6 +3,7 @@
     public static class Constants
     {
         public const string FILL_WEIGHT_EXCEPTION_MESSAGE = "FillWeight";
+        public const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
     }
 
     public enum ParquetEngine

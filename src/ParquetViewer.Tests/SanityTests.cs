@@ -1,4 +1,3 @@
-using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
 
 namespace ParquetViewer.Tests
@@ -110,16 +109,18 @@ namespace ParquetViewer.Tests
             Assert.Equal("USA", dataTable.Rows[500][1]);
         }
 
-        [Fact(Skip = "Skipping because I need to convert this to the multi-threaded parquet engine implementation to reduce the run time.")]
-        public async Task MANY_COLUMNS_PERFORMANCE_TEST1()
+        [Fact]
+        public async Task COLUMN_ENDING_IN_PERIOD_TEST1()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MANY_COLUMNS_PERFORMANCE_TEST1.parquet", default);
+            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST1.parquet", default);
 
-            var stopWatch = Stopwatch.StartNew();
-            await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
-            stopWatch.Stop();
+            Assert.Equal(1, parquetEngine.RecordCount);
+            Assert.Equal(11, parquetEngine.Fields.Count);
 
-            Assert.InRange(stopWatch.ElapsedMilliseconds, 0, 65000);
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.Equal(202252, dataTable.Rows[0][0]);
+            Assert.Equal(false, dataTable.Rows[0]["Output as FP"]);
+            Assert.Equal((sbyte)0, dataTable.Rows[0]["Preorder FP equi."]);
         }
     }
 }

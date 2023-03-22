@@ -11,7 +11,7 @@ namespace ParquetViewer
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
         private const int DynamicFieldCheckboxYIncrement = 30;
-        public static readonly List<SchemaType> UnsupportedSchemaTypes = new List<SchemaType>() { SchemaType.List, SchemaType.Map, SchemaType.Struct };
+        public static readonly List<SchemaType> UnsupportedSchemaTypes = new () { SchemaType.List, SchemaType.Map, SchemaType.Struct };
 
         public List<string> PreSelectedFields { get; set; }
         public IEnumerable<Field> AvailableFields { get; set; }
