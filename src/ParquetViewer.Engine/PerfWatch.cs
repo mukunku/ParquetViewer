@@ -15,6 +15,9 @@ namespace ParquetViewer.Engine
 
         public static void Milestone(string key, string message)
         {
+#if !DEBUG
+            return;
+#endif
             if (string.IsNullOrWhiteSpace(key))
                 return;
 
@@ -23,6 +26,9 @@ namespace ParquetViewer.Engine
 
         public static void Milestone(string message)
         {
+#if !DEBUG
+            return;
+#endif
             GetOrCreate("MAIN").Milestone(message);
         }
 
