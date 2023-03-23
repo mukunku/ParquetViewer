@@ -94,6 +94,7 @@ namespace ParquetViewer
             this._panel.Dispose();
         }
 
+        private object _lock = new object();
         public void Report(int _)
         {
             if (this._loadingBarMax <= 0)
@@ -105,18 +106,21 @@ namespace ParquetViewer
             {
                 this._progressRatio = progressRatio;
 
-                //Convert the cancel button into a progress bar
-                var bitmap = (Bitmap)this._cancelButton.BackgroundImage;
-                using (var solidBrush = new SolidBrush(Color.FromArgb(30, 40, 160, 60)))
-                {
-                    using (Graphics graphics = Graphics.FromImage(bitmap))
+                lock (_lock) //This part isn't thread-safe
+                { 
+                    //Convert the cancel button into a progress bar
+                    var bitmap = (Bitmap)this._cancelButton.BackgroundImage;
+                    using (var solidBrush = new SolidBrush(Color.FromArgb(30, 40, 160, 60)))
                     {
-                        float wid = bitmap.Width * this._progressRatio / 100;
-                        float hgt = bitmap.Height;
-                        RectangleF rect = new RectangleF(0, 0, wid, hgt);
-                        graphics.FillRectangle(solidBrush, rect);
+                        using (Graphics graphics = Graphics.FromImage(bitmap))
+                        {
+                            float wid = bitmap.Width * this._progressRatio / 100;
+                            float hgt = bitmap.Height;
+                            RectangleF rect = new RectangleF(0, 0, wid, hgt);
+                            graphics.FillRectangle(solidBrush, rect);
+                        }
+                        this._cancelButton.Invoke(this._cancelButton.Refresh);
                     }
-                    this._cancelButton.Invoke(this._cancelButton.Refresh);
                 }
             }
         }
