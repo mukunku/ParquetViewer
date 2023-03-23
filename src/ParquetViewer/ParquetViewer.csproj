@@ -13,6 +13,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\parquet_icon.ico</ApplicationIcon>
+    <PlatformTarget>x64</PlatformTarget>
+    <StartupObject>ParquetViewer.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>
