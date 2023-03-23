@@ -6,6 +6,11 @@ namespace ParquetViewer.Engine
     public partial class ParquetEngine
     {
         public static readonly string TotalRecordCountExtendedPropertyKey = "TOTAL_RECORD_COUNT";
+        private static readonly int MinMemoryGBNeededForAdditionalCaching = 8; //Let's not use extra caching if the PC doesn't have more than 8GB memory
+
+        private static bool? _useDataRowCache;
+        private static bool UseDataRowCache => 
+            _useDataRowCache ??= (GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/) > (MinMemoryGBNeededForAdditionalCaching * 1024);
 
         public async Task<DataTable> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
@@ -24,14 +29,14 @@ namespace ParquetViewer.Engine
                     PerfWatch.Milestone(nameof(dataTable));
 
                     dataTable = new DataTable();
-                    var dataFields = reader.ParquetReader.Schema.GetDataFields();
-
+                    var dataFieldsDictionary = reader.ParquetReader.Schema.GetDataFields().ToDictionary(df => df.Name, df => df);
+                    var thriftSchemaDictionary = reader.ParquetReader.ThriftMetadata.Schema.ToDictionary(f => f.Name, f => f);
                     foreach (string selectedField in selectedFields)
                     {
-                        var dataField = dataFields.FirstOrDefault(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
+                        dataFieldsDictionary.TryGetValue(selectedField, out var dataField);
                         if (dataField != null)
                         {
-                            var thriftSchema = reader.ParquetReader.ThriftMetadata.Schema.First(f => f.Name.Equals(selectedField, StringComparison.InvariantCultureIgnoreCase));
+                            var thriftSchema = thriftSchemaDictionary[selectedField];
 
                             fields.Add((thriftSchema, dataField));
                             var newColumn = new DataColumn(dataField.Name, ParquetNetTypeToCSharpType(thriftSchema, dataField.DataType));
@@ -49,7 +54,7 @@ namespace ParquetViewer.Engine
                     }
 
                     dataTable.BeginLoadData(); //might help boost performance a bit
-                    PerfWatch.Milestone(nameof(dataFields));
+                    PerfWatch.Milestone(nameof(dataTable));
                 }
 
                 if (recordsLeftToRead <= 0)
@@ -113,6 +118,7 @@ namespace ParquetViewer.Engine
             int rowBeginIndex = dataTable.Rows.Count;
             bool isFirstColumn = true;
 
+            var rowLookupCache = new Dictionary<int, DataRow>();
             foreach (var fieldTuple in fields)
             {
                 PerfWatch.Milestone(fieldTuple.Item2.Name, "START");
@@ -156,10 +162,24 @@ namespace ParquetViewer.Engine
                         dataTable.Rows.Add(newRow);
                     }
 
+                    DataRow datarow;
+                    if (!UseDataRowCache)
+                    {
+                        datarow = dataTable.Rows[rowIndex];
+                    }
+                    else
+                    {
+                        if (!rowLookupCache.TryGetValue(rowIndex, out datarow))
+                        {
+                            datarow = dataTable.Rows[rowIndex];
+                            rowLookupCache.TryAdd(rowIndex, dataTable.Rows[rowIndex]);
+                        }
+                    }
+
                     if (value is null)
-                        dataTable.Rows[rowIndex][fieldIndex] = DBNull.Value;
+                        datarow[fieldIndex] = DBNull.Value;
                     else if (field.DataType == Parquet.Schema.DataType.DateTimeOffset)
-                        dataTable.Rows[rowIndex][fieldIndex] = (DateTime)value;
+                        datarow[fieldIndex] = (DateTime)value;
                     else if (field.DataType == Parquet.Schema.DataType.Int64
                         && logicalType?.TIMESTAMP != null)
                     {
@@ -172,12 +192,12 @@ namespace ParquetViewer.Engine
                             divideBy = 1;
 
                         if (divideBy > 0)
-                            dataTable.Rows[rowIndex][fieldIndex] = DateTimeOffset.FromUnixTimeMilliseconds((long)value / divideBy).DateTime;
+                            datarow[fieldIndex] = DateTimeOffset.FromUnixTimeMilliseconds((long)value / divideBy).DateTime;
                         else //Not sure if this 'else' is correct but adding just in case
-                            dataTable.Rows[rowIndex][fieldIndex] = DateTimeOffset.FromUnixTimeSeconds((long)value);
+                            datarow[fieldIndex] = DateTimeOffset.FromUnixTimeSeconds((long)value);
                     }
                     else
-                        dataTable.Rows[rowIndex][fieldIndex] = value;
+                        datarow[fieldIndex] = value;
 
                     rowIndex++;
                     progress?.Report(1);
@@ -193,7 +213,7 @@ namespace ParquetViewer.Engine
 
         private static Type ParquetNetTypeToCSharpType(Parquet.Thrift.SchemaElement thriftSchema, Parquet.Schema.DataType type)
         {
-            Type columnType = null;
+            Type columnType;
             switch (type)
             {
                 case Parquet.Schema.DataType.Boolean:
