@@ -10,6 +10,7 @@ namespace ParquetViewer
     public partial class FieldsToLoadForm : Form
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
+        private const string UnsupportedFieldText = "(Unsupported)";
         private const int DynamicFieldCheckboxYIncrement = 30;
         public static readonly List<SchemaType> UnsupportedSchemaTypes = new () { SchemaType.List, SchemaType.Map, SchemaType.Struct };
 
@@ -110,7 +111,7 @@ namespace ParquetViewer
                         var fieldCheckbox = new CheckBox()
                         {
                             Name = string.Concat("checkbox_", field.Name),
-                            Text = string.Concat(field.Name, isUnsupportedFieldType ? " (Unsupported)" : string.Empty),
+                            Text = string.Concat(field.Name, isUnsupportedFieldType ? $" {UnsupportedFieldText}" : string.Empty),
                             Tag = field.Name,
                             Checked = preSelectedFields.Contains(field.Name),
                             Location = new Point(locationX, locationY),
@@ -214,6 +215,9 @@ namespace ParquetViewer
         {
             try
             {
+                //Clear filter text so all checked fields are loaded
+                clearfilterColumnsButton_Click(null, null); 
+
                 if (this.allFieldsRememberRadioButton.Checked)
                     AppSettings.AlwaysSelectAllFields = true;
                 else
@@ -224,7 +228,7 @@ namespace ParquetViewer
                 {
                     foreach (Control control in this.fieldsPanel.Controls)
                     {
-                        if (!control.Name.Equals(SelectAllCheckboxName) && control.Enabled)
+                        if (!control.Name.Equals(SelectAllCheckboxName) && !control.Text.Contains(UnsupportedFieldText))
                             this.NewSelectedFields.Add((string)control.Tag);
                     }
                 }

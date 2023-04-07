@@ -134,7 +134,7 @@ namespace ParquetViewer.Engine
                 Parquet.Data.DataColumn dataColumn = null;
                 try
                 {
-                    dataColumn = await groupReader.ReadColumnAsync(field);
+                    dataColumn = await groupReader.ReadColumnAsync(field, cancellationToken);
                     PerfWatch.Milestone(fieldTuple.Item2.Name, "LOAD");
                 }
                 catch(Exception)

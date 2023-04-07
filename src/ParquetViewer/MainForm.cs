@@ -306,12 +306,9 @@ namespace ParquetViewer
                     {
                         loadingIcon?.Dispose();
                         var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
-                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
+                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
                         {
-                            if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
-                                this.SelectedFields = fieldSelectionForm.NewSelectedFields;
-                            else
-                                this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
+                            this.SelectedFields = fieldSelectionForm.NewSelectedFields;
                         }
                     }
                     finally
