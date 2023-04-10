@@ -262,8 +262,10 @@ namespace ParquetViewer
             mainGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 6;
+            mainGridView.CellContentClick += mainGridView_CellContentClick;
             mainGridView.CellMouseEnter += mainGridView_CellMouseEnter;
             mainGridView.CellMouseLeave += mainGridView_CellMouseLeave;
+            mainGridView.CellMouseMove += mainGridView_CellMouseMove;
             mainGridView.CellPainting += MainGridView_CellPainting;
             mainGridView.ColumnAdded += MainGridView_ColumnAdded;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
@@ -539,7 +541,7 @@ namespace ParquetViewer
             // springStatusBarLabel
             // 
             springStatusBarLabel.Name = "springStatusBarLabel";
-            springStatusBarLabel.Size = new System.Drawing.Size(661, 17);
+            springStatusBarLabel.Size = new System.Drawing.Size(692, 17);
             springStatusBarLabel.Spring = true;
             // 
             // showingStatusBarLabel

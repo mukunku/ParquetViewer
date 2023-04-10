@@ -16,7 +16,7 @@ namespace ParquetViewer
         private LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
         {
             var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
-            loadingIcon.OnShow += (object sender, EventArgs e) => 
+            loadingIcon.OnShow += (object sender, EventArgs e) =>
             {
                 this.mainTableLayoutPanel.Enabled = false;
                 this.mainMenuStrip.Enabled = false;

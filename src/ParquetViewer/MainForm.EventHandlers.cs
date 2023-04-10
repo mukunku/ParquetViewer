@@ -1,8 +1,10 @@
-﻿using Parquet.Serialization;
-using ParquetViewer.Engine;
+﻿using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -12,6 +14,7 @@ namespace ParquetViewer
         private const string QueryUselessPartRegex = "^WHERE ";
 
         private ToolTip dateOnlyFormatWarningToolTip = new();
+        private Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
 
         private void offsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -86,7 +89,26 @@ namespace ParquetViewer
 
                     e.Handled = true;
                 }
+                else if (e.Value is ListValue)
+                {
+                    e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
+                    e.CellStyle.ForeColor = Color.Blue;
+                }
             }
+        }
+
+        private static bool IsCursorOverCellText(DataGridView dgv, int columnIndex, int rowIndex)
+        {
+            if (dgv[columnIndex, rowIndex] is DataGridViewCell cell)
+            {
+                var cursorPosition = dgv.PointToClient(Cursor.Position);
+                var cellAreaWithTextInIt =
+                    new Rectangle(dgv.GetCellDisplayRectangle(columnIndex, rowIndex, true).Location, cell.GetContentBounds(rowIndex).Size);
+
+                return cellAreaWithTextInIt.Contains(cursorPosition);
+            }
+
+            return false;
         }
 
         private void searchFilterTextBox_KeyPress(object sender, KeyPressEventArgs e)
@@ -136,6 +158,24 @@ STRING:
     WHERE field_name <> 'not equals'
 MULTIPLE CONDITIONS: 
     WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
+        }
+
+        private void mainGridView_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.ColumnIndex < 0 || e.RowIndex < 0)
+                return;
+
+            if (sender is DataGridView dgv)
+            {
+                if (dgv.Columns[e.ColumnIndex].ValueType == typeof(ListValue))
+                {
+                    //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
+                    if (IsCursorOverCellText(dgv, e.ColumnIndex, e.RowIndex))
+                        dgv.Cursor = Cursors.Hand;
+                    else
+                        dgv.Cursor = Cursors.Default;
+                }
+            }
         }
 
         private void mainGridView_MouseClick(object sender, MouseEventArgs e)
@@ -209,6 +249,11 @@ MULTIPLE CONDITIONS:
         private void mainGridView_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
         {
             this.dateOnlyFormatWarningToolTip.Hide(this);
+
+            if (sender is DataGridView dgv)
+            {
+                dgv.Cursor = Cursors.Default;
+            }
         }
 
         private void showingStatusBarLabel_Click(object sender, EventArgs e)
@@ -217,6 +262,101 @@ MULTIPLE CONDITIONS:
             Clipboard.SetText(PerfWatch.PrintAndReset());
             MessageBox.Show("Copied perf info to clipboard");
 #endif
+        }
+
+        private void mainGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
+            if (sender is DataGridView dgv)
+            {
+                //Check if there's already a quick peek open for this cell
+                if (dgv[e.ColumnIndex, e.RowIndex].Tag is Guid cellUniqueTag
+                    && openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
+                    && quickPeekForm.UniqueTag.Equals(cellUniqueTag))
+                {
+                    quickPeekForm.Focus();
+                    return;
+                }
+
+                DataTable dt = null;
+                if (dgv[e.ColumnIndex, e.RowIndex].Value is ListValue listValue)
+                {
+                    dt = new DataTable();
+                    dt.Columns.Add(new DataColumn(dgv.Columns[e.ColumnIndex].Name, listValue.Type));
+
+                    foreach (var item in listValue.Data)
+                    {
+                        var row = dt.NewRow();
+                        row[0] = item;
+                        dt.Rows.Add(row);
+                    }
+                }
+
+                if (dt == null)
+                    return;
+
+                dgv[e.ColumnIndex, e.RowIndex].Tag = Guid.NewGuid();
+                var uniqueCellTag = (Guid)dgv[e.ColumnIndex, e.RowIndex].Tag;
+
+                var quickPeakForm = new QuickPeekForm(null, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+                quickPeakForm.TakeMeBackEvent += (object form, TakeMeBackEventArgs tag) =>
+                {
+                    if (dgv.Rows.Count > tag.SourceRowIndex) //Can't be too safe
+                    {
+                        DataGridViewCell cellToReturnTo = dgv[tag.SourceColumnIndex, tag.SourceRowIndex];
+
+                        //Check if the cell is still the same (user hasn't navigated the file since opening the popup)
+                        if (cellToReturnTo.Tag is Guid t && t == tag.UniqueTag)
+                        {
+                            if (form is Form f)
+                                f.Close();
+
+                            dgv.ClearSelection();
+                            dgv.FirstDisplayedScrollingRowIndex = cellToReturnTo.RowIndex;
+
+                            if (dgv.Columns.Count > tag.SourceColumnIndex) //Can't be too safe
+                            {
+                                dgv.FirstDisplayedScrollingColumnIndex = tag.SourceColumnIndex;
+                                dgv[cellToReturnTo.ColumnIndex, cellToReturnTo.RowIndex].Selected = true;
+                            }
+                            else
+                            {
+                                //Can't find column, select whole row
+                                cellToReturnTo.Selected = true;
+                            }
+
+                            dgv.Focus();
+                        }
+                        else
+                        {
+                            //Can't find return row
+                            if (form is QuickPeekForm f)
+                                f.TakeMeBackLinkDisable();
+                        }
+                    }
+                    else
+                    {
+                        //User has navigated the file. No chance we can find the same row again :(
+                        if (form is QuickPeekForm f)
+                            f.TakeMeBackLinkDisable();
+                    }
+                };
+
+                quickPeakForm.FormClosed += (object sender, FormClosedEventArgs _) =>
+                {
+                    if (openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
+                        && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
+                    {
+                        openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex));
+                    }
+                };
+
+                openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
+                openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeakForm);
+                quickPeakForm.Show(this.Parent ?? this);
+            }
         }
     }
 }

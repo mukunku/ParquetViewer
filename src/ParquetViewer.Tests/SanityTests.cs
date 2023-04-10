@@ -83,7 +83,7 @@ namespace ParquetViewer.Tests
             Assert.Equal(12, parquetEngine.Fields.Count);
 
             var ex = await Assert.ThrowsAsync<NotSupportedException>(() => parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default));
-            Assert.Equal("Duplicate column detected. Column names are case insensitive and must be unique.", ex.Message);
+            Assert.Equal("Duplicate column 'TransPlan_NORMAL_v2' detected. Column names are case insensitive and must be unique.", ex.Message);
         }
 
         [Fact]
