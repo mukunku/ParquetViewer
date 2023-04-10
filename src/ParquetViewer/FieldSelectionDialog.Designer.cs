@@ -94,7 +94,7 @@
             this.showSelectedFieldsRadioButton.Name = "showSelectedFieldsRadioButton";
             this.showSelectedFieldsRadioButton.Size = new System.Drawing.Size(105, 29);
             this.showSelectedFieldsRadioButton.TabIndex = 1;
-            this.showSelectedFieldsRadioButton.Text = "Selected Fields:";
+            this.showSelectedFieldsRadioButton.Text = "Selected Fields (Count: {0}):";
             this.showSelectedFieldsRadioButton.UseVisualStyleBackColor = true;
             this.showSelectedFieldsRadioButton.CheckedChanged += new System.EventHandler(this.showSelectedFieldsRadioButton_CheckedChanged);
             // 

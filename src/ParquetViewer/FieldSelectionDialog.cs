@@ -15,24 +15,25 @@ namespace ParquetViewer
         public static readonly List<SchemaType> UnsupportedSchemaTypes = new () { /*SchemaType.List,*/ SchemaType.Map, SchemaType.Struct };
 
         public List<string> PreSelectedFields { get; set; }
-        public IEnumerable<Field> AvailableFields { get; set; }
+        public List<Field> AvailableFields { get; set; }
         public List<string> NewSelectedFields { get; set; }
-        public List<string> PreserveSelectedFields { get; set; }
+
+        private string _selectedFieldsOnlyLabelTemplate;
 
         public FieldsToLoadForm()
         {
             InitializeComponent();
-            this.AvailableFields = new List<Field>();
-            this.PreSelectedFields = new List<string>();
-            this.NewSelectedFields = new List<string>();
+            this.AvailableFields ??= new List<Field>();
+            this.PreSelectedFields ??= new List<string>();
+            this.NewSelectedFields ??= new List<string>();
+            this._selectedFieldsOnlyLabelTemplate = this.showSelectedFieldsRadioButton.Text;
+            this.SetSelectedFieldCount();
         }
 
-        public FieldsToLoadForm(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields)
+        public FieldsToLoadForm(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields) : this()
         {
-            InitializeComponent();
-            this.AvailableFields = availableFields;
-            this.PreSelectedFields = preSelectedFields.ToList() ?? new List<string>();
-            this.NewSelectedFields = new List<string>();
+            this.AvailableFields = availableFields.ToList() ?? new();
+            this.PreSelectedFields = preSelectedFields.ToList() ?? new();
         }
 
         private void FieldsToLoadForm_Load(object sender, EventArgs e)
@@ -41,7 +42,7 @@ namespace ParquetViewer
             this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
         }
 
-        private void RenderFieldsCheckboxes(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields)
+        private void RenderFieldsCheckboxes(List<Field> availableFields, List<string> preSelectedFields)
         {
             this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
             this.fieldsPanel.Controls.Clear();
@@ -50,6 +51,7 @@ namespace ParquetViewer
             {
                 if (availableFields != null)
                 {
+
                     int locationX = 0;
                     int locationY = 5;
                     bool isFirst = true;
@@ -62,19 +64,16 @@ namespace ParquetViewer
                         {
                             isFirst = false;
 
-                            if (preSelectedFields != null)
+                            if (preSelectedFields?.Count > 0)
                             {
-                                foreach (string preSelectedField in preSelectedFields)
-                                {
-                                    this.showSelectedFieldsRadioButton.Checked = true;
-                                    break;
-                                }
+                                this.showSelectedFieldsRadioButton.Checked = true;
+                                this.SetSelectedFieldCount();
                             }
 
                             var selectAllCheckbox = new CheckBox()
                             {
                                 Name = SelectAllCheckboxName,
-                                Text = "Select All",
+                                Text = $"Select All (Count: {availableFields.Count})",
                                 Tag = SelectAllCheckboxName,
                                 Checked = false,
                                 Location = new Point(locationX, locationY),
@@ -107,7 +106,7 @@ namespace ParquetViewer
                             locationY += DynamicFieldCheckboxYIncrement;
                         }
 
-                        bool isUnsupportedFieldType = UnsupportedSchemaTypes.Contains(field.SchemaType);
+                        bool isUnsupportedFieldType = !IsSupportedFieldType(field);
                         var fieldCheckbox = new CheckBox()
                         {
                             Name = string.Concat("checkbox_", field.Name),
@@ -125,12 +124,13 @@ namespace ParquetViewer
                             if (fieldCheckBox.Checked)
                             {
                                 this.PreSelectedFields.Add((string)fieldCheckBox.Tag);
+                                SetSelectedFieldCount();
                             }
                             else
                             {
                                 this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                                SetSelectedFieldCount();
                             }
-
 
                             if (!fieldCheckBox.Checked)
                             {
@@ -144,6 +144,7 @@ namespace ParquetViewer
                                             checkbox.Checked = false;
                                             this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
                                             isClearingSelectAllCheckbox = false;
+                                            SetSelectedFieldCount();
                                             break;
                                         }
                                     }
@@ -174,6 +175,14 @@ namespace ParquetViewer
                 this.fieldsPanel.ResumeLayout();
             }
         }
+
+        private bool IsSupportedFieldType(Field field) =>
+            field.SchemaType switch
+            {
+                SchemaType.Data => true,
+                SchemaType.List when field is ListField lf && lf.Item.SchemaType == SchemaType.Data => true, //we don't support nested lists
+                _ => false
+            };
 
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
@@ -280,7 +289,7 @@ namespace ParquetViewer
                     filteredFields = this.AvailableFields.Where(w => filteredColumnsNames.Contains(w.Name));
                 }
 
-                this.RenderFieldsCheckboxes(filteredFields, this.PreSelectedFields);
+                this.RenderFieldsCheckboxes(filteredFields.ToList(), this.PreSelectedFields);
             }
             else
             {
@@ -299,6 +308,12 @@ namespace ParquetViewer
             {
                 this.Close();
             }
+        }
+
+        private void SetSelectedFieldCount()
+        {
+            this.showSelectedFieldsRadioButton.Text = string.Format(_selectedFieldsOnlyLabelTemplate, this.PreSelectedFields?.Count 
+                ?? this.AvailableFields.Count);
         }
     }
 }

@@ -54,6 +54,7 @@ namespace ParquetViewer
             var metadataResult = new List<(string TabName, string Text)>();
             if (parquetEngine.ThriftMetadata != null)
             {
+                
                 string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine.ThriftMetadata, parquetEngine.RecordCount);
                 metadataResult.Add((THRIFT_METADATA, json));
             }

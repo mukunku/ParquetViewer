@@ -33,7 +33,7 @@ namespace ParquetViewer.Engine
 
                     dataTable = new DataTable();
                     var dataFieldsDictionary = reader.ParquetReader.Schema.GetDataFields().ToDictionary(df => df.Path.FirstPart ?? df.Name, df => df);
-                    var thriftSchemaDictionary = reader.ParquetReader.ThriftMetadata?.Schema.ToDictionary(f => f.Name, f => f) ?? new();
+                    var thriftSchemaDictionary = reader.ParquetReader.ThriftMetadata?.Schema.Where(f => dataFieldsDictionary.ContainsKey(f.Name)).ToDictionary(f => f.Name, f => f) ?? new();
                     foreach (string selectedField in selectedFields)
                     {
                         dataFieldsDictionary.TryGetValue(selectedField, out var dataField);
