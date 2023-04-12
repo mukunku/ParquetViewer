@@ -1,3 +1,4 @@
+using ParquetViewer.Common;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
@@ -129,7 +130,7 @@ namespace ParquetViewer
             {
                 //Check for performance issues
                 int? cellsToRender = value?.Columns.Count * value?.Rows.Count;
-                if (cellsToRender > PerformanceWarningCellCount && AppSettings.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.AllCells)
+                if (cellsToRender > PerformanceWarningCellCount && AppSettings.AutoSizeColumnsMode == AutoSizeColumnsMode.AllCells)
                 {
                     //Don't spam the user so ask only once per app update
                     if (AppSettings.WarningBypassedOnVersion != AboutBox.AssemblyVersion)
@@ -160,10 +161,10 @@ namespace ParquetViewer
                     }
 
                     //Adjust column sizes if required
-                    if (AppSettings.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.AllCells)
+                    if (AppSettings.AutoSizeColumnsMode == AutoSizeColumnsMode.AllCells)
                         this.mainGridView.FastAutoSizeColumns();
-                    else if (AppSettings.AutoSizeColumnsMode != DataGridViewAutoSizeColumnsMode.None)
-                        this.mainGridView.AutoResizeColumns(AppSettings.AutoSizeColumnsMode);
+                    else if (AppSettings.AutoSizeColumnsMode != AutoSizeColumnsMode.None)
+                        this.mainGridView.AutoResizeColumns(AppSettings.AutoSizeColumnsMode.ToDGVMode());
                 }
                 catch { }
             }

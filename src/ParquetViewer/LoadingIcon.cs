@@ -119,8 +119,8 @@ namespace ParquetViewer
                             RectangleF rect = new RectangleF(0, 0, wid, hgt);
                             graphics.FillRectangle(solidBrush, rect);
                         }
-                        this._cancelButton.Invoke(this._cancelButton.Refresh);
                     }
+                    this._cancelButton.Invoke(this._cancelButton.Refresh);
                 }
             }
         }

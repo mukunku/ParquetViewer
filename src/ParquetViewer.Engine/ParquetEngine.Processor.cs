@@ -1,8 +1,6 @@
-﻿using System;
-using Parquet;
-using System.Data;
+﻿using Parquet;
 using System.Collections;
-using System.Reflection;
+using System.Data;
 
 namespace ParquetViewer.Engine
 {
@@ -17,8 +15,6 @@ namespace ParquetViewer.Engine
 
         public async Task<DataTable> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
-            PerfWatch.Milestone(nameof(ReadRowsAsync));
-
             long recordsLeftToRead = recordCount;
             DataTable dataTable = null;
             var fields = new List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)>();
@@ -29,8 +25,6 @@ namespace ParquetViewer.Engine
                 //Build datatable once
                 if (dataTable is null)
                 {
-                    PerfWatch.Milestone(nameof(dataTable));
-
                     dataTable = new DataTable();
                     var dataFieldsDictionary = reader.ParquetReader.Schema.GetDataFields().ToDictionary(df => df.Path.FirstPart ?? df.Name, df => df);
                     var thriftSchemaDictionary = reader.ParquetReader.ThriftMetadata?.Schema.Where(f => dataFieldsDictionary.ContainsKey(f.Name)).ToDictionary(f => f.Name, f => f) ?? new();
@@ -66,7 +60,6 @@ namespace ParquetViewer.Engine
                     }
 
                     dataTable.BeginLoadData(); //might help boost performance a bit
-                    PerfWatch.Milestone(nameof(dataTable));
                 }
 
                 if (recordsLeftToRead <= 0)
@@ -79,15 +72,12 @@ namespace ParquetViewer.Engine
             result.ExtendedProperties.Add(TotalRecordCountExtendedPropertyKey, this.RecordCount);
             result.EndLoadData();
 
-            PerfWatch.Milestone(nameof(ReadRowsAsync));
             return result;
         }
 
         private static async Task<long> ParquetReaderToDataTable(DataTable dataTable, List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)> fields, ParquetReader parquetReader,
             long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            PerfWatch.Milestone(nameof(ParquetReaderToDataTable));
-
             //Read column by column to generate each row in the datatable
             int totalRecordCountSoFar = 0;
             long rowsLeftToRead = recordCount;
@@ -118,23 +108,18 @@ namespace ParquetViewer.Engine
                 }
             }
 
-            PerfWatch.Milestone(nameof(ParquetReaderToDataTable));
             return rowsLeftToRead;
         }
 
         private static async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, List<(Parquet.Thrift.SchemaElement, Parquet.Schema.DataField)> fields,
             long skipRecords, long readRecords, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            PerfWatch.Milestone(nameof(ProcessRowGroup));
-
             int rowBeginIndex = dataTable.Rows.Count;
             bool isFirstColumn = true;
 
             var rowLookupCache = new Dictionary<int, DataRow>();
             foreach (var fieldTuple in fields)
             {
-                PerfWatch.Milestone(fieldTuple.Item2.Name, "START");
-
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var schemaElement = fieldTuple.Item1;
@@ -152,10 +137,7 @@ namespace ParquetViewer.Engine
                 }
 
                 isFirstColumn = false;
-                PerfWatch.Milestone(nameof(ProcessRowGroup));
             }
-
-            PerfWatch.Milestone(nameof(ProcessRowGroup));
         }
 
         private static async Task ReadPrimitiveField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, Parquet.Schema.DataField field, Parquet.Thrift.LogicalType logicalType,
@@ -165,7 +147,6 @@ namespace ParquetViewer.Engine
 
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field, cancellationToken);
-            PerfWatch.Milestone(field.Name, "LOAD");
 
             var fieldIndex = dataTable.Columns[field.Name].Ordinal;
             foreach (var value in dataColumn.Data)
@@ -205,7 +186,6 @@ namespace ParquetViewer.Engine
 
                 rowIndex++;
                 progress?.Report(1);
-                PerfWatch.Milestone(field.Name, "READ");
             }
         }
 
@@ -216,9 +196,8 @@ namespace ParquetViewer.Engine
 
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field, cancellationToken);
-            PerfWatch.Milestone(field.Name, "LOAD");
 
-            ArrayList rowValue = null;
+            ArrayList? rowValue = null;
             var fieldIndex = dataTable.Columns[field.Path.FirstPart].Ordinal;
             for (int i = 0; i < dataColumn.Data.Length; i++)
             {
@@ -267,12 +246,11 @@ namespace ParquetViewer.Engine
                     var lastItem = ReadParquetValue(dataColumn.Data.GetValue(i), field, schemaElement.LogicalType);
                     rowValue.Add(lastItem);
 
-                    datarow[fieldIndex] = new ListValue(rowValue, "TODO DateFormat");
+                    datarow[fieldIndex] = new ListValue(rowValue);
                     rowValue = null;
 
                     rowIndex++;
                     progress?.Report(1);
-                    PerfWatch.Milestone(field.Name, "READ");
 
                     if (rowIndex - rowBeginIndex >= readRecords)
                         break;

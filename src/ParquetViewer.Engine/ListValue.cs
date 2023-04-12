@@ -1,26 +1,24 @@
-﻿using System.Collections;
+﻿using ParquetViewer.Common;
+using System.Collections;
 using System.Text;
 
 namespace ParquetViewer.Engine
 {
-    public class ListValue
+    public class ListValue : IComplexValue
     {
         public IList? Data { get; }
         public Type? Type { get; private set; }
-        public string DateFormat { get; }
 
-        public ListValue(Array data, string dateFormat)
+        public ListValue(Array data)
         {
             this.Data = data;
             this.Type = this.Data?.GetType().GetElementType();
-            this.DateFormat = dateFormat;
         }
 
-        public ListValue(ArrayList data, string dateFormat)
+        public ListValue(ArrayList data)
         {
             this.Data = data;
             this.Type = null;
-            this.DateFormat = dateFormat;
             foreach (var d in data)
             {
                 if (d is not null && d != DBNull.Value)
@@ -44,8 +42,8 @@ namespace ParquetViewer.Engine
                     if (!isFirst)
                         sb.Append(',');
 
-                    if (data is DateTime dt && this.DateFormat is not null)
-                        sb.Append(dt.ToString(this.DateFormat));
+                    if (data is DateTime dt)
+                        sb.Append(dt.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()));
                     else
                         sb.Append(data?.ToString() ?? string.Empty);
 

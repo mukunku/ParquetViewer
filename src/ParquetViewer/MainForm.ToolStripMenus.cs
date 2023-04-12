@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Helpers;
+﻿using ParquetViewer.Common;
+using ParquetViewer.Helpers;
 using System;
 using System.Data;
 using System.Diagnostics;
@@ -131,7 +132,7 @@ namespace ParquetViewer
         {
             try
             {
-                DataGridViewAutoSizeColumnsMode columnSizingMode;
+                AutoSizeColumnsMode columnSizingMode;
                 if (sender is ToolStripMenuItem tsi && tsi.Tag != null
                     && Enum.TryParse(tsi.Tag.ToString(), out columnSizingMode)
                     && AppSettings.AutoSizeColumnsMode != columnSizingMode)
@@ -143,7 +144,7 @@ namespace ParquetViewer
                     }
 
                     var tempMainDataSource = this.MainDataSource;
-                    if (columnSizingMode == DataGridViewAutoSizeColumnsMode.None)
+                    if (columnSizingMode == AutoSizeColumnsMode.None)
                         this.MainDataSource = null; //Need to reload the entire grid to return to the default sizing
 
                     this.MainDataSource = tempMainDataSource; //Will cause a refresh of the column rendering

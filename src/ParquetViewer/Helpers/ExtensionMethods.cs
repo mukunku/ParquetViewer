@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ParquetViewer.Common;
+using ParquetViewer.Engine;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -8,62 +9,7 @@ namespace ParquetViewer.Helpers
 {
     public static class ExtensionMethods
     {
-        private const string DefaultDateTimeFormat = "g";
-        private const string DateOnlyDateTimeFormat = "d";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
-        private const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
-        private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
-        private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
-
-        /// <summary>
-        /// Returns a list of all column names within a given datatable
-        /// </summary>
-        /// <param name="datatable">The datatable to retrieve the column names from</param>
-        /// <returns></returns>
-        public static IList<string> GetColumnNames(this DataTable datatable)
-        {
-            List<string> columns = new List<string>(datatable.Columns.Count);
-            foreach (DataColumn column in datatable.Columns)
-            {
-                columns.Add(column.ColumnName);
-            }
-            return columns;
-        }
-
-        /// <summary>
-        /// Gets the corresponding date format string for the provided <paramref name="dateFormat"/>
-        /// </summary>
-        /// <param name="dateFormat">Date format to get formatting string for</param>
-        /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
-        public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
-        {
-            DateFormat.ISO8601 => ISO8601DateTimeFormat,
-            DateFormat.ISO8601_DateOnly => ISO8601DateOnlyFormat,
-            DateFormat.Default_DateOnly => DateOnlyDateTimeFormat,
-            DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
-            DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
-            DateFormat.Default => DefaultDateTimeFormat,
-            _ => null
-        };
-
-        /// <summary>
-        /// Returns true if the date format does not contain a time component
-        /// </summary>
-        /// <param name="dateFormat">Date format to check</param>
-        /// <returns>True if the date format has time information</returns>
-        public static bool IsDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
-        {
-            DateFormat.ISO8601_DateOnly => true,
-            DateFormat.Default_DateOnly => true,
-            _ => false
-        };
-
-        public static string GetExtension(this FileType fileType) => fileType switch
-        {
-            FileType.CSV => ".csv",
-            FileType.XLS => ".xls",
-            _ => throw new ArgumentOutOfRangeException(nameof(fileType))
-        };
+        private const string WHITESPACE_BUFFER = "#";
 
         /// <summary>
         /// Provides very fast and basic column sizing for large data sets.
@@ -83,34 +29,44 @@ namespace ParquetViewer.Helpers
                 // Iterate through the columns.
                 for (int i = 0; i < gridTable.Columns.Count; i++)
                 {
-                    // Leverage Linq enumerator to rapidly collect all the rows into a string array, making sure to exclude null values.
-                    IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
-                        .Where(r => r.Field<object>(i) != null)
-                        .Select(r => r.Field<object>(i).ToString());
-
-                    // Sort the string array by string lengths.
-                    colStringCollection = colStringCollection.OrderBy((x) => x.Length);
-
-                    // Get the last and longest string in the array.
-                    string longestColString = colStringCollection.Last();
-
-                    if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
-                        longestColString = gridTable.Columns[i].ColumnName;
-
-                    // Use the graphics object to measure the string size. (With some added buffer)
-                    var colWidth = gfx.MeasureString(longestColString + "#", targetGrid.Font);
-
-                    // If the calculated width is larger than the column header width, set the new column width.
-                    if (colWidth.Width > targetGrid.Columns[i].HeaderCell.Size.Width)
+                    var newColumnSize = MeasureStringWidth(gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER); //Fit header by default
+                    bool isComplexType = typeof(IComplexValue).IsAssignableFrom(gridTable.Columns[i].DataType);
+                    if (!isComplexType)
                     {
-                        targetGrid.Columns[i].Width = (int)colWidth.Width;
+                        // Leverage Linq enumerator to rapidly collect all the rows into a string array, making sure to exclude null values.
+                        IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
+                            .Select(r => r.Field<object>(i)?.ToString())
+                            .Where(v => v is not null);
+
+                        // Sort the string array by string lengths.
+                        colStringCollection = colStringCollection.OrderBy((x) => x.Length);
+
+                        // Get the last and longest string in the array.
+                        string longestColString = colStringCollection.Last();
+
+                        if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
+                            longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
+
+                        var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
+
+                        // If the calculated width is larger than the column header width, use that instead
+                        if (maxColWidth > newColumnSize)
+                            newColumnSize = maxColWidth;
                     }
-                    else // Otherwise, set the column width to the header width.
-                    {
-                        targetGrid.Columns[i].Width = targetGrid.Columns[i].HeaderCell.Size.Width;
-                    }
+
+                    targetGrid.Columns[i].Width = newColumnSize;
                 }
+
+                int MeasureStringWidth(string input) => (int)gfx.MeasureString(input, targetGrid.Font).Width;
             }
         }
+
+        public static DataGridViewAutoSizeColumnsMode ToDGVMode(this AutoSizeColumnsMode mode) => mode switch
+        {
+            AutoSizeColumnsMode.ColumnHeader => DataGridViewAutoSizeColumnsMode.ColumnHeader,
+            AutoSizeColumnsMode.AllCells => DataGridViewAutoSizeColumnsMode.AllCells,
+            AutoSizeColumnsMode.None => DataGridViewAutoSizeColumnsMode.None,
+            _ => DataGridViewAutoSizeColumnsMode.None
+        };
     }
 }

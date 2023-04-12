@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Engine;
+﻿using ParquetViewer.Common;
+using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -258,10 +259,7 @@ MULTIPLE CONDITIONS:
 
         private void showingStatusBarLabel_Click(object sender, EventArgs e)
         {
-#if DEBUG
-            Clipboard.SetText(PerfWatch.PrintAndReset());
-            MessageBox.Show("Copied perf info to clipboard");
-#endif
+            //This is just here in case I want to add debug info
         }
 
         private void mainGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
