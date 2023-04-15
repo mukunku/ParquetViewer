@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
+using ParquetViewer.Helpers;
+using System;
 
-namespace ParquetViewer.Helpers
+namespace ParquetViewer
 {
     public static class AppSettings
     {

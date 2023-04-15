@@ -1,5 +1,4 @@
-﻿using ParquetViewer.Common;
-using System.Collections;
+﻿using System.Collections;
 using System.Text;
 
 namespace ParquetViewer.Engine
@@ -8,6 +7,7 @@ namespace ParquetViewer.Engine
     {
         public IList? Data { get; }
         public Type? Type { get; private set; }
+        public static string? DateDisplayFormat { get; set; }
 
         public ListValue(Array data)
         {
@@ -29,7 +29,6 @@ namespace ParquetViewer.Engine
             }
         }
 
-        //TODO: Adjust auto column sizing to ignore list cells
         public override string ToString()
         {
             var sb = new StringBuilder("[");
@@ -42,8 +41,8 @@ namespace ParquetViewer.Engine
                     if (!isFirst)
                         sb.Append(',');
 
-                    if (data is DateTime dt)
-                        sb.Append(dt.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()));
+                    if (data is DateTime dt && DateDisplayFormat is not null)
+                        sb.Append(dt.ToString(DateDisplayFormat));
                     else
                         sb.Append(data?.ToString() ?? string.Empty);
 

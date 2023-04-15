@@ -40,7 +40,6 @@
     <PackageReference Include="System.Data.DataSetExtensions" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ParquetViewer.Common\ParquetViewer.Common.csproj" />
     <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />
   </ItemGroup>
 </Project>

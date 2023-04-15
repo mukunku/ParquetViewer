@@ -1,5 +1,4 @@
-﻿using ParquetViewer.Common;
-using ParquetViewer.Helpers;
+﻿using ParquetViewer.Helpers;
 using System;
 using System.Data;
 using System.Diagnostics;

@@ -9,7 +9,4 @@
   <ItemGroup>
     <PackageReference Include="Parquet.Net" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ParquetViewer.Common\ParquetViewer.Common.csproj" />
-  </ItemGroup>
 </Project>

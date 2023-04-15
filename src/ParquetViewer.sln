@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Tests", "Parq
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Engine", "ParquetViewer.Engine\ParquetViewer.Engine.csproj", "{77900356-25F3-4A24-B638-845C784C1175}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParquetViewer.Common", "ParquetViewer.Common\ParquetViewer.Common.csproj", "{7A7600B0-2DCF-4D74-9DAF-BCAF62820020}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{77900356-25F3-4A24-B638-845C784C1175}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77900356-25F3-4A24-B638-845C784C1175}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77900356-25F3-4A24-B638-845C784C1175}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7A7600B0-2DCF-4D74-9DAF-BCAF62820020}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7A7600B0-2DCF-4D74-9DAF-BCAF62820020}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7A7600B0-2DCF-4D74-9DAF-BCAF62820020}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7A7600B0-2DCF-4D74-9DAF-BCAF62820020}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
