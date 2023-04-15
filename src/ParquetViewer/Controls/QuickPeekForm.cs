@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace ParquetViewer
+namespace ParquetViewer.Controls
 {
     public partial class QuickPeekForm : Form
     {

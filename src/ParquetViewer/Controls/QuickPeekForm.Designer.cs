@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace ParquetViewer
+namespace ParquetViewer.Controls
 {
     partial class QuickPeekForm
     {
@@ -32,7 +32,7 @@ namespace ParquetViewer
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QuickPeekForm));
             mainTableLayoutPanel = new TableLayoutPanel();
-            mainGridView = new DataGridView();
+            mainGridView = new ParquetGridView();
             takeMeBackLinkLabel = new LinkLabel();
             closeWindowButton = new Button();
             mainTableLayoutPanel.SuspendLayout();
@@ -122,7 +122,7 @@ namespace ParquetViewer
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel mainTableLayoutPanel;
-        private System.Windows.Forms.DataGridView mainGridView;
+        private ParquetGridView mainGridView;
         private System.Windows.Forms.LinkLabel takeMeBackLinkLabel;
         private System.Windows.Forms.Button closeWindowButton;
     }

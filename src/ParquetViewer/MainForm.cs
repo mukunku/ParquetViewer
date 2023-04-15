@@ -149,25 +149,6 @@ namespace ParquetViewer
 
                 this.mainDataSource = value;
                 this.mainGridView.DataSource = this.mainDataSource;
-
-                try
-                {
-                    //Format date fields
-                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                    ListValue.DateDisplayFormat = dateFormat; //Need to tell the parquet engine how to render date values
-                    foreach (DataGridViewColumn column in this.mainGridView.Columns)
-                    {
-                        if (column.ValueType == typeof(DateTime))
-                            column.DefaultCellStyle.Format = dateFormat;
-                    }                    
-
-                    //Adjust column sizes if required
-                    if (AppSettings.AutoSizeColumnsMode == AutoSizeColumnsMode.AllCells)
-                        this.mainGridView.FastAutoSizeColumns();
-                    else if (AppSettings.AutoSizeColumnsMode != AutoSizeColumnsMode.None)
-                        this.mainGridView.AutoResizeColumns(AppSettings.AutoSizeColumnsMode.ToDGVMode());
-                }
-                catch { }
             }
         }
 
@@ -185,14 +166,6 @@ namespace ParquetViewer
 
             //Have to set this here because it gets deleted from the .Designer.cs file for some reason
             this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
-
-            //Set DGV to be double buffered for smoother loading and scrolling
-            if (!SystemInformation.TerminalServerSession)
-            {
-                Type dgvType = this.mainGridView.GetType();
-                System.Reflection.PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                pi.SetValue(this.mainGridView, true, null);
-            }
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -428,7 +401,7 @@ namespace ParquetViewer
             this.currentMaxRowCount = DefaultRowCount;
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.currentOffset = DefaultOffset;
-
+            this.mainGridView.ClearQuickPeekForms();
             return this.OpenFieldSelectionDialog(false);
         }
 

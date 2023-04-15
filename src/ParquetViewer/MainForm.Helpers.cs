@@ -33,7 +33,7 @@ namespace ParquetViewer
 
         private static void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
         {
-            MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(string.Concat(customMessage ?? "Something went wrong (CTRL+C to copy):", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private async void ExportResults(FileType defaultFileType)
