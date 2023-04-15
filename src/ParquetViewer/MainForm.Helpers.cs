@@ -1,0 +1,251 @@
+﻿using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Helpers;
+using System;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ParquetViewer
+{
+    public partial class MainForm
+    {
+        private LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
+        {
+            var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
+            loadingIcon.OnShow += (object sender, EventArgs e) => 
+            {
+                this.mainTableLayoutPanel.Enabled = false;
+                this.mainMenuStrip.Enabled = false;
+            };
+            loadingIcon.OnHide += (object sender, EventArgs e) =>
+            {
+                this.mainTableLayoutPanel.Enabled = true;
+                this.mainMenuStrip.Enabled = true;
+            };
+
+            loadingIcon.Show();
+            return loadingIcon;
+        }
+
+        private static void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
+        {
+            MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        private async void ExportResults(FileType defaultFileType)
+        {
+            string filePath = null;
+            LoadingIcon loadingIcon = null;
+            try
+            {
+                if (this.mainGridView.RowCount > 0)
+                {
+                    this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
+                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
+                    this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+                    if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        filePath = this.exportFileDialog.FileName;
+                        var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
+
+                        loadingIcon = this.ShowLoadingIcon("Exporting Data");
+                        if (selectedFileType == FileType.CSV)
+                        {
+                            await Task.Run(() => this.WriteDataToCSVFile(filePath, loadingIcon.CancellationToken));
+                        }
+                        else if (selectedFileType == FileType.XLS)
+                        {
+                            await Task.Run(() => this.WriteDataToExcelFile(filePath, loadingIcon.CancellationToken));
+                        }
+                        else
+                        {
+                            throw new Exception(string.Format("Unsupported export type: '{0}'", selectedFileType.ToString()));
+                        }
+
+                        if (loadingIcon.CancellationToken.IsCancellationRequested)
+                        {
+                            CleanupFile(filePath);
+                            MessageBox.Show("Export has been cancelled", "Export Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                CleanupFile(filePath);
+                throw;
+            }
+            finally
+            {
+                loadingIcon?.Dispose();
+            }
+
+            void CleanupFile(string filePath)
+            {
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(filePath))
+                        File.Delete(filePath);
+                }
+                catch (Exception) { /*Swallow*/ }
+            }
+        }
+
+        private void WriteDataToCSVFile(string path, CancellationToken cancellationToken)
+        {
+            using var writer = new StreamWriter(path, false, Encoding.UTF8);
+
+            var rowBuilder = new StringBuilder();
+            bool isFirst = true;
+            foreach (DataColumn column in this.MainDataSource.Columns)
+            {
+                if (!isFirst)
+                {
+                    rowBuilder.Append(',');
+                }
+                else
+                {
+                    isFirst = false;
+                }
+
+                rowBuilder.Append(
+                    column.ColumnName
+                        .Replace("\r", string.Empty)
+                        .Replace("\n", string.Empty)
+                        .Replace(",", string.Empty));
+            }
+            writer.WriteLine(rowBuilder.ToString());
+
+            foreach (DataRowView row in this.MainDataSource.DefaultView)
+            {
+                rowBuilder.Clear();
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                isFirst = true;
+                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                foreach (object value in row.Row.ItemArray)
+                {
+                    if (!isFirst)
+                    {
+                        rowBuilder.Append(',');
+                    }
+                    else
+                    {
+                        isFirst = false;
+                    }
+
+                    if (value is DateTime dt)
+                    {
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
+                    }
+                    else
+                    {
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString()));
+                    }
+                }
+
+                writer.WriteLine(rowBuilder.ToString());
+            }
+        }
+
+        private void WriteDataToExcelFile(string path, CancellationToken cancellationToken)
+        {
+            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            var excelWriter = new ExcelWriter(fs);
+            excelWriter.BeginWrite();
+
+            //Write headers
+            for (int i = 0; i < this.MainDataSource.Columns.Count; i++)
+            {
+                excelWriter.WriteCell(0, i, this.MainDataSource.Columns[i].ColumnName);
+            }
+
+            //Write data
+            for (int i = 0; i < this.MainDataSource.DefaultView.Count; i++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
+                {
+                    var value = this.mainDataSource.DefaultView[i][j];
+
+                    if (value is DateTime dt)
+                    {
+                        excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
+                    }
+                    else
+                    {
+                        excelWriter.WriteCell(i + 1, j, value?.ToString() ?? string.Empty);
+                    }
+                }
+            }
+
+            excelWriter.EndWrite();
+        }
+
+        private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("No valid Parquet files found in folder. Invalid Parquet files:");
+            foreach (var skippedFile in ex.SkippedFiles)
+            {
+                sb.AppendLine($"-{skippedFile.FileName}");
+            }
+            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
+        }
+
+        private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("Some files could not be loaded. Invalid Parquet files:");
+            foreach (var skippedFile in ex.SkippedFiles)
+            {
+                sb.AppendLine($"-{skippedFile.FileName}");
+            }
+            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
+        }
+
+        private static void HandleFileReadException(FileReadException ex)
+        {
+            ShowError(new Exception($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
+                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}", ex));
+        }
+
+        private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("Multiple schemas detected. ");
+
+            int schemaIndex = 1;
+            const int topCount = 5;
+            foreach (var schema in ex.Schemas)
+            {
+                sb.AppendLine($"SCHEMA-{schemaIndex++} FIELDS (TOP 5):");
+                for (var i = 0; i < topCount; i++)
+                {
+                    if (i == schema.Fields.Count)
+                        break;
+
+                    sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
+                }
+            }
+            ShowError(new Exception(sb.ToString(), ex));
+        }
+    }
+}
