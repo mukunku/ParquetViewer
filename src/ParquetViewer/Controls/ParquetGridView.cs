@@ -281,6 +281,25 @@ namespace ParquetViewer.Controls
             quickPeakForm.Show(this.Parent ?? this);
         }
 
+        protected override void OnRowHeaderMouseClick(DataGridViewCellMouseEventArgs e)
+        {
+            ClearSelection();
+
+            bool isFirst = true;
+            foreach (DataGridViewCell cell in Rows[e.RowIndex].Cells)
+            {
+                if (isFirst)
+                {
+                    CurrentCell = cell;
+                    isFirst = false;
+                }
+
+                cell.Selected = true;
+            }
+
+            base.OnRowHeaderMouseClick(e); //Handle any additional events
+        }
+
         public void ClearQuickPeekForms()
         {
             foreach (var form in this.openQuickPeekForms)
