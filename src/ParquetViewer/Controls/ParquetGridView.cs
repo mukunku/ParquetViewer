@@ -311,6 +311,7 @@ namespace ParquetViewer.Controls
         private void FastAutoSizeColumns()
         {
             const string WHITESPACE_BUFFER = "#";
+            const int MAX_WIDTH = 500;
 
             // Cast out a DataTable from the target grid datasource.
             // We need to iterate through all the data in the grid and a DataTable supports enumeration.
@@ -326,31 +327,28 @@ namespace ParquetViewer.Controls
                 for (int i = 0; i < gridTable.Columns.Count; i++)
                 {
                     var newColumnSize = MeasureStringWidth(gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER); //Fit header by default
-                    bool isComplexType = typeof(IComplexValue).IsAssignableFrom(gridTable.Columns[i].DataType);
-                    if (!isComplexType)
-                    {
-                        // Leverage Linq enumerator to rapidly collect all the rows into a string array, making sure to exclude null values.
-                        IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
-                            .Select(row => row.Field<object>(i)?.ToString())
-                            .Where(value => value is not null);
 
-                        // Sort the string array by string lengths.
-                        colStringCollection = colStringCollection.OrderBy((x) => x.Length);
+                    // Leverage Linq enumerator to rapidly collect all the rows into a string array, making sure to exclude null values.
+                    IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
+                        .Select(row => row.Field<object>(i)?.ToString())
+                        .Where(value => value is not null);
 
-                        // Get the last and longest string in the array.
-                        string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
+                    // Sort the string array by string lengths.
+                    colStringCollection = colStringCollection.OrderBy((x) => x.Length);
 
-                        if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
-                            longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
+                    // Get the last and longest string in the array.
+                    string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
 
-                        var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
+                    if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
+                        longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
 
-                        // If the calculated width is larger than the column header width, use that instead
-                        if (maxColWidth > newColumnSize)
-                            newColumnSize = maxColWidth;
-                    }
+                    var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
 
-                    this.Columns[i].Width = newColumnSize;
+                    // If the calculated width is larger than the column header width, use that instead
+                    if (maxColWidth > newColumnSize)
+                        newColumnSize = maxColWidth;
+
+                    this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
                 }
 
                 int MeasureStringWidth(string input) => (int)gfx.MeasureString(input, this.Font).Width;

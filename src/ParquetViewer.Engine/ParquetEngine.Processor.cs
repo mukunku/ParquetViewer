@@ -2,7 +2,6 @@
 using ParquetViewer.Engine.Exceptions;
 using System.Collections;
 using System.Data;
-using System.Linq;
 
 namespace ParquetViewer.Engine
 {

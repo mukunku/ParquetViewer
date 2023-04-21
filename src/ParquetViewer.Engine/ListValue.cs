@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ParquetViewer.Engine
 {
-    public class ListValue : IComplexValue
+    public class ListValue
     {
         public IList? Data { get; }
         public Type? Type { get; private set; }

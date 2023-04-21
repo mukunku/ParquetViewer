@@ -266,7 +266,7 @@ namespace ParquetViewer
 
                     try
                     {
-                        this.SelectedFields = fields.Where(f => FieldsToLoadForm.IsSupportedFieldType(f)).Select(f => f.Name).ToList();
+                        this.SelectedFields = fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f.Name).ToList();
                     }
                     finally
                     {

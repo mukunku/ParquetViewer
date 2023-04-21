@@ -1,6 +1,6 @@
 ﻿namespace ParquetViewer.Engine
 {
-    public class MapValue : IComplexValue
+    public class MapValue
     {
         public object? Key { get; }
         public Type KeyType { get; }
