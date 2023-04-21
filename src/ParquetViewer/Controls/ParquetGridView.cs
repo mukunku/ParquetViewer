@@ -35,7 +35,7 @@ namespace ParquetViewer.Controls
             EnableHeadersVisualStyles = false;
             ReadOnly = true;
             RowHeadersWidth = 24;
-            SelectionMode = DataGridViewSelectionMode.CellSelect;
+            SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
         }
 
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
@@ -106,7 +106,7 @@ namespace ParquetViewer.Controls
 
                     e.Handled = true;
                 }
-                else if (e.Value is ListValue)
+                else if (e.Value is ListValue || e.Value is MapValue)
                 {
                     e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
@@ -226,6 +226,17 @@ namespace ParquetViewer.Controls
                     dt.Rows.Add(row);
                 }
             }
+            else if (clickedCell.Value is MapValue mapValue)
+            {
+                dt = new DataTable();
+                dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-key", mapValue.KeyType));
+                dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-value", mapValue.ValueType));
+
+                var row = dt.NewRow();
+                row[0] = mapValue.Key;
+                row[1] = mapValue.Value;
+                dt.Rows.Add(row);
+            }
 
             if (dt == null)
                 return;
@@ -250,6 +261,7 @@ namespace ParquetViewer.Controls
                         this.FirstDisplayedScrollingRowIndex = cellToReturnTo.RowIndex;
                         this.FirstDisplayedScrollingColumnIndex = tag.SourceColumnIndex;
                         this[cellToReturnTo.ColumnIndex, cellToReturnTo.RowIndex].Selected = true;
+                        this.CurrentCell = cellToReturnTo;
                         this.Focus();
                     }
                     else
@@ -279,25 +291,6 @@ namespace ParquetViewer.Controls
             openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
             openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeakForm);
             quickPeakForm.Show(this.Parent ?? this);
-        }
-
-        protected override void OnRowHeaderMouseClick(DataGridViewCellMouseEventArgs e)
-        {
-            ClearSelection();
-
-            bool isFirst = true;
-            foreach (DataGridViewCell cell in Rows[e.RowIndex].Cells)
-            {
-                if (isFirst)
-                {
-                    CurrentCell = cell;
-                    isFirst = false;
-                }
-
-                cell.Selected = true;
-            }
-
-            base.OnRowHeaderMouseClick(e); //Handle any additional events
         }
 
         public void ClearQuickPeekForms()

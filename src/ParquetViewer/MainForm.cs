@@ -266,7 +266,7 @@ namespace ParquetViewer
 
                     try
                     {
-                        this.SelectedFields = fields.Where(f => !FieldsToLoadForm.UnsupportedSchemaTypes.Contains(f.SchemaType)).Select(f => f.Name).ToList();
+                        this.SelectedFields = fields.Where(f => FieldsToLoadForm.IsSupportedFieldType(f)).Select(f => f.Name).ToList();
                     }
                     finally
                     {
@@ -411,6 +411,15 @@ namespace ParquetViewer
             {
                 string queryText = this.searchFilterTextBox.Text ?? string.Empty;
                 queryText = Regex.Replace(queryText, QueryUselessPartRegex, string.Empty).Trim();
+
+                //Treat list and map types as strings by casting them automatically
+                foreach(var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue))
+                    .Select(c => c.Name))
+                {
+                    //This isn't perfect but it should handle most cases
+                    queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)");
+                }
 
                 try
                 {

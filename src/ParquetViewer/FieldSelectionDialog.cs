@@ -12,7 +12,6 @@ namespace ParquetViewer
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
         private const string UnsupportedFieldText = "(Unsupported)";
         private const int DynamicFieldCheckboxYIncrement = 30;
-        public static readonly List<SchemaType> UnsupportedSchemaTypes = new () { /*SchemaType.List,*/ SchemaType.Map, SchemaType.Struct };
 
         public List<string> PreSelectedFields { get; set; }
         public List<Field> AvailableFields { get; set; }
@@ -176,14 +175,16 @@ namespace ParquetViewer
             }
         }
 
-        private bool IsSupportedFieldType(Field field) =>
+        public static bool IsSupportedFieldType(Field field) =>
             field.SchemaType switch
             {
                 SchemaType.Data => true,
                 SchemaType.List when field is ListField lf && lf.Item.SchemaType == SchemaType.Data => true, //we don't support nested lists
+                SchemaType.Map when field is MapField mp && mp.Key.SchemaType == SchemaType.Data 
+                    &&  mp.Value.SchemaType == SchemaType.Data => true, //we don't support nested maps
                 _ => false
             };
-
+         
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             if (((RadioButton)sender).Checked)

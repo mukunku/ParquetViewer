@@ -15,16 +15,19 @@ namespace ParquetViewer.Engine
             this.Type = this.Data?.GetType().GetElementType();
         }
 
-        public ListValue(ArrayList data)
+        public ListValue(ArrayList data, Type type)
         {
             this.Data = data;
-            this.Type = null;
+            this.Type = type; //the parameter is needed for the case where the entire list is null
+
             foreach (var d in data)
             {
                 if (d is not null && d != DBNull.Value)
                 {
-                    this.Type = d.GetType();
-                    break;
+                    if (this.Type != d.GetType())
+                    {
+                        throw new ArgumentException($"Data type {d.GetType()} doesn't match the passed type {type}");
+                    }
                 }
             }
         }
