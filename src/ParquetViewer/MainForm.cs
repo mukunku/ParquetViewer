@@ -119,7 +119,6 @@ namespace ParquetViewer
 
         private bool IsAnyFileOpen
             => !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath)
-                && this.SelectedFields is not null
                 && this._openParquetEngine is not null;
 
         private DataTable mainDataSource;

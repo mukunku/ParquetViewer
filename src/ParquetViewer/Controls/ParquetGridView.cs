@@ -141,7 +141,8 @@ namespace ParquetViewer.Controls
             if (e.ColumnIndex < 0 || e.RowIndex < 0)
                 return;
 
-            if (this.Columns[e.ColumnIndex].ValueType == typeof(ListValue))
+            var valueType = this.Columns[e.ColumnIndex].ValueType;
+            if (valueType == typeof(ListValue) || valueType == typeof(MapValue))
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))

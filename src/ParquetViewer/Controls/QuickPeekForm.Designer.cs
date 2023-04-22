@@ -30,6 +30,7 @@ namespace ParquetViewer.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QuickPeekForm));
             mainTableLayoutPanel = new TableLayoutPanel();
             mainGridView = new ParquetGridView();
@@ -62,13 +63,24 @@ namespace ParquetViewer.Controls
             mainGridView.AllowUserToAddRows = false;
             mainGridView.AllowUserToDeleteRows = false;
             mainGridView.AllowUserToOrderColumns = true;
+            mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 2);
             mainGridView.Dock = DockStyle.Fill;
+            mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Location = new System.Drawing.Point(4, 26);
             mainGridView.Margin = new Padding(4, 3, 4, 3);
             mainGridView.Name = "mainGridView";
             mainGridView.ReadOnly = true;
+            mainGridView.RowHeadersWidth = 24;
             mainGridView.Size = new System.Drawing.Size(316, 373);
             mainGridView.TabIndex = 0;
             // 

@@ -1,7 +1,6 @@
 ﻿using Apache.Arrow.Ipc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Parquet.Schema;
 using Parquet.Thrift;
 using System;
 using System.Linq;
@@ -27,7 +26,7 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static string ThriftMetadataToJSON(FileMetaData thriftMetadata, long recordCount)
+        public static string ThriftMetadataToJSON(FileMetaData thriftMetadata, long recordCount, int fieldCount)
         {
             try
             {
@@ -36,6 +35,7 @@ namespace ParquetViewer.Helpers
                     [nameof(thriftMetadata.Version)] = thriftMetadata.Version,
                     [nameof(thriftMetadata.Num_rows)] = recordCount,
                     ["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? -1, //What about partitioned files?
+                    ["Num_fields"] = fieldCount,
                     [nameof(thriftMetadata.Created_by)] = thriftMetadata.Created_by
                 };
 
