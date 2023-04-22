@@ -141,6 +141,12 @@ namespace ParquetViewer
                         toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
                     }
                     this.mainGridView.AutoSizeColumns();
+
+                    //Also clear out each column's Tag so auto sizing can pick it up again (see: FastAutoSizeColumns())
+                    foreach (DataGridViewColumn column in this.mainGridView.Columns)
+                    {
+                        column.Tag = null; //TODO: This logic is terrible. Need to find a cleaner solution
+                    }
                 }
             }
             catch (Exception ex)

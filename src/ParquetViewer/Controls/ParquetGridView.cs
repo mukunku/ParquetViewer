@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Engine;
+﻿using Apache.Arrow;
+using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -333,7 +334,6 @@ namespace ParquetViewer.Controls
             // Cast out a DataTable from the target grid datasource.
             // We need to iterate through all the data in the grid and a DataTable supports enumeration.
             var gridTable = this.DataSource as DataTable;
-
             if (gridTable is null)
                 return;
 
@@ -343,27 +343,47 @@ namespace ParquetViewer.Controls
                 // Iterate through the columns.
                 for (int i = 0; i < gridTable.Columns.Count; i++)
                 {
+                    //Don't autosize the same column twice
+                    if (this.Columns[i].Tag is not null)
+                        continue;
+                    else
+                        this.Columns[i].Tag = new object();
+                    
                     var newColumnSize = MeasureStringWidth(gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER); //Fit header by default
 
-                    // Leverage Linq enumerator to rapidly collect all the rows into a string array, making sure to exclude null values.
-                    IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
-                        .Select(row => row.Field<object>(i)?.ToString())
-                        .Where(value => value is not null);
+                    if (gridTable.Columns[i].DataType == typeof(DateTime))
+                    {
+                        //All date time's will have the same string length so no need to go through actual values.
+                        //We can just measure one and use that.
+                        string formattedDateTimeValue = DateTime.Now.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
+                        var maxDateTimeWidth = MeasureStringWidth(formattedDateTimeValue + WHITESPACE_BUFFER);
 
-                    // Sort the string array by string lengths.
-                    colStringCollection = colStringCollection.OrderBy((x) => x.Length);
+                        // If the calculated width is larger than the column header width, use that instead
+                        if (maxDateTimeWidth > newColumnSize)
+                            newColumnSize = maxDateTimeWidth;
+                    }
+                    else
+                    {
+                        // Collect all the rows into a string array, making sure to exclude null values.
+                        IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
+                            .Select(row => row.Field<object>(i)?.ToString())
+                            .Where(value => value is not null);
 
-                    // Get the last and longest string in the array.
-                    string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
+                        // Sort the string array by string lengths.
+                        colStringCollection = colStringCollection.OrderBy((x) => x.Length);
 
-                    if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
-                        longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
+                        // Get the last and longest string in the array.
+                        string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
 
-                    var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
+                        if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
+                            longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
 
-                    // If the calculated width is larger than the column header width, use that instead
-                    if (maxColWidth > newColumnSize)
-                        newColumnSize = maxColWidth;
+                        var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
+
+                        // If the calculated width is larger than the column header width, use that instead
+                        if (maxColWidth > newColumnSize)
+                            newColumnSize = maxColWidth;
+                    }
 
                     this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
                 }
