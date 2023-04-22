@@ -68,11 +68,16 @@ namespace ParquetViewer
                     string value = _customMetadata.Value;
                     if (PANDAS_SCHEMA.Equals(_customMetadata.Key))
                     {
-                        value = ParquetMetadataAnalyzers.PandasSchemaToJSON(value);
+                        //Pandas is already json; so just make it pretty.
+                        value = ParquetMetadataAnalyzers.TryFormatJSON(value);
                     }
                     else if (APACHE_ARROW_SCHEMA.Equals(_customMetadata.Key))
                     {
                         value = ParquetMetadataAnalyzers.ApacheArrowToJSON(value);
+                    }
+                    else
+                    {
+                        value = ParquetMetadataAnalyzers.TryFormatJSON(value);
                     }
 
                     metadataResult.Add((_customMetadata.Key, value));

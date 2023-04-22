@@ -97,17 +97,16 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static string PandasSchemaToJSON(string pandas)
+        public static string TryFormatJSON(string possibleJSON)
         {
             try
             {
-                //Pandas is already json; so just make it pretty.
-                return JToken.Parse(pandas).ToString(Formatting.Indented);
+                return JToken.Parse(possibleJSON).ToString(Formatting.Indented);
             }
             catch (Exception)
             {
                 //malformed json detected
-                return pandas;
+                return possibleJSON;
             }
         }
     }

@@ -89,7 +89,7 @@ namespace ParquetViewer.Engine
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                         readRecords, isFirstColumn, rowLookupCache, cancellationToken, progress);
                 }
-                else if (field.SchemaElement.LogicalType?.MAP is not null)
+                else if (field.SchemaElement.LogicalType?.MAP is not null || field.SchemaElement.Converted_type == Parquet.Thrift.ConvertedType.MAP)
                 {
                     await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                         readRecords, isFirstColumn, rowLookupCache, cancellationToken, progress);
