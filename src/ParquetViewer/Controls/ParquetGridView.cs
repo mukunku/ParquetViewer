@@ -1,5 +1,4 @@
-﻿using Apache.Arrow;
-using ParquetViewer.Engine;
+﻿using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -26,17 +25,18 @@ namespace ParquetViewer.Controls
             {
                 Alignment = DataGridViewContentAlignment.MiddleLeft,
                 BackColor = SystemColors.ControlLight,
-                Font = new Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point),
+                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = SystemColors.WindowText,
                 SelectionBackColor = SystemColors.Highlight,
                 SelectionForeColor = SystemColors.HighlightText,
                 WrapMode = DataGridViewTriState.True
             };
-            ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             EnableHeadersVisualStyles = false;
             ReadOnly = true;
             RowHeadersWidth = 24;
             SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
+            ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
         }
 
         protected override void OnDataSourceChanged(EventArgs e)
@@ -161,14 +161,25 @@ namespace ParquetViewer.Controls
 
                 if (rowIndex >= 0 && columnIndex >= 0)
                 {
-                    var toolStripMenuItem = new ToolStripMenuItem("Copy");
-                    toolStripMenuItem.Click += (object clickSender, EventArgs clickArgs) =>
+                    var copy = new ToolStripMenuItem("Copy");
+                    copy.Click += (object clickSender, EventArgs clickArgs) =>
                     {
                         Clipboard.SetDataObject(this.GetClipboardContent());
                     };
 
+                    var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
+                    copyWithHeaders.Click += (object clickSender, EventArgs clickArgs) =>
+                    {
+                        this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
+                        this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+                        Clipboard.SetDataObject(this.GetClipboardContent());
+                        this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+                        this.RowHeadersVisible = true;
+                    };
+
                     var menu = new ContextMenuStrip();
-                    menu.Items.Add(toolStripMenuItem);
+                    menu.Items.Add(copy);
+                    menu.Items.Add(copyWithHeaders);
                     menu.Show(this, new Point(e.X, e.Y));
                 }
             }
