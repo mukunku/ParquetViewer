@@ -107,6 +107,15 @@ namespace ParquetViewer.Tests
             Assert.Equal((double)450, dataTable.Rows[500][3]);
             Assert.Equal("B000CTP5G2P2", dataTable.Rows[1999][8]);
             Assert.Equal("USA", dataTable.Rows[500][1]);
+
+            dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 200, 1, default);
+            Assert.Equal("5022121000", dataTable.Rows[0][2]);
+
+            dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 500, 1, default);
+            Assert.Equal((double)450, dataTable.Rows[0][3]);
+
+            dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1999, 1, default);
+            Assert.Equal("B000CTP5G2P2", dataTable.Rows[0][8]);
         }
 
         [Fact]
@@ -121,6 +130,63 @@ namespace ParquetViewer.Tests
             Assert.Equal(202252, dataTable.Rows[0][0]);
             Assert.Equal(false, dataTable.Rows[0]["Output as FP"]);
             Assert.Equal((sbyte)0, dataTable.Rows[0]["Preorder FP equi."]);
+        }
+
+        [Fact]
+        public async Task LIST_TYPE_TEST()
+        {
+            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
+
+            Assert.Equal(3, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.IsType<ListValue>(dataTable.Rows[0][0]);
+            Assert.Equal("[1,2,3]", ((ListValue)dataTable.Rows[0][0]).ToString());
+            Assert.IsType<ListValue>(dataTable.Rows[0][1]);
+            Assert.Equal("[abc,efg,hij]", ((ListValue)dataTable.Rows[0][1]).ToString());
+            Assert.IsType<ListValue>(dataTable.Rows[1][0]);
+            Assert.Equal("[,1]", ((ListValue)dataTable.Rows[1][0]).ToString());
+            Assert.IsType<ListValue>(dataTable.Rows[2][1]);
+            Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Data?.Count);
+            Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data[0]);
+            Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data[1]);
+            Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data[3]);
+        }
+
+        [Fact]
+        public async Task MAP_TYPE_TEST1()
+        {
+            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST1.parquet", default);
+
+            Assert.Equal(2, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default);
+            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
+            Assert.Equal("(,)", ((MapValue)dataTable.Rows[0][0]).ToString());
+            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
+            Assert.Equal(DBNull.Value, ((MapValue)dataTable.Rows[0][0]).Key);
+            Assert.Equal(DBNull.Value, ((MapValue)dataTable.Rows[0][0]).Value);
+        }
+
+        [Fact]
+        public async Task MAP_TYPE_TEST2()
+        {
+            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet", default);
+
+            Assert.Equal(2, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 2, default);
+            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
+            Assert.Equal("(id,something)", ((MapValue)dataTable.Rows[0][0]).ToString());
+            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
+            Assert.Equal("id", ((MapValue)dataTable.Rows[0][0]).Key);
+            Assert.Equal("something", ((MapValue)dataTable.Rows[0][0]).Value);
+            Assert.IsType<MapValue>(dataTable.Rows[1][0]);
+            Assert.Equal("value2", ((MapValue)dataTable.Rows[1][0]).Key);
+            Assert.Equal("else", ((MapValue)dataTable.Rows[1][0]).Value);
         }
     }
 }

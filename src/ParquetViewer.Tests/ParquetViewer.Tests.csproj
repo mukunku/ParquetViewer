@@ -54,6 +54,15 @@
     <None Update="Data\DECIMALS_TEST.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\LIST_TYPE_TEST1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\MAP_TYPE_TEST1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\MAP_TYPE_TEST2.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Data\PARTITIONED_PARQUET_FILE_TEST1\bldgtype=B\bd8c129da60e412db4b21800b9e0b983.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
