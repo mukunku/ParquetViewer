@@ -38,33 +38,50 @@ namespace ParquetViewer.Controls
             SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
         }
 
-        protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
+        protected override void OnDataSourceChanged(EventArgs e)
         {
-            //Format date fields
-            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-            ListValue.DateDisplayFormat = dateFormat; //Need to tell the parquet engine how to render date values
-            foreach (DataGridViewColumn column in this.Columns)
-            {
-                if (column.ValueType == typeof(DateTime))
-                    column.DefaultCellStyle.Format = dateFormat;
-            }
+            base.OnDataSourceChanged(e);
+
+            UpdateDateFormats();
 
             //Handle NULLs for bool types
             foreach (DataGridViewColumn column in this.Columns)
             {
                 if (column is DataGridViewCheckBoxColumn checkboxColumn)
-                {
                     checkboxColumn.ThreeState = true;
-                }
             }
 
-            //Adjust column sizes if required
+            AutoSizeColumns();
+        }
+
+        public void UpdateDateFormats()
+        {
+            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+            ListValue.DateDisplayFormat = dateFormat; //Need to tell the parquet engine how to render date values
+            MapValue.DateDisplayFormat = dateFormat;
+
+            foreach (DataGridViewColumn column in this.Columns)
+            {
+                if (column.ValueType == typeof(DateTime))
+                    column.DefaultCellStyle.Format = dateFormat;
+            }
+        }
+
+        public void AutoSizeColumns()
+        {
+            const int DEFAULT_COL_WIDTH = 100;
+
             if (AppSettings.AutoSizeColumnsMode == Helpers.AutoSizeColumnsMode.AllCells)
                 this.FastAutoSizeColumns();
             else if (AppSettings.AutoSizeColumnsMode != Helpers.AutoSizeColumnsMode.None)
                 this.AutoResizeColumns(AppSettings.AutoSizeColumnsMode.ToDGVMode());
-
-            base.OnDataBindingComplete(e);
+            else
+            {
+                foreach (DataGridViewColumn column in this.Columns)
+                {
+                    column.Width = DEFAULT_COL_WIDTH;
+                }
+            }
         }
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
@@ -179,7 +196,7 @@ namespace ParquetViewer.Controls
                 {
                     var relativeMousePosition = this.PointToClient(Cursor.Position);
                     this.dateOnlyFormatWarningToolTip.Show($"Date only format enabled. To see time values: Edit -> Date Format",
-                        this, relativeMousePosition, 10000);
+                        Parent ?? this, relativeMousePosition, 10000);
                 }
             }
 

@@ -28,162 +28,156 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.allFieldsRadioButton = new System.Windows.Forms.RadioButton();
-            this.showSelectedFieldsRadioButton = new System.Windows.Forms.RadioButton();
-            this.fieldsPanel = new System.Windows.Forms.Panel();
-            this.allFieldsRememberRadioButton = new System.Windows.Forms.RadioButton();
-            this.doneButton = new System.Windows.Forms.Button();
-            this.filterColumnsTextbox = new System.Windows.Forms.TextBox();
-            this.clearfilterColumnsButton = new System.Windows.Forms.Button();
-            this.mainTableLayoutPanel.SuspendLayout();
-            this.SuspendLayout();
+            mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            allFieldsRadioButton = new System.Windows.Forms.RadioButton();
+            showSelectedFieldsRadioButton = new System.Windows.Forms.RadioButton();
+            fieldsPanel = new System.Windows.Forms.Panel();
+            allFieldsRememberRadioButton = new System.Windows.Forms.RadioButton();
+            doneButton = new System.Windows.Forms.Button();
+            filterColumnsTextbox = new System.Windows.Forms.TextBox();
+            clearfilterColumnsButton = new System.Windows.Forms.Button();
+            mainTableLayoutPanel.SuspendLayout();
+            SuspendLayout();
             // 
             // mainTableLayoutPanel
             // 
-            this.mainTableLayoutPanel.ColumnCount = 3;
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 23F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 34F));
-            this.mainTableLayoutPanel.Controls.Add(this.allFieldsRadioButton, 0, 0);
-            this.mainTableLayoutPanel.Controls.Add(this.showSelectedFieldsRadioButton, 0, 2);
-            this.mainTableLayoutPanel.Controls.Add(this.fieldsPanel, 1, 4);
-            this.mainTableLayoutPanel.Controls.Add(this.allFieldsRememberRadioButton, 0, 1);
-            this.mainTableLayoutPanel.Controls.Add(this.doneButton, 1, 5);
-            this.mainTableLayoutPanel.Controls.Add(this.filterColumnsTextbox, 1, 3);
-            this.mainTableLayoutPanel.Controls.Add(this.clearfilterColumnsButton, 2, 3);
-            this.mainTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
-            this.mainTableLayoutPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.mainTableLayoutPanel.Name = "mainTableLayoutPanel";
-            this.mainTableLayoutPanel.RowCount = 5;
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.mainTableLayoutPanel.Size = new System.Drawing.Size(500, 399);
-            this.mainTableLayoutPanel.TabIndex = 0;
+            mainTableLayoutPanel.ColumnCount = 3;
+            mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 23F));
+            mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 34F));
+            mainTableLayoutPanel.Controls.Add(allFieldsRadioButton, 0, 0);
+            mainTableLayoutPanel.Controls.Add(showSelectedFieldsRadioButton, 0, 2);
+            mainTableLayoutPanel.Controls.Add(fieldsPanel, 1, 4);
+            mainTableLayoutPanel.Controls.Add(allFieldsRememberRadioButton, 0, 1);
+            mainTableLayoutPanel.Controls.Add(doneButton, 1, 5);
+            mainTableLayoutPanel.Controls.Add(filterColumnsTextbox, 1, 3);
+            mainTableLayoutPanel.Controls.Add(clearfilterColumnsButton, 2, 3);
+            mainTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
+            mainTableLayoutPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            mainTableLayoutPanel.Name = "mainTableLayoutPanel";
+            mainTableLayoutPanel.RowCount = 5;
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            mainTableLayoutPanel.Size = new System.Drawing.Size(500, 399);
+            mainTableLayoutPanel.TabIndex = 0;
             // 
             // allFieldsRadioButton
             // 
-            this.allFieldsRadioButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.allFieldsRadioButton.AutoSize = true;
-            this.allFieldsRadioButton.Checked = true;
-            this.mainTableLayoutPanel.SetColumnSpan(this.allFieldsRadioButton, 2);
-            this.allFieldsRadioButton.Location = new System.Drawing.Point(4, 3);
-            this.allFieldsRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.allFieldsRadioButton.Name = "allFieldsRadioButton";
-            this.allFieldsRadioButton.Size = new System.Drawing.Size(81, 29);
-            this.allFieldsRadioButton.TabIndex = 0;
-            this.allFieldsRadioButton.TabStop = true;
-            this.allFieldsRadioButton.Text = "All Fields...";
-            this.allFieldsRadioButton.UseVisualStyleBackColor = true;
-            this.allFieldsRadioButton.CheckedChanged += new System.EventHandler(this.allFieldsRadioButton_CheckedChanged);
+            allFieldsRadioButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            allFieldsRadioButton.AutoSize = true;
+            allFieldsRadioButton.Checked = true;
+            mainTableLayoutPanel.SetColumnSpan(allFieldsRadioButton, 2);
+            allFieldsRadioButton.Location = new System.Drawing.Point(4, 3);
+            allFieldsRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            allFieldsRadioButton.Name = "allFieldsRadioButton";
+            allFieldsRadioButton.Size = new System.Drawing.Size(72, 29);
+            allFieldsRadioButton.TabIndex = 0;
+            allFieldsRadioButton.TabStop = true;
+            allFieldsRadioButton.Text = "All Fields";
+            allFieldsRadioButton.UseVisualStyleBackColor = true;
+            allFieldsRadioButton.CheckedChanged += allFieldsRadioButton_CheckedChanged;
             // 
             // showSelectedFieldsRadioButton
             // 
-            this.showSelectedFieldsRadioButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.showSelectedFieldsRadioButton.AutoSize = true;
-            this.mainTableLayoutPanel.SetColumnSpan(this.showSelectedFieldsRadioButton, 2);
-            this.showSelectedFieldsRadioButton.Location = new System.Drawing.Point(4, 73);
-            this.showSelectedFieldsRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.showSelectedFieldsRadioButton.Name = "showSelectedFieldsRadioButton";
-            this.showSelectedFieldsRadioButton.Size = new System.Drawing.Size(105, 29);
-            this.showSelectedFieldsRadioButton.TabIndex = 1;
-            this.showSelectedFieldsRadioButton.Text = "Selected Fields (Count: {0}):";
-            this.showSelectedFieldsRadioButton.UseVisualStyleBackColor = true;
-            this.showSelectedFieldsRadioButton.CheckedChanged += new System.EventHandler(this.showSelectedFieldsRadioButton_CheckedChanged);
+            showSelectedFieldsRadioButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            showSelectedFieldsRadioButton.AutoSize = true;
+            mainTableLayoutPanel.SetColumnSpan(showSelectedFieldsRadioButton, 2);
+            showSelectedFieldsRadioButton.Location = new System.Drawing.Point(4, 73);
+            showSelectedFieldsRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            showSelectedFieldsRadioButton.Name = "showSelectedFieldsRadioButton";
+            showSelectedFieldsRadioButton.Size = new System.Drawing.Size(169, 29);
+            showSelectedFieldsRadioButton.TabIndex = 1;
+            showSelectedFieldsRadioButton.Text = "Selected Fields (Count: {0}):";
+            showSelectedFieldsRadioButton.UseVisualStyleBackColor = true;
+            showSelectedFieldsRadioButton.CheckedChanged += showSelectedFieldsRadioButton_CheckedChanged;
             // 
             // fieldsPanel
             // 
-            this.fieldsPanel.AutoScroll = true;
-            this.mainTableLayoutPanel.SetColumnSpan(this.fieldsPanel, 2);
-            this.fieldsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fieldsPanel.Enabled = false;
-            this.fieldsPanel.Location = new System.Drawing.Point(27, 140);
-            this.fieldsPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.fieldsPanel.Name = "fieldsPanel";
-            this.fieldsPanel.Size = new System.Drawing.Size(469, 221);
-            this.fieldsPanel.TabIndex = 2;
+            fieldsPanel.AutoScroll = true;
+            mainTableLayoutPanel.SetColumnSpan(fieldsPanel, 2);
+            fieldsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            fieldsPanel.Enabled = false;
+            fieldsPanel.Location = new System.Drawing.Point(27, 140);
+            fieldsPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            fieldsPanel.Name = "fieldsPanel";
+            fieldsPanel.Size = new System.Drawing.Size(469, 221);
+            fieldsPanel.TabIndex = 2;
             // 
             // allFieldsRememberRadioButton
             // 
-            this.allFieldsRememberRadioButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.allFieldsRememberRadioButton.AutoSize = true;
-            this.mainTableLayoutPanel.SetColumnSpan(this.allFieldsRememberRadioButton, 2);
-            this.allFieldsRememberRadioButton.Location = new System.Drawing.Point(4, 38);
-            this.allFieldsRememberRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.allFieldsRememberRadioButton.Name = "allFieldsRememberRadioButton";
-            this.allFieldsRememberRadioButton.Size = new System.Drawing.Size(205, 29);
-            this.allFieldsRememberRadioButton.TabIndex = 1;
-            this.allFieldsRememberRadioButton.Text = "All Fields... (remember my choice)";
-            this.allFieldsRememberRadioButton.UseVisualStyleBackColor = true;
-            this.allFieldsRememberRadioButton.CheckedChanged += new System.EventHandler(this.AllFieldsRememberRadioButton_CheckedChanged);
+            allFieldsRememberRadioButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            allFieldsRememberRadioButton.AutoSize = true;
+            mainTableLayoutPanel.SetColumnSpan(allFieldsRememberRadioButton, 2);
+            allFieldsRememberRadioButton.Location = new System.Drawing.Point(4, 38);
+            allFieldsRememberRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            allFieldsRememberRadioButton.Name = "allFieldsRememberRadioButton";
+            allFieldsRememberRadioButton.Size = new System.Drawing.Size(196, 29);
+            allFieldsRememberRadioButton.TabIndex = 1;
+            allFieldsRememberRadioButton.Text = "All Fields (remember my choice)";
+            allFieldsRememberRadioButton.UseVisualStyleBackColor = true;
+            allFieldsRememberRadioButton.CheckedChanged += AllFieldsRememberRadioButton_CheckedChanged;
             // 
             // doneButton
             // 
-            this.doneButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.mainTableLayoutPanel.SetColumnSpan(this.doneButton, 2);
-            this.doneButton.Location = new System.Drawing.Point(383, 367);
-            this.doneButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.doneButton.Name = "doneButton";
-            this.doneButton.Size = new System.Drawing.Size(113, 29);
-            this.doneButton.TabIndex = 3;
-            this.doneButton.Text = "Done";
-            this.doneButton.UseVisualStyleBackColor = true;
-            this.doneButton.Click += new System.EventHandler(this.doneButton_Click);
+            doneButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            mainTableLayoutPanel.SetColumnSpan(doneButton, 2);
+            doneButton.Location = new System.Drawing.Point(383, 367);
+            doneButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            doneButton.Name = "doneButton";
+            doneButton.Size = new System.Drawing.Size(113, 29);
+            doneButton.TabIndex = 3;
+            doneButton.Text = "Done";
+            doneButton.UseVisualStyleBackColor = true;
+            doneButton.Click += doneButton_Click;
             // 
             // filterColumnsTextbox
             // 
-            this.filterColumnsTextbox.Enabled = false;
-            this.filterColumnsTextbox.Location = new System.Drawing.Point(27, 108);
-            this.filterColumnsTextbox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.filterColumnsTextbox.Name = "filterColumnsTextbox";
-            this.filterColumnsTextbox.PlaceholderText = "search by name";
-            this.filterColumnsTextbox.Size = new System.Drawing.Size(434, 23);
-            this.filterColumnsTextbox.TabIndex = 0;
-            this.filterColumnsTextbox.TextChanged += new System.EventHandler(this.filterColumnsTextbox_TextChanged);
+            filterColumnsTextbox.Enabled = false;
+            filterColumnsTextbox.Location = new System.Drawing.Point(27, 108);
+            filterColumnsTextbox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            filterColumnsTextbox.Name = "filterColumnsTextbox";
+            filterColumnsTextbox.PlaceholderText = "search by name";
+            filterColumnsTextbox.Size = new System.Drawing.Size(434, 23);
+            filterColumnsTextbox.TabIndex = 0;
+            filterColumnsTextbox.TextChanged += filterColumnsTextbox_TextChanged;
             // 
             // clearfilterColumnsButton
             // 
-            this.clearfilterColumnsButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.clearfilterColumnsButton.Enabled = false;
-            this.clearfilterColumnsButton.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.clearfilterColumnsButton.Location = new System.Drawing.Point(470, 108);
-            this.clearfilterColumnsButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.clearfilterColumnsButton.Name = "clearfilterColumnsButton";
-            this.clearfilterColumnsButton.Size = new System.Drawing.Size(26, 26);
-            this.clearfilterColumnsButton.TabIndex = 4;
-            this.clearfilterColumnsButton.Text = "X";
-            this.clearfilterColumnsButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.clearfilterColumnsButton.UseVisualStyleBackColor = true;
-            this.clearfilterColumnsButton.Click += new System.EventHandler(this.clearfilterColumnsButton_Click);
+            clearfilterColumnsButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            clearfilterColumnsButton.Enabled = false;
+            clearfilterColumnsButton.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            clearfilterColumnsButton.Location = new System.Drawing.Point(470, 108);
+            clearfilterColumnsButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            clearfilterColumnsButton.Name = "clearfilterColumnsButton";
+            clearfilterColumnsButton.Size = new System.Drawing.Size(26, 26);
+            clearfilterColumnsButton.TabIndex = 4;
+            clearfilterColumnsButton.Text = "X";
+            clearfilterColumnsButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            clearfilterColumnsButton.UseVisualStyleBackColor = true;
+            clearfilterColumnsButton.Click += clearfilterColumnsButton_Click;
             // 
             // FieldsToLoadForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(500, 399);
-            this.Controls.Add(this.mainTableLayoutPanel);
-            this.Icon = global::ParquetViewer.Properties.Resources.list_icon_32x32;
-            this.KeyPreview = true;
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.MinimumSize = new System.Drawing.Size(248, 282);
-            this.Name = "FieldsToLoadForm";
-            this.Text = "Select Fields to Load";
-            this.Load += new System.EventHandler(this.FieldsToLoadForm_Load);
-            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.FieldsToLoadForm_KeyUp);
-            this.mainTableLayoutPanel.ResumeLayout(false);
-            this.mainTableLayoutPanel.PerformLayout();
-            this.ResumeLayout(false);
-
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            ClientSize = new System.Drawing.Size(500, 399);
+            Controls.Add(mainTableLayoutPanel);
+            Icon = Properties.Resources.list_icon_32x32;
+            KeyPreview = true;
+            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            MinimumSize = new System.Drawing.Size(248, 282);
+            Name = "FieldsToLoadForm";
+            Text = "Select Fields to Load";
+            Load += FieldsToLoadForm_Load;
+            KeyUp += FieldsToLoadForm_KeyUp;
+            mainTableLayoutPanel.ResumeLayout(false);
+            mainTableLayoutPanel.PerformLayout();
+            ResumeLayout(false);
         }
 
         #endregion

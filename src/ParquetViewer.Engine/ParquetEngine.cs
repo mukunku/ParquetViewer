@@ -23,7 +23,7 @@ namespace ParquetViewer.Engine
         public ParquetSchema Schema => DefaultReader.Schema ?? new();
 
         private ParquetSchemaElement? _parquetSchemaTree;
-        private ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ?? BuildParquetSchemaTree();
+        private ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
 
         public string OpenFileOrFolderPath { get; }
 
@@ -55,7 +55,7 @@ namespace ParquetViewer.Engine
             var parquetSchemaElement = new ParquetSchemaElement(current);
             for (int i = 0; i < current.Num_children; i++)
             {
-                parquetSchemaElement.Children.Add(ReadSchemaTree(ref schemaElements));
+                parquetSchemaElement.AddChild(ReadSchemaTree(ref schemaElements));
             }
             return parquetSchemaElement;
         }

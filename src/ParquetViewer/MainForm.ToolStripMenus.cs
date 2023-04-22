@@ -9,7 +9,7 @@ namespace ParquetViewer
 {
     public partial class MainForm
     {
-        private const string DefaultTableName = "MY_TABLE";
+        private const string DEFAULT_TABLE_NAME = "MY_TABLE";
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -88,7 +88,7 @@ namespace ParquetViewer
                     openFileOrFolderPath = openFileOrFolderPath[..^1];
                 }
 
-                string tableName = Path.GetFileNameWithoutExtension(openFileOrFolderPath) ?? DefaultTableName;
+                string tableName = Path.GetFileNameWithoutExtension(openFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
                 if (this.mainDataSource?.Columns.Count > 0)
                 {
                     var dataset = new DataSet();
@@ -131,9 +131,8 @@ namespace ParquetViewer
         {
             try
             {
-                AutoSizeColumnsMode columnSizingMode;
                 if (sender is ToolStripMenuItem tsi && tsi.Tag != null
-                    && Enum.TryParse(tsi.Tag.ToString(), out columnSizingMode)
+                    && Enum.TryParse(tsi.Tag.ToString(), out AutoSizeColumnsMode columnSizingMode)
                     && AppSettings.AutoSizeColumnsMode != columnSizingMode)
                 {
                     AppSettings.AutoSizeColumnsMode = columnSizingMode;
@@ -141,12 +140,7 @@ namespace ParquetViewer
                     {
                         toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
                     }
-
-                    var tempMainDataSource = this.MainDataSource;
-                    if (columnSizingMode == AutoSizeColumnsMode.None)
-                        this.MainDataSource = null; //Need to reload the entire grid to return to the default sizing
-
-                    this.MainDataSource = tempMainDataSource; //Will cause a refresh of the column rendering
+                    this.mainGridView.AutoSizeColumns();
                 }
             }
             catch (Exception ex)
@@ -188,7 +182,8 @@ namespace ParquetViewer
                     var selectedDateFormat = (DateFormat)(int.Parse((string)item.Tag));
                     AppSettings.DateTimeDisplayFormat = selectedDateFormat;
                     this.RefreshDateFormatMenuItemSelection();
-                    this.MainDataSource = this.MainDataSource; //Will cause a refresh of the date formats
+                    this.mainGridView.UpdateDateFormats();
+                    this.mainGridView.Refresh();
                 }
             }
             catch (Exception ex)
