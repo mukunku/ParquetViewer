@@ -1,8 +1,8 @@
-﻿using System;
+﻿using ParquetViewer.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using ParquetViewer.Helpers;
 
 namespace ParquetViewer
 {
@@ -21,6 +21,7 @@ namespace ParquetViewer
         public MetadataViewer()
         {
             InitializeComponent();
+            this.DoubleBuffered = true;
         }
 
         private void MetadataViewer_Load(object sender, EventArgs e)
@@ -37,8 +38,9 @@ namespace ParquetViewer
                 Dock = DockStyle.Fill,
                 BackColor = Color.LightGray,
                 Text = text,
-                ScrollBars = ScrollBars.Vertical,
-                ReadOnly = true
+                ScrollBars = ScrollBars.Both,
+                ReadOnly = true,
+                WordWrap = false //gives significant performance boost
             });
 
             this.tabControl.TabPages.Add(tab);
@@ -96,6 +98,7 @@ namespace ParquetViewer
             }
             else
             {
+                this.tabControl.SuspendLayout();
                 this.tabControl.TabPages.Clear();
                 if (e.Result is List<(string TabName, string Text)> tabs)
                 {
@@ -104,6 +107,7 @@ namespace ParquetViewer
                         this.AddTab(tab.TabName, tab.Text);
                     }
                 }
+                this.tabControl.ResumeLayout();
             }
         }
 
