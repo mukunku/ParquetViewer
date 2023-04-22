@@ -59,6 +59,15 @@ namespace ParquetViewer
                         }
                         else if (selectedFileType == FileType.XLS)
                         {
+                            const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
+                            if (this.MainDataSource.Columns.Count > MAX_XLS_COLUMN_COUNT)
+                            {
+                                MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.\r\n\r\nPlease try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
+                                    "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                
+                                return;
+                            }
+
                             await Task.Run(() => this.WriteDataToExcelFile(filePath, loadingIcon.CancellationToken));
                         }
                         else
@@ -184,8 +193,19 @@ namespace ParquetViewer
                 for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
                 {
                     var value = this.mainDataSource.DefaultView[i][j];
-
-                    if (value is DateTime dt)
+                    if (value is null || value == DBNull.Value)
+                    {
+                        excelWriter.WriteCell(i + 1, j); //empty cell
+                    }
+                    else if (IsIntCastSafe(value))
+                    {
+                        excelWriter.WriteCell(i + 1, j, Convert.ToInt32(value));
+                    }
+                    else if (IsDoubleCastSafe(value))
+                    {
+                        excelWriter.WriteCell(i + 1, j, Convert.ToDouble(value));
+                    }
+                    else if (value is DateTime dt)
                     {
                         excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
                     }
@@ -195,6 +215,16 @@ namespace ParquetViewer
                     }
                 }
             }
+
+            bool IsIntCastSafe(object value) => value.GetType() == typeof(int)
+                || value.GetType() == typeof(uint)
+                || value.GetType() == typeof(sbyte)
+                || value.GetType() == typeof(byte);
+
+            bool IsDoubleCastSafe(object value) => value.GetType() == typeof(double)
+                || value.GetType() == typeof(decimal)
+                || value.GetType() == typeof(float)
+                || value.GetType() == typeof(long);
 
             excelWriter.EndWrite();
         }
