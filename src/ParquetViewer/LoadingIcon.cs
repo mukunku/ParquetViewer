@@ -109,8 +109,8 @@ namespace ParquetViewer
                 lock (_lock) //This part isn't thread-safe
                 { 
                     //Convert the cancel button into a progress bar
-                    var bitmap = (Bitmap)this._cancelButton.BackgroundImage;
-                    using (var solidBrush = new SolidBrush(Color.FromArgb(30, 40, 160, 60)))
+                    var bitmap = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
+                    using (var solidBrush = new SolidBrush(Color.FromArgb(160, 40, 160, 60)))
                     {
                         using (Graphics graphics = Graphics.FromImage(bitmap))
                         {
@@ -120,6 +120,7 @@ namespace ParquetViewer
                             graphics.FillRectangle(solidBrush, rect);
                         }
                     }
+                    this._cancelButton.BackgroundImage = bitmap;
                     this._cancelButton.Invoke(this._cancelButton.Refresh);
                 }
             }
