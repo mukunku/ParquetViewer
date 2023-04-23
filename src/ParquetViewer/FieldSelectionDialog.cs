@@ -316,10 +316,12 @@ namespace ParquetViewer
             this.filterColumnsTextbox.Text = string.Empty;
         }
 
-        private void FieldsToLoadForm_KeyUp(object sender, KeyEventArgs e)
+        private void FieldsToLoadForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
             {
+                //We need to do this on key down because if there's a message box on screen and the user hits 'esc'
+                //the message box is closed on the key down. So if we listen on the key up we will also close the main window.
                 this.Close();
             }
         }

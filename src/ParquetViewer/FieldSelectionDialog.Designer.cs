@@ -174,7 +174,7 @@
             Name = "FieldsToLoadForm";
             Text = "Select Fields to Load";
             Load += FieldsToLoadForm_Load;
-            KeyUp += FieldsToLoadForm_KeyUp;
+            KeyDown += FieldsToLoadForm_KeyDown;
             mainTableLayoutPanel.ResumeLayout(false);
             mainTableLayoutPanel.PerformLayout();
             ResumeLayout(false);
