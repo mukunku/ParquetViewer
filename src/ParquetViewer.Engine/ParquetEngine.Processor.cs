@@ -27,7 +27,7 @@ namespace ParquetViewer.Engine
                 if (recordsLeftToRead <= 0)
                     break;
 
-                recordsLeftToRead = await ParquetReaderToDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
+                recordsLeftToRead = await PopulateDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
             }
 
             result.ExtendedProperties.Add(TotalRecordCountExtendedPropertyKey, this.RecordCount);
@@ -36,7 +36,7 @@ namespace ParquetViewer.Engine
             return result;
         }
 
-        private async Task<long> ParquetReaderToDataTable(DataTable dataTable, ParquetReader parquetReader,
+        private async Task<long> PopulateDataTable(DataTable dataTable, ParquetReader parquetReader,
             long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read column by column to generate each row in the datatable
@@ -328,10 +328,10 @@ namespace ParquetViewer.Engine
                     columnType = typeof(bool);
                     break;
                 case Parquet.Schema.DataType.Byte:
-                    columnType = typeof(sbyte);
+                    columnType = typeof(byte);
                     break;
                 case Parquet.Schema.DataType.ByteArray:
-                    columnType = typeof(sbyte[]);
+                    columnType = typeof(byte[]);
                     break;
                 case Parquet.Schema.DataType.DateTimeOffset:
                     //Let's treat DateTimeOffsets as DateTime
@@ -358,7 +358,7 @@ namespace ParquetViewer.Engine
                     columnType = thriftSchema.LogicalType?.TIMESTAMP != null ? typeof(DateTime) : typeof(long);
                     break;
                 case Parquet.Schema.DataType.SignedByte:
-                    columnType = typeof(byte);
+                    columnType = typeof(sbyte);
                     break;
                 case Parquet.Schema.DataType.String:
                 default:
