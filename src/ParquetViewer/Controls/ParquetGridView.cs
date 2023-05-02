@@ -360,8 +360,10 @@ namespace ParquetViewer.Controls
                         continue;
                     else
                         this.Columns[i].Tag = new object();
-                    
-                    var newColumnSize = MeasureStringWidth(gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER); //Fit header by default
+
+                    //Fit header by default. If header is short, make sure NULLs will fit at least
+                    string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
+                    var newColumnSize = MeasureStringWidth(columnNameOrNull + WHITESPACE_BUFFER); 
 
                     if (gridTable.Columns[i].DataType == typeof(DateTime))
                     {
