@@ -129,7 +129,7 @@ namespace ParquetViewer.Tests
             var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
             Assert.Equal(202252, dataTable.Rows[0][0]);
             Assert.Equal(false, dataTable.Rows[0]["Output as FP"]);
-            Assert.Equal((sbyte)0, dataTable.Rows[0]["Preorder FP equi."]);
+            Assert.Equal((byte)0, dataTable.Rows[0]["Preorder FP equi."]);
         }
 
         [Fact]
