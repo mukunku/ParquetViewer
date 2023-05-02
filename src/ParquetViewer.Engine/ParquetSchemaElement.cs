@@ -1,5 +1,5 @@
-﻿using Parquet.Schema;
-using Parquet.Thrift;
+﻿using Parquet.Meta;
+using Parquet.Schema;
 
 namespace ParquetViewer.Engine
 {

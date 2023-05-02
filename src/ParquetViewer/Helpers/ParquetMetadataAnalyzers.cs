@@ -1,7 +1,7 @@
 ﻿using Apache.Arrow.Ipc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Parquet.Thrift;
+using Parquet.Meta;
 using System;
 using System.Linq;
 
@@ -33,10 +33,10 @@ namespace ParquetViewer.Helpers
                 var jsonObject = new JObject
                 {
                     [nameof(thriftMetadata.Version)] = thriftMetadata.Version,
-                    [nameof(thriftMetadata.Num_rows)] = recordCount,
-                    ["Num_row_groups"] = thriftMetadata.Row_groups?.Count ?? -1, //What about partitioned files?
-                    ["Num_fields"] = fieldCount,
-                    [nameof(thriftMetadata.Created_by)] = thriftMetadata.Created_by
+                    [nameof(thriftMetadata.NumRows)] = recordCount,
+                    ["NumRowGroups"] = thriftMetadata.RowGroups?.Count ?? -1, //What about partitioned files?
+                    ["NumFields"] = fieldCount,
+                    [nameof(thriftMetadata.CreatedBy)] = thriftMetadata.CreatedBy
                 };
 
                 var schemas = new JArray();
@@ -47,15 +47,15 @@ namespace ParquetViewer.Helpers
 
                     var schemaObject = new JObject
                     {
-                        [nameof(schema.Field_id)] = schema.Field_id,
+                        [nameof(schema.FieldId)] = schema.FieldId,
                         [nameof(schema.Name)] = schema.Name,
                         [nameof(schema.Type)] = schema.Type.ToString(),
-                        [nameof(schema.Type_length)] = schema.Type_length,
+                        [nameof(schema.TypeLength)] = schema.TypeLength,
                         [nameof(schema.LogicalType)] = schema.LogicalType?.ToString(),
                         [nameof(schema.Scale)] = schema.Scale,
                         [nameof(schema.Precision)] = schema.Precision,
-                        [nameof(schema.Repetition_type)] = schema.Repetition_type.ToString(),
-                        [nameof(schema.Converted_type)] = schema.Converted_type.ToString()
+                        [nameof(schema.RepetitionType)] = schema.RepetitionType.ToString(),
+                        [nameof(schema.ConvertedType)] = schema.ConvertedType.ToString()
                     };
 
                     schemas.Add(schemaObject);
@@ -63,37 +63,37 @@ namespace ParquetViewer.Helpers
                 jsonObject[nameof(thriftMetadata.Schema)] = schemas;
 
                 var rowGroups = new JArray();
-                foreach (var rowGroup in thriftMetadata.Row_groups ?? Enumerable.Empty<RowGroup>())
+                foreach (var rowGroup in thriftMetadata.RowGroups ?? Enumerable.Empty<RowGroup>())
                 {
                     var rowGroupObject = new JObject();
                     rowGroupObject[nameof(rowGroup.Ordinal)] = rowGroup.Ordinal;
-                    rowGroupObject[nameof(rowGroup.Num_rows)] = rowGroup.Num_rows;
+                    rowGroupObject[nameof(rowGroup.NumRows)] = rowGroup.NumRows;
 
                     var sortingColumns = new JArray();
-                    foreach (var sortingColumn in rowGroup.Sorting_columns ?? Enumerable.Empty<SortingColumn>())
+                    foreach (var sortingColumn in rowGroup.SortingColumns ?? Enumerable.Empty<SortingColumn>())
                     {
                         var sortingColumnObject = new JObject();
-                        sortingColumnObject[nameof(sortingColumn.Column_idx)] = sortingColumn.Column_idx;
+                        sortingColumnObject[nameof(sortingColumn.ColumnIdx)] = sortingColumn.ColumnIdx;
                         sortingColumnObject[nameof(sortingColumn.Descending)] = sortingColumn.Descending;
-                        sortingColumnObject[nameof(sortingColumn.Nulls_first)] = sortingColumn.Nulls_first;
+                        sortingColumnObject[nameof(sortingColumn.NullsFirst)] = sortingColumn.NullsFirst;
 
                         sortingColumns.Add(sortingColumnObject);
                     }
 
-                    rowGroupObject[nameof(rowGroup.Sorting_columns)] = sortingColumns;
-                    rowGroupObject[nameof(rowGroup.File_offset)] = rowGroup.File_offset;
-                    rowGroupObject[nameof(rowGroup.Total_byte_size)] = rowGroup.Total_byte_size;
-                    rowGroupObject[nameof(rowGroup.Total_compressed_size)] = rowGroup.Total_compressed_size;
+                    rowGroupObject[nameof(rowGroup.SortingColumns)] = sortingColumns;
+                    rowGroupObject[nameof(rowGroup.FileOffset)] = rowGroup.FileOffset;
+                    rowGroupObject[nameof(rowGroup.TotalByteSize)] = rowGroup.TotalByteSize;
+                    rowGroupObject[nameof(rowGroup.TotalCompressedSize)] = rowGroup.TotalCompressedSize;
 
                     rowGroups.Add(rowGroupObject);
                 }
-                jsonObject[nameof(thriftMetadata.Row_groups)] = rowGroups;
+                jsonObject[nameof(thriftMetadata.RowGroups)] = rowGroups;
 
                 return jsonObject.ToString(Formatting.Indented);
             }
             catch (Exception ex)
             {
-                return $"Something went wrong while processing the schema:{Environment.NewLine}{Environment.NewLine}{ex.ToString()}";
+                return $"Something went wrong while processing the schema:{Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
 

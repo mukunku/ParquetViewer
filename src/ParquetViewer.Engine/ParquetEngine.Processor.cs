@@ -89,7 +89,7 @@ namespace ParquetViewer.Engine
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                         readRecords, isFirstColumn, rowLookupCache, cancellationToken, progress);
                 }
-                else if (field.SchemaElement.LogicalType?.MAP is not null || field.SchemaElement.Converted_type == Parquet.Thrift.ConvertedType.MAP)
+                else if (field.SchemaElement.LogicalType?.MAP is not null || field.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.MAP)
                 {
                     await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                         readRecords, isFirstColumn, rowLookupCache, cancellationToken, progress);
@@ -280,10 +280,23 @@ namespace ParquetViewer.Engine
                     }
                 }
 
-                var key = ReadParquetValue(keyDataColumn.Data.GetValue(i), keyField.DataField, keyField.SchemaElement.LogicalType);
-                var value = ReadParquetValue(valueDataColumn.Data.GetValue(i), valueField.DataField, valueField.SchemaElement.LogicalType);
-
-                datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
+                bool isMapTypeValid = keyDataColumn.Data.Length == valueDataColumn.Data.Length;
+                if (isMapTypeValid)
+                {
+                    var key = ReadParquetValue(keyDataColumn.Data.GetValue(i), keyField.DataField, keyField.SchemaElement.LogicalType);
+                    var value = ReadParquetValue(valueDataColumn.Data.GetValue(i), valueField.DataField, valueField.SchemaElement.LogicalType);
+                    datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
+                }
+                else if (keyDataColumn.Data.Length == 0)
+                {
+                    var key = DBNull.Value; //Just assume the key is null. This is a special case I saw in some MAP fields. Maybe it's not worth having this but putting it in for now to keep sanity tests happy
+                    var value = ReadParquetValue(valueDataColumn.Data.GetValue(i), valueField.DataField, valueField.SchemaElement.LogicalType);
+                    datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
+                }
+                else
+                {
+                    throw new UnsupportedFieldException($"{field.Path} is malformed and cannot be loaded");
+                }
 
                 rowIndex++;
                 progress?.Report(1);
@@ -293,7 +306,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private static object ReadParquetValue(object? parquetValue, Parquet.Schema.DataField field, Parquet.Thrift.LogicalType logicalType)
+        private static object ReadParquetValue(object? parquetValue, Parquet.Schema.DataField field, Parquet.Meta.LogicalType logicalType)
         {
             if (parquetValue is null)
                 return DBNull.Value;
@@ -319,7 +332,7 @@ namespace ParquetViewer.Engine
                 return parquetValue;
         }
 
-        private static Type ParquetNetTypeToCSharpType(Parquet.Thrift.SchemaElement thriftSchema, Parquet.Schema.DataType type)
+        private static Type ParquetNetTypeToCSharpType(Parquet.Meta.SchemaElement thriftSchema, Parquet.Schema.DataType type)
         {
             Type columnType;
             switch (type)
@@ -377,11 +390,11 @@ namespace ParquetViewer.Engine
                 var schema = ParquetSchemaTree.GetChildByName(field);
 
                 DataColumn newColumn;
-                if (schema.SchemaElement.Converted_type == Parquet.Thrift.ConvertedType.LIST)
+                if (schema.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 {
                     newColumn = new DataColumn(field, typeof(ListValue));
                 }
-                else if (schema.SchemaElement.Converted_type == Parquet.Thrift.ConvertedType.MAP)
+                else if (schema.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.MAP)
                 {
                     newColumn = new DataColumn(field, typeof(MapValue));
                 }

@@ -1,6 +1,6 @@
 ﻿using Parquet;
+using Parquet.Meta;
 using Parquet.Schema;
-using Parquet.Thrift;
 using ParquetViewer.Engine.Exceptions;
 
 namespace ParquetViewer.Engine
@@ -10,13 +10,13 @@ namespace ParquetViewer.Engine
         private readonly List<ParquetReader> _parquetFiles;
         private long? _recordCount;
 
-        public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.ThriftMetadata.Num_rows);
+        public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Metadata?.NumRows ?? 0);
 
         private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new Exception("No parquet readers available");
 
         public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList() ?? new();
 
-        public Parquet.Thrift.FileMetaData ThriftMetadata => DefaultReader.ThriftMetadata ?? throw new Exception("No thrift metadata was found");
+        public FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new Exception("No thrift metadata was found");
 
         public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata ?? new();
 
@@ -53,7 +53,7 @@ namespace ParquetViewer.Engine
 
             var current = schemaElements.Current;
             var parquetSchemaElement = new ParquetSchemaElement(current);
-            for (int i = 0; i < current.Num_children; i++)
+            for (int i = 0; i < current.NumChildren; i++)
             {
                 parquetSchemaElement.AddChild(ReadSchemaTree(ref schemaElements));
             }
@@ -171,9 +171,9 @@ namespace ParquetViewer.Engine
         {
             foreach (var parquetFile in _parquetFiles)
             {
-                if (offset >= parquetFile.ThriftMetadata.Num_rows)
+                if (offset >= parquetFile.Metadata?.NumRows)
                 {
-                    offset -= parquetFile.ThriftMetadata.Num_rows;
+                    offset -= parquetFile.Metadata.NumRows;
                     continue;
                 }
 
