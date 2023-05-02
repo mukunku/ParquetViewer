@@ -13,7 +13,7 @@ namespace ParquetViewer.Tests
             Assert.Equal(337, parquetEngine.Fields.Count);
 
             var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
-            Assert.Equal((uint)156, dataTable.Rows[0][0]);
+            Assert.Equal((UInt16)156, dataTable.Rows[0][0]);
             Assert.Equal(60.7376101, dataTable.Rows[1][10]);
             Assert.False((bool)dataTable.Rows[19][332]);
             Assert.True((bool)dataTable.Rows[20][336]);
@@ -158,22 +158,6 @@ namespace ParquetViewer.Tests
         public async Task MAP_TYPE_TEST1()
         {
             var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST1.parquet", default);
-
-            Assert.Equal(2, parquetEngine.RecordCount);
-            Assert.Equal(2, parquetEngine.Fields.Count);
-
-            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default);
-            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
-            Assert.Equal("(,)", ((MapValue)dataTable.Rows[0][0]).ToString());
-            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
-            Assert.Equal(DBNull.Value, ((MapValue)dataTable.Rows[0][0]).Key);
-            Assert.Equal(DBNull.Value, ((MapValue)dataTable.Rows[0][0]).Value);
-        }
-
-        [Fact]
-        public async Task MAP_TYPE_TEST2()
-        {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet", default);
 
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);

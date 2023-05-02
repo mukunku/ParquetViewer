@@ -72,7 +72,7 @@ namespace ParquetViewer.Engine
             return rowsLeftToRead;
         }
 
-        private async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader, 
+        private async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader,
             long skipRecords, long readRecords, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowBeginIndex = dataTable.Rows.Count;
@@ -110,9 +110,9 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(field.DataField, cancellationToken);
+            var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field {field.Path} is missing its data field"), cancellationToken);
 
-            var fieldIndex = dataTable.Columns[field.Path].Ordinal;
+            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column {field.Path} is missing");
             foreach (var value in dataColumn.Data)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -132,7 +132,7 @@ namespace ParquetViewer.Engine
                     dataTable.Rows.Add(newRow);
                 }
 
-                DataRow datarow;
+                DataRow? datarow;
                 if (!UseDataRowCache)
                 {
                     datarow = dataTable.Rows[rowIndex];
@@ -146,7 +146,7 @@ namespace ParquetViewer.Engine
                     }
                 }
 
-                datarow[fieldIndex] = ReadParquetValue(value, field.DataField, field.SchemaElement.LogicalType);
+                datarow[fieldIndex] = value ?? DBNull.Value;
 
                 rowIndex++;
                 progress?.Report(1);
@@ -213,7 +213,7 @@ namespace ParquetViewer.Engine
                         }
                     }
 
-                    var lastItem = ReadParquetValue(dataColumn.Data.GetValue(i), itemField.DataField, itemField.SchemaElement.LogicalType);
+                    var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
                     rowValue.Add(lastItem);
 
                     datarow[fieldIndex] = new ListValue(rowValue, itemField.DataField.ClrType);
@@ -227,7 +227,7 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    var value = ReadParquetValue(dataColumn.Data.GetValue(i), itemField.DataField, itemField.SchemaElement.LogicalType);
+                    var value = dataColumn.Data.GetValue(i) ?? DBNull.Value;
                     rowValue.Add(value);
                 }
             }
@@ -266,7 +266,7 @@ namespace ParquetViewer.Engine
                     dataTable.Rows.Add(newRow);
                 }
 
-                DataRow datarow;
+                DataRow? datarow;
                 if (!UseDataRowCache)
                 {
                     datarow = dataTable.Rows[rowIndex];
@@ -281,22 +281,12 @@ namespace ParquetViewer.Engine
                 }
 
                 bool isMapTypeValid = keyDataColumn.Data.Length == valueDataColumn.Data.Length;
-                if (isMapTypeValid)
-                {
-                    var key = ReadParquetValue(keyDataColumn.Data.GetValue(i), keyField.DataField, keyField.SchemaElement.LogicalType);
-                    var value = ReadParquetValue(valueDataColumn.Data.GetValue(i), valueField.DataField, valueField.SchemaElement.LogicalType);
-                    datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
-                }
-                else if (keyDataColumn.Data.Length == 0)
-                {
-                    var key = DBNull.Value; //Just assume the key is null. This is a special case I saw in some MAP fields. Maybe it's not worth having this but putting it in for now to keep sanity tests happy
-                    var value = ReadParquetValue(valueDataColumn.Data.GetValue(i), valueField.DataField, valueField.SchemaElement.LogicalType);
-                    datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
-                }
-                else
-                {
+                if (!isMapTypeValid)
                     throw new UnsupportedFieldException($"{field.Path} is malformed and cannot be loaded");
-                }
+
+                var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
+                var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
+                datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
 
                 rowIndex++;
                 progress?.Report(1);
@@ -304,82 +294,6 @@ namespace ParquetViewer.Engine
                 if (rowIndex - rowBeginIndex >= readRecords)
                     break;
             }
-        }
-
-        private static object ReadParquetValue(object? parquetValue, Parquet.Schema.DataField field, Parquet.Meta.LogicalType logicalType)
-        {
-            if (parquetValue is null)
-                return DBNull.Value;
-            else if (field.DataType == Parquet.Schema.DataType.DateTimeOffset)
-                return (DateTime)parquetValue;
-            else if (field.DataType == Parquet.Schema.DataType.Int64
-                && logicalType?.TIMESTAMP != null)
-            {
-                int divideBy = 0;
-                if (logicalType.TIMESTAMP.Unit.NANOS != null)
-                    divideBy = 1000 * 1000;
-                else if (logicalType.TIMESTAMP.Unit.MICROS != null)
-                    divideBy = 1000;
-                else if (logicalType.TIMESTAMP.Unit.MILLIS != null)
-                    divideBy = 1;
-
-                if (divideBy > 0)
-                    return DateTimeOffset.FromUnixTimeMilliseconds((long)parquetValue / divideBy).DateTime;
-                else //Not sure if this 'else' is correct but adding just in case
-                    return DateTimeOffset.FromUnixTimeSeconds((long)parquetValue);
-            }
-            else
-                return parquetValue;
-        }
-
-        private static Type ParquetNetTypeToCSharpType(Parquet.Meta.SchemaElement thriftSchema, Parquet.Schema.DataType type)
-        {
-            Type columnType;
-            switch (type)
-            {
-                case Parquet.Schema.DataType.Boolean:
-                    columnType = typeof(bool);
-                    break;
-                case Parquet.Schema.DataType.Byte:
-                    columnType = typeof(byte);
-                    break;
-                case Parquet.Schema.DataType.ByteArray:
-                    columnType = typeof(byte[]);
-                    break;
-                case Parquet.Schema.DataType.DateTimeOffset:
-                    //Let's treat DateTimeOffsets as DateTime
-                    columnType = typeof(DateTime);
-                    break;
-                case Parquet.Schema.DataType.Decimal:
-                    columnType = typeof(decimal);
-                    break;
-                case Parquet.Schema.DataType.Double:
-                    columnType = typeof(double);
-                    break;
-                case Parquet.Schema.DataType.Float:
-                    columnType = typeof(float);
-                    break;
-                case Parquet.Schema.DataType.Int16:
-                case Parquet.Schema.DataType.Int32:
-                    columnType = typeof(int);
-                    break;
-                case Parquet.Schema.DataType.UnsignedInt16:
-                case Parquet.Schema.DataType.UnsignedInt32:
-                    columnType = typeof(uint);
-                    break;
-                case Parquet.Schema.DataType.Int64:
-                    columnType = thriftSchema.LogicalType?.TIMESTAMP != null ? typeof(DateTime) : typeof(long);
-                    break;
-                case Parquet.Schema.DataType.SignedByte:
-                    columnType = typeof(sbyte);
-                    break;
-                case Parquet.Schema.DataType.String:
-                default:
-                    columnType = typeof(string);
-                    break;
-            }
-
-            return columnType;
         }
 
         private DataTable BuildDataTable(List<string> fields)
@@ -400,7 +314,7 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    var clrType = ParquetNetTypeToCSharpType(schema.SchemaElement, schema.DataField.DataType);
+                    var clrType = schema.DataField?.ClrType ?? throw new Exception($"{field} has no data field");
                     newColumn = new DataColumn(field, clrType);
                 }
 
