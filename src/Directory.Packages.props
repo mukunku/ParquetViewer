@@ -5,7 +5,7 @@
   <ItemGroup>
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Apache.Arrow" Version="12.0.0" />
-    <PackageVersion Include="Parquet.Net" Version="4.10.1" />
+    <PackageVersion Include="Parquet.Net" Version="4.11.0" />
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageVersion Include="xunit" Version="2.4.2" />
