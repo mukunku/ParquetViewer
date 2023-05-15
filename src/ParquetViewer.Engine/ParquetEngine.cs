@@ -1,4 +1,5 @@
 ﻿using Parquet;
+using Parquet.Meta;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 
@@ -9,21 +10,59 @@ namespace ParquetViewer.Engine
         private readonly List<ParquetReader> _parquetFiles;
         private long? _recordCount;
 
-        public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.ThriftMetadata.Num_rows);
+        public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Metadata?.NumRows ?? 0);
 
-        public List<string> Fields => _parquetFiles.FirstOrDefault()?.Schema.Fields.Select(f => f.Name).ToList() ?? new();
+        private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new Exception("No parquet readers available");
 
-        public Parquet.Thrift.FileMetaData ThriftMetadata => _parquetFiles?.FirstOrDefault()?.ThriftMetadata ?? new();
+        public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList() ?? new();
 
-        public Dictionary<string, string> CustomMetadata => _parquetFiles?.FirstOrDefault()?.CustomMetadata ?? new();
+        public FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new Exception("No thrift metadata was found");
 
-        public ParquetSchema Schema => _parquetFiles?.FirstOrDefault()?.Schema ?? new();
+        public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata ?? new();
+
+        public ParquetSchema Schema => DefaultReader.Schema ?? new();
+
+        private ParquetSchemaElement? _parquetSchemaTree;
+        private ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
 
         public string OpenFileOrFolderPath { get; }
 
+        private ParquetSchemaElement BuildParquetSchemaTree()
+        {
+            var thriftSchema = ThriftMetadata.Schema ?? throw new Exception("No thrift metadata was found");
+            var schemaElements = thriftSchema.GetEnumerator();
+            var thriftSchemaTree = ReadSchemaTree(ref schemaElements);
+
+            foreach (var dataField in Schema.GetDataFields())
+            {
+                var field = thriftSchemaTree.GetChildByName(dataField.Path.FirstPart ?? throw new Exception($"Field has no schema path: {dataField.Name}"));
+                for (var i = 1; i < dataField.Path.Length; i++)
+                {
+                    field = field.GetChildByName(dataField.Path[i]);
+                }
+                field.DataField = dataField; //if it doesn't have a child it's a datafield (I hope)
+            }
+
+            return thriftSchemaTree;
+        }
+
+        private ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements)
+        {
+            if (!schemaElements.MoveNext())
+                throw new Exception("Invalid parquet schema");
+
+            var current = schemaElements.Current;
+            var parquetSchemaElement = new ParquetSchemaElement(current);
+            for (int i = 0; i < current.NumChildren; i++)
+            {
+                parquetSchemaElement.AddChild(ReadSchemaTree(ref schemaElements));
+            }
+            return parquetSchemaElement;
+        }
+
         private ParquetEngine(string fileOrFolderPath, List<ParquetReader> parquetFiles)
         {
-            _parquetFiles = parquetFiles ?? new List<ParquetReader>();
+            _parquetFiles = parquetFiles ?? throw new InvalidDataException("No parquet readers found");
             OpenFileOrFolderPath = fileOrFolderPath;
         }
 
@@ -34,26 +73,17 @@ namespace ParquetViewer.Engine
 
         public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath, CancellationToken cancellationToken)
         {
-            PerfWatch.Milestone(nameof(OpenFileOrFolderAsync));
-
-            try
+            if (File.Exists(fileOrFolderPath)) //Handles null
             {
-                if (File.Exists(fileOrFolderPath)) //Handles null
-                {
-                    return OpenFileAsync(fileOrFolderPath, cancellationToken);
-                }
-                else if (Directory.Exists(fileOrFolderPath)) //Handles null
-                {
-                    return OpenFolderAsync(fileOrFolderPath, cancellationToken);
-                }
-                else
-                {
-                    throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
-                }
+                return OpenFileAsync(fileOrFolderPath, cancellationToken);
             }
-            finally
+            else if (Directory.Exists(fileOrFolderPath)) //Handles null
             {
-                PerfWatch.Milestone(nameof(OpenFileOrFolderAsync));
+                return OpenFolderAsync(fileOrFolderPath, cancellationToken);
+            }
+            else
+            {
+                throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
             }
         }
 
@@ -141,9 +171,9 @@ namespace ParquetViewer.Engine
         {
             foreach (var parquetFile in _parquetFiles)
             {
-                if (offset >= parquetFile.ThriftMetadata.Num_rows)
+                if (offset >= parquetFile.Metadata?.NumRows)
                 {
-                    offset -= parquetFile.ThriftMetadata.Num_rows;
+                    offset -= parquetFile.Metadata.NumRows;
                     continue;
                 }
 

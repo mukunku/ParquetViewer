@@ -10,28 +10,30 @@ namespace ParquetViewer
     public partial class FieldsToLoadForm : Form
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
+        private const string UnsupportedFieldText = "(Unsupported)";
         private const int DynamicFieldCheckboxYIncrement = 30;
-        public static readonly List<SchemaType> UnsupportedSchemaTypes = new () { SchemaType.List, SchemaType.Map, SchemaType.Struct };
+        private const int MaxNumberOfFieldsWeCanRender = 5000;
 
         public List<string> PreSelectedFields { get; set; }
-        public IEnumerable<Field> AvailableFields { get; set; }
+        public List<Field> AvailableFields { get; set; }
         public List<string> NewSelectedFields { get; set; }
-        public List<string> PreserveSelectedFields { get; set; }
+
+        private string _selectedFieldsOnlyLabelTemplate;
 
         public FieldsToLoadForm()
         {
             InitializeComponent();
-            this.AvailableFields = new List<Field>();
-            this.PreSelectedFields = new List<string>();
-            this.NewSelectedFields = new List<string>();
+            this.AvailableFields ??= new List<Field>();
+            this.PreSelectedFields ??= new List<string>();
+            this.NewSelectedFields ??= new List<string>();
+            this._selectedFieldsOnlyLabelTemplate = this.showSelectedFieldsRadioButton.Text;
+            this.SetSelectedFieldCount();
         }
 
-        public FieldsToLoadForm(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields)
+        public FieldsToLoadForm(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields) : this()
         {
-            InitializeComponent();
-            this.AvailableFields = availableFields;
-            this.PreSelectedFields = preSelectedFields.ToList() ?? new List<string>();
-            this.NewSelectedFields = new List<string>();
+            this.AvailableFields = availableFields?.ToList() ?? new();
+            this.PreSelectedFields = preSelectedFields?.ToList() ?? new();
         }
 
         private void FieldsToLoadForm_Load(object sender, EventArgs e)
@@ -40,129 +42,145 @@ namespace ParquetViewer
             this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
         }
 
-        private void RenderFieldsCheckboxes(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields)
+        private void RenderFieldsCheckboxes(List<Field> availableFields, List<string> preSelectedFields)
         {
             this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
             this.fieldsPanel.Controls.Clear();
+            this.fieldsPanel.VerticalScroll.Value = 0; //Scroll to the top
 
             try
             {
-                if (availableFields != null)
+                if (availableFields is null)
+                    return;
+
+                if (availableFields.Count > MaxNumberOfFieldsWeCanRender)
                 {
-                    int locationX = 0;
-                    int locationY = 5;
-                    bool isFirst = true;
-                    bool isClearingSelectAllCheckbox = false;
+                    this.showSelectedFieldsRadioButton.Enabled = false;
+                    this.filterColumnsTextbox.PlaceholderText = $"Too many fields: {availableFields.Count}";
+                    return;
+                }
 
-                    var checkboxControls = new List<CheckBox>();
-                    foreach (Field field in availableFields)
+                int locationX = 0;
+                int locationY = 5;
+                bool isFirst = true;
+                bool isClearingSelectAllCheckbox = false;
+
+                var checkboxControls = new List<CheckBox>();
+                foreach (Field field in availableFields)
+                {
+                    if (isFirst) //Add toggle all checkbox and some other setting changes
                     {
-                        if (isFirst) //Add toggle all checkbox and some other setting changes
+                        isFirst = false;
+
+                        if (preSelectedFields?.Count > 0)
                         {
-                            isFirst = false;
-
-                            if (preSelectedFields != null)
-                            {
-                                foreach (string preSelectedField in preSelectedFields)
-                                {
-                                    this.showSelectedFieldsRadioButton.Checked = true;
-                                    break;
-                                }
-                            }
-
-                            var selectAllCheckbox = new CheckBox()
-                            {
-                                Name = SelectAllCheckboxName,
-                                Text = "Select All",
-                                Tag = SelectAllCheckboxName,
-                                Checked = false,
-                                Location = new Point(locationX, locationY),
-                                AutoSize = true
-                            };
-
-                            selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
-                            {
-                                var selectAllCheckBox = (CheckBox)checkboxSender;
-                                var showFilterControls = !(selectAllCheckBox.Enabled && selectAllCheckBox.Checked && string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text));
-                                this.filterColumnsTextbox.Enabled = showFilterControls;
-                                this.clearfilterColumnsButton.Enabled = showFilterControls;
-
-                                if (!isClearingSelectAllCheckbox)
-                                {
-                                    foreach (Control control in this.fieldsPanel.Controls)
-                                    {
-                                        if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
-                                        {
-                                            if (checkbox.Enabled)
-                                            {
-                                                checkbox.Checked = selectAllCheckBox.Checked;
-                                            }
-                                        }
-                                    }
-                                }
-                            };
-
-                            this.fieldsPanel.Controls.Add(selectAllCheckbox);
-                            locationY += DynamicFieldCheckboxYIncrement;
+                            this.showSelectedFieldsRadioButton.Checked = true;
+                            this.SetSelectedFieldCount();
                         }
 
-                        bool isUnsupportedFieldType = UnsupportedSchemaTypes.Contains(field.SchemaType);
-                        var fieldCheckbox = new CheckBox()
+                        var totalFieldCount = availableFields.Count;
+                        var supportedFieldCount = availableFields.Where(IsSupportedFieldType).Count();
+                        var unsupportedFieldCount = totalFieldCount - supportedFieldCount;
+                        var unsupportedFieldsText = unsupportedFieldCount > 0 ? $" - Unsupported: {unsupportedFieldCount}" : string.Empty;
+
+                        string selectAllCheckBoxText = $"Select All (Count: {supportedFieldCount}{unsupportedFieldsText})";
+                        string deselectAllCheckBoxText = $"Deselect All (Count: {supportedFieldCount}{unsupportedFieldsText})";
+                        var selectAllCheckbox = new CheckBox()
                         {
-                            Name = string.Concat("checkbox_", field.Name),
-                            Text = string.Concat(field.Name, isUnsupportedFieldType ? " (Unsupported)" : string.Empty),
-                            Tag = field.Name,
-                            Checked = preSelectedFields.Contains(field.Name),
+                            Name = SelectAllCheckboxName,
+                            Text = selectAllCheckBoxText,
+                            Tag = SelectAllCheckboxName,
+                            Checked = false,
                             Location = new Point(locationX, locationY),
-                            AutoSize = true,
-                            Enabled = !isUnsupportedFieldType
+                            AutoSize = true
                         };
-                        fieldCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+
+                        selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
                         {
-                            var fieldCheckBox = (CheckBox)checkboxSender;
+                            var selectAllCheckBox = (CheckBox)checkboxSender;
+                            var isChecked = selectAllCheckBox.Enabled && selectAllCheckBox.Checked;
+                            var showFilterControls = !(isChecked && string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text));
+                            this.filterColumnsTextbox.Enabled = showFilterControls;
+                            this.clearfilterColumnsButton.Enabled = showFilterControls;
+                            selectAllCheckbox.Text = isChecked ? deselectAllCheckBoxText : selectAllCheckBoxText;
 
-                            if (fieldCheckBox.Checked)
-                            {
-                                this.PreSelectedFields.Add((string)fieldCheckBox.Tag);
-                            }
-                            else
-                            {
-                                this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
-                            }
-
-
-                            if (!fieldCheckBox.Checked)
+                            if (!isClearingSelectAllCheckbox)
                             {
                                 foreach (Control control in this.fieldsPanel.Controls)
                                 {
-                                    if (control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                    if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
                                     {
-                                        if (checkbox.Enabled && checkbox.Checked)
+                                        if (checkbox.Enabled)
                                         {
-                                            isClearingSelectAllCheckbox = true;
-                                            checkbox.Checked = false;
-                                            this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
-                                            isClearingSelectAllCheckbox = false;
-                                            break;
+                                            checkbox.Checked = selectAllCheckBox.Checked;
                                         }
                                     }
                                 }
                             }
                         };
-                        checkboxControls.Add(fieldCheckbox);
 
+                        this.fieldsPanel.Controls.Add(selectAllCheckbox);
                         locationY += DynamicFieldCheckboxYIncrement;
                     }
 
-                    //Disable fields with dupe names because we don't support case sensitive fields right now
-                    var duplicateFields = checkboxControls?.GroupBy(f => f.Text.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
-                    foreach(var duplicateField in duplicateFields)
+                    bool isUnsupportedFieldType = !IsSupportedFieldType(field);
+                    var fieldCheckbox = new CheckBox()
                     {
-                        duplicateField.Enabled = false;
-                    }
+                        Name = string.Concat("checkbox_", field.Name),
+                        Text = string.Concat(field.Name, isUnsupportedFieldType ? $" {UnsupportedFieldText}" : string.Empty),
+                        Tag = field.Name,
+                        Checked = preSelectedFields.Contains(field.Name),
+                        Location = new Point(locationX, locationY),
+                        AutoSize = true,
+                        Enabled = !isUnsupportedFieldType
+                    };
+                    fieldCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+                    {
+                        var fieldCheckBox = (CheckBox)checkboxSender;
 
-                    this.fieldsPanel.Controls.AddRange(checkboxControls.ToArray<Control>());
+                        if (fieldCheckBox.Checked)
+                        {
+                            this.PreSelectedFields.Add((string)fieldCheckBox.Tag);
+                            SetSelectedFieldCount();
+                        }
+                        else
+                        {
+                            this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                            SetSelectedFieldCount();
+                        }
+
+                        if (!fieldCheckBox.Checked)
+                        {
+                            foreach (Control control in this.fieldsPanel.Controls)
+                            {
+                                if (control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                {
+                                    if (checkbox.Enabled && checkbox.Checked)
+                                    {
+                                        isClearingSelectAllCheckbox = true;
+                                        checkbox.Checked = false;
+                                        this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                                        isClearingSelectAllCheckbox = false;
+                                        SetSelectedFieldCount();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    checkboxControls.Add(fieldCheckbox);
+
+                    locationY += DynamicFieldCheckboxYIncrement;
                 }
+
+                //Disable fields with dupe names because we don't support case sensitive fields right now
+                var duplicateFields = checkboxControls?.GroupBy(f => f.Text.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+                foreach (var duplicateField in duplicateFields)
+                {
+                    duplicateField.Enabled = false;
+                }
+
+                this.fieldsPanel.Controls.AddRange(checkboxControls.ToArray<Control>());
             }
             catch (Exception ex)
             {
@@ -173,6 +191,16 @@ namespace ParquetViewer
                 this.fieldsPanel.ResumeLayout();
             }
         }
+
+        public static bool IsSupportedFieldType(Field field) =>
+            field.SchemaType switch
+            {
+                SchemaType.Data => true,
+                SchemaType.List when field is ListField lf && lf.Item.SchemaType == SchemaType.Data => true, //we don't support nested lists
+                SchemaType.Map when field is MapField mp && mp.Key.SchemaType == SchemaType.Data
+                    && mp.Value.SchemaType == SchemaType.Data => true, //we don't support nested maps
+                _ => false
+            };
 
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
@@ -214,6 +242,9 @@ namespace ParquetViewer
         {
             try
             {
+                //Clear filter text so all checked fields are loaded
+                clearfilterColumnsButton_Click(null, null);
+
                 if (this.allFieldsRememberRadioButton.Checked)
                     AppSettings.AlwaysSelectAllFields = true;
                 else
@@ -222,11 +253,7 @@ namespace ParquetViewer
                 this.NewSelectedFields.Clear();
                 if (this.allFieldsRadioButton.Checked || this.allFieldsRememberRadioButton.Checked || ((CheckBox)(this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true)[0])).Checked)
                 {
-                    foreach (Control control in this.fieldsPanel.Controls)
-                    {
-                        if (!control.Name.Equals(SelectAllCheckboxName) && control.Enabled)
-                            this.NewSelectedFields.Add((string)control.Tag);
-                    }
+                    this.NewSelectedFields.AddRange(this.AvailableFields.Where(IsSupportedFieldType).Select(f => f.Name));
                 }
                 else
                 {
@@ -276,7 +303,7 @@ namespace ParquetViewer
                     filteredFields = this.AvailableFields.Where(w => filteredColumnsNames.Contains(w.Name));
                 }
 
-                this.RenderFieldsCheckboxes(filteredFields, this.PreSelectedFields);
+                this.RenderFieldsCheckboxes(filteredFields.ToList(), this.PreSelectedFields);
             }
             else
             {
@@ -289,12 +316,20 @@ namespace ParquetViewer
             this.filterColumnsTextbox.Text = string.Empty;
         }
 
-        private void FieldsToLoadForm_KeyUp(object sender, KeyEventArgs e)
+        private void FieldsToLoadForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
             {
+                //We need to do this on key down because if there's a message box on screen and the user hits 'esc'
+                //the message box is closed on the key down. So if we listen on the key up we will also close the main window.
                 this.Close();
             }
+        }
+
+        private void SetSelectedFieldCount()
+        {
+            this.showSelectedFieldsRadioButton.Text = string.Format(_selectedFieldsOnlyLabelTemplate, this.PreSelectedFields?.Count
+                ?? this.AvailableFields.Count);
         }
     }
 }

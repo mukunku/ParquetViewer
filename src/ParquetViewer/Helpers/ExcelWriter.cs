@@ -9,12 +9,10 @@ namespace ParquetViewer.Helpers
     /// </summary>
     public class ExcelWriter
     {
-        private Stream stream;
         private BinaryWriter writer;
 
         private ushort[] clBegin = { 0x0809, 8, 0, 0x10, 0, 0 };
         private ushort[] clEnd = { 0x0A, 00 };
-
 
         private void WriteUshortArray(ushort[] value)
         {
@@ -28,7 +26,6 @@ namespace ParquetViewer.Helpers
         /// <param name="stream">The stream.</param>
         public ExcelWriter(Stream stream)
         {
-            this.stream = stream;
             writer = new BinaryWriter(stream);
         }
 

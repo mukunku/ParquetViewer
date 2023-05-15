@@ -42,7 +42,7 @@ namespace ParquetViewer
             searchFilterLabel = new System.Windows.Forms.LinkLabel();
             searchFilterTextBox = new System.Windows.Forms.TextBox();
             clearFilterButton = new System.Windows.Forms.Button();
-            mainGridView = new System.Windows.Forms.DataGridView();
+            mainGridView = new ParquetGridView();
             openParquetFileDialog = new System.Windows.Forms.OpenFileDialog();
             mainMenuStrip = new System.Windows.Forms.MenuStrip();
             fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -237,37 +237,15 @@ namespace ParquetViewer
             // 
             // mainGridView
             // 
-            mainGridView.AllowUserToAddRows = false;
-            mainGridView.AllowUserToDeleteRows = false;
-            mainGridView.AllowUserToOrderColumns = true;
             mainGridView.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            mainGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 10);
-            mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Location = new System.Drawing.Point(4, 38);
             mainGridView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             mainGridView.Name = "mainGridView";
-            mainGridView.ReadOnly = true;
-            mainGridView.RowHeadersWidth = 24;
             mainTableLayoutPanel.SetRowSpan(mainGridView, 2);
-            mainGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 6;
-            mainGridView.CellMouseEnter += mainGridView_CellMouseEnter;
-            mainGridView.CellMouseLeave += mainGridView_CellMouseLeave;
-            mainGridView.CellPainting += MainGridView_CellPainting;
-            mainGridView.ColumnAdded += MainGridView_ColumnAdded;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
-            mainGridView.MouseClick += mainGridView_MouseClick;
             // 
             // openParquetFileDialog
             // 
@@ -539,7 +517,7 @@ namespace ParquetViewer
             // springStatusBarLabel
             // 
             springStatusBarLabel.Name = "springStatusBarLabel";
-            springStatusBarLabel.Size = new System.Drawing.Size(661, 17);
+            springStatusBarLabel.Size = new System.Drawing.Size(692, 17);
             springStatusBarLabel.Spring = true;
             // 
             // showingStatusBarLabel
@@ -629,7 +607,7 @@ namespace ParquetViewer
         private DelayedOnChangedTextBox recordCountTextBox;
         private System.Windows.Forms.Label showRecordsFromLabel;
         private DelayedOnChangedTextBox offsetTextBox;
-        private System.Windows.Forms.DataGridView mainGridView;
+        private ParquetGridView mainGridView;
         private System.Windows.Forms.MenuStrip mainMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;

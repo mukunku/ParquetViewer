@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
+using ParquetViewer.Helpers;
 using System;
-using System.Windows.Forms;
 
 namespace ParquetViewer
 {
@@ -152,7 +152,7 @@ namespace ParquetViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        registryKey.SetValue(DefaultRowCountKey, value.ToString());
+                        registryKey.SetValue(DefaultRowCountKey, value?.ToString() ?? string.Empty);
                     }
                 }
                 catch { }
@@ -223,7 +223,7 @@ namespace ParquetViewer
             }
         }
 
-        public static DataGridViewAutoSizeColumnsMode AutoSizeColumnsMode
+        public static AutoSizeColumnsMode AutoSizeColumnsMode
         {
             get
             {
@@ -232,15 +232,15 @@ namespace ParquetViewer
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         int? value = registryKey.GetValue(AutoSizeColumnsModeKey) as int?;
-                        if (value != null && Enum.IsDefined(typeof(DataGridViewAutoSizeColumnsMode), value))
-                            return (DataGridViewAutoSizeColumnsMode)value;
+                        if (value != null && Enum.IsDefined(typeof(AutoSizeColumnsMode), value))
+                            return (AutoSizeColumnsMode)value;
                         else
-                            return DataGridViewAutoSizeColumnsMode.Fill;
+                            return AutoSizeColumnsMode.None;
                     }
                 }
                 catch
                 {
-                    return DataGridViewAutoSizeColumnsMode.Fill;
+                    return AutoSizeColumnsMode.None;
                 }
             }
             set
@@ -256,7 +256,7 @@ namespace ParquetViewer
             }
         }
 
-        public static string WarningBypassedOnVersion
+        public static string? WarningBypassedOnVersion
         {
             get
             {
@@ -278,7 +278,7 @@ namespace ParquetViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        registryKey.SetValue(WarningBypassedOnVersionKey, value);
+                        registryKey.SetValue(WarningBypassedOnVersionKey, value ?? string.Empty);
                     }
                 }
                 catch { }

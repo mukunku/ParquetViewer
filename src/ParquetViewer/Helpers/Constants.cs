@@ -1,4 +1,4 @@
-﻿namespace ParquetViewer
+﻿namespace ParquetViewer.Helpers
 {
     public static class Constants
     {
@@ -26,5 +26,13 @@
     {
         CSV = 0,
         XLS
+    }
+
+    public enum AutoSizeColumnsMode
+    {
+        //Needs to match System.Windows.Forms.DataGridViewAutoSizeColumnsMode values
+        None = 1,
+        ColumnHeader = 2,
+        AllCells = 6
     }
 }

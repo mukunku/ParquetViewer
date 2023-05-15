@@ -1,3 +1,4 @@
+using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
@@ -118,7 +119,6 @@ namespace ParquetViewer
 
         private bool IsAnyFileOpen
             => !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath)
-                && this.SelectedFields is not null
                 && this._openParquetEngine is not null;
 
         private DataTable mainDataSource;
@@ -129,7 +129,7 @@ namespace ParquetViewer
             {
                 //Check for performance issues
                 int? cellsToRender = value?.Columns.Count * value?.Rows.Count;
-                if (cellsToRender > PerformanceWarningCellCount && AppSettings.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.AllCells)
+                if (cellsToRender > PerformanceWarningCellCount && AppSettings.AutoSizeColumnsMode == AutoSizeColumnsMode.AllCells)
                 {
                     //Don't spam the user so ask only once per app update
                     if (AppSettings.WarningBypassedOnVersion != AboutBox.AssemblyVersion)
@@ -148,24 +148,6 @@ namespace ParquetViewer
 
                 this.mainDataSource = value;
                 this.mainGridView.DataSource = this.mainDataSource;
-
-                try
-                {
-                    //Format date fields
-                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                    foreach (DataGridViewColumn column in this.mainGridView.Columns)
-                    {
-                        if (column.ValueType == typeof(DateTime))
-                            column.DefaultCellStyle.Format = dateFormat;
-                    }
-
-                    //Adjust column sizes if required
-                    if (AppSettings.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.AllCells)
-                        this.mainGridView.FastAutoSizeColumns();
-                    else if (AppSettings.AutoSizeColumnsMode != DataGridViewAutoSizeColumnsMode.None)
-                        this.mainGridView.AutoResizeColumns(AppSettings.AutoSizeColumnsMode);
-                }
-                catch { }
             }
         }
 
@@ -183,14 +165,6 @@ namespace ParquetViewer
 
             //Have to set this here because it gets deleted from the .Designer.cs file for some reason
             this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
-
-            //Set DGV to be double buffered for smoother loading and scrolling
-            if (!SystemInformation.TerminalServerSession)
-            {
-                Type dgvType = this.mainGridView.GetType();
-                System.Reflection.PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                pi.SetValue(this.mainGridView, true, null);
-            }
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -291,7 +265,7 @@ namespace ParquetViewer
 
                     try
                     {
-                        this.SelectedFields = fields.Where(f => !FieldsToLoadForm.UnsupportedSchemaTypes.Contains(f.SchemaType)).Select(f => f.Name).ToList();
+                        this.SelectedFields = fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f.Name).ToList();
                     }
                     finally
                     {
@@ -306,12 +280,9 @@ namespace ParquetViewer
                     {
                         loadingIcon?.Dispose();
                         var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
-                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK)
+                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
                         {
-                            if (fieldSelectionForm.NewSelectedFields != null && fieldSelectionForm.NewSelectedFields.Count > 0)
-                                this.SelectedFields = fieldSelectionForm.NewSelectedFields;
-                            else
-                                this.SelectedFields = fields.Select(f => f.Name).ToList(); //By default, show all fields
+                            this.SelectedFields = fieldSelectionForm.NewSelectedFields;
                         }
                     }
                     finally
@@ -429,7 +400,7 @@ namespace ParquetViewer
             this.currentMaxRowCount = DefaultRowCount;
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.currentOffset = DefaultOffset;
-
+            this.mainGridView.ClearQuickPeekForms();
             return this.OpenFieldSelectionDialog(false);
         }
 
@@ -439,6 +410,15 @@ namespace ParquetViewer
             {
                 string queryText = this.searchFilterTextBox.Text ?? string.Empty;
                 queryText = Regex.Replace(queryText, QueryUselessPartRegex, string.Empty).Trim();
+
+                //Treat list and map types as strings by casting them automatically
+                foreach(var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue))
+                    .Select(c => c.Name))
+                {
+                    //This isn't perfect but it should handle most cases
+                    queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)");
+                }
 
                 try
                 {

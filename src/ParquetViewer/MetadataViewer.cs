@@ -1,8 +1,8 @@
-﻿using System;
+﻿using ParquetViewer.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using ParquetViewer.Helpers;
 
 namespace ParquetViewer
 {
@@ -21,6 +21,7 @@ namespace ParquetViewer
         public MetadataViewer()
         {
             InitializeComponent();
+            this.DoubleBuffered = true;
         }
 
         private void MetadataViewer_Load(object sender, EventArgs e)
@@ -37,8 +38,9 @@ namespace ParquetViewer
                 Dock = DockStyle.Fill,
                 BackColor = Color.LightGray,
                 Text = text,
-                ScrollBars = ScrollBars.Vertical,
-                ReadOnly = true
+                ScrollBars = ScrollBars.Both,
+                ReadOnly = true,
+                WordWrap = false //gives significant performance boost
             });
 
             this.tabControl.TabPages.Add(tab);
@@ -54,7 +56,8 @@ namespace ParquetViewer
             var metadataResult = new List<(string TabName, string Text)>();
             if (parquetEngine.ThriftMetadata != null)
             {
-                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine.ThriftMetadata, parquetEngine.RecordCount);
+                
+                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine.ThriftMetadata, parquetEngine.RecordCount, parquetEngine.Fields.Count);
                 metadataResult.Add((THRIFT_METADATA, json));
             }
             else
@@ -67,11 +70,16 @@ namespace ParquetViewer
                     string value = _customMetadata.Value;
                     if (PANDAS_SCHEMA.Equals(_customMetadata.Key))
                     {
-                        value = ParquetMetadataAnalyzers.PandasSchemaToJSON(value);
+                        //Pandas is already json; so just make it pretty.
+                        value = ParquetMetadataAnalyzers.TryFormatJSON(value);
                     }
                     else if (APACHE_ARROW_SCHEMA.Equals(_customMetadata.Key))
                     {
                         value = ParquetMetadataAnalyzers.ApacheArrowToJSON(value);
+                    }
+                    else
+                    {
+                        value = ParquetMetadataAnalyzers.TryFormatJSON(value);
                     }
 
                     metadataResult.Add((_customMetadata.Key, value));
@@ -90,6 +98,7 @@ namespace ParquetViewer
             }
             else
             {
+                this.tabControl.SuspendLayout();
                 this.tabControl.TabPages.Clear();
                 if (e.Result is List<(string TabName, string Text)> tabs)
                 {
@@ -98,6 +107,7 @@ namespace ParquetViewer
                         this.AddTab(tab.TabName, tab.Text);
                     }
                 }
+                this.tabControl.ResumeLayout();
             }
         }
 
