@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="RichardSzalay.MockHttp" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -33,6 +34,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />
+    <ProjectReference Include="..\ParquetViewer\ParquetViewer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,6 +63,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Data\MAP_TYPE_TEST2.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\NULLABLE_GUID_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Data\PARTITIONED_PARQUET_FILE_TEST1\bldgtype=B\bd8c129da60e412db4b21800b9e0b983.parquet">

@@ -1,5 +1,7 @@
+using ParquetViewer.Analytics;
 using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Concurrent;
@@ -8,7 +10,6 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -18,7 +19,6 @@ namespace ParquetViewer
     {
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
-        private const int PerformanceWarningCellCount = int.MaxValue; //Disabling this for now because it might not be needed anymore now that we have fast auto column sizing
         private const int MultiThreadedParquetEngineColumnCountThreshold = 1000;
         private readonly string DefaultFormTitle;
 
@@ -127,25 +127,6 @@ namespace ParquetViewer
             get => this.mainDataSource;
             set
             {
-                //Check for performance issues
-                int? cellsToRender = value?.Columns.Count * value?.Rows.Count;
-                if (cellsToRender > PerformanceWarningCellCount && AppSettings.AutoSizeColumnsMode == AutoSizeColumnsMode.AllCells)
-                {
-                    //Don't spam the user so ask only once per app update
-                    if (AppSettings.WarningBypassedOnVersion != AboutBox.AssemblyVersion)
-                    {
-                        var choice = MessageBox.Show(this, $"Looks like you're loading a lot of data with column sizing set to 'Fit Headers & Content'. This might cause significant load times. " +
-                            Environment.NewLine + Environment.NewLine + $"If you experience performance issues try changing the default column sizing: Edit -> Column Sizing" +
-                            Environment.NewLine + Environment.NewLine + "Continue loading file anyway?", "Performance Warning",
-                            MessageBoxButtons.OKCancel);
-
-                        if (choice == DialogResult.Cancel)
-                            return;
-                        else
-                            AppSettings.WarningBypassedOnVersion = AboutBox.AssemblyVersion;
-                    }
-                }
-
                 this.mainDataSource = value;
                 this.mainGridView.DataSource = this.mainDataSource;
             }
@@ -175,35 +156,32 @@ namespace ParquetViewer
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            try
+            //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
+            if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
             {
-                //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
-                if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
-                {
-                    this.OpenNewFileOrFolder(this.fileToLoadOnLaunch);
-                }
-
-                //Setup date format checkboxes
-                this.RefreshDateFormatMenuItemSelection();
-
-                foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
-                {
-                    if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
-                    {
-                        toolStripItem.Checked = true;
-                        break;
-                    }
-                }
-
-                if (AppSettings.RememberLastRowCount)
-                    this.rememberRecordCountToolStripMenuItem.Checked = true;
-                else
-                    this.rememberRecordCountToolStripMenuItem.Checked = false;
+                this.OpenNewFileOrFolder(this.fileToLoadOnLaunch);
             }
-            catch (Exception ex)
+
+            //Setup date format checkboxes
+            this.RefreshDateFormatMenuItemSelection();
+
+            foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
             {
-                ShowError(ex);
+                if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
+                {
+                    toolStripItem.Checked = true;
+                    break;
+                }
             }
+
+            if (AppSettings.RememberLastRowCount)
+                this.rememberRecordCountToolStripMenuItem.Checked = true;
+            else
+                this.rememberRecordCountToolStripMenuItem.Checked = false;
+
+            //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
+            Program.GetUserConsentToGatherAnalytics();
+            this.shareAnonymousUsageDataToolStripMenuItem.Checked = AppSettings.AnalyticsDataGatheringConsent;
         }
 
         private async Task OpenFieldSelectionDialog(bool forceOpenDialog)
@@ -355,10 +333,13 @@ namespace ParquetViewer
                     }, loadingIcon.CancellationToken);
 
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
-                    this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[ParquetViewer.Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
+                    this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
                     this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                     this.MainDataSource = finalResult;
+
+                    FileOpenEvent.FireAndForget(Directory.Exists(this.OpenFileOrFolderPath), this._openParquetEngine.NumberOfPartitions, this._openParquetEngine.RecordCount, this._openParquetEngine.ThriftMetadata.RowGroups.Count(),
+                        this._openParquetEngine.Fields.Count(), finalResult.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), this.CurrentOffset, this.CurrentMaxRowCount, finalResult.Columns.Count, stopwatch.ElapsedMilliseconds);
                 }
             }
             catch (AllFilesSkippedException ex)
@@ -380,7 +361,7 @@ namespace ParquetViewer
             catch (Exception ex)
             {
                 if (ex is not OperationCanceledException)
-                    ShowError(ex);
+                    throw;
             }
             finally
             {
@@ -409,10 +390,10 @@ namespace ParquetViewer
             if (this.IsAnyFileOpen)
             {
                 string queryText = this.searchFilterTextBox.Text ?? string.Empty;
-                queryText = Regex.Replace(queryText, QueryUselessPartRegex, string.Empty).Trim();
+                queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
 
                 //Treat list and map types as strings by casting them automatically
-                foreach(var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+                foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
                     .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue))
                     .Select(c => c.Name))
                 {
@@ -420,14 +401,27 @@ namespace ParquetViewer
                     queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)");
                 }
 
+                var queryEvent = new ExecuteQueryEvent
+                {
+                    RecordCount = this.MainDataSource.Rows.Count,
+                    ColumnCount = this.MainDataSource.Columns.Count
+                };
+                var stopwatch = Stopwatch.StartNew();
+
                 try
                 {
                     this.MainDataSource.DefaultView.RowFilter = queryText;
+                    queryEvent.IsValid = true;
                 }
                 catch (Exception ex)
                 {
                     this.MainDataSource.DefaultView.RowFilter = null;
-                    ShowError(ex, "The query doesn't seem to be valid. Please try again.", false);
+                    throw new InvalidQueryException(ex);
+                }
+                finally
+                {
+                    queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                    var _ = queryEvent.Record(); //Fire and forget
                 }
             }
         }

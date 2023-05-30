@@ -1,8 +1,10 @@
-﻿using ParquetViewer.Helpers;
+﻿using ParquetViewer.Analytics;
+using ParquetViewer.Helpers;
 using System;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -13,6 +15,7 @@ namespace ParquetViewer
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileNew);
             this.OpenFileOrFolderPath = null;
         }
 
@@ -22,13 +25,14 @@ namespace ParquetViewer
             {
                 if (this.openParquetFileDialog.ShowDialog(this) == DialogResult.OK)
                 {
+                    MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileOpen);
                     await this.OpenNewFileOrFolder(this.openParquetFileDialog.FileName);
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 this.OpenFileOrFolderPath = null;
-                ShowError(ex);
+                throw;
             }
         }
 
@@ -38,164 +42,126 @@ namespace ParquetViewer
             {
                 if (this.openFolderDialog.ShowDialog(this) == DialogResult.OK)
                 {
+                    MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FolderOpen);
                     await this.OpenNewFileOrFolder(this.openFolderDialog.SelectedPath);
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 this.OpenFileOrFolderPath = null;
-                ShowError(ex);
+                throw;
             }
         }
 
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                this.ExportResults(default);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-        }
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e) => this.ExportResults(default);
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            await new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
             this.Close();
         }
 
         private async void changeFieldsMenuStripButton_Click(object sender, EventArgs e)
         {
-            try
-            {
-                await this.OpenFieldSelectionDialog(true);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
+            MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.ChangeFields);
+            await this.OpenFieldSelectionDialog(true);
         }
 
         private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
+            var openFileOrFolderPath = this.OpenFileOrFolderPath;
+            if (openFileOrFolderPath?.EndsWith("/") == true)
             {
-                var openFileOrFolderPath = this.OpenFileOrFolderPath;
-                if (openFileOrFolderPath?.EndsWith("/") == true)
-                {
-                    //trim trailing slash '/'
-                    openFileOrFolderPath = openFileOrFolderPath[..^1];
-                }
-
-                string tableName = Path.GetFileNameWithoutExtension(openFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
-                if (this.mainDataSource?.Columns.Count > 0)
-                {
-                    var dataset = new DataSet();
-
-                    this.mainDataSource.TableName = tableName;
-                    dataset.Tables.Add(this.mainDataSource);
-
-                    var scriptAdapter = new CustomScriptBasedSchemaAdapter();
-                    string sql = scriptAdapter.GetSchemaScript(dataset, false);
-
-                    Clipboard.SetText(sql);
-                    MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                    MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //trim trailing slash '/'
+                openFileOrFolderPath = openFileOrFolderPath[..^1];
             }
-            catch (Exception ex)
+
+            string tableName = Path.GetFileNameWithoutExtension(openFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
+            if (this.mainDataSource?.Columns.Count > 0)
             {
-                ShowError(ex);
+                var dataset = new DataSet();
+
+                this.mainDataSource.TableName = tableName;
+                dataset.Tables.Add(this.mainDataSource);
+
+                var scriptAdapter = new CustomScriptBasedSchemaAdapter();
+                string sql = scriptAdapter.GetSchemaScript(dataset, false);
+
+                Clipboard.SetText(sql);
+                MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.SQLCreateTable);
+                MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+            else
+                MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
+            if (IsAnyFileOpen)
             {
-                if (IsAnyFileOpen)
-                {
-                    using var metadataViewer = new MetadataViewer(this._openParquetEngine);
-                    metadataViewer.ShowDialog(this);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
+                MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.MetadataViewer);
+                using var metadataViewer = new MetadataViewer(this._openParquetEngine);
+                metadataViewer.ShowDialog(this);
             }
         }
 
         private void changeColumnSizingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
+            if (sender is ToolStripMenuItem tsi && tsi.Tag != null
+                && Enum.TryParse(tsi.Tag.ToString(), out AutoSizeColumnsMode columnSizingMode)
+                && AppSettings.AutoSizeColumnsMode != columnSizingMode)
             {
-                if (sender is ToolStripMenuItem tsi && tsi.Tag != null
-                    && Enum.TryParse(tsi.Tag.ToString(), out AutoSizeColumnsMode columnSizingMode)
-                    && AppSettings.AutoSizeColumnsMode != columnSizingMode)
+                AppSettings.AutoSizeColumnsMode = columnSizingMode;
+                foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent().Items)
                 {
-                    AppSettings.AutoSizeColumnsMode = columnSizingMode;
-                    foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent().Items)
-                    {
-                        toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
-                    }
-                    this.mainGridView.AutoSizeColumns();
-
-                    //Also clear out each column's Tag so auto sizing can pick it up again (see: FastAutoSizeColumns())
-                    foreach (DataGridViewColumn column in this.mainGridView.Columns)
-                    {
-                        column.Tag = null; //TODO: This logic is terrible. Need to find a cleaner solution
-                    }
+                    toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
                 }
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
+                this.mainGridView.AutoSizeColumns();
+
+                //Also clear out each column's Tag so auto sizing can pick it up again (see: FastAutoSizeColumns())
+                foreach (DataGridViewColumn column in this.mainGridView.Columns)
+                {
+                    column.Tag = null; //TODO: This logic is terrible. Need to find a cleaner solution
+                }
             }
         }
 
         private void rememberRecordCountToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
-            {
-                this.rememberRecordCountToolStripMenuItem.Checked = !this.rememberRecordCountToolStripMenuItem.Checked;
-                AppSettings.RememberLastRowCount = this.rememberRecordCountToolStripMenuItem.Checked;
-                AppSettings.LastRowCount = this.CurrentMaxRowCount;
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
+            this.rememberRecordCountToolStripMenuItem.Checked = !this.rememberRecordCountToolStripMenuItem.Checked;
+            AppSettings.RememberLastRowCount = this.rememberRecordCountToolStripMenuItem.Checked;
+            AppSettings.LastRowCount = this.CurrentMaxRowCount;
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.AboutBox);
             (new AboutBox()).ShowDialog(this);
         }
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.UserGuide);
             Process.Start(new ProcessStartInfo(Constants.WikiURL) { UseShellExecute = true });
         }
 
         private void DateFormatMenuItem_Click(object sender, EventArgs e)
         {
-            try
+            if (sender is ToolStripMenuItem item)
             {
-                if (sender is ToolStripMenuItem item)
-                {
-                    var selectedDateFormat = (DateFormat)(int.Parse((string)item.Tag));
-                    AppSettings.DateTimeDisplayFormat = selectedDateFormat;
-                    this.RefreshDateFormatMenuItemSelection();
-                    this.mainGridView.UpdateDateFormats();
-                    this.mainGridView.Refresh();
-                }
+                var selectedDateFormat = (DateFormat)(int.Parse((string)item.Tag));
+                AppSettings.DateTimeDisplayFormat = selectedDateFormat;
+                this.RefreshDateFormatMenuItemSelection();
+                this.mainGridView.UpdateDateFormats();
+                this.mainGridView.Refresh();
             }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
+        }
+
+        private void shareAnonymousUsageDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.shareAnonymousUsageDataToolStripMenuItem.Checked = !this.shareAnonymousUsageDataToolStripMenuItem.Checked;
+            AppSettings.AnalyticsDataGatheringConsent = this.shareAnonymousUsageDataToolStripMenuItem.Checked;
+            AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
         }
     }
 }

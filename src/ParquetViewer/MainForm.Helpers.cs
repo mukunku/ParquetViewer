@@ -1,7 +1,9 @@
-﻿using ParquetViewer.Engine.Exceptions;
+﻿using ParquetViewer.Analytics;
+using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -31,11 +33,6 @@ namespace ParquetViewer
             return loadingIcon;
         }
 
-        private static void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
-        {
-            MessageBox.Show(string.Concat(customMessage ?? "Something went wrong (CTRL+C to copy):", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-
         private async void ExportResults(FileType defaultFileType)
         {
             string filePath = null;
@@ -52,6 +49,7 @@ namespace ParquetViewer
                         filePath = this.exportFileDialog.FileName;
                         var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
 
+                        var stopWatch = Stopwatch.StartNew();
                         loadingIcon = this.ShowLoadingIcon("Exporting Data");
                         if (selectedFileType == FileType.CSV)
                         {
@@ -64,7 +62,7 @@ namespace ParquetViewer
                             {
                                 MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.\r\n\r\nPlease try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
                                     "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                
+
                                 return;
                             }
 
@@ -82,6 +80,7 @@ namespace ParquetViewer
                         }
                         else
                         {
+                            FileExportEvent.FireAndForget(selectedFileType, new FileInfo(filePath).Length, this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
                             MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
@@ -237,7 +236,7 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
+            throw new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception);
         }
 
         private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
@@ -248,13 +247,13 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            ShowError(new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception));
+            throw new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception);
         }
 
         private static void HandleFileReadException(FileReadException ex)
         {
-            ShowError(new Exception($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
-                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}", ex));
+            throw new Exception($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
+                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}", ex);
         }
 
         private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
@@ -275,7 +274,7 @@ namespace ParquetViewer
                     sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
                 }
             }
-            ShowError(new Exception(sb.ToString(), ex));
+            throw new Exception(sb.ToString(), ex);
         }
     }
 }

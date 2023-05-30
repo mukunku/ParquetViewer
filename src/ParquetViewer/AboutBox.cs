@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    partial class AboutBox : Form
+    public partial class AboutBox : Form
     {
         public AboutBox()
         {

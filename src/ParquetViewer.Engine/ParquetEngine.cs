@@ -12,6 +12,8 @@ namespace ParquetViewer.Engine
 
         public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Metadata?.NumRows ?? 0);
 
+        public int NumberOfPartitions => _parquetFiles.Count;
+
         private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new Exception("No parquet readers available");
 
         public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList() ?? new();
@@ -23,7 +25,7 @@ namespace ParquetViewer.Engine
         public ParquetSchema Schema => DefaultReader.Schema ?? new();
 
         private ParquetSchemaElement? _parquetSchemaTree;
-        private ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
+        public ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
 
         public string OpenFileOrFolderPath { get; }
 
@@ -46,7 +48,7 @@ namespace ParquetViewer.Engine
             return thriftSchemaTree;
         }
 
-        private ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements)
+        private static ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements)
         {
             if (!schemaElements.MoveNext())
                 throw new Exception("Invalid parquet schema");

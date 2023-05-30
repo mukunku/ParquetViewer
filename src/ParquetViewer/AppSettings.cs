@@ -2,6 +2,8 @@
 using ParquetViewer.Helpers;
 using System;
 
+#nullable enable
+
 namespace ParquetViewer
 {
     public static class AppSettings
@@ -14,7 +16,9 @@ namespace ParquetViewer
         private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
-        private const string WarningBypassedOnVersionKey = "WarningBypassedOnVersion";
+        private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
+        private const string AnalyticsDeviceIdKey = "AnalyticsDeviceId";
+        private const string AnalyticsDataGatheringConsentKey = "AnalyticsDataGatheringConsent";
 
         //TODO: Cleanup this setting after sufficient time has passed.
         [Obsolete($"We have more date formats now so use {nameof(DateTimeDisplayFormat)} instead.")]
@@ -256,7 +260,7 @@ namespace ParquetViewer
             }
         }
 
-        public static string? WarningBypassedOnVersion
+        public static string? ConsentLastAskedOnVersion
         {
             get
             {
@@ -264,7 +268,7 @@ namespace ParquetViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        return registryKey.GetValue(WarningBypassedOnVersionKey)?.ToString();
+                        return registryKey.GetValue(ConsentLastAskedOnVersionKey)?.ToString();
                     }
                 }
                 catch
@@ -278,7 +282,65 @@ namespace ParquetViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        registryKey.SetValue(WarningBypassedOnVersionKey, value ?? string.Empty);
+                        registryKey.SetValue(ConsentLastAskedOnVersionKey, value ?? string.Empty);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        public static Guid AnalyticsDeviceId
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        if (Guid.TryParse(registryKey.GetValue(AnalyticsDeviceIdKey)?.ToString(), out var value))
+                        {
+                            return value;
+                        }
+                        else
+                        {
+                            //This user doesn't have an analytics device id yet, so create one
+                            Guid newDeviceId = Guid.NewGuid();
+                            registryKey.SetValue(AnalyticsDeviceIdKey, newDeviceId);
+                            return newDeviceId;
+                        }
+                    }
+                }
+                catch
+                {
+                    return Guid.Empty;
+                }
+            }
+        }
+    
+        public static bool AnalyticsDataGatheringConsent
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        bool.TryParse(registryKey.GetValue(AnalyticsDataGatheringConsentKey)?.ToString(), out var value);
+                        return value;
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            set
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        registryKey.SetValue(AnalyticsDataGatheringConsentKey, value.ToString());
                     }
                 }
                 catch { }

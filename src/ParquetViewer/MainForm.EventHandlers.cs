@@ -1,11 +1,14 @@
-﻿using System;
+﻿using ParquetViewer.Analytics;
+using System;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace ParquetViewer
 {
     public partial class MainForm
     {
-        private const string QueryUselessPartRegex = "^WHERE ";
+        [GeneratedRegex("^WHERE ")]
+        private static partial Regex QueryUselessPartRegex();
 
         private void offsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -57,13 +60,14 @@ namespace ParquetViewer
                 if (files != null && files.Length > 0)
                 {
                     this.Cursor = Cursors.WaitCursor;
+                    MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.DragDrop);
                     await this.OpenNewFileOrFolder(files[0]);
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 this.OpenFileOrFolderPath = null;
-                ShowError(ex);
+                throw;
             }
         }
 
