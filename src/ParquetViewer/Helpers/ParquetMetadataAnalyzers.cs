@@ -150,6 +150,10 @@ namespace ParquetViewer.Helpers
                 {
                     return new { Name = nameof(logicalType.UUID) };
                 }
+                else if (logicalType.UNKNOWN is not null)
+                {
+                    return new { Name = $"{logicalType.UNKNOWN.GetType().Name}" };
+                }
                 else
                 {
                     return new { Name = nameof(logicalType.UNKNOWN) };
