@@ -20,6 +20,7 @@ namespace ParquetViewer.Tests
         public void SwapHttpClientHandler(HttpMessageHandler mockHandler)
         {
             HttpMessageHandler = mockHandler;
+            BypassConsentRequirement = true;
         }
     }
 }

@@ -17,6 +17,7 @@ namespace ParquetViewer.Analytics
         private static readonly int _systemRAM = (int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/);
 
         protected HttpMessageHandler HttpMessageHandler { get; set; } = new HttpClientHandler();
+        protected bool BypassConsentRequirement { get; set; }
 
         [JsonIgnore]
         public string DeviceId => AppSettings.AnalyticsDeviceId.ToString();
@@ -48,7 +49,7 @@ namespace ParquetViewer.Analytics
         {
             try
             {
-                if (AMPLITUDE_API_KEY.Length == 0 || !AppSettings.AnalyticsDataGatheringConsent)
+                if (!BypassConsentRequirement && (AMPLITUDE_API_KEY.Length == 0 || !AppSettings.AnalyticsDataGatheringConsent))
                     return false;
 
                 var request = new
