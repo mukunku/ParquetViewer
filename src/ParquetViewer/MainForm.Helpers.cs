@@ -236,7 +236,7 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            throw new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception);
+            ShowLoadingError(sb.ToString());
         }
 
         private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
@@ -247,13 +247,14 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            throw new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception);
+            ShowLoadingError(sb.ToString());
         }
 
         private static void HandleFileReadException(FileReadException ex)
         {
-            throw new Exception($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
-                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}", ex);
+            ShowLoadingError($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
+                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}{Environment.NewLine}" +
+                $"{ex}");
         }
 
         private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
@@ -274,7 +275,9 @@ namespace ParquetViewer
                     sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
                 }
             }
-            throw new Exception(sb.ToString(), ex);
+            ShowLoadingError(sb.ToString());
         }
+
+        private static void ShowLoadingError(string message) => MessageBox.Show(message, "Something went wrong", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }
