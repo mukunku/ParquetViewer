@@ -387,42 +387,54 @@ namespace ParquetViewer
 
         private void runQueryButton_Click(object sender, EventArgs e)
         {
-            if (this.IsAnyFileOpen)
+            try
             {
-                string queryText = this.searchFilterTextBox.Text ?? string.Empty;
-                queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
+                if (this.IsAnyFileOpen)
+                {
+                    string queryText = this.searchFilterTextBox.Text ?? string.Empty;
+                    queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
 
-                //Treat list and map types as strings by casting them automatically
-                foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue))
-                    .Select(c => c.Name))
-                {
-                    //This isn't perfect but it should handle most cases
-                    queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)");
-                }
+                    //Treat list and map types as strings by casting them automatically
+                    foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue))
+                        .Select(c => c.Name))
+                    {
+                        //This isn't perfect but it should handle most cases
+                        queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)");
+                    }
 
-                var queryEvent = new ExecuteQueryEvent
-                {
-                    RecordCount = this.MainDataSource.Rows.Count,
-                    ColumnCount = this.MainDataSource.Columns.Count
-                };
-                var stopwatch = Stopwatch.StartNew();
+                    var queryEvent = new ExecuteQueryEvent
+                    {
+                        RecordCount = this.MainDataSource.Rows.Count,
+                        ColumnCount = this.MainDataSource.Columns.Count
+                    };
+                    var stopwatch = Stopwatch.StartNew();
 
-                try
-                {
-                    this.MainDataSource.DefaultView.RowFilter = queryText;
-                    queryEvent.IsValid = true;
+                    try
+                    {
+                        this.MainDataSource.DefaultView.RowFilter = queryText;
+                        queryEvent.IsValid = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        this.MainDataSource.DefaultView.RowFilter = null;
+                        throw new InvalidQueryException(ex);
+                    }
+                    finally
+                    {
+                        queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                        var _ = queryEvent.Record(); //Fire and forget
+                    }
                 }
-                catch (Exception ex)
-                {
-                    this.MainDataSource.DefaultView.RowFilter = null;
-                    throw new InvalidQueryException(ex);
-                }
-                finally
-                {
-                    queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
-                    var _ = queryEvent.Record(); //Fire and forget
-                }
+            }
+            catch(InvalidQueryException ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine + Environment.NewLine + ex.InnerException?.Message, 
+                    "Invalid Query", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
 
