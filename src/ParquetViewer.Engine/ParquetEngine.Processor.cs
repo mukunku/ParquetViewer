@@ -157,7 +157,15 @@ namespace ParquetViewer.Engine
             long skipRecords, long readRecords, bool isFirstColumn, Dictionary<int, DataRow> rowLookupCache, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var listField = field.GetChildByName("list");
-            var itemField = listField.GetChildByName("item");
+            ParquetSchemaElement itemField;
+            try
+            {
+                itemField = listField.GetChildByName("item");
+            }
+            catch(Exception ex)
+            {
+                throw new UnsupportedFieldException($"Cannot load field '{field.Path}. Invalid List type.'", ex);
+            }
 
             if (itemField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field '{field.Path}'. Nested list types are not supported");
@@ -165,17 +173,17 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField, cancellationToken);
+            var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
 
             ArrayList? rowValue = null;
-            var fieldIndex = dataTable.Columns[field.Path].Ordinal;
+            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
             for (int i = 0; i < dataColumn.Data.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 rowValue ??= new ArrayList();
 
-                bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels.Length
+                bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels!.Length
                     || dataColumn.RepetitionLevels[i + 1] == 0; //0 means new list
 
                 //Skip rows
@@ -206,7 +214,7 @@ namespace ParquetViewer.Engine
                     }
                     else
                     {
-                        if (!rowLookupCache.TryGetValue(rowIndex, out datarow))
+                        if (!rowLookupCache.TryGetValue(rowIndex, out datarow!))
                         {
                             datarow = dataTable.Rows[rowIndex];
                             rowLookupCache.TryAdd(rowIndex, datarow);
@@ -216,7 +224,7 @@ namespace ParquetViewer.Engine
                     var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
                     rowValue.Add(lastItem);
 
-                    datarow[fieldIndex] = new ListValue(rowValue, itemField.DataField.ClrType);
+                    datarow[fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
                     rowValue = null;
 
                     rowIndex++;
@@ -246,10 +254,10 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField, cancellationToken);
-            var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField, cancellationToken);
+            var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
+            var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
 
-            var fieldIndex = dataTable.Columns[field.Path].Ordinal;
+            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
             for (int i = 0; i < valueDataColumn.Data.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -286,7 +294,7 @@ namespace ParquetViewer.Engine
 
                 var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
                 var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
-                datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
+                datarow[fieldIndex] = new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType);
 
                 rowIndex++;
                 progress?.Report(1);
