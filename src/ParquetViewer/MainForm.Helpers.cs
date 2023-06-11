@@ -86,6 +86,11 @@ namespace ParquetViewer
                     }
                 }
             }
+            catch(IOException ex)
+            {
+                CleanupFile(filePath);
+                ShowError(ex.Message, "File export failed");
+            }
             catch (Exception)
             {
                 CleanupFile(filePath);
@@ -96,7 +101,7 @@ namespace ParquetViewer
                 loadingIcon?.Dispose();
             }
 
-            void CleanupFile(string filePath)
+            static void CleanupFile(string filePath)
             {
                 try
                 {
@@ -236,7 +241,7 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            ShowLoadingError(sb.ToString());
+            ShowError(sb.ToString());
         }
 
         private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
@@ -247,12 +252,12 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            ShowLoadingError(sb.ToString());
+            ShowError(sb.ToString());
         }
 
         private static void HandleFileReadException(FileReadException ex)
         {
-            ShowLoadingError($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
+            ShowError($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
                 $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}{Environment.NewLine}" +
                 $"{ex}");
         }
@@ -275,9 +280,9 @@ namespace ParquetViewer
                     sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
                 }
             }
-            ShowLoadingError(sb.ToString());
+            ShowError(sb.ToString());
         }
 
-        private static void ShowLoadingError(string message) => MessageBox.Show(message, "Something went wrong", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }
