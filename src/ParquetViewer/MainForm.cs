@@ -285,7 +285,8 @@ namespace ParquetViewer
                 {
                     if (!File.Exists(this.OpenFileOrFolderPath) && !Directory.Exists(this.OpenFileOrFolderPath))
                     {
-                        throw new Exception(string.Format("The specified file/folder no longer exists: {0}{1}Please try opening a new file or folder", this.OpenFileOrFolderPath, Environment.NewLine));
+                        ShowError($"The specified file/folder no longer exists: {this.OpenFileOrFolderPath}{Environment.NewLine}Please try opening a new file or folder");
+                        return;
                     }
 
                     long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine.RecordCount - this.CurrentOffset);
