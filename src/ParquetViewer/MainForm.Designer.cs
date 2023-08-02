@@ -73,6 +73,7 @@ namespace ParquetViewer
             metadataViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             userGuideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            shareAnonymousUsageDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             showingRecordCountStatusBarLabel = new System.Windows.Forms.ToolStripStatusLabel();
             actualShownRecordCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -237,11 +238,28 @@ namespace ParquetViewer
             // 
             // mainGridView
             // 
+            mainGridView.AllowUserToAddRows = false;
+            mainGridView.AllowUserToDeleteRows = false;
+            mainGridView.AllowUserToOrderColumns = true;
             mainGridView.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            mainGridView.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            mainGridView.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            mainGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 10);
+            mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Location = new System.Drawing.Point(4, 38);
             mainGridView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             mainGridView.Name = "mainGridView";
+            mainGridView.ReadOnly = true;
+            mainGridView.RowHeadersWidth = 24;
             mainTableLayoutPanel.SetRowSpan(mainGridView, 2);
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 6;
@@ -476,7 +494,7 @@ namespace ParquetViewer
             // 
             // helpToolStripMenuItem
             // 
-            helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { userGuideToolStripMenuItem, aboutToolStripMenuItem });
+            helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { userGuideToolStripMenuItem, shareAnonymousUsageDataToolStripMenuItem, aboutToolStripMenuItem });
             helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             helpToolStripMenuItem.Text = "&Help";
@@ -484,14 +502,21 @@ namespace ParquetViewer
             // userGuideToolStripMenuItem
             // 
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            userGuideToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             userGuideToolStripMenuItem.Text = "User Guide";
             userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
+            // 
+            // shareAnonymousUsageDataToolStripMenuItem
+            // 
+            shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
+            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
+            shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             aboutToolStripMenuItem.Text = "&About...";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
@@ -653,6 +678,7 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem rememberRecordCountToolStripMenuItem;
         private System.Windows.Forms.FolderBrowserDialog openFolderDialog;
         private System.Windows.Forms.ToolStripMenuItem openFolderToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem shareAnonymousUsageDataToolStripMenuItem;
     }
 }
 

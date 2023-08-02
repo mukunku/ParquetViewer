@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Engine;
+﻿using Parquet.Rows;
+using ParquetViewer.Engine;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -73,5 +74,7 @@ namespace ParquetViewer.Helpers
             FileType.XLS => ".xls",
             _ => throw new ArgumentOutOfRangeException(nameof(fileType))
         };
+
+        public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
     }
 }

@@ -11,9 +11,9 @@ namespace ParquetViewer
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
         private static readonly string PANDAS_SCHEMA = "pandas";
-        private ParquetViewer.Engine.ParquetEngine parquetEngine;
+        private Engine.ParquetEngine parquetEngine;
 
-        public MetadataViewer(ParquetViewer.Engine.ParquetEngine parquetEngine) : this()
+        public MetadataViewer(Engine.ParquetEngine parquetEngine) : this()
         {
             this.parquetEngine = parquetEngine;
         }
@@ -56,8 +56,7 @@ namespace ParquetViewer
             var metadataResult = new List<(string TabName, string Text)>();
             if (parquetEngine.ThriftMetadata != null)
             {
-                
-                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine.ThriftMetadata, parquetEngine.RecordCount, parquetEngine.Fields.Count);
+                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine, parquetEngine.RecordCount, parquetEngine.Fields.Count);
                 metadataResult.Add((THRIFT_METADATA, json));
             }
             else

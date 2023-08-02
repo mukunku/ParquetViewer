@@ -3,7 +3,7 @@ using Parquet.Schema;
 
 namespace ParquetViewer.Engine
 {
-    internal class ParquetSchemaElement
+    public class ParquetSchemaElement
     {
         public string Path => SchemaElement.Name;
         public SchemaElement SchemaElement { get; set; }

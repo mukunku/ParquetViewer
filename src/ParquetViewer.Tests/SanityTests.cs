@@ -1,4 +1,9 @@
+using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
+using RichardSzalay.MockHttp;
+using System.Globalization;
+using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Tests
 {
@@ -7,7 +12,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task DECIMALS_AND_BOOLS_TEST()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_AND_BOOLS_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_AND_BOOLS_TEST1.parquet", default);
 
             Assert.Equal(30, parquetEngine.RecordCount);
             Assert.Equal(337, parquetEngine.Fields.Count);
@@ -23,7 +28,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task DATETIME_TEST1_TEST()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST1.parquet", default);
 
             Assert.Equal(10, parquetEngine.RecordCount);
             Assert.Equal(3, parquetEngine.Fields.Count);
@@ -37,7 +42,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task DATETIME_TEST2_TEST()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST2.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST2.parquet", default);
 
             Assert.Equal(1, parquetEngine.RecordCount);
             Assert.Equal(11, parquetEngine.Fields.Count);
@@ -59,7 +64,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task RANDOM_TEST_FILE1_TEST()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/RANDOM_TEST_FILE1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/RANDOM_TEST_FILE1.parquet", default);
 
             Assert.Equal(5, parquetEngine.RecordCount);
             Assert.Equal(42, parquetEngine.Fields.Count);
@@ -77,7 +82,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task SAME_COLUMN_NAME_DIFFERENT_CASING_TEST()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING1.parquet", default);
 
             Assert.Equal(14610, parquetEngine.RecordCount);
             Assert.Equal(12, parquetEngine.Fields.Count);
@@ -96,7 +101,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task PARTITIONED_PARQUET_FILE_TEST()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST1", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST1", default);
 
             Assert.Equal(2000, parquetEngine.RecordCount);
             Assert.Equal(9, parquetEngine.Fields.Count);
@@ -121,7 +126,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task COLUMN_ENDING_IN_PERIOD_TEST1()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST1.parquet", default);
 
             Assert.Equal(1, parquetEngine.RecordCount);
             Assert.Equal(11, parquetEngine.Fields.Count);
@@ -135,7 +140,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task LIST_TYPE_TEST()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
 
             Assert.Equal(3, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
@@ -157,7 +162,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task MAP_TYPE_TEST1()
         {
-            var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST1.parquet", default);
 
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
@@ -171,6 +176,74 @@ namespace ParquetViewer.Tests
             Assert.IsType<MapValue>(dataTable.Rows[1][0]);
             Assert.Equal("value2", ((MapValue)dataTable.Rows[1][0]).Key);
             Assert.Equal("else", ((MapValue)dataTable.Rows[1][0]).Value);
+        }
+
+        [Fact]
+        public async Task AMPLITUDE_EVENT_TEST()
+        {
+            const string dummyApiKeyBase64 = "ZHVtbXk=";
+            var testEvent = new TestAmplitudeEvent(dummyApiKeyBase64)
+            {
+                IgnoredProperty = "xxx",
+                RegularProperty = "yyy"
+            };
+
+            string expectedRequestJson = @$"
+{{
+    ""api_key"": ""dummy"",
+    ""events"": [{{
+        ""device_id"": ""{AppSettings.AnalyticsDeviceId}"",
+        ""event_type"": ""{TestAmplitudeEvent.EVENT_TYPE}"",
+        ""user_properties"": {{
+            ""rememberLastRowCount"": {AppSettings.RememberLastRowCount.ToString().ToLower()},
+            ""lastRowCount"": {AppSettings.LastRowCount},
+            ""alwaysSelectAllFields"": {AppSettings.AlwaysSelectAllFields.ToString().ToLower()},
+            ""autoSizeColumnsMode"": ""{AppSettings.AutoSizeColumnsMode}"",
+            ""dateTimeDisplayFormat"": ""{AppSettings.DateTimeDisplayFormat}"",
+            ""systemMemory"": {(int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/)},
+            ""processorCount"": {Environment.ProcessorCount}
+        }},
+        ""event_properties"": {{
+            ""regularProperty"": ""yyy""
+        }},
+        ""session_id"": {testEvent.SessionId},
+        ""language"": ""{CultureInfo.CurrentUICulture.Name}"",
+        ""os_name"": ""{Environment.OSVersion.Platform}"",
+        ""os_version"": ""{Environment.OSVersion.VersionString}"",
+        ""app_version"": ""{AboutBox.AssemblyVersion}""
+    }}]
+}}"; 
+
+            //mock the http request
+            var mockHttpHandler = new MockHttpMessageHandler();
+            _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+            {
+                //Verify the request we're sending is what we expect it to be
+                string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+                if (Regex.Replace(requestJsonBody, "\\s", string.Empty)
+                    .Equals(Regex.Replace(expectedRequestJson, "\\s", string.Empty)))
+                    return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+                else
+                    return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+            }); 
+            testEvent.SwapHttpClientHandler(mockHttpHandler);
+
+            bool wasSuccess = await testEvent.Record();
+            Assert.True(wasSuccess, "The event json we would have sent to Amplitude didn't match the expected value");
+        }
+
+        [Fact]
+        public async Task NULLABLE_GUID_TEST1()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/NULLABLE_GUID_TEST1.parquet", default);
+
+            Assert.Equal(1, parquetEngine.RecordCount);
+            Assert.Equal(33, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.Equal(false, dataTable.Rows[0][22]);
+            Assert.Equal(new Guid("0cf9cbfd-d320-45d7-b29f-9c2de1baa979"), dataTable.Rows[0][1]);
+            Assert.Equal(new DateTime(2019, 1, 1), dataTable.Rows[0][4]);
         }
     }
 }
