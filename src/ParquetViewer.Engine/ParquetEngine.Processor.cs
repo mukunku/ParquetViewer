@@ -83,7 +83,7 @@ namespace ParquetViewer.Engine
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var field = ParquetSchemaTree.GetChildByName(column.ColumnName);
+                var field = ParquetSchemaTree.GetChild(column.ColumnName);
                 if (field.SchemaElement.LogicalType?.LIST is not null || field.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 {
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
@@ -156,11 +156,11 @@ namespace ParquetViewer.Engine
         private static async Task ReadListField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, Dictionary<int, DataRow> rowLookupCache, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var listField = field.GetChildByName("list");
+            var listField = field.GetChild("list");
             ParquetSchemaElement itemField;
             try
             {
-                itemField = listField.GetChildByName("item");
+                itemField = listField.GetChildOrSingle("item"); //Not all parquet files follow the same format so we're being lax with getting the child here
             }
             catch(Exception ex)
             {
@@ -244,9 +244,9 @@ namespace ParquetViewer.Engine
         private static async Task ReadMapField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, Dictionary<int, DataRow> rowLookupCache, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var keyValueField = field.GetChildByName("key_value");
-            var keyField = keyValueField.GetChildByName("key");
-            var valueField = keyValueField.GetChildByName("value");
+            var keyValueField = field.GetChild("key_value");
+            var keyField = keyValueField.GetChild("key");
+            var valueField = keyValueField.GetChild("value");
 
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field '{field.Path}'. Nested map types are not supported");
@@ -309,7 +309,7 @@ namespace ParquetViewer.Engine
             DataTable dataTable = new();
             foreach (var field in fields)
             {
-                var schema = ParquetSchemaTree.GetChildByName(field);
+                var schema = ParquetSchemaTree.GetChild(field);
 
                 DataColumn newColumn;
                 if (schema.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
