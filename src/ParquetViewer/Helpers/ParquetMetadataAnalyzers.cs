@@ -80,9 +80,7 @@ namespace ParquetViewer.Helpers
                                 column.MetaData?.KeyValueMetadata,
                                 column.MetaData?.DataPageOffset,
                                 column.MetaData?.IndexPageOffset,
-                                column.MetaData?.DictionaryPageOffset,
-                                column.MetaData?.Statistics,
-                                column.MetaData?.EncodingStats
+                                column.MetaData?.DictionaryPageOffset
                             }
                         }).ToArray()
                     }).ToArray()
