@@ -84,7 +84,7 @@ namespace ParquetViewer.Engine
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var field = ParquetSchemaTree.GetChildByName(column.ColumnName);
-                if (field.SchemaElement.LogicalType?.LIST is not null)
+                if (field.SchemaElement.LogicalType?.LIST is not null || field.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 {
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                         readRecords, isFirstColumn, rowLookupCache, cancellationToken, progress);
