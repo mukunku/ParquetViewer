@@ -1,8 +1,6 @@
-using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
 using RichardSzalay.MockHttp;
 using System.Globalization;
-using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Tests
@@ -154,9 +152,9 @@ namespace ParquetViewer.Tests
             Assert.Equal("[,1]", ((ListValue)dataTable.Rows[1][0]).ToString());
             Assert.IsType<ListValue>(dataTable.Rows[2][1]);
             Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Data?.Count);
-            Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data[0]);
-            Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data[1]);
-            Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data[3]);
+            Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data![0]);
+            Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data![1]);
+            Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data![3]);
         }
 
         [Fact]
@@ -212,7 +210,7 @@ namespace ParquetViewer.Tests
         ""os_version"": ""{Environment.OSVersion.VersionString}"",
         ""app_version"": ""{AboutBox.AssemblyVersion}""
     }}]
-}}"; 
+}}";
 
             //mock the http request
             var mockHttpHandler = new MockHttpMessageHandler();
@@ -225,7 +223,7 @@ namespace ParquetViewer.Tests
                     return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 else
                     return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
-            }); 
+            });
             testEvent.SwapHttpClientHandler(mockHttpHandler);
 
             bool wasSuccess = await testEvent.Record();
