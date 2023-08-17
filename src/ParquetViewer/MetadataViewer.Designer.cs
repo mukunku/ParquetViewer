@@ -81,7 +81,7 @@
             // 
             // closeButton
             // 
-            closeButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            closeButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             closeButton.Location = new System.Drawing.Point(452, 551);
             closeButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             closeButton.Name = "closeButton";
@@ -93,7 +93,6 @@
             // 
             // copyRawThriftMetadataButton
             // 
-            copyRawThriftMetadataButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
             copyRawThriftMetadataButton.Location = new System.Drawing.Point(3, 551);
             copyRawThriftMetadataButton.Name = "copyRawThriftMetadataButton";
             copyRawThriftMetadataButton.Size = new System.Drawing.Size(148, 29);
