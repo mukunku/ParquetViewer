@@ -239,7 +239,7 @@ namespace ParquetViewer
                         if (value != null && Enum.IsDefined(typeof(AutoSizeColumnsMode), value))
                             return (AutoSizeColumnsMode)value;
                         else
-                            return AutoSizeColumnsMode.None;
+                            return AutoSizeColumnsMode.AllCells;
                     }
                 }
                 catch
