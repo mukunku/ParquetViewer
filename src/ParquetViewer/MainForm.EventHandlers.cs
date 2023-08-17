@@ -103,5 +103,11 @@ MULTIPLE CONDITIONS:
         {
             //This is just here in case I want to add debug info
         }
+
+        private void MainGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            //Ignore errors and hope for the best.
+            e.Cancel = true;
+        }
     }
 }

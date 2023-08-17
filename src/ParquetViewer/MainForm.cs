@@ -70,7 +70,7 @@ namespace ParquetViewer
 
                 //Check for duplicate fields (We don't support case sensitive field names unfortunately)
                 var duplicateFields = this.selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
-                if (duplicateFields?.Count() > 0)
+                if (duplicateFields?.Count > 0)
                 {
                     this.selectedFields = this.selectedFields.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
@@ -127,7 +127,9 @@ namespace ParquetViewer
             get => this.mainDataSource;
             set
             {
-                this.mainDataSource = value;
+                var dataTable = value;
+                ReplaceUnsupportedColumnTypes(dataTable);
+                this.mainDataSource = dataTable;
                 this.mainGridView.DataSource = this.mainDataSource;
             }
         }
@@ -428,9 +430,9 @@ namespace ParquetViewer
                     }
                 }
             }
-            catch(InvalidQueryException ex)
+            catch (InvalidQueryException ex)
             {
-                MessageBox.Show(ex.Message + Environment.NewLine + Environment.NewLine + ex.InnerException?.Message, 
+                MessageBox.Show(ex.Message + Environment.NewLine + Environment.NewLine + ex.InnerException?.Message,
                     "Invalid Query", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             catch (Exception)
