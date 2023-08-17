@@ -65,24 +65,7 @@ namespace ParquetViewer.Helpers
                         }).ToArray(),
                         rowGroup.FileOffset,
                         rowGroup.TotalByteSize,
-                        rowGroup.TotalCompressedSize,
-                        Columns = (rowGroup.Columns ?? Enumerable.Empty<ColumnChunk>()).Select(column => new
-                        {
-                            column.FilePath,
-                            column.FileOffset,
-                            Metadata = new
-                            {
-                                column.MetaData?.PathInSchema,
-                                Type = column.MetaData?.Type.ToString(),
-                                column.MetaData?.NumValues,
-                                column.MetaData?.TotalUncompressedSize,
-                                column.MetaData?.TotalCompressedSize,
-                                column.MetaData?.KeyValueMetadata,
-                                column.MetaData?.DataPageOffset,
-                                column.MetaData?.IndexPageOffset,
-                                column.MetaData?.DictionaryPageOffset
-                            }
-                        }).ToArray()
+                        rowGroup.TotalCompressedSize
                     }).ToArray()
                 };
 

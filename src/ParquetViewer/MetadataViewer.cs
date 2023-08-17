@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Text.Json;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -116,6 +117,31 @@ namespace ParquetViewer
             {
                 this.Close();
             }
+        }
+
+        private void copyRawThriftMetadataButton_Click(object sender, EventArgs e)
+        {
+            var rawJson = JsonSerializer.Serialize(this.parquetEngine.ThriftMetadata,
+                new JsonSerializerOptions()
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, //don't escape anything to make it human readable
+                    WriteIndented = true
+                });
+
+            Clipboard.SetText(rawJson);
+            MessageBox.Show("Raw Thrift metadata copied to clipboard.", "ParquetViewer");
+        }
+
+        private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (this.tabControl.TabCount == 0)
+                return;
+
+            //Copy raw option is only for Thrift metadata.
+            if (this.tabControl.SelectedIndex == 0)
+                this.copyRawThriftMetadataButton.Visible = true;
+            else
+                this.copyRawThriftMetadataButton.Visible = false;
         }
     }
 }
