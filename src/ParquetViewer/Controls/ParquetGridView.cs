@@ -11,8 +11,8 @@ namespace ParquetViewer.Controls
 {
     internal class ParquetGridView : DataGridView
     {
-        private ToolTip dateOnlyFormatWarningToolTip = new();
-        private Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
+        private readonly ToolTip dateOnlyFormatWarningToolTip = new();
+        private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
 
         public ParquetGridView() : base()
         {
@@ -363,7 +363,7 @@ namespace ParquetViewer.Controls
 
                     //Fit header by default. If header is short, make sure NULLs will fit at least
                     string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
-                    var newColumnSize = MeasureStringWidth(columnNameOrNull + WHITESPACE_BUFFER); 
+                    var newColumnSize = MeasureStringWidth(columnNameOrNull + WHITESPACE_BUFFER);
 
                     if (gridTable.Columns[i].DataType == typeof(DateTime))
                     {

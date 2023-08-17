@@ -73,7 +73,7 @@ namespace ParquetViewer
                 bool isFirstLaunch = AppSettings.ConsentLastAskedOnVersion is null;
                 if (isFirstLaunch)
                 {
-                    //Don't ask for consent on the first launch. Lets do it on the second one so its less annoying.
+                    //Don't ask for consent on the first launch. Lets do it on the second one so it's less annoying.
                     AppSettings.ConsentLastAskedOnVersion = "0";
                 }
                 else
