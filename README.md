@@ -19,11 +19,9 @@ Releases can be found here: https://github.com/mukunku/ParquetViewer/releases
 Visit the Wiki for details on how to use the utility: https://github.com/mukunku/ParquetViewer/wiki
 
 # Analytics
-Users can opt-in to share anonymous usage data to help make the app better. 
+Users can opt-in to share anonymous usage data to help make the app better. [^1]
 
 Checkout the [ParquetViewer Analytics Dashboard](https://app.amplitude.com/analytics/share/7207c0b64c154e979afd7082980d6dd6) if you're interested!
-
-Usage data being shared can be found in [AllEvents.cs](https://github.com/mukunku/ParquetViewer/blob/master/src/ParquetViewer/Analytics/AllEvents.cs) [^1]
 
 [^1]: Full privacy policy here: https://github.com/mukunku/ParquetViewer/wiki/Privacy-Policy
 
