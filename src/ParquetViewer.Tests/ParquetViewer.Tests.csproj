@@ -8,9 +8,15 @@
     <IsPackable>false</IsPackable>
 
     <PlatformTarget>x64</PlatformTarget>
+
+    <Configurations>Debug;Release;Release_SelfContained</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_SelfContained|AnyCPU'">
     <LangVersion>default</LangVersion>
   </PropertyGroup>
 

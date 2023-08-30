@@ -37,7 +37,12 @@ namespace ParquetViewer.Analytics
             AutoSizeColumnsMode = AppSettings.AutoSizeColumnsMode.ToString(),
             DateTimeDisplayFormat = AppSettings.DateTimeDisplayFormat.ToString(),
             SystemMemory = _systemRAM,
-            Environment.ProcessorCount
+            Environment.ProcessorCount,
+#if RELEASE_SELFCONTAINED
+            SelfContainedExecutable = true,
+#else
+            SelfContainedExecutable = false,
+#endif
         };
 
         protected AmplitudeEvent(string eventType)

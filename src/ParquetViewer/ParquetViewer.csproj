@@ -10,6 +10,7 @@
 	<PublishSingleFile>true</PublishSingleFile>
 	<PublishReadyToRun>false</PublishReadyToRun>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	<Configurations>Debug;Release;Release_SelfContained</Configurations>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\parquet_icon.ico</ApplicationIcon>
@@ -21,6 +22,10 @@
     <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>full</DebugType>
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_SelfContained|AnyCPU'">
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
   </PropertyGroup>
