@@ -186,6 +186,11 @@ namespace ParquetViewer.Tests
                 RegularProperty = "yyy"
             };
 
+            var isSelfContainedExecutable = false;
+#if Release_SelfContained
+            isSelfContainedExecutable = true;
+#endif
+
             string expectedRequestJson = @$"
 {{
     ""api_key"": ""dummy"",
@@ -199,7 +204,8 @@ namespace ParquetViewer.Tests
             ""autoSizeColumnsMode"": ""{AppSettings.AutoSizeColumnsMode}"",
             ""dateTimeDisplayFormat"": ""{AppSettings.DateTimeDisplayFormat}"",
             ""systemMemory"": {(int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/)},
-            ""processorCount"": {Environment.ProcessorCount}
+            ""processorCount"": {Environment.ProcessorCount},
+            ""selfContainedExecutable"": {(isSelfContainedExecutable ? "true" : "false")}
         }},
         ""event_properties"": {{
             ""regularProperty"": ""yyy""
@@ -218,6 +224,10 @@ namespace ParquetViewer.Tests
             {
                 //Verify the request we're sending is what we expect it to be
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+                var a = Regex.Replace(requestJsonBody, "\\s", string.Empty);
+                var b = Regex.Replace(expectedRequestJson, "\\s", string.Empty);
+
                 if (Regex.Replace(requestJsonBody, "\\s", string.Empty)
                     .Equals(Regex.Replace(expectedRequestJson, "\\s", string.Empty)))
                     return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
@@ -248,7 +258,7 @@ namespace ParquetViewer.Tests
         public async Task MALFORMED_DATETIME_TEST1()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST1.parquet", default);
-            
+
             var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
             Assert.Equal(typeof(DateTime), dataTable.Rows[0]["ds"]?.GetType());
 
