@@ -59,6 +59,9 @@
     <None Update="Data\LIST_TYPE_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\MALFORMED_DATETIME_TEST1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Data\MAP_TYPE_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -243,5 +243,24 @@ namespace ParquetViewer.Tests
             Assert.Equal(new Guid("0cf9cbfd-d320-45d7-b29f-9c2de1baa979"), dataTable.Rows[0][1]);
             Assert.Equal(new DateTime(2019, 1, 1), dataTable.Rows[0][4]);
         }
+
+        [Fact]
+        public async Task MALFORMED_DATETIME_TEST1()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST1.parquet", default);
+            
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.Equal(typeof(DateTime), dataTable.Rows[0]["ds"]?.GetType());
+
+            //Check if the malformed datetime still needs to be fixed
+            parquetEngine.FixMalformedDateTime = false;
+
+            dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            if (dataTable.Rows[0]["ds"]?.GetType() == typeof(DateTime))
+            {
+                Assert.Fail("Looks like the Malformed DateTime Fix is no longer needed! Remove that part of the code.");
+            }
+            Assert.Equal(typeof(long), dataTable.Rows[0]["ds"]?.GetType()); //If it's not a datetime, then it should be a long.
+        }
     }
 }
