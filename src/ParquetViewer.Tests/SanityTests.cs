@@ -187,7 +187,7 @@ namespace ParquetViewer.Tests
             };
 
             var isSelfContainedExecutable = false;
-#if Release_SelfContained
+#if RELEASE_SELFCONTAINED
             isSelfContainedExecutable = true;
 #endif
 
