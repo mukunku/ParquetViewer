@@ -29,6 +29,8 @@ namespace ParquetViewer.Engine
 
         public string OpenFileOrFolderPath { get; }
 
+        public bool FixMalformedDateTime { get; set; } = true;
+
         private ParquetSchemaElement BuildParquetSchemaTree()
         {
             var thriftSchema = ThriftMetadata.Schema ?? throw new Exception("No thrift metadata was found");
@@ -37,10 +39,10 @@ namespace ParquetViewer.Engine
 
             foreach (var dataField in Schema.GetDataFields())
             {
-                var field = thriftSchemaTree.GetChildByName(dataField.Path.FirstPart ?? throw new Exception($"Field has no schema path: {dataField.Name}"));
+                var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new Exception($"Field has no schema path: {dataField.Name}"));
                 for (var i = 1; i < dataField.Path.Length; i++)
                 {
-                    field = field.GetChildByName(dataField.Path[i]);
+                    field = field.GetChild(dataField.Path[i]);
                 }
                 field.DataField = dataField; //if it doesn't have a child it's a datafield (I hope)
             }

@@ -1,8 +1,6 @@
-using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
 using RichardSzalay.MockHttp;
 using System.Globalization;
-using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Tests
@@ -154,9 +152,9 @@ namespace ParquetViewer.Tests
             Assert.Equal("[,1]", ((ListValue)dataTable.Rows[1][0]).ToString());
             Assert.IsType<ListValue>(dataTable.Rows[2][1]);
             Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Data?.Count);
-            Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data[0]);
-            Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data[1]);
-            Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data[3]);
+            Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data![0]);
+            Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data![1]);
+            Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data![3]);
         }
 
         [Fact]
@@ -188,6 +186,11 @@ namespace ParquetViewer.Tests
                 RegularProperty = "yyy"
             };
 
+            var isSelfContainedExecutable = false;
+#if RELEASE_SELFCONTAINED
+            isSelfContainedExecutable = true;
+#endif
+
             string expectedRequestJson = @$"
 {{
     ""api_key"": ""dummy"",
@@ -201,7 +204,8 @@ namespace ParquetViewer.Tests
             ""autoSizeColumnsMode"": ""{AppSettings.AutoSizeColumnsMode}"",
             ""dateTimeDisplayFormat"": ""{AppSettings.DateTimeDisplayFormat}"",
             ""systemMemory"": {(int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/)},
-            ""processorCount"": {Environment.ProcessorCount}
+            ""processorCount"": {Environment.ProcessorCount},
+            ""selfContainedExecutable"": {(isSelfContainedExecutable ? "true" : "false")}
         }},
         ""event_properties"": {{
             ""regularProperty"": ""yyy""
@@ -212,7 +216,7 @@ namespace ParquetViewer.Tests
         ""os_version"": ""{Environment.OSVersion.VersionString}"",
         ""app_version"": ""{AboutBox.AssemblyVersion}""
     }}]
-}}"; 
+}}";
 
             //mock the http request
             var mockHttpHandler = new MockHttpMessageHandler();
@@ -220,12 +224,16 @@ namespace ParquetViewer.Tests
             {
                 //Verify the request we're sending is what we expect it to be
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+                var a = Regex.Replace(requestJsonBody, "\\s", string.Empty);
+                var b = Regex.Replace(expectedRequestJson, "\\s", string.Empty);
+
                 if (Regex.Replace(requestJsonBody, "\\s", string.Empty)
                     .Equals(Regex.Replace(expectedRequestJson, "\\s", string.Empty)))
                     return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 else
                     return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
-            }); 
+            });
             testEvent.SwapHttpClientHandler(mockHttpHandler);
 
             bool wasSuccess = await testEvent.Record();
@@ -244,6 +252,25 @@ namespace ParquetViewer.Tests
             Assert.Equal(false, dataTable.Rows[0][22]);
             Assert.Equal(new Guid("0cf9cbfd-d320-45d7-b29f-9c2de1baa979"), dataTable.Rows[0][1]);
             Assert.Equal(new DateTime(2019, 1, 1), dataTable.Rows[0][4]);
+        }
+
+        [Fact]
+        public async Task MALFORMED_DATETIME_TEST1()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST1.parquet", default);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.Equal(typeof(DateTime), dataTable.Rows[0]["ds"]?.GetType());
+
+            //Check if the malformed datetime still needs to be fixed
+            parquetEngine.FixMalformedDateTime = false;
+
+            dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            if (dataTable.Rows[0]["ds"]?.GetType() == typeof(DateTime))
+            {
+                Assert.Fail("Looks like the Malformed DateTime Fix is no longer needed! Remove that part of the code.");
+            }
+            Assert.Equal(typeof(long), dataTable.Rows[0]["ds"]?.GetType()); //If it's not a datetime, then it should be a long.
         }
     }
 }

@@ -2,7 +2,7 @@
 {
     public class UnsupportedFieldException : Exception
     {
-        public UnsupportedFieldException(string fieldName) : base(fieldName)
+        public UnsupportedFieldException(string message, Exception? ex = null) : base(message, ex)
         {
 
         }

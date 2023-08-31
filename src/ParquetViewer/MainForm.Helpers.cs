@@ -2,6 +2,7 @@
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -86,6 +87,11 @@ namespace ParquetViewer
                     }
                 }
             }
+            catch(IOException ex)
+            {
+                CleanupFile(filePath);
+                ShowError(ex.Message, "File export failed");
+            }
             catch (Exception)
             {
                 CleanupFile(filePath);
@@ -96,7 +102,7 @@ namespace ParquetViewer
                 loadingIcon?.Dispose();
             }
 
-            void CleanupFile(string filePath)
+            static void CleanupFile(string filePath)
             {
                 try
                 {
@@ -236,7 +242,7 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            throw new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception);
+            ShowError(sb.ToString());
         }
 
         private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
@@ -247,13 +253,14 @@ namespace ParquetViewer
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
             }
-            throw new Exception(sb.ToString(), ex.SkippedFiles.FirstOrDefault()?.Exception);
+            ShowError(sb.ToString());
         }
 
         private static void HandleFileReadException(FileReadException ex)
         {
-            throw new Exception($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
-                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}", ex);
+            ShowError($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
+                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}{Environment.NewLine}" +
+                $"{ex}");
         }
 
         private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
@@ -274,7 +281,59 @@ namespace ParquetViewer
                     sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
                 }
             }
-            throw new Exception(sb.ToString(), ex);
+            ShowError(sb.ToString());
+        }
+
+        private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+        /// <summary>
+        /// We don't have a way to handle arrays at the moment. So let's render them as strings for now as a hack.
+        /// Ideally we should set 'AutoGenerateColumns' to 'false' on the gridview and generate the datagridview columns ourselves.
+        /// That way we can avoid things like the automatic logic creating 'DataGridViewImageCell' types for byte[] values (#79).
+        /// </summary>
+        private static void ReplaceUnsupportedColumnTypes(DataTable dataTable)
+        {
+            const string tempRenameSuffix = "|temp";
+
+            ReplaceByteArrays(dataTable);
+
+            static void ReplaceByteArrays(DataTable data)
+            {
+                var arrayColumnOrdinals = new List<int>();
+                foreach (DataColumn column in data.Columns)
+                {
+                    if (column.DataType == typeof(byte[]))
+                    {
+                        arrayColumnOrdinals.Add(column.Ordinal);
+                    }
+                }
+
+                foreach (var arrayColumnOrdinal in arrayColumnOrdinals)
+                {
+                    var arrayColumn = data.Columns[arrayColumnOrdinal];
+
+                    string columnName = arrayColumn.ColumnName;
+                    string tempColumnName = columnName + tempRenameSuffix;
+                    arrayColumn.ColumnName = columnName + tempRenameSuffix;
+
+                    var stringColumnReplacement = new DataColumn(columnName, typeof(string));
+                    data.Columns.Add(stringColumnReplacement);
+
+                    //swap the columns
+                    data.Columns[columnName].SetOrdinal(data.Columns[tempColumnName].Ordinal);
+                    data.Columns[tempColumnName].SetOrdinal(arrayColumnOrdinal);
+
+                    //Stringify and copy the data
+                    foreach (DataRow row in data.Rows)
+                    {
+                        var value = (byte[])row[tempColumnName];
+                        row[columnName] = BitConverter.ToString(value);
+                    }
+
+                    //remove the array column
+                    data.Columns.Remove(data.Columns[tempColumnName]);
+                }
+            }
         }
     }
 }

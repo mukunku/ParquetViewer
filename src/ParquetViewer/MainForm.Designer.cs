@@ -264,6 +264,7 @@ namespace ParquetViewer
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 6;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
+            mainGridView.DataError += MainGridView_DataError;
             // 
             // openParquetFileDialog
             // 

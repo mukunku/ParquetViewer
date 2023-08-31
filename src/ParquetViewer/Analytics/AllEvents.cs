@@ -147,6 +147,7 @@ namespace ParquetViewer.Analytics
 
         public string Message => Exception?.Message;
         public string StackTrace => Exception?.StackTrace?.ToString();
+        public string InnerException => Exception?.InnerException?.ToString();
 
         public ExceptionEvent() : base(EVENT_TYPE)
         {

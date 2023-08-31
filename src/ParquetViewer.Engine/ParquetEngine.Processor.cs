@@ -1,4 +1,5 @@
 ﻿using Parquet;
+using Parquet.Meta;
 using ParquetViewer.Engine.Exceptions;
 using System.Collections;
 using System.Data;
@@ -83,8 +84,8 @@ namespace ParquetViewer.Engine
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var field = ParquetSchemaTree.GetChildByName(column.ColumnName);
-                if (field.SchemaElement.LogicalType?.LIST is not null)
+                var field = ParquetSchemaTree.GetChild(column.ColumnName);
+                if (field.SchemaElement.LogicalType?.LIST is not null || field.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 {
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                         readRecords, isFirstColumn, rowLookupCache, cancellationToken, progress);
@@ -104,7 +105,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private static async Task ReadPrimitiveField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadPrimitiveField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, Dictionary<int, DataRow> rowLookupCache, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
@@ -146,18 +147,71 @@ namespace ParquetViewer.Engine
                     }
                 }
 
-                datarow[fieldIndex] = value ?? DBNull.Value;
+                datarow[fieldIndex] = FixDateTime(value, field) ?? DBNull.Value;
 
                 rowIndex++;
                 progress?.Report(1);
             }
         }
 
+        /// <summary>
+        /// This is a patch fix to handle malformed datetime fields. We assume TIMESTAMP fields are DateTime values.
+        /// </summary>
+        /// <param name="value">Original value</param>
+        /// <param name="field">Schema element</param>
+        /// <returns>If the field is a timestamp, a DateTime object will be returned. Otherwise the value will not be changed.</returns>
+        private object? FixDateTime(object value, ParquetSchemaElement field)
+        {
+            if (!this.FixMalformedDateTime || value is null)
+                return value;
+
+            var timestampSchema = field.SchemaElement?.LogicalType?.TIMESTAMP;
+            if (timestampSchema is not null && field.SchemaElement?.ConvertedType is null)
+            {
+                long castValue;
+                if (field.DataField?.ClrType == typeof(long?))
+                {
+                    castValue = ((long?)value).Value; //We know this isn't null from the null check above
+                }
+                else if (field.DataField?.ClrType == typeof(long))
+                {
+                    castValue = (long)value;
+                }
+                else
+                {
+                    throw new UnsupportedFieldException($"Field {field.Path} is not a valid timestamp field");
+                }
+
+                int divideBy = 0;
+                if (timestampSchema.Unit.NANOS != null)
+                    divideBy = 1000 * 1000;
+                else if (timestampSchema.Unit.MICROS != null)
+                    divideBy = 1000;
+                else if (timestampSchema.Unit.MILLIS != null)
+                    divideBy = 1;
+
+                if (divideBy > 0)
+                    value = DateTimeOffset.FromUnixTimeMilliseconds(castValue / divideBy).DateTime;
+                else //Not sure if this 'else' is correct but adding just in case
+                    value = DateTimeOffset.FromUnixTimeSeconds(castValue);
+            }
+
+            return value;
+        }
+
         private static async Task ReadListField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, Dictionary<int, DataRow> rowLookupCache, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var listField = field.GetChildByName("list");
-            var itemField = listField.GetChildByName("item");
+            var listField = field.GetChild("list");
+            ParquetSchemaElement itemField;
+            try
+            {
+                itemField = listField.GetChildOrSingle("item"); //Not all parquet files follow the same format so we're being lax with getting the child here
+            }
+            catch (Exception ex)
+            {
+                throw new UnsupportedFieldException($"Cannot load field '{field.Path}. Invalid List type.'", ex);
+            }
 
             if (itemField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field '{field.Path}'. Nested list types are not supported");
@@ -165,17 +219,17 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField, cancellationToken);
+            var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
 
             ArrayList? rowValue = null;
-            var fieldIndex = dataTable.Columns[field.Path].Ordinal;
+            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
             for (int i = 0; i < dataColumn.Data.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 rowValue ??= new ArrayList();
 
-                bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels.Length
+                bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels!.Length
                     || dataColumn.RepetitionLevels[i + 1] == 0; //0 means new list
 
                 //Skip rows
@@ -206,7 +260,7 @@ namespace ParquetViewer.Engine
                     }
                     else
                     {
-                        if (!rowLookupCache.TryGetValue(rowIndex, out datarow))
+                        if (!rowLookupCache.TryGetValue(rowIndex, out datarow!))
                         {
                             datarow = dataTable.Rows[rowIndex];
                             rowLookupCache.TryAdd(rowIndex, datarow);
@@ -216,7 +270,7 @@ namespace ParquetViewer.Engine
                     var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
                     rowValue.Add(lastItem);
 
-                    datarow[fieldIndex] = new ListValue(rowValue, itemField.DataField.ClrType);
+                    datarow[fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
                     rowValue = null;
 
                     rowIndex++;
@@ -236,9 +290,9 @@ namespace ParquetViewer.Engine
         private static async Task ReadMapField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, Dictionary<int, DataRow> rowLookupCache, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var keyValueField = field.GetChildByName("key_value");
-            var keyField = keyValueField.GetChildByName("key");
-            var valueField = keyValueField.GetChildByName("value");
+            var keyValueField = field.GetChild("key_value");
+            var keyField = keyValueField.GetChild("key");
+            var valueField = keyValueField.GetChild("value");
 
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field '{field.Path}'. Nested map types are not supported");
@@ -246,10 +300,10 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField, cancellationToken);
-            var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField, cancellationToken);
+            var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
+            var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
 
-            var fieldIndex = dataTable.Columns[field.Path].Ordinal;
+            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
             for (int i = 0; i < valueDataColumn.Data.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -286,7 +340,7 @@ namespace ParquetViewer.Engine
 
                 var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
                 var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
-                datarow[fieldIndex] = new MapValue(key, keyField.DataField.ClrType, value, valueField.DataField.ClrType);
+                datarow[fieldIndex] = new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType);
 
                 rowIndex++;
                 progress?.Report(1);
@@ -301,16 +355,23 @@ namespace ParquetViewer.Engine
             DataTable dataTable = new();
             foreach (var field in fields)
             {
-                var schema = ParquetSchemaTree.GetChildByName(field);
+                var schema = ParquetSchemaTree.GetChild(field);
 
                 DataColumn newColumn;
-                if (schema.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
+                if (schema.SchemaElement.ConvertedType == ConvertedType.LIST)
                 {
                     newColumn = new DataColumn(field, typeof(ListValue));
                 }
-                else if (schema.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.MAP)
+                else if (schema.SchemaElement.ConvertedType == ConvertedType.MAP)
                 {
                     newColumn = new DataColumn(field, typeof(MapValue));
+                }
+                else if (this.FixMalformedDateTime
+                    && schema.SchemaElement.LogicalType?.TIMESTAMP is not null 
+                    && schema.SchemaElement?.ConvertedType is null)
+                {
+                    //Fix for malformed datetime fields (#88)
+                    newColumn = new DataColumn(field, typeof(DateTime));
                 }
                 else
                 {

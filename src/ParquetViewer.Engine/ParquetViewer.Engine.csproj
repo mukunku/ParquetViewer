@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
+    <Configurations>Debug;Release;Release_SelfContained</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Parquet.Net" />

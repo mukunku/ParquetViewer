@@ -25,7 +25,22 @@ namespace ParquetViewer.Engine
             this.SchemaElement = schemaElement;
         }
 
-        public ParquetSchemaElement GetChildByName(string name) => _children.TryGetValue(name, out var result)
+        public ParquetSchemaElement GetChild(string name) => _children.TryGetValue(name, out var result)
             ? result : throw new Exception($"Field schema path not found: {Path}/{name}");
+
+        public ParquetSchemaElement GetChildOrSingle(string name)
+        {
+            if (_children.TryGetValue(name, out var result))
+            {
+                return result;
+            }
+
+            if (_children.Count == 1)
+            {
+                return _children.First().Value;
+            }
+
+            throw new Exception($"Field schema path not found: {Path}/{name}");
+        }
     }
 }
