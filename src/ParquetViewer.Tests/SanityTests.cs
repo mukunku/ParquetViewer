@@ -177,6 +177,25 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
+        public async Task STRUCT_TYPE_TEST()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/STRUCT_TEST1.parquet", default);
+
+            Assert.Equal(2, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.IsType<string>(dataTable.Rows[0][0]);
+            Assert.Equal("12345-6", (string)dataTable.Rows[0][0]);
+            Assert.IsType<StructValue>(dataTable.Rows[0][1]);
+            Assert.Equal("{\"firstName\":\"Ivan\",\"lastName\":\"Gavryliuk\"}", ((StructValue)dataTable.Rows[0][1]).ToString());
+            Assert.IsType<string>(dataTable.Rows[1][0]);
+            Assert.Equal("12345-7", (string)dataTable.Rows[1][0]);
+            Assert.IsType<StructValue>(dataTable.Rows[1][1]);
+            Assert.Equal("{\"firstName\":\"Richard\",\"lastName\":\"Conway\"}", ((StructValue)dataTable.Rows[1][1]).ToString());
+        }
+
+        [Fact]
         public async Task AMPLITUDE_EVENT_TEST()
         {
             const string dummyApiKeyBase64 = "ZHVtbXk=";
