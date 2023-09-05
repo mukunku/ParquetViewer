@@ -9,7 +9,7 @@ namespace ParquetViewer.Engine
         public SchemaElement SchemaElement { get; set; }
         public DataField? DataField { get; set; }
 
-        private Dictionary<string, ParquetSchemaElement> _children = new();
+        private readonly Dictionary<string, ParquetSchemaElement> _children = new();
         public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
 
         public void AddChild(ParquetSchemaElement child)
@@ -25,10 +25,25 @@ namespace ParquetViewer.Engine
             this.SchemaElement = schemaElement;
         }
 
-        public ParquetSchemaElement GetChild(string name) => _children.TryGetValue(name, out var result)
-            ? result : throw new Exception($"Field schema path not found: {Path}/{name}");
+        public ParquetSchemaElement GetChild(string name)
+        {
+            if (name?.Contains('/') == true)
+            {
+                string currentPath = name.Substring(0, name.IndexOf('/'));
+                string remainingPath = name.Substring(name.IndexOf('/') + 1);
+                var child = GetChildImpl(currentPath);
+                return child.GetChild(remainingPath);
+            }
+            else
+            {
+                return GetChildImpl(name);
+            }
 
-        public ParquetSchemaElement GetChildOrSingle(string name)
+            ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
+                ? result : throw new Exception($"Field schema path not found: {Path}/{name}");
+        }
+
+        public ParquetSchemaElement GetImmediateChildOrSingle(string name)
         {
             if (_children.TryGetValue(name, out var result))
             {
