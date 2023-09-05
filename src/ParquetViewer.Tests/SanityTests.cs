@@ -177,7 +177,7 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task STRUCT_TYPE_TEST()
+        public async Task STRUCT_TYPE_TEST1()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/STRUCT_TEST1.parquet", default);
 
