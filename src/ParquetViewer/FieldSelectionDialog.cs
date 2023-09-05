@@ -200,7 +200,7 @@ namespace ParquetViewer
                 SchemaType.Map when field is MapField mp && mp.Key.SchemaType == SchemaType.Data
                     && mp.Value.SchemaType == SchemaType.Data => true, //we don't support nested maps
                 SchemaType.Struct when field is StructField sf 
-                    && !sf.Fields.Any(f => f.SchemaType == SchemaType.Struct) => true, //we don't support nested structs
+                    && sf.Fields.All(f => f.SchemaType == SchemaType.Data) => true, //we don't support nested structs
                 _ => false
             };
 
