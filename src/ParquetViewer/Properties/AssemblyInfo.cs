@@ -5,7 +5,7 @@ using System.Runtime.Versioning;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Parquet Viewer")]
+[assembly: AssemblyTitle("ParquetViewer")]
 [assembly: AssemblyDescription("Simple windows desktop application for viewing Apache Parquet files\r\nhttps://github.com/mukunku/ParquetViewer\r\n\r\nSpecial thanks to: https://github.com/aloneguid/parquet-dotnet")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Author: Mukunku")]
@@ -33,4 +33,4 @@ using System.Runtime.Versioning;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.7.2.2")]
+[assembly: AssemblyVersion("2.7.8.0")]
