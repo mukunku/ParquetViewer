@@ -37,7 +37,7 @@ namespace ParquetViewer.Engine
                      new JsonSerializerOptions()
                      {
                          Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, //don't escape anything to make it human readable
-                         WriteIndented = false //keep it minimized. I wonder if users would prefer them to be indented? Bit I feel that wouldn't be desirable for csv exports and such.
+                         WriteIndented = false //keep it minimized.
                      });
             }
             catch (Exception ex)
