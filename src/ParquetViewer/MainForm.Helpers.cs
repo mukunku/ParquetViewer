@@ -1,10 +1,12 @@
-﻿using ParquetViewer.Analytics;
+﻿using CsvHelper;
+using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -115,62 +117,39 @@ namespace ParquetViewer
 
         private void WriteDataToCSVFile(string path, CancellationToken cancellationToken)
         {
-            using var writer = new StreamWriter(path, false, Encoding.UTF8);
-
-            var rowBuilder = new StringBuilder();
-            bool isFirst = true;
-            foreach (DataColumn column in this.MainDataSource.Columns)
+            using (TextWriter writer = new StreamWriter(path, false, System.Text.Encoding.UTF8))
             {
-                if (!isFirst)
+                var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+                //write header
+                foreach (DataColumn column in this.MainDataSource.Columns)
                 {
-                    rowBuilder.Append(',');
-                }
-                else
-                {
-                    isFirst = false;
-                }
-
-                rowBuilder.Append(
-                    column.ColumnName
+                    csv.WriteField(column.ColumnName
                         .Replace("\r", string.Empty)
                         .Replace("\n", string.Empty)
                         .Replace(",", string.Empty));
-            }
-            writer.WriteLine(rowBuilder.ToString());
-
-            foreach (DataRowView row in this.MainDataSource.DefaultView)
-            {
-                rowBuilder.Clear();
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
                 }
-
-                isFirst = true;
-                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                foreach (object value in row.Row.ItemArray)
+                csv.NextRecord();
+                //write rows
+                foreach (DataRowView row in this.MainDataSource.DefaultView)
                 {
-                    if (!isFirst)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        rowBuilder.Append(',');
+                        break;
                     }
-                    else
+                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                    foreach (object value in row.Row.ItemArray)
                     {
-                        isFirst = false;
+                        if (value is DateTime dt)
+                        {
+                            csv.WriteField(dt.ToString(dateFormat));
+                        }
+                        else
+                        {
+                            csv.WriteField(value.ToString());
+                        }
                     }
-
-                    if (value is DateTime dt)
-                    {
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
-                    }
-                    else
-                    {
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString()));
-                    }
+                    csv.NextRecord();
                 }
-
-                writer.WriteLine(rowBuilder.ToString());
             }
         }
 

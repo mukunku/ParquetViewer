@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Apache.Arrow" Version="13.0.0" />
+    <PackageVersion Include="CsvHelper" Version="30.0.1" />
     <PackageVersion Include="Parquet.Net" Version="4.16.2" />
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />

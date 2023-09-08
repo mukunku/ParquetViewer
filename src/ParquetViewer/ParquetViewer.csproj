@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Apache.Arrow" />
+    <PackageReference Include="CsvHelper" />
     <PackageReference Include="Microsoft.CSharp" />
     <PackageReference Include="Parquet.Net" />
     <PackageReference Include="System.Data.DataSetExtensions" />
