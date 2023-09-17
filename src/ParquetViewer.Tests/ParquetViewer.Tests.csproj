@@ -98,6 +98,9 @@
     <None Update="Data\SAME_COLUMN_NAME_DIFFERENT_CASING1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\STRUCT_TEST1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

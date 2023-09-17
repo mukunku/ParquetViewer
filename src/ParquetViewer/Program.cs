@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Exceptions;
 using System;
 using System.IO;
 using System.Windows.Forms;
@@ -53,10 +54,10 @@ namespace ParquetViewer
             if (!System.Diagnostics.Debugger.IsAttached)
             {
                 // Add the event handler for handling non-UI thread exceptions to the event. 
-                AppDomain.CurrentDomain.UnhandledException += new ((sender, e) => ExceptionHandler((Exception)e.ExceptionObject));
+                AppDomain.CurrentDomain.UnhandledException += new((sender, e) => ExceptionHandler((Exception)e.ExceptionObject));
 
                 // Add the event handler for handling UI thread exceptions to the event.
-                Application.ThreadException += new ((sender, e) => ExceptionHandler(e.Exception));
+                Application.ThreadException += new((sender, e) => ExceptionHandler(e.Exception));
             }
         }
 
@@ -66,17 +67,28 @@ namespace ParquetViewer
             MessageBox.Show($"Something went wrong (CTRL+C to copy):{Environment.NewLine}{ex}", ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
+        /// <summary>
+        /// We only ask for consent if the user launched the app at least twice, 1 day apart.
+        /// </summary>
         public static void GetUserConsentToGatherAnalytics()
         {
-            if (!AppSettings.AnalyticsDataGatheringConsent && AssemblyVersionToInt(AppSettings.ConsentLastAskedOnVersion) < AssemblyVersionToInt(AboutBox.AssemblyVersion))
+            if (AppSettings.AnalyticsDataGatheringConsent)
+            {
+                //Keep user's consent asked version up to date with the current assembly version
+                if (AssemblyVersionToInt(AppSettings.ConsentLastAskedOnVersion) < AssemblyVersionToInt(AboutBox.AssemblyVersion))
+                {
+                    AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
+                }
+            }
+            else if (AssemblyVersionToInt(AppSettings.ConsentLastAskedOnVersion) < AssemblyVersionToInt(AboutBox.AssemblyVersion))
             {
                 bool isFirstLaunch = AppSettings.ConsentLastAskedOnVersion is null;
                 if (isFirstLaunch)
                 {
-                    //Don't ask for consent on the first launch. Lets do it on the second one so it's less annoying.
-                    AppSettings.ConsentLastAskedOnVersion = "0";
+                    //Don't ask for consent on the first launch. Record the day of the month instead so we can ask tomorrow. 
+                    AppSettings.ConsentLastAskedOnVersion = DateTime.Now.Day.ToString();
                 }
-                else
+                else if (AppSettings.ConsentLastAskedOnVersion != DateTime.Now.Day.ToString())
                 {
                     AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
                     if (MessageBox.Show($"Would you like to share anonymous usage data to help make ParquetViewer better?{Environment.NewLine}{Environment.NewLine}" +
@@ -88,7 +100,18 @@ namespace ParquetViewer
                 }
             }
 
-            int AssemblyVersionToInt(string? version) => int.Parse(version?.Replace(".", string.Empty) ?? "0");
+            static int AssemblyVersionToInt(string? version)
+            {
+                try
+                {
+                    return int.Parse(version?.Replace(".", string.Empty) ?? "0");
+                }
+                catch (Exception ex)
+                {
+                    ExceptionEvent.FireAndForget(new UnsupportedAssemblyVersionException(ex));
+                    return 0;
+                }
+            }
         }
     }
 }

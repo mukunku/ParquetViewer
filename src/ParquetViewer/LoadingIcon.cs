@@ -107,7 +107,7 @@ namespace ParquetViewer
                 this._progressRatio = progressRatio;
 
                 lock (_lock) //This part isn't thread-safe
-                { 
+                {
                     //Convert the cancel button into a progress bar
                     var bitmap = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
                     using (var solidBrush = new SolidBrush(Color.FromArgb(160, 40, 160, 60)))

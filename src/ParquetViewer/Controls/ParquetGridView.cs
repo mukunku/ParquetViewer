@@ -124,7 +124,7 @@ namespace ParquetViewer.Controls
 
                     e.Handled = true;
                 }
-                else if (e.Value is ListValue || e.Value is MapValue)
+                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
                 {
                     e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
@@ -142,7 +142,7 @@ namespace ParquetViewer.Controls
                 return;
 
             var valueType = this.Columns[e.ColumnIndex].ValueType;
-            if (valueType == typeof(ListValue) || valueType == typeof(MapValue))
+            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue))
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
@@ -265,6 +265,13 @@ namespace ParquetViewer.Controls
                 var row = dt.NewRow();
                 row[0] = mapValue.Key;
                 row[1] = mapValue.Value;
+                dt.Rows.Add(row);
+            }
+            else if (clickedCell.Value is StructValue structValue)
+            {
+                dt = structValue.Data.Table.Clone();
+                var row = dt.NewRow();
+                row.ItemArray = structValue.Data.ItemArray;
                 dt.Rows.Add(row);
             }
 

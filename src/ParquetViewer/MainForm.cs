@@ -397,13 +397,13 @@ namespace ParquetViewer
                     string queryText = this.searchFilterTextBox.Text ?? string.Empty;
                     queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
 
-                    //Treat list and map types as strings by casting them automatically
+                    //Treat list, map, and struct types as strings by casting them automatically
                     foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue))
+                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue) || c.ValueType == typeof(StructValue))
                         .Select(c => c.Name))
                     {
                         //This isn't perfect but it should handle most cases
-                        queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)");
+                        queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
                     }
 
                     var queryEvent = new ExecuteQueryEvent
