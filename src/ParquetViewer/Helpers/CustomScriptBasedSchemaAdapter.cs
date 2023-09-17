@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ParquetViewer.Engine;
+using System;
 using System.Collections;
 using System.Data;
 using System.Text;
@@ -32,7 +33,10 @@ namespace ParquetViewer.Helpers
                 { typeof(sbyte), "TINYINT {1}NULL" },
                 { typeof(string), "NVARCHAR({0}) {1}NULL" },
                 { typeof(TimeSpan), "INT {1}NULL" },
-                { typeof(byte[]), "VARBINARY {1}NULL" }
+                { typeof(byte[]), "VARBINARY {1}NULL" },
+                { typeof(ListValue), "sql_variant {1}NULL /*LIST*/" },
+                { typeof(MapValue), "sql_variant {1}NULL /*MAP*/" },
+                { typeof(StructValue), "sql_variant {1}NULL /*STRUCT*/" },
             };
             TypeMap = hashtable;
         }

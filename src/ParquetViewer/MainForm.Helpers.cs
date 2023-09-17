@@ -287,7 +287,7 @@ namespace ParquetViewer
         private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
 
         /// <summary>
-        /// We don't have a way to handle arrays at the moment. So let's render them as strings for now as a hack.
+        /// We don't have a way to handle byte arrays at the moment. So let's render them as strings for now as a hack.
         /// Ideally we should set 'AutoGenerateColumns' to 'false' on the gridview and generate the datagridview columns ourselves.
         /// That way we can avoid things like the automatic logic creating 'DataGridViewImageCell' types for byte[] values (#79).
         /// </summary>

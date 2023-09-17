@@ -87,6 +87,8 @@ namespace ParquetViewer
                 var scriptAdapter = new CustomScriptBasedSchemaAdapter();
                 string sql = scriptAdapter.GetSchemaScript(dataset, false);
 
+                dataset.Tables.Remove(this.mainDataSource); //If we don't remove it, we can get errors in rare cases
+
                 Clipboard.SetText(sql);
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.SQLCreateTable);
                 MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
