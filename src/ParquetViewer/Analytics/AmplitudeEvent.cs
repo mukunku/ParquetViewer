@@ -11,13 +11,13 @@ namespace ParquetViewer.Analytics
     public abstract class AmplitudeEvent
     {
         //The api key is meant to be public: https://www.docs.developers.amplitude.com/guides/amplitude-keys-guide/#api-key
-        protected string AMPLITUDE_API_KEY = ""; //This will only be populated for official releases
-
+        private const string AMPLITUDE_API_KEY = ""; //This will only be populated for official releases
+        
         private static readonly long _sessionId = DateTime.UtcNow.ToMillisecondsSinceEpoch();
         private static readonly int _systemRAM = (int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/);
-
-        protected HttpMessageHandler HttpMessageHandler { get; set; } = new HttpClientHandler();
-        protected bool BypassConsentRequirement { get; set; }
+        private static readonly AmplitudeConfiguration _defaultConfiguration = new(AMPLITUDE_API_KEY, () => new HttpClientHandler(), new AppSettingsConsentProvider());
+        
+        private readonly AmplitudeConfiguration _amplitudeConfiguration;
 
         [JsonIgnore]
         public string DeviceId => AppSettings.AnalyticsDeviceId.ToString();
@@ -45,21 +45,22 @@ namespace ParquetViewer.Analytics
 #endif
         };
 
-        protected AmplitudeEvent(string eventType)
+        protected AmplitudeEvent(string eventType, AmplitudeConfiguration? amplitudeConfiguration = null)
         {
             EventType = eventType;
+            _amplitudeConfiguration = amplitudeConfiguration ?? _defaultConfiguration;
         }
 
         public async Task<bool> Record()
         {
             try
             {
-                if (!BypassConsentRequirement && (AMPLITUDE_API_KEY.Length == 0 || !AppSettings.AnalyticsDataGatheringConsent))
+                if (_amplitudeConfiguration.ApiKey.Length == 0 || !_amplitudeConfiguration.ConsentProvider.AnalyticsDataGatheringConsent)
                     return false;
 
                 var request = new
                 {
-                    api_key = string.Join(string.Empty, Base64Decode(AMPLITUDE_API_KEY)),
+                    api_key = string.Join(string.Empty, Base64Decode(_amplitudeConfiguration.ApiKey)),
                     events = new[] {
                     new {
                         device_id = DeviceId,
@@ -75,7 +76,8 @@ namespace ParquetViewer.Analytics
                     }
                 };
 
-                var result = await new HttpClient(this.HttpMessageHandler).PostAsync("https://api2.amplitude.com/2/httpapi", JsonContent.Create(request));
+                var result = await new HttpClient(this._amplitudeConfiguration.HttpMessageHandlerProvider.Invoke())
+                    .PostAsync("https://api2.amplitude.com/2/httpapi", JsonContent.Create(request));
                 return result.IsSuccessStatusCode;
             }
             catch { /* Analytics is best effort. If it fails, it fails */ }

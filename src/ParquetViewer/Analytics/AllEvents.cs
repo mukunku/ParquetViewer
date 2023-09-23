@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Analytics
 {
@@ -140,16 +141,33 @@ namespace ParquetViewer.Analytics
 
     public class ExceptionEvent : AmplitudeEvent
     {
+        public const string MASK_SENTINEL = "*****";
+
         private const string EVENT_TYPE = "exception.thrown";
 
         [JsonIgnore]
         public System.Exception Exception { get; set; }
 
-        public string Message => Exception?.Message;
+        public string Message
+        {
+            get
+            {
+                var message = Exception?.Message;
+
+                if (string.IsNullOrWhiteSpace(message))
+                    return message;
+
+                //Mask sensitive text that is wrapped with ` `
+                message = Regex.Replace(message, "`[^`]+`", MASK_SENTINEL);
+                return message;
+            }
+        }
+            
         public string StackTrace => Exception?.StackTrace?.ToString();
         public string InnerException => Exception?.InnerException?.ToString();
 
-        public ExceptionEvent() : base(EVENT_TYPE)
+        public ExceptionEvent(AmplitudeConfiguration? amplitudeConfiguration = null) 
+            : base(EVENT_TYPE, amplitudeConfiguration)
         {
 
         }

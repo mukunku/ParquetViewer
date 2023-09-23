@@ -1,3 +1,4 @@
+using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
 using RichardSzalay.MockHttp;
 using System.Globalization;
@@ -198,12 +199,9 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task AMPLITUDE_EVENT_TEST()
         {
-            const string dummyApiKeyBase64 = "ZHVtbXk=";
-            var testEvent = new TestAmplitudeEvent(dummyApiKeyBase64)
-            {
-                IgnoredProperty = "xxx",
-                RegularProperty = "yyy"
-            };
+            var testEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+            testEvent.IgnoredProperty = "xxx";
+            testEvent.RegularProperty = "yyy";
 
             var isSelfContainedExecutable = false;
 #if RELEASE_SELFCONTAINED
@@ -238,14 +236,13 @@ namespace ParquetViewer.Tests
 }}";
 
             //mock the http request
-            var mockHttpHandler = new MockHttpMessageHandler();
             _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
             {
                 //Verify the request we're sending is what we expect it to be
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
 
-                var a = Regex.Replace(requestJsonBody, "\\s", string.Empty);
-                var b = Regex.Replace(expectedRequestJson, "\\s", string.Empty);
+                string a = Regex.Replace(requestJsonBody, "\\s", string.Empty);
+                string b = Regex.Replace(expectedRequestJson, "\\s", string.Empty);
 
                 if (Regex.Replace(requestJsonBody, "\\s", string.Empty)
                     .Equals(Regex.Replace(expectedRequestJson, "\\s", string.Empty)))
@@ -253,10 +250,32 @@ namespace ParquetViewer.Tests
                 else
                     return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
             });
-            testEvent.SwapHttpClientHandler(mockHttpHandler);
 
             bool wasSuccess = await testEvent.Record();
             Assert.True(wasSuccess, "The event json we would have sent to Amplitude didn't match the expected value");
+        }
+
+        [Fact]
+        public async Task AMPLITUDE_EXCEPTION_SENSITIVE_TEXT_MASKING_TEST()
+        {
+            var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+            var testEvent = new ExceptionEvent(testAmplitudeEvent.CloneAmplitudeConfiguration());
+            testEvent.Exception = new Exception("Exception with `sensitive` data");
+
+            //mock the http request
+            _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+            {
+                //Verify the request we're sending is what we expect it to be
+                string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+                if (requestJsonBody.Contains($"Exception with {ExceptionEvent.MASK_SENTINEL} data"))
+                    return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+                else
+                    return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+            });
+
+            bool wasSuccess = await testEvent.Record();
+            Assert.True(wasSuccess, "Sensitive data wasn't stripped out correctly");
         }
 
         [Fact]
@@ -290,6 +309,6 @@ namespace ParquetViewer.Tests
                 Assert.Fail("Looks like the Malformed DateTime Fix is no longer needed! Remove that part of the code.");
             }
             Assert.Equal(typeof(long), dataTable.Rows[0]["ds"]?.GetType()); //If it's not a datetime, then it should be a long.
-        }
+        }  
     }
 }

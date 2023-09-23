@@ -118,9 +118,9 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field {field.Path} is missing its data field"), cancellationToken);
+            var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
-            var fieldIndex = dataTable.Columns[field.DataField.Path.ToString()]?.Ordinal ?? throw new Exception($"Column {field.Path} is missing");
+            var fieldIndex = dataTable.Columns[field.DataField.Path.ToString()]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
             foreach (var value in dataColumn.Data)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -165,11 +165,11 @@ namespace ParquetViewer.Engine
             }
             catch (Exception ex)
             {
-                throw new UnsupportedFieldException($"Cannot load field '{field.Path}. Invalid List type.'", ex);
+                throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Invalid List type.", ex);
             }
 
             if (itemField.Children.Any())
-                throw new UnsupportedFieldException($"Cannot load field '{field.Path}'. Nested list types are not supported");
+                throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested list types are not supported.");
 
             int rowIndex = rowBeginIndex;
 
@@ -238,7 +238,7 @@ namespace ParquetViewer.Engine
             var valueField = keyValueField.GetChild("value");
 
             if (keyField.Children.Any() || valueField.Children.Any())
-                throw new UnsupportedFieldException($"Cannot load field '{field.Path}'. Nested map types are not supported");
+                throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested map types are not supported");
 
             int rowIndex = rowBeginIndex;
 
@@ -267,7 +267,7 @@ namespace ParquetViewer.Engine
 
                 bool isMapTypeValid = keyDataColumn.Data.Length == valueDataColumn.Data.Length;
                 if (!isMapTypeValid)
-                    throw new UnsupportedFieldException($"{field.Path} is malformed and cannot be loaded");
+                    throw new UnsupportedFieldException($"`{field.Path}` is malformed and cannot be loaded");
 
                 var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
                 var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
@@ -316,7 +316,7 @@ namespace ParquetViewer.Engine
             }
 
             var rowIndex = rowBeginIndex;
-            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column {field.Path} is missing");
+            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
             for (var i = 0; i < structFieldDataTable.Rows.Count; i++)
             {
                 DataRow datarow = GetRow(dataTable, rowIndex);
