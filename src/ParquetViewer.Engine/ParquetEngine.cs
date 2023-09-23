@@ -39,7 +39,7 @@ namespace ParquetViewer.Engine
 
             foreach (var dataField in Schema.GetDataFields())
             {
-                var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new Exception($"Field has no schema path: {dataField.Name}"));
+                var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new Exception($"Field has no schema path: `{dataField.Name}`"));
                 for (var i = 1; i < dataField.Path.Length; i++)
                 {
                     field = field.GetChild(dataField.Path[i]);

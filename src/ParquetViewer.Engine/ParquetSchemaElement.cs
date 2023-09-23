@@ -40,7 +40,7 @@ namespace ParquetViewer.Engine
             }
 
             ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
-                ? result : throw new Exception($"Field schema path not found: {Path}/{name}");
+                ? result : throw new Exception($"Field schema path not found: `{Path}/{name}`");
         }
 
         public ParquetSchemaElement GetImmediateChildOrSingle(string name)
@@ -55,7 +55,7 @@ namespace ParquetViewer.Engine
                 return _children.First().Value;
             }
 
-            throw new Exception($"Field schema path not found: {Path}/{name}");
+            throw new Exception($"Field schema path not found: `{Path}/{name}`");
         }
     }
 }

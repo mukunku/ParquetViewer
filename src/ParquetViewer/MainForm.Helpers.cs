@@ -326,8 +326,15 @@ namespace ParquetViewer
                     //Stringify and copy the data
                     foreach (DataRow row in data.Rows)
                     {
-                        var value = (byte[])row[tempColumnName];
-                        row[columnName] = BitConverter.ToString(value);
+                        if (row[tempColumnName] is null || row[tempColumnName] == DBNull.Value)
+                        {
+                            row[columnName] = DBNull.Value;
+                        }
+                        else
+                        {
+                            var value = (byte[])row[tempColumnName];
+                            row[columnName] = BitConverter.ToString(value);
+                        }
                     }
 
                     //remove the array column
