@@ -45,7 +45,7 @@ namespace ParquetViewer
         private void RenderFieldsCheckboxes(List<Field> availableFields, List<string> preSelectedFields)
         {
             this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
-            this.fieldsPanel.Controls.Clear();
+            this.ClearAndDisposeCheckboxes();
             this.fieldsPanel.VerticalScroll.Value = 0; //Scroll to the top
 
             try
@@ -190,6 +190,27 @@ namespace ParquetViewer
             {
                 this.fieldsPanel.ResumeLayout();
             }
+        }
+
+        /// <summary>
+        /// Makes sure we properly dispose our form controls before removing them from the panel
+        /// to avoid memory leaks. Details: https://stackoverflow.com/a/310281/1458738
+        /// </summary>
+        private void ClearAndDisposeCheckboxes()
+        {
+            //Dispose each control
+            foreach (var checkbox in this.fieldsPanel.Controls)
+            {
+                try
+                {
+                    if (checkbox is Control c)
+                        c.Dispose();
+                }
+                catch { /* swallow exception */ }
+            }
+
+            //Now we're safe to clear the panel
+            this.fieldsPanel.Controls.Clear();
         }
 
         public static bool IsSupportedFieldType(Field field) =>

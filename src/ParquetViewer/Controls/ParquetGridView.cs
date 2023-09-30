@@ -347,8 +347,8 @@ namespace ParquetViewer.Controls
         /// </summary>
         private void FastAutoSizeColumns()
         {
-            const string WHITESPACE_BUFFER = "#";
-            const int MAX_WIDTH = 500;
+            const string WHITESPACE_BUFFER = "##";
+            const int MAX_WIDTH = 450;
 
             // Cast out a DataTable from the target grid datasource.
             // We need to iterate through all the data in the grid and a DataTable supports enumeration.
@@ -409,7 +409,17 @@ namespace ParquetViewer.Controls
                     this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
                 }
 
-                int MeasureStringWidth(string input) => (int)gfx.MeasureString(input, this.Font).Width;
+                int MeasureStringWidth(string input)
+                {
+                    try
+                    {
+                        return (int)gfx.MeasureString(input, this.Font).Width;
+                    }
+                    catch (Exception)
+                    {
+                        return int.MaxValue; //Assume worst case
+                    }
+                }
             }
         }
 
