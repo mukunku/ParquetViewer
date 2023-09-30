@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
 
@@ -128,8 +129,31 @@ namespace ParquetViewer
                     WriteIndented = true
                 });
 
-            Clipboard.SetText(rawJson);
-            MessageBox.Show("Raw Thrift metadata copied to clipboard.", "ParquetViewer");
+            try
+            {
+                Clipboard.SetText(rawJson);
+                MessageBox.Show("Raw Thrift metadata copied to clipboard.", "ParquetViewer");
+            }
+            catch (Exception)
+            {
+                var selection = MessageBox.Show("Failed to copy metadata to your clipboard. Save to a file instead?", "Copy error", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (selection == DialogResult.Yes)
+                {
+                    var saveFileDialog = new SaveFileDialog();
+                    saveFileDialog.Filter = "JSON file|*.json";
+                    saveFileDialog.Title = "Save raw metadata";
+                    saveFileDialog.ShowDialog();
+
+                    if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
+                    {
+                        using var fileStream = File.OpenWrite(saveFileDialog.FileName);
+                        using var writer = new StreamWriter(fileStream);
+                        writer.Write(rawJson);
+
+                        MessageBox.Show($"Metadata successfully exported to: {saveFileDialog.FileName}", "Export complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
         }
 
         private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
