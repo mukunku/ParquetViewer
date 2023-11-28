@@ -63,6 +63,16 @@ namespace ParquetViewer.Controls
 
         private void QuickPeakForm_Load(object sender, EventArgs e)
         {
+            var width = 0;
+            if (this.mainGridView is not null)
+            {
+                width = this.mainGridView.RowHeadersWidth + 26; /* magic number? */
+                foreach (DataGridViewColumn column in this.mainGridView.Columns)
+                {
+                    width += column.Width;
+                }
+            }
+            this.Width = Math.Min(Math.Max(width, 280), 900); //900 pixel max seems reasonable, right?
             this.Location = new Point(Cursor.Position.X + 5, Cursor.Position.Y);
         }
 
