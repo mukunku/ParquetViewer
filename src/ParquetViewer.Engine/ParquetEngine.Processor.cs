@@ -309,16 +309,16 @@ namespace ParquetViewer.Engine
             //Read the struct data and populate the datatable
             await ProcessRowGroup(structFieldDataTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
 
-            if (isFirstColumn)
-            {
-                var newRow = dataTable.NewRow();
-                dataTable.Rows.Add(newRow);
-            }
-
             var rowIndex = rowBeginIndex;
             var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
             for (var i = 0; i < structFieldDataTable.Rows.Count; i++)
             {
+                if (isFirstColumn)
+                {
+                    var newRow = dataTable.NewRow();
+                    dataTable.Rows.Add(newRow);
+                }
+
                 DataRow datarow = GetRow(dataTable, rowIndex);
                 datarow[fieldIndex] = new StructValue(field.Path, structFieldDataTable.Rows[i]);
                 rowIndex++;
