@@ -182,18 +182,21 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/STRUCT_TEST1.parquet", default);
 
-            Assert.Equal(2, parquetEngine.RecordCount);
-            Assert.Equal(2, parquetEngine.Fields.Count);
+            Assert.Equal(10, parquetEngine.RecordCount);
+            Assert.Equal(6, parquetEngine.Fields.Count);
 
-            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
-            Assert.IsType<string>(dataTable.Rows[0][0]);
-            Assert.Equal("12345-6", (string)dataTable.Rows[0][0]);
+            //We currently only support three of the fields in this test file
+            string[] supportedFields = { "txn", "remove", "protocol" };
+            var dataTable = await parquetEngine.ReadRowsAsync(
+                parquetEngine.Fields.Where(f => supportedFields.Contains(f)).ToList(), 0, int.MaxValue, default);
+            Assert.IsType<StructValue>(dataTable.Rows[0][0]);
+            Assert.Equal("{\"appId\":{},\"version\":0,\"lastUpdated\":{}}", ((StructValue)dataTable.Rows[0][0]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][1]);
-            Assert.Equal("{\"firstName\":\"Ivan\",\"lastName\":\"Gavryliuk\"}", ((StructValue)dataTable.Rows[0][1]).ToString());
-            Assert.IsType<string>(dataTable.Rows[1][0]);
-            Assert.Equal("12345-7", (string)dataTable.Rows[1][0]);
-            Assert.IsType<StructValue>(dataTable.Rows[1][1]);
-            Assert.Equal("{\"firstName\":\"Richard\",\"lastName\":\"Conway\"}", ((StructValue)dataTable.Rows[1][1]).ToString());
+            Assert.Equal("{\"path\":{},\"deletionTimestamp\":{},\"dataChange\":false}", ((StructValue)dataTable.Rows[0][1]).ToString());
+            Assert.IsType<StructValue>(dataTable.Rows[0][2]);
+            Assert.Equal("{\"minReaderVersion\":1,\"minWriterVersion\":2}", ((StructValue)dataTable.Rows[0][2]).ToString());
+            Assert.IsType<DBNull>(dataTable.Rows[9][2]);
+            Assert.Equal(DBNull.Value, dataTable.Rows[9][2]);
         }
 
         [Fact]
