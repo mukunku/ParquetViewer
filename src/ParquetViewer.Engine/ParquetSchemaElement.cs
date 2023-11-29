@@ -25,23 +25,21 @@ namespace ParquetViewer.Engine
             this.SchemaElement = schemaElement;
         }
 
-        public ParquetSchemaElement GetChild(string name)
+        public ParquetSchemaElement GetChild(string name) => GetChildImpl(name);
+    
+        public ParquetSchemaElement GetChild(string? parent, string name)
         {
-            if (name?.Contains('/') == true)
-            {
-                string currentPath = name.Substring(0, name.IndexOf('/'));
-                string remainingPath = name.Substring(name.IndexOf('/') + 1);
-                var child = GetChildImpl(currentPath);
-                return child.GetChild(remainingPath);
-            }
-            else
+            if (parent is null)
             {
                 return GetChildImpl(name);
             }
 
-            ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
-                ? result : throw new Exception($"Field schema path not found: `{Path}/{name}`");
+            var child = GetChildImpl(parent);
+            return child.GetChild(name);
         }
+
+        private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
+                ? result : throw new Exception($"Field schema path not found: `{Path}/{name}`");
 
         public ParquetSchemaElement GetImmediateChildOrSingle(string name)
         {

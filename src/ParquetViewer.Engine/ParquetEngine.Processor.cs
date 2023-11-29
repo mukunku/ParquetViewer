@@ -21,7 +21,7 @@ namespace ParquetViewer.Engine
         public async Task<DataTable> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
             long recordsLeftToRead = recordCount;
-            DataTable result = BuildDataTable(selectedFields);
+            DataTable result = BuildDataTable(null, selectedFields);
             result.BeginLoadData(); //might speed things up
 
             foreach (var reader in this.GetReaders(offset))
@@ -86,7 +86,7 @@ namespace ParquetViewer.Engine
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var field = ParquetSchemaTree.GetChild(column.ColumnName);
+                var field = ParquetSchemaTree.GetChild(column.ExtendedProperties["Parent"] as string, column.ColumnName);
                 if (field.SchemaElement.LogicalType?.LIST is not null || field.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 {
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
@@ -120,7 +120,7 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
-            var fieldIndex = dataTable.Columns[field.DataField.Path.ToString()]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
+            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
             foreach (var value in dataColumn.Data)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -285,7 +285,7 @@ namespace ParquetViewer.Engine
            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read struct data as a new datatable
-            DataTable structFieldDataTable = BuildDataTable(field.Children.Select(f => $"{field.Path}/{f.Path}").ToList());
+            DataTable structFieldDataTable = BuildDataTable(field.Path, field.Children.Select(f => f.Path).ToList());
 
             //Need to calculate progress differently for structs
             var structFieldReadProgress = new SimpleProgress();
@@ -350,12 +350,12 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private DataTable BuildDataTable(List<string> fields)
+        private DataTable BuildDataTable(string? parent, List<string> fields)
         {
             DataTable dataTable = new();
             foreach (var field in fields)
             {
-                var schema = ParquetSchemaTree.GetChild(field);
+                var schema = ParquetSchemaTree.GetChild(parent, field);
 
                 DataColumn newColumn;
                 if (schema.SchemaElement.ConvertedType == ConvertedType.LIST)
@@ -379,14 +379,16 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    var clrType = schema.DataField?.ClrType ?? throw new Exception($"{field} has no data field");
+                    var clrType = schema.DataField?.ClrType ?? throw new Exception($"{(parent is not null ? parent + "/" : string.Empty)}/{field} has no data field");
                     newColumn = new DataColumn(field, clrType);
                 }
+
+                newColumn.ExtendedProperties.Add("Parent", parent);
 
                 //We don't support case sensitive field names unfortunately
                 if (dataTable.Columns.Contains(newColumn.ColumnName))
                 {
-                    throw new NotSupportedException($"Duplicate column '{field}' detected. Column names are case insensitive and must be unique.");
+                    throw new NotSupportedException($"Duplicate column '{(parent is not null ? parent + "/" : string.Empty)}{field}' detected. Column names are case insensitive and must be unique.");
                 }
 
                 dataTable.Columns.Add(newColumn);

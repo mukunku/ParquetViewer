@@ -312,6 +312,32 @@ namespace ParquetViewer.Tests
                 Assert.Fail("Looks like the Malformed DateTime Fix is no longer needed! Remove that part of the code.");
             }
             Assert.Equal(typeof(long), dataTable.Rows[0]["ds"]?.GetType()); //If it's not a datetime, then it should be a long.
-        }  
+        }
+
+        [Fact]
+        public async Task COLUMN_NAME_WITH_FORWARD_SLASH_TEST1()
+        {
+            //TODO: need to make this file smaller
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH1.parquet", default);
+
+            Assert.Equal(181966, parquetEngine.RecordCount);
+            Assert.Equal(320, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 1, default);
+            Assert.Equal((byte)0, dataTable.Rows[0]["FLC K/L"]);
+        }
+
+        [Fact]
+        public async Task ORACLE_MALFORMED_INT64_TEST1()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/ORACLE_MALFORMED_INT64_TEST1.parquet", default);
+
+            Assert.Equal(126, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default);
+            Assert.Equal("DEPOSIT", dataTable.Rows[0][0]);
+            Assert.Equal((long)1, dataTable.Rows[0][1]);
+        }
     }
 }
