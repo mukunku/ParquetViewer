@@ -20,9 +20,11 @@ namespace ParquetViewer.Engine
             Data = data;
         }
 
-        public override string ToString() => DataTableToJSONWithJavaScriptSerializer(this.Data);
+        public override string ToString() => DataTableToJSONWithJavaScriptSerializer(this.Data, false);
 
-        private string DataTableToJSONWithJavaScriptSerializer(DataRow dataRow)
+        public string ToStringTruncated() => DataTableToJSONWithJavaScriptSerializer(this.Data, true);
+
+        private string DataTableToJSONWithJavaScriptSerializer(DataRow dataRow, bool truncateForDisplay)
         {
             try
             {
@@ -30,7 +32,26 @@ namespace ParquetViewer.Engine
                 foreach (DataColumn col in dataRow.Table.Columns)
                 {
                     string columnName = col.ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
-                    record.Add(columnName, dataRow[col]);
+
+                    var value = dataRow[col];
+
+                    if (truncateForDisplay)
+                    {
+                        if (value is ByteArrayValue byteArrayValue)
+                        {
+                            var byteArrayAsString = byteArrayValue.ToString();
+                            if (byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
+                            {
+                                value = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
+                            }
+                            else
+                            {
+                                value = byteArrayAsString;
+                            }
+                        }
+                    }
+
+                    record.Add(columnName, value);
                 }
 
                 return JsonSerializer.Serialize(record,

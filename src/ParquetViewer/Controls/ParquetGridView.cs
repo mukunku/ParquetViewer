@@ -11,8 +11,13 @@ namespace ParquetViewer.Controls
 {
     internal class ParquetGridView : DataGridView
     {
+        //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
+        //But lets use something smaller to increase rendering performance.
+        private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 400; 
+
         private readonly ToolTip dateOnlyFormatWarningToolTip = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
+        private bool isCopyingToClipboard = false;
 
         public ParquetGridView() : base()
         {
@@ -37,6 +42,7 @@ namespace ParquetViewer.Controls
             RowHeadersWidth = 24;
             SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
             ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            ShowCellToolTips = false; //tooltips for columns with very long strings cause performance issues. This was the easiest solution
         }
 
         protected override void OnDataSourceChanged(EventArgs e)
@@ -45,9 +51,9 @@ namespace ParquetViewer.Controls
 
             UpdateDateFormats();
 
-            //Handle NULLs for bool types
             foreach (DataGridViewColumn column in this.Columns)
             {
+                //Handle NULLs for bool types
                 if (column is DataGridViewCheckBoxColumn checkboxColumn)
                     checkboxColumn.ThreeState = true;
             }
@@ -164,17 +170,21 @@ namespace ParquetViewer.Controls
                     var copy = new ToolStripMenuItem("Copy");
                     copy.Click += (object clickSender, EventArgs clickArgs) =>
                     {
+                        this.isCopyingToClipboard = true;
                         Clipboard.SetDataObject(this.GetClipboardContent());
+                        this.isCopyingToClipboard = false;
                     };
 
                     var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
                     copyWithHeaders.Click += (object clickSender, EventArgs clickArgs) =>
                     {
+                        this.isCopyingToClipboard = true;
                         this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
                         Clipboard.SetDataObject(this.GetClipboardContent());
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
                         this.RowHeadersVisible = true;
+                        this.isCopyingToClipboard = false;
                     };
 
                     var menu = new ContextMenuStrip();
@@ -328,6 +338,53 @@ namespace ParquetViewer.Controls
             openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
             openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeakForm);
             quickPeakForm.Show(this.Parent ?? this);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C)) 
+            {
+                this.isCopyingToClipboard = true;
+            }
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            this.isCopyingToClipboard = false;
+            base.OnKeyUp(e);
+        }
+
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            base.OnCellFormatting(e);
+
+            if (this.isCopyingToClipboard)
+            {
+                //In order to get the full values into the clipboard we need to
+                //disable formatting during a copy to clipboard operation
+                return;
+            }
+
+            var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
+            if (cellValueType == typeof(ByteArrayValue) || cellValueType == typeof(string))
+            {
+                string value = e.Value.ToString();
+                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                {
+                    e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
+                    e.FormattingApplied = true;
+                }
+            }
+            else if (cellValueType == typeof(StructValue))
+            {
+                string value = e.Value.ToString();
+                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                {
+                    e.Value = ((StructValue)e.Value).ToStringTruncated();
+                    e.FormattingApplied = true;
+                }
+            }
         }
 
         public void ClearQuickPeekForms()

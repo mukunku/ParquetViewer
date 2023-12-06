@@ -128,7 +128,6 @@ namespace ParquetViewer
             set
             {
                 var dataTable = value;
-                ReplaceUnsupportedColumnTypes(dataTable);
                 this.mainDataSource = dataTable;
                 this.mainGridView.DataSource = this.mainDataSource;
             }

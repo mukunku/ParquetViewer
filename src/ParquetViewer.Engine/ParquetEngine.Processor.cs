@@ -121,6 +121,7 @@ namespace ParquetViewer.Engine
             var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
             var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
+            var fieldType = dataTable.Columns[fieldIndex].DataType; var byteArrayValueType = typeof(ByteArrayValue);
             foreach (var value in dataColumn.Data)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -141,7 +142,19 @@ namespace ParquetViewer.Engine
                 }
 
                 DataRow datarow = GetRow(dataTable, rowIndex);
-                datarow[fieldIndex] = FixDateTime(value, field) ?? DBNull.Value;
+
+                if (value == DBNull.Value || value is null)
+                {
+                    datarow[fieldIndex] = DBNull.Value;
+                }
+                else if (fieldType == byteArrayValueType)
+                {
+                    datarow[fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
+                }
+                else
+                {
+                    datarow[fieldIndex] = FixDateTime(value, field);
+                }
 
                 rowIndex++;
                 progress?.Report(1);
@@ -377,6 +390,12 @@ namespace ParquetViewer.Engine
                 {
                     newColumn = new DataColumn(field, typeof(StructValue));
                 }
+                else if (schema.SchemaElement.Type == Parquet.Meta.Type.BYTE_ARRAY
+                    && schema.SchemaElement.LogicalType is null
+                    && schema.SchemaElement.ConvertedType is null)
+                {
+                    newColumn = new DataColumn(field, typeof(ByteArrayValue));
+                }
                 else
                 {
                     var clrType = schema.DataField?.ClrType ?? throw new Exception($"{(parent is not null ? parent + "/" : string.Empty)}/{field} has no data field");
@@ -398,7 +417,7 @@ namespace ParquetViewer.Engine
 
         private object? FixDateTime(object value, ParquetSchemaElement field)
         {
-            if (!this.FixMalformedDateTime || value is null)
+            if (!this.FixMalformedDateTime)
                 return value;
 
             var timestampSchema = field.SchemaElement?.LogicalType?.TIMESTAMP;
@@ -429,7 +448,7 @@ namespace ParquetViewer.Engine
                 if (divideBy > 0)
                     value = DateTimeOffset.FromUnixTimeMilliseconds(castValue / divideBy).DateTime;
                 else //Not sure if this 'else' is correct but adding just in case
-                    value = DateTimeOffset.FromUnixTimeSeconds(castValue);
+                    value = DateTimeOffset.FromUnixTimeSeconds(castValue).DateTime;
             }
 
             return value;
