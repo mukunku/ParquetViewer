@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -13,7 +14,7 @@ namespace ParquetViewer.Controls
     {
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
         //But lets use something smaller to increase rendering performance.
-        private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 400; 
+        private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 400;
 
         private readonly ToolTip dateOnlyFormatWarningToolTip = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
@@ -130,7 +131,7 @@ namespace ParquetViewer.Controls
 
                     e.Handled = true;
                 }
-                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
+                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue || e.Value is ByteArrayValue)
                 {
                     e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
@@ -148,13 +149,17 @@ namespace ParquetViewer.Controls
                 return;
 
             var valueType = this.Columns[e.ColumnIndex].ValueType;
-            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue))
+            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue) || valueType == typeof(ByteArrayValue))
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
                     this.Cursor = Cursors.Hand;
                 else
                     this.Cursor = Cursors.Default;
+            }
+            else
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -284,8 +289,37 @@ namespace ParquetViewer.Controls
                 row.ItemArray = structValue.Data.ItemArray;
                 dt.Rows.Add(row);
             }
+            else if (clickedCell.Value is ByteArrayValue byteArray)
+            {
+                Image image = null;
+                try
+                {
+                    image = GetImage(byteArray.Data);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show(this.Parent, "This byte[] data doesn't seem to represent an image",
+                        "Image preview error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
 
-            if (dt == null)
+                if (image is not null)
+                {
+                    new ImagePreviewForm()
+                    {
+                        PreviewImage = image,
+                        Width = image.Width + 22,
+                        Height = image.Height + 77
+                    }.Show(this.Parent);
+                }
+
+                static Image GetImage(byte[] data)
+                {
+                    using var ms = new MemoryStream(data);
+                    return Image.FromStream(ms);
+                }
+            }
+
+            if (dt is null)
                 return;
 
             var uniqueCellTag = Guid.NewGuid();
@@ -342,7 +376,7 @@ namespace ParquetViewer.Controls
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C)) 
+            if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C))
             {
                 this.isCopyingToClipboard = true;
             }
@@ -404,8 +438,8 @@ namespace ParquetViewer.Controls
         /// </summary>
         private void FastAutoSizeColumns()
         {
-            const string WHITESPACE_BUFFER = "##";
-            const int MAX_WIDTH = 450;
+            const string WHITESPACE_BUFFER = "#|";
+            const int MAX_WIDTH = 400;
 
             // Cast out a DataTable from the target grid datasource.
             // We need to iterate through all the data in the grid and a DataTable supports enumeration.
