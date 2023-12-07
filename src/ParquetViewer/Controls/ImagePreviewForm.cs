@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -20,10 +19,17 @@ namespace ParquetViewer.Controls
             }
         }
 
+
         public ImagePreviewForm()
         {
             InitializeComponent();
             MaximumSize = new Size(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+
+        }
+
+        private void ImagePreviewForm_Load(object sender, EventArgs e)
+        {
+            Location = new Point(Cursor.Position.X + 5, Cursor.Position.Y);
         }
 
         private void saveAsPngButton_Click(object sender, EventArgs e)
@@ -73,6 +79,11 @@ namespace ParquetViewer.Controls
                     $"Could not copy the image to your clipboard. Details:{Environment.NewLine}{ex}",
                     "Copy error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void closeButton_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

@@ -115,6 +115,7 @@
             KeyPreview = true;
             Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             Name = "MetadataViewer";
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Text = "Parquet Metadata Viewer";
             Load += MetadataViewer_Load;
             KeyUp += MetadataViewer_KeyUp;

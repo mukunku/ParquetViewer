@@ -294,13 +294,10 @@ namespace ParquetViewer.Controls
                 Image image = null;
                 try
                 {
-                    image = GetImage(byteArray.Data);
+                    using var ms = new MemoryStream(byteArray.Data);
+                    image = Image.FromStream(ms);
                 }
-                catch (Exception)
-                {
-                    MessageBox.Show(this.Parent, "This byte[] data doesn't seem to represent an image",
-                        "Image preview error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                catch { /* not an image */ }
 
                 if (image is not null)
                 {
@@ -309,13 +306,12 @@ namespace ParquetViewer.Controls
                         PreviewImage = image,
                         Width = image.Width + 22,
                         Height = image.Height + 77
-                    }.Show(this.Parent);
+                    }.Show(this.Parent ?? this);
                 }
-
-                static Image GetImage(byte[] data)
+                else
                 {
-                    using var ms = new MemoryStream(data);
-                    return Image.FromStream(ms);
+                    MessageBox.Show(this.Parent, "This byte[] data doesn't seem to represent an image",
+                        "Image preview error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
@@ -401,7 +397,17 @@ namespace ParquetViewer.Controls
             }
 
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
-            if (cellValueType == typeof(ByteArrayValue) || cellValueType == typeof(string))
+            if (cellValueType == typeof(ByteArrayValue))
+            {
+                string value = e.Value.ToString();
+                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                {
+                    e.Value = value[..(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2)]
+                        + "[...]" + value[(value.Length - (MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2))..];
+                    e.FormattingApplied = true;
+                }
+            }
+            else if (cellValueType == typeof(string))
             {
                 string value = e.Value.ToString();
                 if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)

@@ -33,6 +33,7 @@
             saveAsPngButton = new System.Windows.Forms.Button();
             mainPictureBox = new System.Windows.Forms.PictureBox();
             copyToClipboardButton = new System.Windows.Forms.Button();
+            closeButton = new System.Windows.Forms.Button();
             mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)mainPictureBox).BeginInit();
             SuspendLayout();
@@ -86,17 +87,34 @@
             copyToClipboardButton.UseVisualStyleBackColor = true;
             copyToClipboardButton.Click += copyToClipboardButton_Click;
             // 
+            // closeButton
+            // 
+            closeButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            closeButton.Location = new System.Drawing.Point(94, 0);
+            closeButton.MaximumSize = new System.Drawing.Size(1, 1);
+            closeButton.Name = "closeButton";
+            closeButton.Size = new System.Drawing.Size(1, 0);
+            closeButton.TabIndex = 0;
+            closeButton.TabStop = false;
+            closeButton.Text = "Close";
+            closeButton.UseVisualStyleBackColor = true;
+            closeButton.Click += closeButton_Click;
+            // 
             // ImagePreviewForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.SystemColors.Control;
+            CancelButton = closeButton;
             ClientSize = new System.Drawing.Size(246, 211);
+            Controls.Add(closeButton);
             Controls.Add(mainTableLayoutPanel);
             ForeColor = System.Drawing.Color.Black;
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             Name = "ImagePreviewForm";
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Text = "Image Preview";
+            Load += ImagePreviewForm_Load;
             mainTableLayoutPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)mainPictureBox).EndInit();
             ResumeLayout(false);
@@ -108,5 +126,6 @@
         private System.Windows.Forms.PictureBox mainPictureBox;
         private System.Windows.Forms.Button saveAsPngButton;
         private System.Windows.Forms.Button copyToClipboardButton;
+        private System.Windows.Forms.Button closeButton;
     }
 }
