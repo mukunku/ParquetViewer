@@ -87,7 +87,7 @@ namespace ParquetViewer
                     }
                 }
             }
-            catch(IOException ex)
+            catch (IOException ex)
             {
                 CleanupFile(filePath);
                 ShowError(ex.Message, "File export failed");
