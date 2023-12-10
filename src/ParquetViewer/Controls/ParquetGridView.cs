@@ -14,7 +14,7 @@ namespace ParquetViewer.Controls
     {
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
         //But lets use something smaller to increase rendering performance.
-        private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 400;
+        private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
 
         private readonly ToolTip dateOnlyFormatWarningToolTip = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
@@ -116,7 +116,7 @@ namespace ParquetViewer.Controls
             else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 //Draw NULLs
-                if (e.Value == null || e.Value == DBNull.Value)
+                if (e.Value == DBNull.Value || e.Value == null)
                 {
                     e.Paint(e.CellBounds, DataGridViewPaintParts.All
                         & ~(DataGridViewPaintParts.ContentForeground));
@@ -131,10 +131,25 @@ namespace ParquetViewer.Controls
 
                     e.Handled = true;
                 }
-                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue || e.Value is ByteArrayValue)
+                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
                 {
                     e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
+                }
+                else if (e.Value is ByteArrayValue byteArrayValue)
+                {
+                    var tag = this.Columns[e.ColumnIndex].Tag as string;
+                    if (tag is null || (!tag.Equals("NOT-IMAGE") && !tag.Equals("IMAGE")))
+                    {
+                        tag = byteArrayValue.IsImage() ? "IMAGE" : "NOT-IMAGE";
+                        this.Columns[e.ColumnIndex].Tag = tag;
+                    }
+
+                    if (tag.Equals("IMAGE"))
+                    {
+                        e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
+                        e.CellStyle.ForeColor = Color.Blue;
+                    }
                 }
             }
 
@@ -149,7 +164,8 @@ namespace ParquetViewer.Controls
                 return;
 
             var valueType = this.Columns[e.ColumnIndex].ValueType;
-            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue) || valueType == typeof(ByteArrayValue))
+            var isClickableByteArrayType = valueType == typeof(ByteArrayValue) && this.Columns[e.ColumnIndex].Tag is string tag && tag.Equals("IMAGE");
+            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue) || isClickableByteArrayType)
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
@@ -294,8 +310,7 @@ namespace ParquetViewer.Controls
                 Image image = null;
                 try
                 {
-                    using var ms = new MemoryStream(byteArray.Data);
-                    image = Image.FromStream(ms);
+                    image = byteArray.ToImage();
                 }
                 catch { /* not an image */ }
 
@@ -307,11 +322,6 @@ namespace ParquetViewer.Controls
                         Width = image.Width + 22,
                         Height = image.Height + 77
                     }.Show(this.Parent ?? this);
-                }
-                else
-                {
-                    MessageBox.Show(this.Parent, "This byte[] data doesn't seem to represent an image",
-                        "Image preview error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
@@ -460,10 +470,10 @@ namespace ParquetViewer.Controls
                 for (int i = 0; i < gridTable.Columns.Count; i++)
                 {
                     //Don't autosize the same column twice
-                    if (this.Columns[i].Tag is not null)
+                    if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
                         continue;
                     else
-                        this.Columns[i].Tag = new object();
+                        this.Columns[i].Tag = "AUTOSIZED";
 
                     //Fit header by default. If header is short, make sure NULLs will fit at least
                     string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
