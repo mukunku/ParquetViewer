@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Engine;
+﻿using ParquetViewer.Analytics;
+using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -274,9 +275,12 @@ namespace ParquetViewer.Controls
                 return;
             }
 
+            var dataType = QuickPeekEvent.DataTypeId.Unknown;
             DataTable dt = null;
             if (clickedCell.Value is ListValue listValue)
             {
+                dataType = QuickPeekEvent.DataTypeId.List;
+
                 dt = new DataTable();
                 dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type));
 
@@ -289,6 +293,8 @@ namespace ParquetViewer.Controls
             }
             else if (clickedCell.Value is MapValue mapValue)
             {
+                dataType = QuickPeekEvent.DataTypeId.Map;
+
                 dt = new DataTable();
                 dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-key", mapValue.KeyType));
                 dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-value", mapValue.ValueType));
@@ -300,6 +306,8 @@ namespace ParquetViewer.Controls
             }
             else if (clickedCell.Value is StructValue structValue)
             {
+                dataType = QuickPeekEvent.DataTypeId.Struct;
+
                 dt = structValue.Data.Table.Clone();
                 var row = dt.NewRow();
                 row.ItemArray = structValue.Data.ItemArray;
@@ -316,12 +324,16 @@ namespace ParquetViewer.Controls
 
                 if (image is not null)
                 {
+                    dataType = QuickPeekEvent.DataTypeId.Image;
+
                     new ImagePreviewForm()
                     {
                         PreviewImage = image,
                         Width = image.Width + 22,
                         Height = image.Height + 77
                     }.Show(this.Parent ?? this);
+
+                    QuickPeekEvent.FireAndForget(dataType);
                 }
             }
 
@@ -378,6 +390,7 @@ namespace ParquetViewer.Controls
             openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
             openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeakForm);
             quickPeakForm.Show(this.Parent ?? this);
+            QuickPeekEvent.FireAndForget(dataType);
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -413,7 +426,7 @@ namespace ParquetViewer.Controls
                 if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
                 {
                     e.Value = value[..(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2)]
-                        + "[...]" + value[(value.Length - (MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2))..];
+                        + " [...] " + value[(value.Length - (MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2))..];
                     e.FormattingApplied = true;
                 }
             }

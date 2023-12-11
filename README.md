@@ -16,7 +16,7 @@ Some key features:
 # Download
 Releases can be found here: https://github.com/mukunku/ParquetViewer/releases
 
-Visit the Wiki for details on how to use the utility: https://github.com/mukunku/ParquetViewer/wiki
+Details on how to use the utility can be found in [the Wiki](https://github.com/mukunku/ParquetViewer/wiki)
 
 # Analytics
 Users can opt-in to share anonymous usage data to help make the app better. [^1]
@@ -26,7 +26,7 @@ Checkout the [ParquetViewer Analytics Dashboard](https://app.amplitude.com/analy
 [^1]: Full privacy policy here: https://github.com/mukunku/ParquetViewer/wiki/Privacy-Policy
 
 # Technical Details
-The latest version of this project was written in C# using Microsoft Visual Studio Community 2022 v17.7.3 and .NET 7
+The latest version of this project was written in C# using Microsoft Visual Studio Community 2022 v17.8.3 and .NET 7
 
 # Acknowledgements
 This utility would not be possible without: https://github.com/aloneguid/parquet-dotnet
