@@ -516,14 +516,21 @@ namespace ParquetViewer.Controls
                         // Get the last and longest string in the array.
                         string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
 
-                        if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
-                            longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
+                        if (longestColString.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                        {
+                            newColumnSize = int.MaxValue;
+                        }
+                        else
+                        {
+                            if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
+                                longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
 
-                        var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
+                            var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
 
-                        // If the calculated width is larger than the column header width, use that instead
-                        if (maxColWidth > newColumnSize)
-                            newColumnSize = maxColWidth;
+                            // If the calculated width is larger than the column header width, use that instead
+                            if (maxColWidth > newColumnSize)
+                                newColumnSize = maxColWidth;
+                        }
                     }
 
                     this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
