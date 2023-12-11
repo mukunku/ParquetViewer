@@ -19,12 +19,10 @@ namespace ParquetViewer.Controls
             }
         }
 
-
         public ImagePreviewForm()
         {
             InitializeComponent();
             MaximumSize = new Size(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
-
         }
 
         private void ImagePreviewForm_Load(object sender, EventArgs e)
@@ -34,50 +32,32 @@ namespace ParquetViewer.Controls
 
         private void saveAsPngButton_Click(object sender, EventArgs e)
         {
-            try
+            var saveFileDialog = new SaveFileDialog
             {
-                var saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "PNG image|*.png",
-                    Title = "Save image as PNG"
-                };
-                saveFileDialog.ShowDialog();
+                Filter = "PNG image|*.png",
+                Title = "Save image as PNG"
+            };
+            saveFileDialog.ShowDialog();
 
-                if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
-                {
-                    this.mainPictureBox.Image.Save(saveFileDialog.FileName);
-
-                    MessageBox.Show($"Image saved to {saveFileDialog.FileName}", "Save complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex)
+            if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
             {
-                MessageBox.Show(this,
-                    $"Something went wrong. Details:{Environment.NewLine}{ex}",
-                    "Save as PNG error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.mainPictureBox.Image.Save(saveFileDialog.FileName);
+
+                MessageBox.Show($"Image saved to {saveFileDialog.FileName}", "Save complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
         private async void copyToClipboardButton_Click(object sender, EventArgs e)
         {
-            try
+            Clipboard.SetImage(this.mainPictureBox.Image);
+            if (sender is Button button)
             {
-                Clipboard.SetImage(this.mainPictureBox.Image);
-                if (sender is Button button)
-                {
-                    string buttonText = button.Text;
-                    button.Text = "Copied!";
-                    button.Enabled = false;
-                    await Task.Delay(2000);
-                    button.Enabled = true;
-                    button.Text = buttonText;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this,
-                    $"Could not copy the image to your clipboard. Details:{Environment.NewLine}{ex}",
-                    "Copy error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string buttonText = button.Text;
+                button.Text = "Copied!";
+                button.Enabled = false;
+                await Task.Delay(2000);
+                button.Enabled = true;
+                button.Text = buttonText;
             }
         }
 
