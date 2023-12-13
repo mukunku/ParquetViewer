@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ParquetViewer.Helpers;
+using System;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -28,6 +29,14 @@ namespace ParquetViewer.Controls
         private void ImagePreviewForm_Load(object sender, EventArgs e)
         {
             Location = new Point(Cursor.Position.X + 5, Cursor.Position.Y);
+
+            this.Text += $" (Dimensions: {this.PreviewImage.PhysicalDimension.Width} x {this.PreviewImage.PhysicalDimension.Height})";
+            this.Text += $" (Type: {this.PreviewImage.RawFormat})";
+
+            this.Width = Math.Min((int)(Screen.PrimaryScreen.Bounds.Width / 1.8), this.mainPictureBox.Image.Width);
+            this.Height = Math.Min((int)(Screen.PrimaryScreen.Bounds.Height / 1.8), this.mainPictureBox.Image.Height);
+
+            this.Size = this.mainPictureBox.RenderedSize();
         }
 
         private void saveAsPngButton_Click(object sender, EventArgs e)

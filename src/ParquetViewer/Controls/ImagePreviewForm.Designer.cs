@@ -68,11 +68,12 @@
             // 
             // mainPictureBox
             // 
+            mainPictureBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             mainTableLayoutPanel.SetColumnSpan(mainPictureBox, 2);
-            mainPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
             mainPictureBox.Location = new System.Drawing.Point(3, 3);
             mainPictureBox.Name = "mainPictureBox";
             mainPictureBox.Size = new System.Drawing.Size(240, 173);
+            mainPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             mainPictureBox.TabIndex = 0;
             mainPictureBox.TabStop = false;
             // 

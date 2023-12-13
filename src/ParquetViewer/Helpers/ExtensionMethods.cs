@@ -102,5 +102,14 @@ namespace ParquetViewer.Helpers
                 return false;
             }
         }
+
+        public static Size RenderedSize(this PictureBox pictureBox)
+        {
+            var wfactor = (double)pictureBox.Image.Width / pictureBox.ClientSize.Width;
+            var hfactor = (double)pictureBox.Image.Height / pictureBox.ClientSize.Height;
+
+            var resizeFactor = Math.Max(wfactor, hfactor);
+            return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
+        }
     }
 }
