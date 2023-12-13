@@ -33,24 +33,27 @@ namespace ParquetViewer.Controls
             this.Text += $" (Dimensions: {this.PreviewImage.PhysicalDimension.Width} x {this.PreviewImage.PhysicalDimension.Height})";
             this.Text += $" (Type: {this.PreviewImage.RawFormat})";
 
-            this.Width = Math.Min((int)(Screen.PrimaryScreen.Bounds.Width / 1.8), this.mainPictureBox.Image.Width);
-            this.Height = Math.Min((int)(Screen.PrimaryScreen.Bounds.Height / 1.8), this.mainPictureBox.Image.Height);
+            this.Width = Math.Max(Math.Min((int)(Screen.PrimaryScreen.Bounds.Width / 1.8), this.mainPictureBox.Image.Width), 400);
+            this.Height = Math.Max(Math.Min((int)(Screen.PrimaryScreen.Bounds.Height / 1.8), this.mainPictureBox.Image.Height), 400);
 
-            this.Size = this.mainPictureBox.RenderedSize();
+            this.Size = this.mainPictureBox.RenderedSize() + new Size(0, 60);
+
+            this.saveAsPngButton.Text = $"Save as {this.PreviewImage.RawFormat}";
         }
 
         private void saveAsPngButton_Click(object sender, EventArgs e)
         {
             var saveFileDialog = new SaveFileDialog
             {
-                Filter = "PNG image|*.png",
-                Title = "Save image as PNG"
+                Filter = $"{this.PreviewImage.RawFormat.ToString().ToUpperInvariant()} image|*.{this.PreviewImage.RawFormat.ToString().ToLowerInvariant()}",
+                Title = $"Save image as {this.PreviewImage.RawFormat.ToString().ToUpperInvariant()}"
             };
             saveFileDialog.ShowDialog();
 
             if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
             {
-                this.mainPictureBox.Image.Save(saveFileDialog.FileName);
+                var bitmap = new Bitmap(this.mainPictureBox.Image);
+                bitmap.Save(saveFileDialog.FileName, this.PreviewImage.RawFormat);
 
                 MessageBox.Show($"Image saved to {saveFileDialog.FileName}", "Save complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
