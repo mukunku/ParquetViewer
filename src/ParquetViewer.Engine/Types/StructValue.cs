@@ -1,39 +1,35 @@
 ﻿using System.Data;
 using System.Text.Json;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.Types
 {
     public class StructValue
     {
         public string Name { get; }
-        public DataRow Data { get; }
+
+        //we are always guaranteed to have exactly one row in 'Data' since we don't allow nested structs right now
+        public DataRow Data { get; } 
 
         public StructValue(string name, DataRow data)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-
-            if (data is null)
-                throw new ArgumentNullException(nameof(data));
-
-            Name = name;
-            Data = data;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Data = data ?? throw new ArgumentNullException(nameof(data));
         }
 
-        public override string ToString() => DataTableToJSONWithJavaScriptSerializer(this.Data, false);
+        public override string ToString() => ToJSONWithJavaScriptSerializer(false);
 
-        public string ToStringTruncated() => DataTableToJSONWithJavaScriptSerializer(this.Data, true);
+        public string ToStringTruncated() => ToJSONWithJavaScriptSerializer(true);
 
-        private string DataTableToJSONWithJavaScriptSerializer(DataRow dataRow, bool truncateForDisplay)
+        private string ToJSONWithJavaScriptSerializer(bool truncateForDisplay)
         {
             try
             {
                 var record = new Dictionary<string, object>();
-                foreach (DataColumn col in dataRow.Table.Columns)
+                foreach (DataColumn column in this.Data.Table.Columns)
                 {
-                    string columnName = col.ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
+                    string columnName = column.ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
 
-                    var value = dataRow[col];
+                    var value = this.Data[column];
 
                     if (truncateForDisplay)
                     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Text;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.Types
 {
     public class ListValue
     {
@@ -11,20 +11,20 @@ namespace ParquetViewer.Engine
 
         public ListValue(Array data)
         {
-            this.Data = data;
-            this.Type = this.Data?.GetType().GetElementType();
+            Data = data;
+            Type = Data?.GetType().GetElementType();
         }
 
         public ListValue(ArrayList data, Type type)
         {
-            this.Data = data;
-            this.Type = type; //the parameter is needed for the case where the entire list is null
+            Data = data;
+            Type = type; //the parameter is needed for the case where the entire list is null
 
             foreach (var d in data)
             {
                 if (d is not null && d != DBNull.Value)
                 {
-                    if (this.Type != d.GetType())
+                    if (Type != d.GetType())
                     {
                         throw new ArgumentException($"Data type {d.GetType()} doesn't match the passed type {type}");
                     }
@@ -36,10 +36,10 @@ namespace ParquetViewer.Engine
         {
             var sb = new StringBuilder("[");
 
-            if (this.Data is not null)
+            if (Data is not null)
             {
                 bool isFirst = true;
-                foreach (var data in this.Data)
+                foreach (var data in Data)
                 {
                     if (!isFirst)
                         sb.Append(',');

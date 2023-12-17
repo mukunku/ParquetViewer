@@ -1,28 +1,20 @@
 ﻿using Parquet;
 using Parquet.Meta;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
-using System.Reflection.Emit;
 
 namespace ParquetViewer.Engine
 {
     public partial class ParquetEngine
     {
         public static readonly string TotalRecordCountExtendedPropertyKey = "TOTAL_RECORD_COUNT";
-        private static readonly int MinMemoryGBNeededForAdditionalCaching = 8; //Let's not use extra caching if the PC doesn't have more than 8GB memory
 
-        private static bool? _useDataRowCache;
-        private static bool UseDataRowCache =>
-            _useDataRowCache ??= (GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/) > (MinMemoryGBNeededForAdditionalCaching * 1024);
-
-        private readonly Dictionary<DataTable, Dictionary<int, DataRow>> _rowLookupCache = new();
-
-        public async Task<DataTable> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
+        public async Task<Func<DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
             long recordsLeftToRead = recordCount;
-            DataTable result = BuildDataTable(null, selectedFields);
-            result.BeginLoadData(); //might speed things up
+            DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
 
             foreach (var reader in this.GetReaders(offset))
             {
@@ -34,13 +26,17 @@ namespace ParquetViewer.Engine
                 recordsLeftToRead = await PopulateDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
             }
 
-            result.ExtendedProperties.Add(TotalRecordCountExtendedPropertyKey, this.RecordCount);
-            result.EndLoadData();
+            result.DataSetSize = this.RecordCount;
 
-            return result;
+            return () =>
+            {
+                var datatable = result.ToDataTable(cancellationToken);
+                datatable.ExtendedProperties[TotalRecordCountExtendedPropertyKey] = result.DataSetSize;
+                return datatable;
+            };
         }
 
-        private async Task<long> PopulateDataTable(DataTable dataTable, ParquetReader parquetReader,
+        private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
             long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read column by column to generate each row in the datatable
@@ -76,17 +72,17 @@ namespace ParquetViewer.Engine
             return rowsLeftToRead;
         }
 
-        private async Task ProcessRowGroup(DataTable dataTable, ParquetRowGroupReader groupReader,
+        private async Task ProcessRowGroup(DataTableLite dataTable, ParquetRowGroupReader groupReader,
             long skipRecords, long readRecords, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowBeginIndex = dataTable.Rows.Count;
             bool isFirstColumn = true;
 
-            foreach (DataColumn column in dataTable.Columns)
+            foreach (DataTableLite.ColumnLite column in dataTable.Columns.Values)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var field = ParquetSchemaTree.GetChild(column.ExtendedProperties["Parent"] as string, column.ColumnName);
+                var field = ParquetSchemaTree.GetChild(column.Parent, column.Name);
                 if (field.SchemaElement.LogicalType?.LIST is not null || field.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 {
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
@@ -112,7 +108,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadPrimitiveField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
@@ -120,8 +116,8 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
-            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
-            var fieldType = dataTable.Columns[fieldIndex].DataType; var byteArrayValueType = typeof(ByteArrayValue);
+            int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
+            var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
             foreach (var value in dataColumn.Data)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -137,23 +133,20 @@ namespace ParquetViewer.Engine
 
                 if (isFirstColumn)
                 {
-                    var newRow = dataTable.NewRow();
-                    dataTable.Rows.Add(newRow);
+                    dataTable.NewRow();
                 }
-
-                DataRow datarow = GetRow(dataTable, rowIndex);
 
                 if (value == DBNull.Value || value is null)
                 {
-                    datarow[fieldIndex] = DBNull.Value;
+                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                 }
                 else if (fieldType == byteArrayValueType)
                 {
-                    datarow[fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
                 }
                 else
                 {
-                    datarow[fieldIndex] = FixDateTime(value, field);
+                    dataTable.Rows[rowIndex]![fieldIndex] = FixDateTime(value, field);
                 }
 
                 rowIndex++;
@@ -167,7 +160,7 @@ namespace ParquetViewer.Engine
         /// <param name="value">Original value</param>
         /// <param name="field">Schema element</param>
         /// <returns>If the field is a timestamp, a DateTime object will be returned. Otherwise the value will not be changed.</returns>
-        private async Task ReadListField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadListField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var listField = field.GetChild("list");
@@ -217,16 +210,13 @@ namespace ParquetViewer.Engine
                 {
                     if (isFirstColumn)
                     {
-                        var newRow = dataTable.NewRow();
-                        dataTable.Rows.Add(newRow);
+                        dataTable.NewRow();
                     }
-
-                    DataRow datarow = GetRow(dataTable, rowIndex);
 
                     var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
                     rowValue.Add(lastItem);
 
-                    datarow[fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
                     rowValue = null;
 
                     rowIndex++;
@@ -243,7 +233,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadMapField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var keyValueField = field.GetChild("key_value");
@@ -272,11 +262,8 @@ namespace ParquetViewer.Engine
 
                 if (isFirstColumn)
                 {
-                    var newRow = dataTable.NewRow();
-                    dataTable.Rows.Add(newRow);
+                    dataTable.NewRow();
                 }
-
-                DataRow datarow = GetRow(dataTable, rowIndex);
 
                 bool isMapTypeValid = keyDataColumn.Data.Length == valueDataColumn.Data.Length;
                 if (!isMapTypeValid)
@@ -284,7 +271,7 @@ namespace ParquetViewer.Engine
 
                 var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
                 var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
-                datarow[fieldIndex] = new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType);
+                dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType);
 
                 rowIndex++;
                 progress?.Report(1);
@@ -294,128 +281,93 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadStructField(DataTable dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read struct data as a new datatable
-            DataTable structFieldDataTable = BuildDataTable(field.Path, field.Children.Select(f => f.Path).ToList());
+            DataTableLite structFieldTable = BuildDataTable(field.Path, field.Children.Select(f => f.Path).ToList(), 1);
 
             //Need to calculate progress differently for structs
             var structFieldReadProgress = new SimpleProgress();
             structFieldReadProgress.ProgressChanged += (int progressSoFar) =>
             {
-                if (structFieldDataTable.Columns.Count > 0)
+                if (structFieldTable.Columns.Count > 0)
                 {
                     //To report progress accurately we'll need to divide the progress total  
                     //by the field count to convert it to row count in the main data table.
-                    var increment = progressSoFar % structFieldDataTable.Columns.Count;
+                    var increment = progressSoFar % structFieldTable.Columns.Count;
                     if (increment == 0)
                         progress?.Report(1);
                 }
                 else
                 {
-                    //If the struct field has no columns then each read is for each row.
+                    //If the struct field has no columns, then each read is one row.
                     progress?.Report(1);
                 }
             };
 
             //Read the struct data and populate the datatable
-            await ProcessRowGroup(structFieldDataTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
+            await ProcessRowGroup(structFieldTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
 
             var rowIndex = rowBeginIndex;
             var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
-            for (var i = 0; i < structFieldDataTable.Rows.Count; i++)
+            
+            var finalResultDataTable = structFieldTable.ToDataTable(cancellationToken);
+            for (var i = 0; i < finalResultDataTable.Rows.Count; i++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (isFirstColumn)
                 {
-                    var newRow = dataTable.NewRow();
-                    dataTable.Rows.Add(newRow);
+                    dataTable.NewRow();
                 }
 
-                DataRow datarow = GetRow(dataTable, rowIndex);
-                datarow[fieldIndex] = new StructValue(field.Path, structFieldDataTable.Rows[i]);
+                dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, finalResultDataTable.Rows[i]);
                 rowIndex++;
             }
         }
 
-        private DataRow GetRow(DataTable dataTable, int rowIndex)
+        private DataTableLite BuildDataTable(string? parent, List<string> fields, int expectedRecordCount)
         {
-            if (!UseDataRowCache)
-            {
-                //This is a costly call when tables have a lot of columns
-                return dataTable.Rows[rowIndex];
-            }
-            else
-            {
-                if (!_rowLookupCache.TryGetValue(dataTable, out var lookupCache))
-                {
-                    lookupCache = new();
-                    _rowLookupCache.Add(dataTable, lookupCache);
-                }
-
-                if (!lookupCache.TryGetValue(rowIndex, out var datarow))
-                {
-                    datarow = dataTable.Rows[rowIndex];
-                    lookupCache.TryAdd(rowIndex, datarow);
-                }
-
-                return datarow;
-            }
-        }
-
-        private DataTable BuildDataTable(string? parent, List<string> fields)
-        {
-            DataTable dataTable = new();
+            DataTableLite dataTable = new(expectedRecordCount);
             foreach (var field in fields)
             {
                 var schema = ParquetSchemaTree.GetChild(parent, field);
-
-                DataColumn newColumn;
                 if (schema.SchemaElement.ConvertedType == ConvertedType.LIST)
                 {
-                    newColumn = new DataColumn(field, typeof(ListValue));
+                    dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
                 else if (schema.SchemaElement.ConvertedType == ConvertedType.MAP)
                 {
-                    newColumn = new DataColumn(field, typeof(MapValue));
+                    dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
                 else if (this.FixMalformedDateTime
                     && schema.SchemaElement.LogicalType?.TIMESTAMP is not null
                     && schema.SchemaElement?.ConvertedType is null)
                 {
                     //Fix for malformed datetime fields (#88)
-                    newColumn = new DataColumn(field, typeof(DateTime));
+                    dataTable.AddColumn(field, typeof(DateTime), parent);
                 }
                 else if (schema.SchemaElement.NumChildren > 0) //Struct
                 {
-                    newColumn = new DataColumn(field, typeof(StructValue));
+                    dataTable.AddColumn(field, typeof(StructValue), parent);
                 }
                 else if (schema.SchemaElement.Type == Parquet.Meta.Type.BYTE_ARRAY
                     && schema.SchemaElement.LogicalType is null
                     && schema.SchemaElement.ConvertedType is null)
                 {
-                    newColumn = new DataColumn(field, typeof(ByteArrayValue));
+                    dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
                 }
                 else
                 {
                     var clrType = schema.DataField?.ClrType ?? throw new Exception($"{(parent is not null ? parent + "/" : string.Empty)}/{field} has no data field");
-                    newColumn = new DataColumn(field, clrType);
+                    dataTable.AddColumn(field, clrType, parent);
                 }
-
-                newColumn.ExtendedProperties.Add("Parent", parent);
-
-                //We don't support case sensitive field names unfortunately
-                if (dataTable.Columns.Contains(newColumn.ColumnName))
-                {
-                    throw new NotSupportedException($"Duplicate column '{(parent is not null ? parent + "/" : string.Empty)}{field}' detected. Column names are case insensitive and must be unique.");
-                }
-
-                dataTable.Columns.Add(newColumn);
             }
             return dataTable;
         }
 
-        private object? FixDateTime(object value, ParquetSchemaElement field)
+        private object FixDateTime(object value, ParquetSchemaElement field)
         {
             if (!this.FixMalformedDateTime)
                 return value;

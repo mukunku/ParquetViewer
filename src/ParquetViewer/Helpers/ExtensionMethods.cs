@@ -1,4 +1,4 @@
-﻿using ParquetViewer.Engine;
+﻿using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;

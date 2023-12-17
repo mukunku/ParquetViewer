@@ -1,4 +1,4 @@
-﻿namespace ParquetViewer.Engine
+﻿namespace ParquetViewer.Engine.Types
 {
     public class ByteArrayValue
     {

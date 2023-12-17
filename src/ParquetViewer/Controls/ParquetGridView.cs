@@ -1,11 +1,10 @@
 ﻿using ParquetViewer.Analytics;
-using ParquetViewer.Engine;
+using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 

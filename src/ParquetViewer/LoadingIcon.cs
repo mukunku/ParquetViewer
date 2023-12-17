@@ -74,6 +74,14 @@ namespace ParquetViewer
             };
         }
 
+        public void SetText(string message)
+        {
+            foreach(Control control in this._panel.Controls.Find("loadingmessagelabel", false))
+            {
+                control.Text = message;
+            }
+        }
+
         public void Show()
         {
             this._form.Controls.Add(this._panel);
