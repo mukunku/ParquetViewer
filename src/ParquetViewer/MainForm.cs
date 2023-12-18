@@ -300,7 +300,7 @@ namespace ParquetViewer
 
                     loadTime = stopwatch.Elapsed;
                     IProgress<int> progress = null;
-                    if (loadTime > TimeSpan.FromSeconds(5))
+                    if (loadTime > TimeSpan.FromSeconds(4))
                     {
                         //Don't bother showing the indexing step if the data load was really fast because we know 
                         //indexing will be instantaneous. It looks better this way in my opinion.
