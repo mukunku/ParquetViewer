@@ -58,7 +58,7 @@ namespace ParquetViewer.Engine
             throw new KeyNotFoundException($"{nameof(name)}: {name}");
         }
 
-        public DataTable ToDataTable(CancellationToken token)
+        public DataTable ToDataTable(CancellationToken token, IProgress<int>? progress = null)
         {
             var dataTable = new DataTable();
 
@@ -85,6 +85,8 @@ namespace ParquetViewer.Engine
 
                 //supposedly this is the fastest way to load data into a datatable https://stackoverflow.com/a/17123914/1458738
                 dataTable.LoadDataRow(_rows[i]!, false);
+
+                progress?.Report(_columns.Count);
             }
             dataTable.EndLoadData();
 

@@ -277,7 +277,7 @@ namespace ParquetViewer
 
         private async void LoadFileToGridview()
         {
-            var stopwatch = Stopwatch.StartNew(); TimeSpan loadTime = TimeSpan.Zero;
+            var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
             LoadingIcon loadingIcon = null;
             try
             {
@@ -298,10 +298,11 @@ namespace ParquetViewer
                         
                     }, loadingIcon.CancellationToken);
 
-                    loadingIcon.SetText("Indexing");
+                    loadingIcon.Reset("Indexing");
                     loadTime = stopwatch.Elapsed;
 
-                    var finalResult = await Task.Run(intermediateResult.Invoke, loadingIcon.CancellationToken);
+                    var finalResult = await Task.Run(() => intermediateResult.Invoke(loadingIcon), loadingIcon.CancellationToken);
+                    indexTime = stopwatch.Elapsed - loadTime;
 
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
                     this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
@@ -340,10 +341,11 @@ namespace ParquetViewer
                 stopwatch.Stop();
 
                 TimeSpan totalTime = stopwatch.Elapsed;
-                TimeSpan indexTime = totalTime - loadTime;
+                TimeSpan renderTime = totalTime - loadTime - indexTime;
                 this.showingStatusBarLabel.ToolTipText = $"Total time: {totalTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Load time: {loadTime:mm\\:ss\\.ff}" + Environment.NewLine +
-                $"    Index time: {indexTime:mm\\:ss\\.ff}";
+                $"    Index time: {indexTime:mm\\:ss\\.ff}" + Environment.NewLine +
+                $"    Render time: {renderTime:mm\\:ss\\.ff}" + Environment.NewLine;
 
                 loadingIcon?.Dispose();
             }

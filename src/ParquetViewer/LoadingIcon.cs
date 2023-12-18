@@ -74,12 +74,20 @@ namespace ParquetViewer
             };
         }
 
-        public void SetText(string message)
+        public void Reset(string newMessage = null)
         {
-            foreach(Control control in this._panel.Controls.Find("loadingmessagelabel", false))
+            if (newMessage is not null)
             {
-                control.Text = message;
+                foreach (Control control in this._panel.Controls.Find("loadingmessagelabel", false))
+                {
+                    control.Text = newMessage;
+                }
             }
+
+            this._progressSoFar = 0;
+            this._progressRatio = 0;
+            this._cancelButton.BackgroundImage = null;
+            this._cancelButton.Invoke(this._cancelButton.Refresh);
         }
 
         public void Show()
@@ -102,13 +110,13 @@ namespace ParquetViewer
             this._panel.Dispose();
         }
 
-        private object _lock = new object();
-        public void Report(int _)
+        private object _lock = new();
+        public void Report(int progress)
         {
             if (this._loadingBarMax <= 0)
                 return;
 
-            var progressSoFar = Interlocked.Increment(ref this._progressSoFar);
+            var progressSoFar = Interlocked.Add(ref this._progressSoFar, progress);
             var progressRatio = (int)Math.Ceiling((progressSoFar * 100) / (double)this._loadingBarMax);
             if (progressRatio != this._progressRatio)
             {
