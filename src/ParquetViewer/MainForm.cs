@@ -381,7 +381,8 @@ namespace ParquetViewer
 
                     //Treat list, map, and struct types as strings by casting them automatically
                     foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue) || c.ValueType == typeof(StructValue))
+                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue) 
+                            || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
                         .Select(c => c.Name))
                     {
                         //This isn't perfect but it should handle most cases
