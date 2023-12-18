@@ -298,10 +298,17 @@ namespace ParquetViewer
                         
                     }, loadingIcon.CancellationToken);
 
-                    loadingIcon.Reset("Indexing");
                     loadTime = stopwatch.Elapsed;
+                    IProgress<int> progress = null;
+                    if (loadTime > TimeSpan.FromSeconds(5))
+                    {
+                        //Don't bother showing the indexing step if the data load was really fast because we know 
+                        //indexing will be instantaneous. It looks better this way in my opinion.
+                        loadingIcon.Reset("Indexing");
+                        progress = loadingIcon;
+                    }
 
-                    var finalResult = await Task.Run(() => intermediateResult.Invoke(loadingIcon), loadingIcon.CancellationToken);
+                    var finalResult = await Task.Run(() => intermediateResult.Invoke(progress), loadingIcon.CancellationToken);
                     indexTime = stopwatch.Elapsed - loadTime;
 
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
