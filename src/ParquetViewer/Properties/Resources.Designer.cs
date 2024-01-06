@@ -95,6 +95,18 @@ namespace ParquetViewer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap external_link_icon
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("external-link-icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap hourglass {
             get {
                 object obj = ResourceManager.GetObject("hourglass", resourceCulture);

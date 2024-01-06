@@ -1,10 +1,9 @@
 using ParquetViewer.Analytics;
-using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -128,7 +127,6 @@ namespace ParquetViewer
             set
             {
                 var dataTable = value;
-                ReplaceUnsupportedColumnTypes(dataTable);
                 this.mainDataSource = dataTable;
                 this.mainGridView.DataSource = this.mainDataSource;
             }
@@ -279,7 +277,7 @@ namespace ParquetViewer
 
         private async void LoadFileToGridview()
         {
-            var stopwatch = Stopwatch.StartNew();
+            var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
             LoadingIcon loadingIcon = null;
             try
             {
@@ -294,46 +292,24 @@ namespace ParquetViewer
                     long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine.RecordCount - this.CurrentOffset);
                     loadingIcon = this.ShowLoadingIcon("Loading Data", cellCount);
 
-                    var finalResult = await Task.Run(async () =>
+                    var intermediateResult = await Task.Run(async () =>
                     {
-                        var results = new ConcurrentDictionary<int, DataTable>();
-                        if (this.SelectedFields.Count < MultiThreadedParquetEngineColumnCountThreshold)
-                        {
-                            var dataTable = await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
-                            results.TryAdd(1, dataTable);
-                        }
-                        else
-                        {
-                            //In my experience the multi-threaded parquet engine is only beneficial when processing more than 1k fields. In 
-                            //all other cases the single threaded was faster. I'm not sure if this applies to all users' experience but I want
-                            //the app to be able to adapt to the user's needs automatically, instead of people knowing which parquet engine is
-                            //best for their use case.
-
-                            int i = 0;
-                            var fieldGroups = new List<(int Index, List<string> SubSetOfFields)>();
-                            foreach (var fields in UtilityMethods.Split(this.SelectedFields, Environment.ProcessorCount))
-                            {
-                                fieldGroups.Add((i++, fields.ToList()));
-                            }
-
-                            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount, CancellationToken = loadingIcon.CancellationToken };
-                            await Parallel.ForEachAsync(fieldGroups, options,
-                                async (fieldGroup, _cancellationToken) =>
-                                {
-                                    using var parquetEngine = await this._openParquetEngine.CloneAsync(loadingIcon.CancellationToken);
-                                    var dataTable = await parquetEngine.ReadRowsAsync(fieldGroup.SubSetOfFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
-                                    results.TryAdd(fieldGroup.Index, dataTable);
-                                });
-                        }
-
-                        if (results.IsEmpty)
-                        {
-                            throw new FileLoadException("Something went wrong while processing this file. If the issue persists please open a bug ticket on the repo. Help -> About");
-                        }
-
-                        DataTable mergedDataTables = UtilityMethods.MergeTables(results.OrderBy(f => f.Key).Select(f => f.Value).AsEnumerable());
-                        return mergedDataTables;
+                        return await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
+                        
                     }, loadingIcon.CancellationToken);
+
+                    loadTime = stopwatch.Elapsed;
+                    IProgress<int> progress = null;
+                    if (loadTime > TimeSpan.FromSeconds(4))
+                    {
+                        //Don't bother showing the indexing step if the data load was really fast because we know 
+                        //indexing will be instantaneous. It looks better this way in my opinion.
+                        loadingIcon.Reset("Indexing");
+                        progress = loadingIcon;
+                    }
+
+                    var finalResult = await Task.Run(() => intermediateResult.Invoke(progress), loadingIcon.CancellationToken);
+                    indexTime = stopwatch.Elapsed - loadTime;
 
                     this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
                     this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
@@ -370,7 +346,13 @@ namespace ParquetViewer
             {
                 //Little secret performance counter
                 stopwatch.Stop();
-                this.showingStatusBarLabel.ToolTipText = $"Load time: {stopwatch.Elapsed:mm\\:ss\\.ff}";
+
+                TimeSpan totalTime = stopwatch.Elapsed;
+                TimeSpan renderTime = totalTime - loadTime - indexTime;
+                this.showingStatusBarLabel.ToolTipText = $"Total time: {totalTime:mm\\:ss\\.ff}" + Environment.NewLine +
+                $"    Load time: {loadTime:mm\\:ss\\.ff}" + Environment.NewLine +
+                $"    Index time: {indexTime:mm\\:ss\\.ff}" + Environment.NewLine +
+                $"    Render time: {renderTime:mm\\:ss\\.ff}" + Environment.NewLine;
 
                 loadingIcon?.Dispose();
             }
@@ -399,7 +381,8 @@ namespace ParquetViewer
 
                     //Treat list, map, and struct types as strings by casting them automatically
                     foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue) || c.ValueType == typeof(StructValue))
+                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue) 
+                            || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
                         .Select(c => c.Name))
                     {
                         //This isn't perfect but it should handle most cases

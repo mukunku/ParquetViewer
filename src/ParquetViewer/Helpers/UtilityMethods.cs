@@ -1,9 +1,7 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 
 namespace ParquetViewer.Helpers
 {
@@ -54,40 +52,6 @@ namespace ParquetViewer.Helpers
 
             if (list.Count > 0)
                 yield return list;
-        }
-
-        public static DataTable MergeTables(IEnumerable<DataTable> additionalTables)
-        {
-            // Build combined table columns
-            DataTable merged = null;
-            foreach (DataTable dt in additionalTables)
-            {
-                if (merged == null)
-                    merged = dt;
-                else
-                    merged = AddTable(merged, dt);
-            }
-            return merged ?? new DataTable();
-        }
-
-        private static DataTable AddTable(DataTable baseTable, DataTable additionalTable)
-        {
-            // Build combined table columns
-            DataTable merged = baseTable.Clone(); // Include all columns from base table in result.
-            foreach (DataColumn col in additionalTable.Columns)
-            {
-                string newColumnName = col.ColumnName;
-                merged.Columns.Add(newColumnName, col.DataType);
-            }
-            // Add all rows from both tables
-            var bt = baseTable.AsEnumerable();
-            var at = additionalTable.AsEnumerable();
-            var mergedRows = bt.Zip(at, (r1, r2) => r1.ItemArray.Concat(r2.ItemArray).ToArray());
-            foreach (object[] rowFields in mergedRows)
-            {
-                merged.Rows.Add(rowFields);
-            }
-            return merged;
         }
     }
 }

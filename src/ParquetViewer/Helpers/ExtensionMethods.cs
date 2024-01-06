@@ -1,9 +1,9 @@
-﻿using Parquet.Rows;
-using ParquetViewer.Engine;
+﻿using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
+using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers
@@ -76,5 +76,40 @@ namespace ParquetViewer.Helpers
         };
 
         public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
+
+        public static Image ToImage(this ByteArrayValue byteArrayValue)
+        {
+            if (byteArrayValue is null)
+                throw new ArgumentNullException(nameof(byteArrayValue));
+
+            using var ms = new MemoryStream(byteArrayValue.Data);
+            return Image.FromStream(ms);
+        }
+
+        public static bool IsImage(this ByteArrayValue byteArrayValue)
+        {
+            if (byteArrayValue is null) 
+                throw new ArgumentNullException(nameof(byteArrayValue));
+
+            try
+            {
+                using var ms = new MemoryStream(byteArrayValue.Data);
+                Image.FromStream(ms);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static Size RenderedSize(this PictureBox pictureBox)
+        {
+            var wfactor = (double)pictureBox.Image.Width / pictureBox.ClientSize.Width;
+            var hfactor = (double)pictureBox.Image.Height / pictureBox.ClientSize.Height;
+
+            var resizeFactor = Math.Max(wfactor, hfactor);
+            return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
+        }
     }
 }

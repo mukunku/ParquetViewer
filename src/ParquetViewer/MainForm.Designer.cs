@@ -261,6 +261,7 @@ namespace ParquetViewer
             mainGridView.ReadOnly = true;
             mainGridView.RowHeadersWidth = 24;
             mainTableLayoutPanel.SetRowSpan(mainGridView, 2);
+            mainGridView.ShowCellToolTips = false;
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 6;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
@@ -502,6 +503,7 @@ namespace ParquetViewer
             // 
             // userGuideToolStripMenuItem
             // 
+            userGuideToolStripMenuItem.Image = Properties.Resources.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
             userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             userGuideToolStripMenuItem.Text = "User Guide";

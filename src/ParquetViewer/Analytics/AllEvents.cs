@@ -162,11 +162,11 @@ namespace ParquetViewer.Analytics
                 return message;
             }
         }
-            
+
         public string StackTrace => Exception?.StackTrace?.ToString();
         public string InnerException => Exception?.InnerException?.ToString();
 
-        public ExceptionEvent(AmplitudeConfiguration? amplitudeConfiguration = null) 
+        public ExceptionEvent(AmplitudeConfiguration? amplitudeConfiguration = null)
             : base(EVENT_TYPE, amplitudeConfiguration)
         {
 
@@ -175,6 +175,35 @@ namespace ParquetViewer.Analytics
         public static void FireAndForget(System.Exception ex)
         {
             var _ = new ExceptionEvent { Exception = ex }.Record();
+        }
+    }
+
+    public class QuickPeekEvent : AmplitudeEvent
+    {
+        private const string EVENT_TYPE = "quickpeek.show";
+
+        [JsonIgnore]
+        public DataTypeId DataType { get; set; }
+
+        public string DataTypeName => this.DataType.ToString();
+
+        public QuickPeekEvent() : base(EVENT_TYPE)
+        {
+
+        }
+
+        public enum DataTypeId
+        {
+            Unknown,
+            List,
+            Map,
+            Struct,
+            Image
+        }
+
+        public static void FireAndForget(DataTypeId dataType)
+        {
+            var _ = new QuickPeekEvent { DataType = dataType }.Record();
         }
     }
 }

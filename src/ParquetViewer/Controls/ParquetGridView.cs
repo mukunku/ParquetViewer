@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Engine;
+﻿using ParquetViewer.Analytics;
+using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -11,8 +12,13 @@ namespace ParquetViewer.Controls
 {
     internal class ParquetGridView : DataGridView
     {
+        //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
+        //But lets use something smaller to increase rendering performance.
+        private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
+
         private readonly ToolTip dateOnlyFormatWarningToolTip = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
+        private bool isCopyingToClipboard = false;
 
         public ParquetGridView() : base()
         {
@@ -37,6 +43,7 @@ namespace ParquetViewer.Controls
             RowHeadersWidth = 24;
             SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
             ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            ShowCellToolTips = false; //tooltips for columns with very long strings cause performance issues. This was the easiest solution
         }
 
         protected override void OnDataSourceChanged(EventArgs e)
@@ -45,9 +52,9 @@ namespace ParquetViewer.Controls
 
             UpdateDateFormats();
 
-            //Handle NULLs for bool types
             foreach (DataGridViewColumn column in this.Columns)
             {
+                //Handle NULLs for bool types
                 if (column is DataGridViewCheckBoxColumn checkboxColumn)
                     checkboxColumn.ThreeState = true;
             }
@@ -109,7 +116,7 @@ namespace ParquetViewer.Controls
             else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 //Draw NULLs
-                if (e.Value == null || e.Value == DBNull.Value)
+                if (e.Value == DBNull.Value || e.Value == null)
                 {
                     e.Paint(e.CellBounds, DataGridViewPaintParts.All
                         & ~(DataGridViewPaintParts.ContentForeground));
@@ -129,6 +136,21 @@ namespace ParquetViewer.Controls
                     e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
                 }
+                else if (e.Value is ByteArrayValue byteArrayValue)
+                {
+                    var tag = this.Columns[e.ColumnIndex].Tag as string;
+                    if (tag is null || (!tag.Equals("NOT-IMAGE") && !tag.Equals("IMAGE")))
+                    {
+                        tag = byteArrayValue.IsImage() ? "IMAGE" : "NOT-IMAGE";
+                        this.Columns[e.ColumnIndex].Tag = tag;
+                    }
+
+                    if (tag.Equals("IMAGE"))
+                    {
+                        e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
+                        e.CellStyle.ForeColor = Color.Blue;
+                    }
+                }
             }
 
             base.OnCellPainting(e); //Handle any additional event handlers
@@ -142,13 +164,18 @@ namespace ParquetViewer.Controls
                 return;
 
             var valueType = this.Columns[e.ColumnIndex].ValueType;
-            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue))
+            var isClickableByteArrayType = valueType == typeof(ByteArrayValue) && this.Columns[e.ColumnIndex].Tag is string tag && tag.Equals("IMAGE");
+            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue) || isClickableByteArrayType)
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
                     this.Cursor = Cursors.Hand;
                 else
                     this.Cursor = Cursors.Default;
+            }
+            else
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -164,17 +191,21 @@ namespace ParquetViewer.Controls
                     var copy = new ToolStripMenuItem("Copy");
                     copy.Click += (object clickSender, EventArgs clickArgs) =>
                     {
+                        this.isCopyingToClipboard = true;
                         Clipboard.SetDataObject(this.GetClipboardContent());
+                        this.isCopyingToClipboard = false;
                     };
 
                     var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
                     copyWithHeaders.Click += (object clickSender, EventArgs clickArgs) =>
                     {
+                        this.isCopyingToClipboard = true;
                         this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
                         Clipboard.SetDataObject(this.GetClipboardContent());
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
                         this.RowHeadersVisible = true;
+                        this.isCopyingToClipboard = false;
                     };
 
                     var menu = new ContextMenuStrip();
@@ -243,9 +274,12 @@ namespace ParquetViewer.Controls
                 return;
             }
 
+            var dataType = QuickPeekEvent.DataTypeId.Unknown;
             DataTable dt = null;
             if (clickedCell.Value is ListValue listValue)
             {
+                dataType = QuickPeekEvent.DataTypeId.List;
+
                 dt = new DataTable();
                 dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type));
 
@@ -258,6 +292,8 @@ namespace ParquetViewer.Controls
             }
             else if (clickedCell.Value is MapValue mapValue)
             {
+                dataType = QuickPeekEvent.DataTypeId.Map;
+
                 dt = new DataTable();
                 dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-key", mapValue.KeyType));
                 dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-value", mapValue.ValueType));
@@ -269,13 +305,38 @@ namespace ParquetViewer.Controls
             }
             else if (clickedCell.Value is StructValue structValue)
             {
+                dataType = QuickPeekEvent.DataTypeId.Struct;
+
                 dt = structValue.Data.Table.Clone();
                 var row = dt.NewRow();
                 row.ItemArray = structValue.Data.ItemArray;
                 dt.Rows.Add(row);
             }
+            else if (clickedCell.Value is ByteArrayValue byteArray)
+            {
+                Image image = null;
+                try
+                {
+                    image = byteArray.ToImage();
+                }
+                catch { /* not an image */ }
 
-            if (dt == null)
+                if (image is not null)
+                {
+                    dataType = QuickPeekEvent.DataTypeId.Image;
+
+                    new ImagePreviewForm()
+                    {
+                        PreviewImage = image,
+                        Width = image.Width + 22,
+                        Height = image.Height + 77
+                    }.Show(this.Parent ?? this);
+
+                    QuickPeekEvent.FireAndForget(dataType);
+                }
+            }
+
+            if (dt is null)
                 return;
 
             var uniqueCellTag = Guid.NewGuid();
@@ -328,6 +389,64 @@ namespace ParquetViewer.Controls
             openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
             openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeakForm);
             quickPeakForm.Show(this.Parent ?? this);
+            QuickPeekEvent.FireAndForget(dataType);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C))
+            {
+                this.isCopyingToClipboard = true;
+            }
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            this.isCopyingToClipboard = false;
+            base.OnKeyUp(e);
+        }
+
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            base.OnCellFormatting(e);
+
+            if (this.isCopyingToClipboard)
+            {
+                //In order to get the full values into the clipboard we need to
+                //disable formatting during a copy to clipboard operation
+                return;
+            }
+
+            var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
+            if (cellValueType == typeof(ByteArrayValue))
+            {
+                string value = e.Value.ToString();
+                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                {
+                    e.Value = value[..(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2)]
+                        + " [...] " + value[(value.Length - (MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2))..];
+                    e.FormattingApplied = true;
+                }
+            }
+            else if (cellValueType == typeof(string))
+            {
+                string value = e.Value.ToString();
+                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                {
+                    e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
+                    e.FormattingApplied = true;
+                }
+            }
+            else if (cellValueType == typeof(StructValue))
+            {
+                string value = e.Value.ToString();
+                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                {
+                    e.Value = ((StructValue)e.Value).ToStringTruncated();
+                    e.FormattingApplied = true;
+                }
+            }
         }
 
         public void ClearQuickPeekForms()
@@ -347,8 +466,8 @@ namespace ParquetViewer.Controls
         /// </summary>
         private void FastAutoSizeColumns()
         {
-            const string WHITESPACE_BUFFER = "##";
-            const int MAX_WIDTH = 450;
+            const string WHITESPACE_BUFFER = "#|";
+            const int MAX_WIDTH = 400;
 
             // Cast out a DataTable from the target grid datasource.
             // We need to iterate through all the data in the grid and a DataTable supports enumeration.
@@ -363,10 +482,10 @@ namespace ParquetViewer.Controls
                 for (int i = 0; i < gridTable.Columns.Count; i++)
                 {
                     //Don't autosize the same column twice
-                    if (this.Columns[i].Tag is not null)
+                    if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
                         continue;
                     else
-                        this.Columns[i].Tag = new object();
+                        this.Columns[i].Tag = "AUTOSIZED";
 
                     //Fit header by default. If header is short, make sure NULLs will fit at least
                     string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
@@ -396,14 +515,21 @@ namespace ParquetViewer.Controls
                         // Get the last and longest string in the array.
                         string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
 
-                        if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
-                            longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
+                        if (longestColString.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+                        {
+                            newColumnSize = int.MaxValue;
+                        }
+                        else
+                        {
+                            if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
+                                longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
 
-                        var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
+                            var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
 
-                        // If the calculated width is larger than the column header width, use that instead
-                        if (maxColWidth > newColumnSize)
-                            newColumnSize = maxColWidth;
+                            // If the calculated width is larger than the column header width, use that instead
+                            if (maxColWidth > newColumnSize)
+                                newColumnSize = maxColWidth;
+                        }
                     }
 
                     this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
