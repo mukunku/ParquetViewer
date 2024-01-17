@@ -50,6 +50,10 @@ namespace ParquetViewer
             {
                 this.runQueryButton_Click(this.runQueryButton, null);
             }
+            else if (e.KeyChar == Convert.ToChar(Keys.Escape))
+            {
+                this.clearFilterButton_Click(this.clearFilterButton, null);
+            }
         }
 
         private async void MainForm_DragDrop(object sender, DragEventArgs e)
@@ -103,11 +107,33 @@ MULTIPLE CONDITIONS:
         {
             //This is just here in case I want to add debug info
         }
-
+         
         private void MainGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             //Ignore errors and hope for the best.
             e.Cancel = true;
+        }
+
+        private void searchFilterTextBox_Enter(object sender, EventArgs e)
+        {
+            if (sender is TextBox searchBox)
+            {
+                if (!searchBox.Text.StartsWith("WHERE", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    searchBox.Text = "WHERE ";
+                }
+            }
+        }
+
+        private void searchFilterTextBox_Leave(object sender, EventArgs e)
+        {
+            if (sender is TextBox searchBox)
+            {
+                if (searchBox.Text.Trim().Equals("WHERE", StringComparison.OrdinalIgnoreCase))
+                {
+                    searchBox.Text = string.Empty; //show the placeholder
+                }
+            }
         }
     }
 }

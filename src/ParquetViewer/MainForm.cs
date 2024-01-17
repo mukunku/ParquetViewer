@@ -18,7 +18,6 @@ namespace ParquetViewer
     {
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
-        private const int MultiThreadedParquetEngineColumnCountThreshold = 1000;
         private readonly string DefaultFormTitle;
 
         #region Members
@@ -129,6 +128,44 @@ namespace ParquetViewer
                 var dataTable = value;
                 this.mainDataSource = dataTable;
                 this.mainGridView.DataSource = this.mainDataSource;
+
+                if (dataTable.Rows.Count == 0)
+                    return;
+
+                //provide sample query in search filter box
+                var simpleColumn = dataTable.Columns.AsEnumerable().FirstOrDefault(c => c.DataType.IsSimple());
+                if (simpleColumn is not null)
+                {
+                    //find a value we can use as a sample
+                    object sampleSimpleValue = DBNull.Value; int counter = 1000;
+                    foreach (DataRow row in dataTable.Rows)
+                    {
+                        sampleSimpleValue = row[simpleColumn];
+                        if (counter <= 0 || (sampleSimpleValue != DBNull.Value))
+                        {
+                            break;
+                        }
+                        counter--;
+                    }
+
+                    if (sampleSimpleValue == DBNull.Value)
+                        return;
+
+                    var dataType = simpleColumn.DataType;
+                    if (dataType == typeof(DateTime))
+                    {
+                        this.searchFilterTextBox.PlaceholderText =
+                            $"WHERE {simpleColumn.ColumnName} = #{((DateTime)sampleSimpleValue).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat())}#";
+                    }
+                    else if (dataType.IsNumber())
+                    {
+                        this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = {sampleSimpleValue}";
+                    }
+                    else
+                    {
+                        this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = '{sampleSimpleValue}'";
+                    }
+                }
             }
         }
 
@@ -295,7 +332,7 @@ namespace ParquetViewer
                     var intermediateResult = await Task.Run(async () =>
                     {
                         return await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
-                        
+
                     }, loadingIcon.CancellationToken);
 
                     loadTime = stopwatch.Elapsed;
@@ -381,7 +418,7 @@ namespace ParquetViewer
 
                     //Treat list, map, and struct types as strings by casting them automatically
                     foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue) 
+                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
                             || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
                         .Select(c => c.Name))
                     {

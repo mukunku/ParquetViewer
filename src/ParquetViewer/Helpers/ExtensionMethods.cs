@@ -1,9 +1,12 @@
 ﻿using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.Numerics;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers
@@ -88,7 +91,7 @@ namespace ParquetViewer.Helpers
 
         public static bool IsImage(this ByteArrayValue byteArrayValue)
         {
-            if (byteArrayValue is null) 
+            if (byteArrayValue is null)
                 throw new ArgumentNullException(nameof(byteArrayValue));
 
             try
@@ -111,5 +114,26 @@ namespace ParquetViewer.Helpers
             var resizeFactor = Math.Max(wfactor, hfactor);
             return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
         }
+
+        public static IEnumerable<DataColumn> AsEnumerable(this DataColumnCollection columns)
+        {
+            foreach (DataColumn column in columns)
+            {
+                yield return column;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the type is a "simple" type. Basically anything that isn't a class or array.
+        /// </summary>
+        /// <remarks>Source: https://stackoverflow.com/a/65079923/1458738</remarks>
+        public static bool IsSimple(this Type type) 
+            => TypeDescriptor.GetConverter(type).CanConvertFrom(typeof(string));
+
+        /// <summary>
+        /// Returns true if the type is a number type.
+        /// </summary>
+        public static bool IsNumber(this Type type) => 
+            Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
     }
 }
