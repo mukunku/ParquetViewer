@@ -77,5 +77,8 @@ namespace ParquetViewer.Controls
         {
             this.Close();
         }
+
+        private void copyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+            => copyToClipboardButton_Click(sender, e);
     }
 }

@@ -28,14 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImagePreviewForm));
             mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             saveAsPngButton = new System.Windows.Forms.Button();
             mainPictureBox = new System.Windows.Forms.PictureBox();
             copyToClipboardButton = new System.Windows.Forms.Button();
             closeButton = new System.Windows.Forms.Button();
+            imageRightClickMenu = new System.Windows.Forms.ContextMenuStrip(components);
+            copyToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)mainPictureBox).BeginInit();
+            imageRightClickMenu.SuspendLayout();
             SuspendLayout();
             // 
             // mainTableLayoutPanel
@@ -70,6 +74,7 @@
             // 
             mainPictureBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             mainTableLayoutPanel.SetColumnSpan(mainPictureBox, 2);
+            mainPictureBox.ContextMenuStrip = imageRightClickMenu;
             mainPictureBox.Location = new System.Drawing.Point(3, 3);
             mainPictureBox.Name = "mainPictureBox";
             mainPictureBox.Size = new System.Drawing.Size(240, 173);
@@ -101,6 +106,19 @@
             closeButton.UseVisualStyleBackColor = true;
             closeButton.Click += closeButton_Click;
             // 
+            // imageRightClickMenu
+            // 
+            imageRightClickMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { copyToClipboardToolStripMenuItem });
+            imageRightClickMenu.Name = "imageRightClickMenu";
+            imageRightClickMenu.Size = new System.Drawing.Size(181, 48);
+            // 
+            // copyToClipboardToolStripMenuItem
+            // 
+            copyToClipboardToolStripMenuItem.Name = "copyToClipboardToolStripMenuItem";
+            copyToClipboardToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            copyToClipboardToolStripMenuItem.Text = "Copy to clipboard";
+            copyToClipboardToolStripMenuItem.Click += copyToClipboardToolStripMenuItem_Click;
+            // 
             // ImagePreviewForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -118,6 +136,7 @@
             Load += ImagePreviewForm_Load;
             mainTableLayoutPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)mainPictureBox).EndInit();
+            imageRightClickMenu.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -128,5 +147,7 @@
         private System.Windows.Forms.Button saveAsPngButton;
         private System.Windows.Forms.Button copyToClipboardButton;
         private System.Windows.Forms.Button closeButton;
+        private System.Windows.Forms.ContextMenuStrip imageRightClickMenu;
+        private System.Windows.Forms.ToolStripMenuItem copyToClipboardToolStripMenuItem;
     }
 }
