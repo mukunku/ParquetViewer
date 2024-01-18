@@ -31,8 +31,7 @@ namespace ParquetViewer.Analytics
         [JsonIgnore]
         public object UserProperties => new
         {
-            AppSettings.RememberLastRowCount,
-            AppSettings.LastRowCount,
+            AppSettings.AlwaysLoadAllRecords,
             AppSettings.AlwaysSelectAllFields,
             AutoSizeColumnsMode = AppSettings.AutoSizeColumnsMode.ToString(),
             DateTimeDisplayFormat = AppSettings.DateTimeDisplayFormat.ToString(),

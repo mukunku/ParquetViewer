@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Properties;
 using System;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -107,7 +108,7 @@ MULTIPLE CONDITIONS:
         {
             //This is just here in case I want to add debug info
         }
-         
+
         private void MainGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             //Ignore errors and hope for the best.
@@ -133,6 +134,31 @@ MULTIPLE CONDITIONS:
                 {
                     searchBox.Text = string.Empty; //show the placeholder
                 }
+            }
+        }
+
+        private void loadAllRowsButton_EnabledChanged(object sender, EventArgs e)
+        {
+            if (sender is Button loadAllRecordsButton)
+            {
+                if (loadAllRecordsButton.Enabled)
+                {
+                    loadAllRecordsButton.Image = Resources.next_blue;
+                }
+                else
+                {
+                    loadAllRecordsButton.Image = Resources.next_disabled;
+                }
+            }
+        }
+
+        private void loadAllRowsButton_Click(object sender, EventArgs e)
+        {
+            if (this._openParquetEngine is not null)
+            {
+                //Force file reload to happen instantly by triggering the event handler ourselves
+                this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
+                this.recordsToTextBox_TextChanged(this.recordCountTextBox, null);
             }
         }
     }

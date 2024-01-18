@@ -186,7 +186,6 @@
         }
 
         #endregion
-        private System.Windows.Forms.GroupBox recordCountsGroupBox;
         private System.Windows.Forms.TableLayoutPanel mainTableLayoutPanel;
         private System.Windows.Forms.Button doneButton;
         private System.Windows.Forms.Panel fieldsPanel;

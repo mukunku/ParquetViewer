@@ -11,7 +11,6 @@ namespace ParquetViewer
         private const string RegistrySubKey = "ParquetViewer";
         private const string UseISODateFormatKey = "UseISODateFormat";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
-        private const string DefaultRowCountKey = "DefaultRowCount";
         private const string RememberLastRowCountKey = "RememberLastRowCount";
         private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
@@ -19,39 +18,7 @@ namespace ParquetViewer
         private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
         private const string AnalyticsDeviceIdKey = "AnalyticsDeviceId";
         private const string AnalyticsDataGatheringConsentKey = "AnalyticsDataGatheringConsent";
-
-        //TODO: Cleanup this setting after sufficient time has passed.
-        [Obsolete($"We have more date formats now so use {nameof(DateTimeDisplayFormat)} instead.")]
-        public static bool UseISODateFormat
-        {
-            get
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        bool value = false;
-                        bool.TryParse(registryKey.GetValue(UseISODateFormatKey)?.ToString(), out value);
-                        return value;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(UseISODateFormatKey, value.ToString());
-                    }
-                }
-                catch { }
-            }
-        }
+        private const string AlwaysLoadAllRecordsKey = "AlwaysLoadAllRecords";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -130,40 +97,8 @@ namespace ParquetViewer
             }
         }
 
-        public static int? LastRowCount
-        {
-            get
-            {
-                try
-                {
-                    if (!RememberLastRowCount)
-                        return null;
-
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        int.TryParse(registryKey.GetValue(DefaultRowCountKey)?.ToString(), out var value);
-                        return value <= 0 ? null : value;
-                    }
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(DefaultRowCountKey, value?.ToString() ?? string.Empty);
-                    }
-                }
-                catch { }
-            }
-        }
-
-        public static bool RememberLastRowCount
+        [Obsolete("Retired in favor of AlwaysLoadAllRecords. Do not use!")]
+        private static bool RememberLastRowCount
         {
             get
             {
@@ -193,25 +128,33 @@ namespace ParquetViewer
             }
         }
 
-        [Obsolete("This setting is no longer being used. We try to automatically switch between engines now.")]
-        public static ParquetEngine ReadingEngine
+        public static bool AlwaysLoadAllRecords
         {
             get
             {
                 try
                 {
+                    bool value;
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        ParquetEngine value = default;
-                        if (!Enum.TryParse(registryKey.GetValue(ParquetReadingEngineKey)?.ToString(), out value))
-                            value = default;
-
-                        return value;
+                        if (!bool.TryParse(registryKey.GetValue(AlwaysLoadAllRecordsKey)?.ToString(), out value))
+                        {
+#pragma warning disable CS0618 // Type or member is obsolete
+                            if (RememberLastRowCount)
+                            {
+                                //Replace obsolete setting with new one
+                                AlwaysLoadAllRecords = true;
+                                value = true;
+                            }
+#pragma warning restore CS0618 // Type or member is obsolete
+                        }
                     }
+
+                    return value;
                 }
                 catch
                 {
-                    return default;
+                    return false;
                 }
             }
             set
@@ -220,7 +163,7 @@ namespace ParquetViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
-                        registryKey.SetValue(ParquetReadingEngineKey, value.ToString());
+                        registryKey.SetValue(AlwaysLoadAllRecordsKey, value.ToString());
                     }
                 }
                 catch { }
@@ -316,7 +259,7 @@ namespace ParquetViewer
                 }
             }
         }
-    
+
         public static bool AnalyticsDataGatheringConsent
         {
             get
