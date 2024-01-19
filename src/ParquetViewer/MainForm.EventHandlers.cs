@@ -159,6 +159,7 @@ MULTIPLE CONDITIONS:
                 //Force file reload to happen instantly by triggering the event handler ourselves
                 this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
                 this.recordsToTextBox_TextChanged(this.recordCountTextBox, null);
+                MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.LoadAllRows);
             }
         }
     }

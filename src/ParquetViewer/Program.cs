@@ -38,7 +38,6 @@ namespace ParquetViewer
                 mainForm = new MainForm();
 
             RouteUnhandledExceptions();
-            ProgramOpenEvent.FireAndForget(isOpeningFile);
 
             Application.Run(mainForm);
         }
