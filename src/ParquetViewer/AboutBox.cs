@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ParquetViewer.Analytics;
+using System;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -22,6 +23,12 @@ namespace ParquetViewer
             this.labelCompanyName.Text = AssemblyCompany;
             this.textBoxDescription.Text = AssemblyDescription;
             this.publicKeyLabel.Text = $"Public Key Token: {AssemblyPublicKey}";
+
+            if (!AmplitudeEvent.HasApiKey)
+            {
+                this.textBoxDescription.Text = $"No Amplitude API Key!{Environment.NewLine}{Environment.NewLine}"
+                    + this.textBoxDescription.Text;
+            }
         }
 
         #region Assembly Attribute Accessors

@@ -44,6 +44,8 @@ namespace ParquetViewer.Analytics
 #endif
         };
 
+        public static bool HasApiKey => !string.IsNullOrEmpty(AMPLITUDE_API_KEY);
+
         protected AmplitudeEvent(string eventType, AmplitudeConfiguration? amplitudeConfiguration = null)
         {
             EventType = eventType;
