@@ -41,6 +41,7 @@ namespace ParquetViewer
                 this.MainDataSource.Clear();
                 this.MainDataSource.Columns.Clear();
                 this.loadAllRowsButton.Enabled = false;
+                this.searchFilterTextBox.PlaceholderText = "WHERE ";
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {
