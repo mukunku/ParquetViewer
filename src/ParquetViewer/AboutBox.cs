@@ -107,7 +107,7 @@ namespace ParquetViewer
         {
             get
             {
-                byte[]? publicKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
+                byte[] publicKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
                 if (publicKey is null || publicKey.Length == 0)
                 {
                     return string.Empty;
