@@ -28,6 +28,7 @@
         private void InitializeComponent()
         {
             tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            publicKeyLabel = new System.Windows.Forms.Label();
             logoPictureBox = new System.Windows.Forms.PictureBox();
             labelProductName = new System.Windows.Forms.Label();
             labelVersion = new System.Windows.Forms.Label();
@@ -44,26 +45,41 @@
             tableLayoutPanel.ColumnCount = 2;
             tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33F));
             tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 67F));
+            tableLayoutPanel.Controls.Add(publicKeyLabel, 1, 4);
             tableLayoutPanel.Controls.Add(logoPictureBox, 0, 0);
             tableLayoutPanel.Controls.Add(labelProductName, 1, 0);
             tableLayoutPanel.Controls.Add(labelVersion, 1, 1);
             tableLayoutPanel.Controls.Add(labelCopyright, 1, 2);
             tableLayoutPanel.Controls.Add(labelCompanyName, 1, 3);
-            tableLayoutPanel.Controls.Add(textBoxDescription, 1, 4);
-            tableLayoutPanel.Controls.Add(okButton, 1, 5);
+            tableLayoutPanel.Controls.Add(textBoxDescription, 1, 5);
+            tableLayoutPanel.Controls.Add(okButton, 1, 6);
             tableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             tableLayoutPanel.Location = new System.Drawing.Point(10, 10);
             tableLayoutPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             tableLayoutPanel.Name = "tableLayoutPanel";
-            tableLayoutPanel.RowCount = 6;
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            tableLayoutPanel.RowCount = 7;
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.090909F));
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.090909F));
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.090909F));
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.090909F));
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.090909F));
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 45.4545441F));
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.090909F));
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             tableLayoutPanel.Size = new System.Drawing.Size(487, 307);
             tableLayoutPanel.TabIndex = 0;
+            // 
+            // publicKeyLabel
+            // 
+            publicKeyLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            publicKeyLabel.Location = new System.Drawing.Point(167, 108);
+            publicKeyLabel.Margin = new System.Windows.Forms.Padding(7, 0, 4, 0);
+            publicKeyLabel.MaximumSize = new System.Drawing.Size(0, 20);
+            publicKeyLabel.Name = "publicKeyLabel";
+            publicKeyLabel.Size = new System.Drawing.Size(316, 20);
+            publicKeyLabel.TabIndex = 25;
+            publicKeyLabel.Text = "Public Key";
+            publicKeyLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // logoPictureBox
             // 
@@ -72,7 +88,7 @@
             logoPictureBox.Location = new System.Drawing.Point(4, 3);
             logoPictureBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             logoPictureBox.Name = "logoPictureBox";
-            tableLayoutPanel.SetRowSpan(logoPictureBox, 6);
+            tableLayoutPanel.SetRowSpan(logoPictureBox, 7);
             logoPictureBox.Size = new System.Drawing.Size(152, 301);
             logoPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             logoPictureBox.TabIndex = 12;
@@ -93,7 +109,7 @@
             // labelVersion
             // 
             labelVersion.Dock = System.Windows.Forms.DockStyle.Fill;
-            labelVersion.Location = new System.Drawing.Point(167, 30);
+            labelVersion.Location = new System.Drawing.Point(167, 27);
             labelVersion.Margin = new System.Windows.Forms.Padding(7, 0, 4, 0);
             labelVersion.MaximumSize = new System.Drawing.Size(0, 20);
             labelVersion.Name = "labelVersion";
@@ -105,7 +121,7 @@
             // labelCopyright
             // 
             labelCopyright.Dock = System.Windows.Forms.DockStyle.Fill;
-            labelCopyright.Location = new System.Drawing.Point(167, 60);
+            labelCopyright.Location = new System.Drawing.Point(167, 54);
             labelCopyright.Margin = new System.Windows.Forms.Padding(7, 0, 4, 0);
             labelCopyright.MaximumSize = new System.Drawing.Size(0, 20);
             labelCopyright.Name = "labelCopyright";
@@ -117,7 +133,7 @@
             // labelCompanyName
             // 
             labelCompanyName.Dock = System.Windows.Forms.DockStyle.Fill;
-            labelCompanyName.Location = new System.Drawing.Point(167, 90);
+            labelCompanyName.Location = new System.Drawing.Point(167, 81);
             labelCompanyName.Margin = new System.Windows.Forms.Padding(7, 0, 4, 0);
             labelCompanyName.MaximumSize = new System.Drawing.Size(0, 20);
             labelCompanyName.Name = "labelCompanyName";
@@ -129,13 +145,13 @@
             // textBoxDescription
             // 
             textBoxDescription.Dock = System.Windows.Forms.DockStyle.Fill;
-            textBoxDescription.Location = new System.Drawing.Point(167, 123);
+            textBoxDescription.Location = new System.Drawing.Point(167, 138);
             textBoxDescription.Margin = new System.Windows.Forms.Padding(7, 3, 4, 3);
             textBoxDescription.Multiline = true;
             textBoxDescription.Name = "textBoxDescription";
             textBoxDescription.ReadOnly = true;
             textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            textBoxDescription.Size = new System.Drawing.Size(316, 147);
+            textBoxDescription.Size = new System.Drawing.Size(316, 133);
             textBoxDescription.TabIndex = 23;
             textBoxDescription.TabStop = false;
             // 
@@ -185,5 +201,6 @@
         private System.Windows.Forms.Label labelCompanyName;
         private System.Windows.Forms.TextBox textBoxDescription;
         private System.Windows.Forms.Button okButton;
+        private System.Windows.Forms.Label publicKeyLabel;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -20,6 +21,7 @@ namespace ParquetViewer
             this.labelCopyright.Text = AssemblyCopyright;
             this.labelCompanyName.Text = AssemblyCompany;
             this.textBoxDescription.Text = AssemblyDescription;
+            this.publicKeyLabel.Text = $"Public Key Token: {AssemblyPublicKey}";
         }
 
         #region Assembly Attribute Accessors
@@ -98,6 +100,25 @@ namespace ParquetViewer
                     return string.Empty;
                 }
                 return ((AssemblyCompanyAttribute)attributes[0]).Company;
+            }
+        }
+
+        public string AssemblyPublicKey
+        {
+            get
+            {
+                byte[]? publicKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
+                if (publicKey is null || publicKey.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                var sb = new StringBuilder();
+                for (int i = 0; i < publicKey.Length; i++)
+                {
+                    sb.AppendFormat("{0:x2}", publicKey[i]);
+                }
+                return sb.ToString();
             }
         }
         #endregion
