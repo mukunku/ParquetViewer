@@ -29,6 +29,7 @@ namespace ParquetViewer
             get => this._openFileOrFolderPath;
             set
             {
+                this._openParquetEngine?.Dispose();
                 this._openFileOrFolderPath = value;
                 this._openParquetEngine = null;
                 this.SelectedFields = null;
