@@ -291,7 +291,7 @@ namespace ParquetViewer
             loadAllRowsButton.Name = "loadAllRowsButton";
             loadAllRowsButton.Size = new System.Drawing.Size(13, 16);
             loadAllRowsButton.TabIndex = 8;
-            loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, "Load all records (CTRL+E)");
+            loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, "Load all records (Ctrl+E)");
             loadAllRowsButton.UseVisualStyleBackColor = true;
             loadAllRowsButton.EnabledChanged += loadAllRowsButton_EnabledChanged;
             loadAllRowsButton.Click += loadAllRowsButton_Click;
