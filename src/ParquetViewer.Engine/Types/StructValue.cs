@@ -8,7 +8,7 @@ namespace ParquetViewer.Engine.Types
         public string Name { get; }
 
         //we are always guaranteed to have exactly one row in 'Data' since we don't allow nested structs right now
-        public DataRow Data { get; } 
+        public DataRow Data { get; }
 
         public StructValue(string name, DataRow data)
         {
@@ -24,42 +24,47 @@ namespace ParquetViewer.Engine.Types
         {
             try
             {
-                var record = new Dictionary<string, object>();
-                for (var i = 0; i < this.Data.Table.Columns.Count; i++)
+                using var ms = new MemoryStream();
+                using (var jsonWriter = new Utf8JsonWriter(ms))
                 {
-                    string columnName = this.Data.Table.Columns[i].ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
-                    object value = this.Data[i];
-
-                    if (truncateForDisplay)
+                    jsonWriter.WriteStartObject();
+                    for (var i = 0; i < this.Data.Table.Columns.Count; i++)
                     {
-                        if (value is ByteArrayValue byteArrayValue)
+                        string columnName = this.Data.Table.Columns[i].ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
+                        jsonWriter.WritePropertyName(columnName);
+
+                        object value = this.Data[i];
+                        if (truncateForDisplay)
                         {
-                            var byteArrayAsString = byteArrayValue.ToString();
-                            if (byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
+                            if (value is ByteArrayValue byteArrayValue)
                             {
-                                value = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
-                            }
-                            else
-                            {
-                                value = byteArrayAsString;
+                                var byteArrayAsString = byteArrayValue.ToString();
+                                if (byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
+                                {
+                                    value = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
+                                }
+                                else
+                                {
+                                    value = byteArrayAsString;
+                                }
                             }
                         }
-                    }
 
-                    if (value is StructValue sv)
-                    {
-                        value = sv.ToString();
+                        if (value == DBNull.Value)
+                        {
+                            jsonWriter.WriteNullValue();
+                        }
+                        else
+                        {
+                            jsonWriter.WriteRawValue(value.ToString() ?? string.Empty);
+                        }
                     }
-
-                    record.Add(columnName, value);
+                    jsonWriter.WriteEndObject();
                 }
 
-                return JsonSerializer.Serialize(record,
-                     new JsonSerializerOptions()
-                     {
-                         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, //don't escape anything to make it human readable
-                         WriteIndented = false //keep it minimized.
-                     });
+                ms.Position = 0;
+                using var reader = new StreamReader(ms);
+                return reader.ReadToEnd();
             }
             catch (Exception ex)
             {
