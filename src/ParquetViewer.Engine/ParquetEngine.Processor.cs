@@ -82,7 +82,7 @@ namespace ParquetViewer.Engine
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var field = ParquetSchemaTree.GetChild(column.Parent, column.Name);
+                var field = column.Parent.GetChild(column.Name);
                 if (field.SchemaElement.LogicalType?.LIST is not null || field.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 {
                     await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
@@ -175,60 +175,68 @@ namespace ParquetViewer.Engine
             }
 
             if (itemField.Children.Any())
-                throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested list types are not supported.");
-
-            int rowIndex = rowBeginIndex;
-
-            int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
-
-            ArrayList? rowValue = null;
-            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-            for (int i = 0; i < dataColumn.Data.Length; i++)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                //This is a list of a complex type (Map, List, or Struct)
+                var childDataTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), 1000);
+                await ProcessRowGroup(childDataTable, groupReader, skipRecords, readRecords, cancellationToken, null);
+                //TODO
+                //throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested list types are not supported.");
+            }
+            else //list of simple types
+            {
+                int rowIndex = rowBeginIndex;
 
-                rowValue ??= new ArrayList();
+                int skippedRecords = 0;
+                var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
 
-                bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels!.Length
-                    || dataColumn.RepetitionLevels[i + 1] == 0; //0 means new list
-
-                //Skip rows
-                while (skipRecords > skippedRecords)
+                ArrayList? rowValue = null;
+                var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
+                for (int i = 0; i < dataColumn.Data.Length; i++)
                 {
-                    if (IsEndOfRow())
-                        skippedRecords++;
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    i++;
-                }
+                    rowValue ??= new ArrayList();
 
-                //If we skipped to the end then just exit
-                if (i == dataColumn.Data.Length)
-                    break;
+                    bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels!.Length
+                        || dataColumn.RepetitionLevels[i + 1] == 0; //0 means new list
 
-                if (IsEndOfRow())
-                {
-                    if (isFirstColumn)
+                    //Skip rows
+                    while (skipRecords > skippedRecords)
                     {
-                        dataTable.NewRow();
+                        if (IsEndOfRow())
+                            skippedRecords++;
+
+                        i++;
                     }
 
-                    var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
-                    rowValue.Add(lastItem);
-
-                    dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
-                    rowValue = null;
-
-                    rowIndex++;
-                    progress?.Report(1);
-
-                    if (rowIndex - rowBeginIndex >= readRecords)
+                    //If we skipped to the end then just exit
+                    if (i == dataColumn.Data.Length)
                         break;
-                }
-                else
-                {
-                    var value = dataColumn.Data.GetValue(i) ?? DBNull.Value;
-                    rowValue.Add(value);
+
+                    if (IsEndOfRow())
+                    {
+                        if (isFirstColumn)
+                        {
+                            dataTable.NewRow();
+                        }
+
+                        var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
+                        rowValue.Add(lastItem);
+
+                        dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
+                        rowValue = null;
+
+                        rowIndex++;
+                        progress?.Report(1);
+
+                        if (rowIndex - rowBeginIndex >= readRecords)
+                            break;
+                    }
+                    else
+                    {
+                        var value = dataColumn.Data.GetValue(i) ?? DBNull.Value;
+                        rowValue.Add(value);
+                    }
                 }
             }
         }
@@ -285,7 +293,7 @@ namespace ParquetViewer.Engine
            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read struct data as a new datatable
-            DataTableLite structFieldTable = BuildDataTable(field.Path, field.Children.Select(f => f.Path).ToList(), 1);
+            DataTableLite structFieldTable = BuildDataTable(field, field.Children.Select(f => f.Path).ToList(), 1);
 
             //Need to calculate progress differently for structs
             var structFieldReadProgress = new SimpleProgress();
@@ -311,7 +319,6 @@ namespace ParquetViewer.Engine
 
             var rowIndex = rowBeginIndex;
             var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
-            
             var finalResultDataTable = structFieldTable.ToDataTable(cancellationToken);
             for (var i = 0; i < finalResultDataTable.Rows.Count; i++)
             {
@@ -327,12 +334,13 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private DataTableLite BuildDataTable(string? parent, List<string> fields, int expectedRecordCount)
+        private DataTableLite BuildDataTable(ParquetSchemaElement? parent, List<string> fields, int expectedRecordCount)
         {
+            parent ??= this.ParquetSchemaTree;
             DataTableLite dataTable = new(expectedRecordCount);
             foreach (var field in fields)
             {
-                var schema = ParquetSchemaTree.GetChild(parent, field);
+                var schema = parent.GetChild(field);
                 if (schema.SchemaElement.ConvertedType == ConvertedType.LIST)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);

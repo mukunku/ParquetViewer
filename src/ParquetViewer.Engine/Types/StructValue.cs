@@ -25,11 +25,10 @@ namespace ParquetViewer.Engine.Types
             try
             {
                 var record = new Dictionary<string, object>();
-                foreach (DataColumn column in this.Data.Table.Columns)
+                for (var i = 0; i < this.Data.Table.Columns.Count; i++)
                 {
-                    string columnName = column.ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
-
-                    var value = this.Data[column];
+                    string columnName = this.Data.Table.Columns[i].ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
+                    object value = this.Data[i];
 
                     if (truncateForDisplay)
                     {
@@ -47,6 +46,11 @@ namespace ParquetViewer.Engine.Types
                         }
                     }
 
+                    if (value is StructValue sv)
+                    {
+                        value = sv.ToString();
+                    }
+
                     record.Add(columnName, value);
                 }
 
@@ -62,6 +66,5 @@ namespace ParquetViewer.Engine.Types
                 return $"Error while deserializing field: {Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
-
     }
 }

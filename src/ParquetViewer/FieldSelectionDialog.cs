@@ -222,7 +222,7 @@ namespace ParquetViewer
                     && mp.Value.SchemaType == SchemaType.Data => true, //we don't support nested maps
                 SchemaType.Struct when field is StructField sf
                     && sf.Fields.All(f => f.SchemaType == SchemaType.Data) => true, //we don't support nested structs
-                _ => false
+                _ => true
             };
 
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)

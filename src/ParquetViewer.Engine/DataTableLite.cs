@@ -4,11 +4,11 @@ namespace ParquetViewer.Engine
 {
     internal class DataTableLite
     {
-        internal record ColumnLite(string Name, Type Type, string? Parent, int Ordinal);
+        internal record ColumnLite(string Name, Type Type, ParquetSchemaElement Parent, int Ordinal);
 
         private int _ordinal = 0;
         private readonly Dictionary<string, ColumnLite> _columns = new();
-        private readonly List<object[]?> _rows;
+        private readonly List<object[]> _rows;
 
         /// <summary>
         /// Total number of rows in the opened parquet file(s)
@@ -24,14 +24,14 @@ namespace ParquetViewer.Engine
         /// <summary>
         /// Rows of the dataset
         /// </summary>
-        public IReadOnlyList<object[]?> Rows => _rows;
+        public IReadOnlyList<object[]> Rows => _rows;
 
         public DataTableLite(int expectedRowCount = 1000)
         {
             this._rows = new(expectedRowCount);
         }
 
-        public ColumnLite AddColumn(string name, Type type, string? parent = null)
+        public ColumnLite AddColumn(string name, Type type, ParquetSchemaElement parent)
         {
             if (_rows.Count > 0)
             {
@@ -61,7 +61,6 @@ namespace ParquetViewer.Engine
         public DataTable ToDataTable(CancellationToken token, IProgress<int>? progress = null)
         {
             var dataTable = new DataTable();
-
             foreach (var column in _columns)
             {
                 token.ThrowIfCancellationRequested();

@@ -22,12 +22,10 @@ namespace ParquetViewer.Engine.Types
 
             foreach (var d in data)
             {
-                if (d is not null && d != DBNull.Value)
+                if (d != DBNull.Value && d is not null
+                    && Type != d.GetType())
                 {
-                    if (Type != d.GetType())
-                    {
-                        throw new ArgumentException($"Data type {d.GetType()} doesn't match the passed type {type}");
-                    }
+                    throw new ArgumentException($"Data type {d.GetType()} doesn't match the passed type {type}");
                 }
             }
         }
