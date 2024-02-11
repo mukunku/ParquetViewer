@@ -152,7 +152,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void loadAllRowsButton_Click(object sender, EventArgs e)
+        private void loadAllRowsButton_Click(object _, EventArgs e)
         {
             if (this._openParquetEngine is not null)
             {
@@ -160,6 +160,15 @@ MULTIPLE CONDITIONS:
                 this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
                 this.recordsToTextBox_TextChanged(this.recordCountTextBox, null);
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.LoadAllRows);
+            }
+        }
+
+
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.E && this.loadAllRowsButton.Enabled)
+            {
+                this.loadAllRowsButton_Click(null, null);
             }
         }
     }

@@ -291,7 +291,7 @@ namespace ParquetViewer
             loadAllRowsButton.Name = "loadAllRowsButton";
             loadAllRowsButton.Size = new System.Drawing.Size(13, 16);
             loadAllRowsButton.TabIndex = 8;
-            loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, "Load all records");
+            loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, "Load all records (CTRL+E)");
             loadAllRowsButton.UseVisualStyleBackColor = true;
             loadAllRowsButton.EnabledChanged += loadAllRowsButton_EnabledChanged;
             loadAllRowsButton.Click += loadAllRowsButton_Click;
@@ -651,6 +651,7 @@ namespace ParquetViewer
             Controls.Add(mainTableLayoutPanel);
             Controls.Add(mainMenuStrip);
             Icon = Properties.Resources.parquet_icon_32x32;
+            KeyPreview = true;
             MainMenuStrip = mainMenuStrip;
             Margin = new Padding(4, 3, 4, 3);
             MinimumSize = new System.Drawing.Size(791, 398);
@@ -659,6 +660,7 @@ namespace ParquetViewer
             Load += MainForm_Load;
             DragDrop += MainForm_DragDrop;
             DragEnter += MainForm_DragEnter;
+            KeyDown += MainForm_KeyDown;
             mainTableLayoutPanel.ResumeLayout(false);
             mainTableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)mainGridView).EndInit();

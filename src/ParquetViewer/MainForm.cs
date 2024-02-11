@@ -402,29 +402,16 @@ namespace ParquetViewer
                     {
                         //This isn't perfect but it should handle most cases
                         queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
-                    }
-
-                    var queryEvent = new ExecuteQueryEvent
-                    {
-                        RecordCount = this.MainDataSource.Rows.Count,
-                        ColumnCount = this.MainDataSource.Columns.Count
-                    };
-                    var stopwatch = Stopwatch.StartNew();
+                    }                    
 
                     try
                     {
                         this.MainDataSource.DefaultView.RowFilter = queryText;
-                        queryEvent.IsValid = true;
                     }
                     catch (Exception ex)
                     {
                         this.MainDataSource.DefaultView.RowFilter = null;
                         throw new InvalidQueryException(ex);
-                    }
-                    finally
-                    {
-                        queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
-                        var _ = queryEvent.Record(); //Fire and forget
                     }
                 }
             }
