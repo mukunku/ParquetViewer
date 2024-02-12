@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Properties;
 using System;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -49,6 +50,10 @@ namespace ParquetViewer
             if (e.KeyChar == Convert.ToChar(Keys.Return))
             {
                 this.runQueryButton_Click(this.runQueryButton, null);
+            }
+            else if (e.KeyChar == Convert.ToChar(Keys.Escape))
+            {
+                this.clearFilterButton_Click(this.clearFilterButton, null);
             }
         }
 
@@ -108,6 +113,63 @@ MULTIPLE CONDITIONS:
         {
             //Ignore errors and hope for the best.
             e.Cancel = true;
+        }
+
+        private void searchFilterTextBox_Enter(object sender, EventArgs e)
+        {
+            if (sender is TextBox searchBox)
+            {
+                if (!searchBox.Text.StartsWith("WHERE", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    searchBox.Text = "WHERE ";
+                }
+            }
+        }
+
+        private void searchFilterTextBox_Leave(object sender, EventArgs e)
+        {
+            if (sender is TextBox searchBox)
+            {
+                if (searchBox.Text.Trim().Equals("WHERE", StringComparison.OrdinalIgnoreCase))
+                {
+                    searchBox.Text = string.Empty; //show the placeholder
+                }
+            }
+        }
+
+        private void loadAllRowsButton_EnabledChanged(object sender, EventArgs e)
+        {
+            if (sender is Button loadAllRecordsButton)
+            {
+                if (loadAllRecordsButton.Enabled)
+                {
+                    loadAllRecordsButton.Image = Resources.next_blue;
+                }
+                else
+                {
+                    loadAllRecordsButton.Image = Resources.next_disabled;
+                }
+            }
+        }
+
+        private void loadAllRowsButton_Click(object _, EventArgs e)
+        {
+            if (this._openParquetEngine is not null)
+            {
+                //Force file reload to happen instantly by triggering the event handler ourselves
+                this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
+                this.recordsToTextBox_TextChanged(this.recordCountTextBox, null);
+                MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.LoadAllRows);
+            }
+        }
+
+
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.E && this.loadAllRowsButton.Enabled)
+            {
+                this.loadAllRowsButton_Click(null, null);
+            }
         }
     }
 }

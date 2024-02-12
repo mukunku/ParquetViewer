@@ -220,7 +220,7 @@ namespace ParquetViewer
                 SchemaType.List when field is ListField lf && lf.Item.SchemaType == SchemaType.Data => true, //we don't support nested lists
                 SchemaType.Map when field is MapField mp && mp.Key.SchemaType == SchemaType.Data
                     && mp.Value.SchemaType == SchemaType.Data => true, //we don't support nested maps
-                SchemaType.Struct when field is StructField sf 
+                SchemaType.Struct when field is StructField sf
                     && sf.Fields.All(f => f.SchemaType == SchemaType.Data) => true, //we don't support nested structs
                 _ => false
             };
@@ -232,19 +232,7 @@ namespace ParquetViewer
                 this.fieldsPanel.Enabled = false;
                 this.filterColumnsTextbox.Enabled = false;
                 this.clearfilterColumnsButton.Enabled = false;
-                this.allFieldsRememberRadioButton.Checked = false;
-                this.showSelectedFieldsRadioButton.Checked = false;
-            }
-        }
-
-        private void AllFieldsRememberRadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-            if (((RadioButton)sender).Checked)
-            {
-                this.fieldsPanel.Enabled = false;
-                this.filterColumnsTextbox.Enabled = false;
-                this.clearfilterColumnsButton.Enabled = false;
-                this.allFieldsRadioButton.Checked = false;
+                this.rememberMyChoiceCheckBox.Enabled = true;
                 this.showSelectedFieldsRadioButton.Checked = false;
             }
         }
@@ -257,7 +245,7 @@ namespace ParquetViewer
                 this.filterColumnsTextbox.Enabled = true;
                 this.clearfilterColumnsButton.Enabled = true;
                 this.allFieldsRadioButton.Checked = false;
-                this.allFieldsRememberRadioButton.Checked = false;
+                this.rememberMyChoiceCheckBox.Enabled = false;
             }
         }
 
@@ -268,13 +256,13 @@ namespace ParquetViewer
                 //Clear filter text so all checked fields are loaded
                 clearfilterColumnsButton_Click(null, null);
 
-                if (this.allFieldsRememberRadioButton.Checked)
+                if (this.rememberMyChoiceCheckBox.Enabled && this.rememberMyChoiceCheckBox.Checked)
                     AppSettings.AlwaysSelectAllFields = true;
                 else
                     AppSettings.AlwaysSelectAllFields = false;
 
                 this.NewSelectedFields.Clear();
-                if (this.allFieldsRadioButton.Checked || this.allFieldsRememberRadioButton.Checked || ((CheckBox)(this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true)[0])).Checked)
+                if (this.allFieldsRadioButton.Checked || ((CheckBox)(this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true)[0])).Checked)
                 {
                     this.NewSelectedFields.AddRange(this.AvailableFields.Where(IsSupportedFieldType).Select(f => f.Name));
                 }

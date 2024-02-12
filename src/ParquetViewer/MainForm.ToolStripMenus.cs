@@ -64,7 +64,9 @@ namespace ParquetViewer
         private async void changeFieldsMenuStripButton_Click(object sender, EventArgs e)
         {
             MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.ChangeFields);
-            await this.OpenFieldSelectionDialog(true);
+            var fieldList = await this.OpenFieldSelectionDialog(true);
+            if (fieldList is not null) 
+                this.SelectedFields = fieldList; //triggers a file load
         }
 
         private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
@@ -128,11 +130,10 @@ namespace ParquetViewer
             }
         }
 
-        private void rememberRecordCountToolStripMenuItem_Click(object sender, EventArgs e)
+        private void alwaysLoadAllRecordsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.rememberRecordCountToolStripMenuItem.Checked = !this.rememberRecordCountToolStripMenuItem.Checked;
-            AppSettings.RememberLastRowCount = this.rememberRecordCountToolStripMenuItem.Checked;
-            AppSettings.LastRowCount = this.CurrentMaxRowCount;
+            this.alwaysLoadAllRecordsToolStripMenuItem.Checked = !this.alwaysLoadAllRecordsToolStripMenuItem.Checked;
+            AppSettings.AlwaysLoadAllRecords = this.alwaysLoadAllRecordsToolStripMenuItem.Checked;
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)

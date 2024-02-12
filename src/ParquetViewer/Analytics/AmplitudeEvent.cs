@@ -31,8 +31,7 @@ namespace ParquetViewer.Analytics
         [JsonIgnore]
         public object UserProperties => new
         {
-            AppSettings.RememberLastRowCount,
-            AppSettings.LastRowCount,
+            AppSettings.AlwaysLoadAllRecords,
             AppSettings.AlwaysSelectAllFields,
             AutoSizeColumnsMode = AppSettings.AutoSizeColumnsMode.ToString(),
             DateTimeDisplayFormat = AppSettings.DateTimeDisplayFormat.ToString(),
@@ -44,6 +43,8 @@ namespace ParquetViewer.Analytics
             SelfContainedExecutable = false,
 #endif
         };
+
+        public static bool HasApiKey => !string.IsNullOrEmpty(AMPLITUDE_API_KEY);
 
         protected AmplitudeEvent(string eventType, AmplitudeConfiguration? amplitudeConfiguration = null)
         {

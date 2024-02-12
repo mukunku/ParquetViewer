@@ -3,23 +3,6 @@ using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Analytics
 {
-    public class ProgramOpenEvent : AmplitudeEvent
-    {
-        private const string EVENT_TYPE = "program.open";
-
-        public bool IsOpeningFile { get; set; }
-
-        public ProgramOpenEvent() : base(EVENT_TYPE)
-        {
-
-        }
-
-        public static void FireAndForget(bool isOpeningFile)
-        {
-            var _ = new ProgramOpenEvent { IsOpeningFile = isOpeningFile }.Record();
-        }
-    }
-
     public class FileOpenEvent : AmplitudeEvent
     {
         private const string EVENT_TYPE = "file.open";
@@ -120,22 +103,8 @@ namespace ParquetViewer.Analytics
             MetadataViewer,
             AboutBox,
             UserGuide,
-            DragDrop
-        }
-    }
-
-    public class ExecuteQueryEvent : AmplitudeEvent
-    {
-        private const string EVENT_TYPE = "sql.execute";
-
-        public bool IsValid { get; set; }
-        public int RecordCount { get; set; }
-        public int ColumnCount { get; set; }
-        public long RunTimeMS { get; set; }
-
-        public ExecuteQueryEvent() : base(EVENT_TYPE)
-        {
-
+            DragDrop,
+            LoadAllRows
         }
     }
 

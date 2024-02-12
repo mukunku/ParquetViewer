@@ -11,7 +11,7 @@ namespace ParquetViewer.Engine
     {
         public static readonly string TotalRecordCountExtendedPropertyKey = "TOTAL_RECORD_COUNT";
 
-        public async Task<Func<IProgress<int>?, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
+        public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
             long recordsLeftToRead = recordCount;
             DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
@@ -28,9 +28,9 @@ namespace ParquetViewer.Engine
 
             result.DataSetSize = this.RecordCount;
 
-            return (progress) =>
+            return (logProgress) =>
             {
-                var datatable = result.ToDataTable(cancellationToken, progress);
+                var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
                 datatable.ExtendedProperties[TotalRecordCountExtendedPropertyKey] = result.DataSetSize;
                 return datatable;
             };

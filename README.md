@@ -1,7 +1,7 @@
 # ParquetViewer
 Simple Windows desktop application for viewing & querying Apache Parquet files. 
 
-[![Main UI](https://github.com/mukunku/ParquetViewer/blob/master/wiki_images/main_screenshot4.png)](#)
+[![Main UI](https://github.com/mukunku/ParquetViewer/blob/master/wiki_images/main_screenshot5.png)](#)
 
 # Summary
 ParquetViewer is a utility to quickly view Apache Parquet files on Windows desktop machines. 
