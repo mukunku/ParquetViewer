@@ -4,7 +4,7 @@ namespace ParquetViewer.Engine
 {
     internal class DataTableLite
     {
-        internal record ColumnLite(string Name, Type Type, ParquetSchemaElement Parent, int Ordinal);
+        internal record ColumnLite(string Name, Type Type, ParquetSchemaElement ParentSchema, int Ordinal);
 
         private int _ordinal = 0;
         private readonly Dictionary<string, ColumnLite> _columns = new();
@@ -70,7 +70,7 @@ namespace ParquetViewer.Engine
                 if (dataTable.Columns.Contains(columnLite.Name))
                 {
                     //DataTable's don't support case sensitive field names unfortunately
-                    var columnPath = (columnLite.Parent is not null ? columnLite.Parent + "/" : string.Empty) + columnLite.Name;
+                    var columnPath = columnLite.ParentSchema + "/" + columnLite.Name;
                     throw new NotSupportedException($"Duplicate column '{columnPath}' detected. Column names are case insensitive and must be unique.");
                 }
 

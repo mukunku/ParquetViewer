@@ -54,6 +54,10 @@ namespace ParquetViewer.Engine.Types
                         {
                             jsonWriter.WriteNullValue();
                         }
+                        else if (value is string str)
+                        {
+                            jsonWriter.WriteStringValue(str);
+                        }
                         else
                         {
                             jsonWriter.WriteRawValue(value.ToString() ?? string.Empty);
