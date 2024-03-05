@@ -89,7 +89,7 @@ namespace ParquetViewer.Tests
 
             var ex = await Assert.ThrowsAsync<NotSupportedException>(async () 
                 => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false));
-            Assert.Equal("Duplicate column 'TransPlan_NORMAL_v2' detected. Column names are case insensitive and must be unique.", ex.Message);
+            Assert.Equal("Duplicate column 'schema/TransPlan_NORMAL_v2' detected. Column names are case insensitive and must be unique.", ex.Message);
         }
 
         [Fact]
@@ -189,18 +189,22 @@ namespace ParquetViewer.Tests
 
             //We currently only support three of the fields in this test file
             string[] supportedFields = { "txn", "remove", "protocol" };
-            var dataTable = (await parquetEngine.ReadRowsAsync(
-                parquetEngine.Fields.Where(f => supportedFields.Contains(f)).ToList(), 0, int.MaxValue, default))(false);
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.IsType<StructValue>(dataTable.Rows[0][0]);
-            Assert.Equal("{\"appId\":{},\"version\":0,\"lastUpdated\":{}}", ((StructValue)dataTable.Rows[0][0]).ToString());
+            Assert.Equal("{\"appId\":null,\"version\":0,\"lastUpdated\":null}", ((StructValue)dataTable.Rows[0][0]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][1]);
-            Assert.Equal("{\"path\":{},\"deletionTimestamp\":{},\"dataChange\":false}", ((StructValue)dataTable.Rows[0][1]).ToString());
+            Assert.Equal("{\"path\":null,\"partitionValues\":{\"key\":null,\"value\":null},\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":{\"key\":null,\"value\":null}}", ((StructValue)dataTable.Rows[0][1]).ToString()); 
             Assert.IsType<StructValue>(dataTable.Rows[0][2]);
-            Assert.Equal("{\"minReaderVersion\":1,\"minWriterVersion\":2}", ((StructValue)dataTable.Rows[0][2]).ToString());
-            Assert.IsType<DBNull>(dataTable.Rows[9][2]);
-            Assert.Equal(DBNull.Value, dataTable.Rows[9][2]);
-            Assert.Equal("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":{},\"lastUpdated\":1564524299648}", ((StructValue)dataTable.Rows[2][0]).ToString());
-
+            Assert.Equal("{\"path\":null,\"deletionTimestamp\":null,\"dataChange\":false}", ((StructValue)dataTable.Rows[0][2]).ToString());
+            Assert.IsType<StructValue>(dataTable.Rows[0][3]);
+            Assert.Equal("{\"id\":null,\"name\":null,\"description\":null,\"format\":{\"provider\":null,\"options\":{\"key\":null,\"value\":null}},\"schemaString\":null,\"partitionColumns\":[],\"configuration\":{\"key\":null,\"value\":null},\"createdTime\":null}", ((StructValue)dataTable.Rows[0][3]).ToString());
+            Assert.IsType<StructValue>(dataTable.Rows[0][4]);
+            Assert.Equal("{\"minReaderVersion\":1,\"minWriterVersion\":2}", ((StructValue)dataTable.Rows[0][4]).ToString());
+            Assert.IsType<StructValue>(dataTable.Rows[0][5]);
+            Assert.Equal("{\"version\":null,\"timestamp\":null,\"userId\":null,\"userName\":null,\"operation\":null,\"operationParameters\":{\"key\":null,\"value\":null},\"job\":{\"jobId\":null,\"jobName\":null,\"runId\":null,\"jobOwnerId\":null,\"triggerType\":null},\"notebook\":{\"notebookId\":null},\"clusterId\":null,\"readVersion\":null,\"isolationLevel\":null,\"isBlindAppend\":null}", ((StructValue)dataTable.Rows[0][5]).ToString());
+            Assert.IsType<DBNull>(dataTable.Rows[9][4]);
+            Assert.Equal(DBNull.Value, dataTable.Rows[9][4]);
+            Assert.Equal("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":null,\"lastUpdated\":1564524299648}", ((StructValue)dataTable.Rows[2][0]).ToString());
         }
 
         [Fact]

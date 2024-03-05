@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Numerics;
 using System.Text.Json;
 
 namespace ParquetViewer.Engine.Types
@@ -49,19 +50,7 @@ namespace ParquetViewer.Engine.Types
                                 }
                             }
                         }
-
-                        if (value == DBNull.Value)
-                        {
-                            jsonWriter.WriteNullValue();
-                        }
-                        else if (value is string str)
-                        {
-                            jsonWriter.WriteStringValue(str);
-                        }
-                        else
-                        {
-                            jsonWriter.WriteRawValue(value.ToString() ?? string.Empty);
-                        }
+                        WriteValue(jsonWriter, value);
                     }
                     jsonWriter.WriteEndObject();
                 }
@@ -75,5 +64,60 @@ namespace ParquetViewer.Engine.Types
                 return $"Error while deserializing field: {Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
+
+        private static void WriteValue(Utf8JsonWriter jsonWriter, object value)
+        {
+            if (value is null)
+            {
+                //Value should never be null as we should be replacing all those with DBNull.Value
+                throw new ArgumentNullException(nameof(value));
+            }
+            else if (value == DBNull.Value)
+            {
+                jsonWriter.WriteNullValue();
+            }
+            else if (value is string str)
+            {
+                jsonWriter.WriteStringValue(str);
+            }
+            else if (value is bool @bool)
+            {
+                jsonWriter.WriteBooleanValue(@bool);
+            }
+            else if (IsNumber(value.GetType()))
+            {
+                jsonWriter.WriteNumberValue(Convert.ToDecimal(value));
+            }
+            else if (value is StructValue @struct)
+            {
+                //Structs already generate JSON on .ToString()
+                jsonWriter.WriteRawValue(@struct.ToString());
+            }
+            else if (value is MapValue map)
+            {
+                jsonWriter.WriteStartObject();
+                jsonWriter.WritePropertyName("key");
+                WriteValue(jsonWriter, map.Key);
+                jsonWriter.WritePropertyName("value");
+                WriteValue(jsonWriter, map.Value);
+                jsonWriter.WriteEndObject();
+            }
+            else if (value is ListValue list)
+            {
+                //Hopefully lists also generate valid JSON on .ToString()
+                jsonWriter.WriteRawValue(list.ToString());
+            }
+            else
+            {
+                //Everything else just try to write it raw
+                jsonWriter.WriteRawValue(value.ToString()!);
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the type is a number type.
+        /// </summary>
+        private static bool IsNumber(Type type) =>
+            Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
     }
 }

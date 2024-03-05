@@ -252,8 +252,9 @@ namespace ParquetViewer.Engine
             var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
             var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
 
+            int rowCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
             var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-            for (int i = 0; i < valueDataColumn.Data.Length; i++)
+            for (int i = 0; i < rowCount; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -268,12 +269,8 @@ namespace ParquetViewer.Engine
                     dataTable.NewRow();
                 }
 
-                bool isMapTypeValid = keyDataColumn.Data.Length == valueDataColumn.Data.Length;
-                if (!isMapTypeValid)
-                    throw new UnsupportedFieldException($"`{field.Path}` is malformed and cannot be loaded");
-
-                var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
-                var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
+                var key = keyDataColumn.Data.Length > i ? keyDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
+                var value = valueDataColumn.Data.Length > i ? valueDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
                 dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType);
 
                 rowIndex++;
