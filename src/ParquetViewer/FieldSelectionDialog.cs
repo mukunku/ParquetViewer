@@ -216,8 +216,11 @@ namespace ParquetViewer
         public static bool IsSupportedFieldType(Field field) =>
             field.SchemaType switch
             {
-                SchemaType.List when field is ListField lf && lf.Item.SchemaType != SchemaType.List => true, //we don't support nested lists
-                _ => true
+                SchemaType.Data => true,
+                SchemaType.List when field is ListField lf && lf.Item.SchemaType == SchemaType.Data => true,
+                SchemaType.Map when field is MapField mp && mp.Key.SchemaType == SchemaType.Data && mp.Value.SchemaType == SchemaType.Data => true,
+                SchemaType.Struct when field is StructField sf => sf.Fields.All(IsSupportedFieldType),
+                _ => false
             };
 
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
