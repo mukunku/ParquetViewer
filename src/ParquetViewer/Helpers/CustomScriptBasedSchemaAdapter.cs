@@ -15,7 +15,7 @@ namespace ParquetViewer.Helpers
 
         static CustomScriptBasedSchemaAdapter()
         {
-            Hashtable hashtable = new
+            Hashtable hashtable = new()
             {
                 { typeof(ulong), "BIGINT {1}NULL" },
                 { typeof(long), "BIGINT {1}NULL" },
