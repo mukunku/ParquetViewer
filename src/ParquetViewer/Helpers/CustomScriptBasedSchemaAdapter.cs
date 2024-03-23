@@ -15,7 +15,7 @@ namespace ParquetViewer.Helpers
 
         static CustomScriptBasedSchemaAdapter()
         {
-            Hashtable hashtable = new Hashtable
+            Hashtable hashtable = new()
             {
                 { typeof(ulong), "BIGINT {1}NULL" },
                 { typeof(long), "BIGINT {1}NULL" },
@@ -28,7 +28,8 @@ namespace ParquetViewer.Helpers
                 { typeof(Guid), "UNIQUEIDENTIFIER {1}NULL" },
                 { typeof(ushort), "SMALLINT {1}NULL" },
                 { typeof(short), "SMALLINT {1}NULL" },
-                { typeof(decimal), "REAL {1}NULL" },
+                { typeof(decimal), "DECIMAL {1}NULL" },
+                { typeof(float), "FLOAT {1}NULL" },
                 { typeof(byte), "TINYINT {1}NULL" },
                 { typeof(sbyte), "TINYINT {1}NULL" },
                 { typeof(string), "NVARCHAR({0}) {1}NULL" },
@@ -37,6 +38,7 @@ namespace ParquetViewer.Helpers
                 { typeof(ListValue), "sql_variant {1}NULL /*LIST*/" },
                 { typeof(MapValue), "sql_variant {1}NULL /*MAP*/" },
                 { typeof(StructValue), "sql_variant {1}NULL /*STRUCT*/" },
+                { typeof(ByteArrayValue), "VARBINARY({0}) {1}NULL" },
             };
             TypeMap = hashtable;
         }
@@ -101,7 +103,8 @@ namespace ParquetViewer.Helpers
             {
                 throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
             }
-            return string.Format(item, column.DataType == typeof(string) ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
+            bool useMaxKeyword = column.DataType == typeof(string) || column.DataType == typeof(ByteArrayValue);
+            return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
         }
 
         private string MakeList(DataColumn[] columns)

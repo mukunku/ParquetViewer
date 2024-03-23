@@ -2,14 +2,19 @@
 {
     public class MapValue
     {
-        public object? Key { get; }
+        public object Key { get; } = DBNull.Value;
         public Type KeyType { get; }
-        public object? Value { get; }
+        public object Value { get; } = DBNull.Value;
         public Type ValueType { get; }
         public static string? DateDisplayFormat { get; set; }
 
         public MapValue(object key, Type keyType, object value, Type valueType)
         {
+            if (key is null)
+                throw new ArgumentNullException(nameof(key));
+            else if (value is null)
+                throw new ArgumentNullException(nameof(value));
+
             Key = key;
             Value = value;
 
@@ -18,10 +23,10 @@
             KeyType = keyType;
             ValueType = valueType;
 
-            if (key is not null && key != DBNull.Value && key.GetType() != keyType)
+            if (key != DBNull.Value && key.GetType() != keyType)
                 throw new ArgumentException($"The key's type {key.GetType()} doesn't match the passed key-type {keyType}");
 
-            if (value is not null && value != DBNull.Value && value.GetType() != valueType)
+            if (value != DBNull.Value && value.GetType() != valueType)
                 throw new ArgumentException($"The value's type {value.GetType()} doesn't match the passed value-type {valueType}");
         }
 
