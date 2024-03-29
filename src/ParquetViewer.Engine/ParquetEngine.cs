@@ -134,7 +134,7 @@ namespace ParquetViewer.Engine
                 }
                 catch (Exception ex)
                 {
-                    skippedFiles.Add(Path.GetFileName(file), ex);
+                    skippedFiles.Add(Path.GetRelativePath(folderPath, file), ex);
                 }
             }
 
