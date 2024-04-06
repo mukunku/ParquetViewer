@@ -81,7 +81,7 @@ namespace ParquetViewer.Controls
 
             if (AppSettings.AutoSizeColumnsMode == Helpers.AutoSizeColumnsMode.AllCells)
                 this.FastAutoSizeColumns();
-            else if (AppSettings.AutoSizeColumnsMode != Helpers.AutoSizeColumnsMode.None)
+            else if (AppSettings.AutoSizeColumnsMode.ToDGVMode() != DataGridViewAutoSizeColumnsMode.None)
                 this.AutoResizeColumns(AppSettings.AutoSizeColumnsMode.ToDGVMode());
             else
             {

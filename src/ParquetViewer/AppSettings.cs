@@ -12,7 +12,6 @@ namespace ParquetViewer
         private const string UseISODateFormatKey = "UseISODateFormat";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
         private const string RememberLastRowCountKey = "RememberLastRowCount";
-        private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
         private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
@@ -187,7 +186,7 @@ namespace ParquetViewer
                 }
                 catch
                 {
-                    return AutoSizeColumnsMode.None;
+                    return AutoSizeColumnsMode.ColumnHeader;
                 }
             }
             set

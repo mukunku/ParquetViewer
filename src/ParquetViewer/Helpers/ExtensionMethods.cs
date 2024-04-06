@@ -24,7 +24,6 @@ namespace ParquetViewer.Helpers
         {
             AutoSizeColumnsMode.ColumnHeader => DataGridViewAutoSizeColumnsMode.ColumnHeader,
             AutoSizeColumnsMode.AllCells => DataGridViewAutoSizeColumnsMode.AllCells,
-            AutoSizeColumnsMode.None => DataGridViewAutoSizeColumnsMode.None,
             _ => DataGridViewAutoSizeColumnsMode.None
         };
 
