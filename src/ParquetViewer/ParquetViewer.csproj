@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <AssemblyName>ParquetViewer</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -16,18 +16,25 @@
     <ApplicationIcon>Resources\parquet_icon.ico</ApplicationIcon>
     <PlatformTarget>x64</PlatformTarget>
     <StartupObject>ParquetViewer.Program</StartupObject>
+    <Nullable>enable</Nullable>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
+    <IsPublishable>True</IsPublishable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
+    <IsPublishable>True</IsPublishable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_SelfContained|AnyCPU'">
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
+    <Optimize>True</Optimize>
+    <IsPublishable>True</IsPublishable>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="Controls\DelayedOnChangedTextBox.cs">
