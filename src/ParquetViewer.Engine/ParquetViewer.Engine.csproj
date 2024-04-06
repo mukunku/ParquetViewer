@@ -12,16 +12,13 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_SelfContained|AnyCPU'">
     <Optimize>True</Optimize>
-    <IsTrimmable>True</IsTrimmable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <IsTrimmable>True</IsTrimmable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
-    <IsTrimmable>True</IsTrimmable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Parquet.Net" />
