@@ -29,16 +29,16 @@ namespace ParquetViewer
 
         private void offsetTextBox_TextChanged(object sender, EventArgs e)
         {
-            var textbox = sender as TextBox;
+            var textbox = (TextBox)sender;
             if (int.TryParse(textbox.Text, out var offset))
                 this.CurrentOffset = offset;
             else
                 textbox.Text = this.CurrentOffset.ToString();
         }
 
-        private void recordsToTextBox_TextChanged(object sender, EventArgs e)
+        private void recordsToTextBox_TextChanged(object sender, EventArgs? e)
         {
-            var textbox = sender as TextBox;
+            var textbox = (TextBox)sender;
             if (int.TryParse(textbox.Text, out var recordCount))
                 this.CurrentMaxRowCount = recordCount;
             else
@@ -61,7 +61,7 @@ namespace ParquetViewer
         {
             try
             {
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                var files = e.Data?.GetData(DataFormats.FileDrop) as string[];
                 if (files != null && files.Length > 0)
                 {
                     this.Cursor = Cursors.WaitCursor;
@@ -78,7 +78,7 @@ namespace ParquetViewer
 
         private void MainForm_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
                 e.Effect = DragDropEffects.Copy;
         }
 
@@ -152,7 +152,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void loadAllRowsButton_Click(object _, EventArgs e)
+        private void loadAllRowsButton_Click(object? sender, EventArgs? e)
         {
             if (this._openParquetEngine is not null)
             {
@@ -162,7 +162,6 @@ MULTIPLE CONDITIONS:
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.LoadAllRows);
             }
         }
-
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {

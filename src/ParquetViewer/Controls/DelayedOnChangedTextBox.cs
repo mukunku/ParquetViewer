@@ -6,9 +6,9 @@ namespace ParquetViewer.Controls
     public class DelayedOnChangedTextBox : TextBox
     {
         private bool _skipNextTextChange = false;
-        private Timer _delayedTextChangedTimer;
+        private Timer? _delayedTextChangedTimer;
 
-        public event EventHandler DelayedTextChanged;
+        public event EventHandler? DelayedTextChanged;
 
         public DelayedOnChangedTextBox()
             : base()
@@ -83,10 +83,10 @@ namespace ParquetViewer.Controls
             _delayedTextChangedTimer.Start();
         }
 
-        private void HandleDelayedTextChangedTimerTick(object sender, EventArgs e)
+        private void HandleDelayedTextChangedTimerTick(object? sender, EventArgs e)
         {
-            Timer timer = sender as Timer;
-            timer.Stop();
+            var timer = sender as Timer;
+            timer?.Stop();
 
             OnDelayedTextChanged(EventArgs.Empty);
         }

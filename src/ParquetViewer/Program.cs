@@ -33,7 +33,7 @@ namespace ParquetViewer
             Form mainForm;
             bool isOpeningFile = !string.IsNullOrWhiteSpace(fileToOpen);
             if (isOpeningFile)
-                mainForm = new MainForm(fileToOpen);
+                mainForm = new MainForm(fileToOpen!);
             else
                 mainForm = new MainForm();
 

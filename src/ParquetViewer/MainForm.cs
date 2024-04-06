@@ -21,10 +21,10 @@ namespace ParquetViewer
         private readonly string DefaultFormTitle;
 
         #region Members
-        private readonly string fileToLoadOnLaunch = null;
+        private readonly string? fileToLoadOnLaunch = null;
 
-        private string _openFileOrFolderPath;
-        private string OpenFileOrFolderPath
+        private string? _openFileOrFolderPath;
+        private string? OpenFileOrFolderPath
         {
             get => this._openFileOrFolderPath;
             set
@@ -39,8 +39,8 @@ namespace ParquetViewer
                 this.metadataViewerToolStripMenuItem.Enabled = false;
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
-                this.MainDataSource.Clear();
-                this.MainDataSource.Columns.Clear();
+                this.MainDataSource?.Clear();
+                this.MainDataSource?.Columns.Clear();
                 this.loadAllRowsButton.Enabled = false;
                 this.searchFilterTextBox.PlaceholderText = "WHERE ";
 
@@ -61,8 +61,8 @@ namespace ParquetViewer
             }
         }
 
-        private List<string> selectedFields = null;
-        private List<string> SelectedFields
+        private List<string>? selectedFields = null;
+        private List<string>? SelectedFields
         {
             get => this.selectedFields;
             set
@@ -73,7 +73,7 @@ namespace ParquetViewer
                 var duplicateFields = this.selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
                 if (duplicateFields?.Count > 0)
                 {
-                    this.selectedFields = this.selectedFields.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
+                    this.selectedFields = this.selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
                     MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
                             $"\r\n\r\nCase sensitive field names are not currently supported.", "Duplicate fields detected",
@@ -118,22 +118,24 @@ namespace ParquetViewer
             => !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath)
                 && this._openParquetEngine is not null;
 
-        private DataTable mainDataSource;
-        private DataTable MainDataSource
+        private DataTable? mainDataSource;
+        private DataTable? MainDataSource
         {
             get => this.mainDataSource;
             set
             {
-                var dataTable = value;
-                this.mainDataSource = dataTable;
+                this.mainDataSource = value;
                 this.mainGridView.DataSource = this.mainDataSource;
 
-                this.loadAllRowsButton.Enabled = dataTable.Rows.Count < (this._openParquetEngine?.RecordCount ?? default);
-                SetSampleQueryAsPlaceHolder();
+                if (this.mainDataSource is not null)
+                {
+                    this.loadAllRowsButton.Enabled = this.mainDataSource.Rows.Count < (this._openParquetEngine?.RecordCount ?? default);
+                    SetSampleQueryAsPlaceHolder();
+                }
             }
         }
 
-        private Engine.ParquetEngine _openParquetEngine = null;
+        private Engine.ParquetEngine? _openParquetEngine = null;
         #endregion
 
         public MainForm()
@@ -182,14 +184,14 @@ namespace ParquetViewer
             this.shareAnonymousUsageDataToolStripMenuItem.Checked = AppSettings.AnalyticsDataGatheringConsent;
         }
 
-        private async Task<List<string>> OpenFieldSelectionDialog(bool forceOpenDialog)
+        private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)
         {
             if (string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath))
             {
                 return null;
             }
 
-            LoadingIcon loadingIcon = null;
+            LoadingIcon? loadingIcon = null;
             if (this._openParquetEngine == null)
             {
                 loadingIcon = this.ShowLoadingIcon("Loading Fields");
@@ -280,11 +282,14 @@ namespace ParquetViewer
         private async void LoadFileToGridview()
         {
             var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
-            LoadingIcon loadingIcon = null;
+            LoadingIcon? loadingIcon = null;
             try
             {
                 if (!this.IsAnyFileOpen)
                     return;
+
+                if (this.SelectedFields is null)
+                    throw new FileLoadException("No fields selected");
 
                 if (!File.Exists(this.OpenFileOrFolderPath) && !Directory.Exists(this.OpenFileOrFolderPath))
                 {
@@ -292,7 +297,7 @@ namespace ParquetViewer
                     return;
                 }
 
-                long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine.RecordCount - this.CurrentOffset);
+                long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine!.RecordCount - this.CurrentOffset);
                 loadingIcon = this.ShowLoadingIcon("Loading Data", cellCount);
 
                 var intermediateResult = await Task.Run(async () =>
@@ -315,7 +320,7 @@ namespace ParquetViewer
                 indexTime = stopwatch.Elapsed - loadTime;
 
                 this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
-                this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
+                this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey]!.ToString();
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                 this.MainDataSource = finalResult;
@@ -373,7 +378,7 @@ namespace ParquetViewer
 
             if (AppSettings.AlwaysLoadAllRecords)
             {
-                this.currentMaxRowCount = (int)this._openParquetEngine.RecordCount;
+                this.currentMaxRowCount = (int)this._openParquetEngine!.RecordCount;
                 this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
             }
             else
@@ -386,7 +391,7 @@ namespace ParquetViewer
                 this.SelectedFields = fieldList; //triggers a file load
         }
 
-        private void runQueryButton_Click(object sender, EventArgs e)
+        private void runQueryButton_Click(object sender, EventArgs? e)
         {
             try
             {
@@ -407,11 +412,11 @@ namespace ParquetViewer
 
                     try
                     {
-                        this.MainDataSource.DefaultView.RowFilter = queryText;
+                        this.MainDataSource!.DefaultView.RowFilter = queryText;
                     }
                     catch (Exception ex)
                     {
-                        this.MainDataSource.DefaultView.RowFilter = null;
+                        this.MainDataSource!.DefaultView.RowFilter = null;
                         throw new InvalidQueryException(ex);
                     }
                 }
@@ -427,9 +432,12 @@ namespace ParquetViewer
             }
         }
 
-        private void clearFilterButton_Click(object sender, EventArgs e)
+        private void clearFilterButton_Click(object sender, EventArgs? e)
         {
-            this.MainDataSource.DefaultView.RowFilter = null;
+            if (this.MainDataSource is not null)
+            {
+                this.MainDataSource.DefaultView.RowFilter = null;
+            }
         }
 
         /// <summary>
@@ -471,9 +479,9 @@ namespace ParquetViewer
         }
 
         /// <summary>
-        /// Provides the user a sample query in <see cref="searchFilterTextBox"/> using 
-        /// the first primitive field available in the dataset. If none are found, the
-        /// placeholder won't contain a sample. Only the "WHERE ".
+        /// Provides the user with a sample query in <see cref="searchFilterTextBox"/> 
+        /// using the first primitive field available in the dataset. If none are found,
+        /// the placeholder won't contain a sample. Only the "WHERE ".
         /// </summary>
         private void SetSampleQueryAsPlaceHolder()
         {
@@ -513,7 +521,7 @@ namespace ParquetViewer
             }
             else
             {
-                string placeholder = sampleSimpleValue.ToString();
+                string placeholder = sampleSimpleValue.ToString()!;
                 if (placeholder.Length < 40)
                     this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = '{sampleSimpleValue}'";
             }

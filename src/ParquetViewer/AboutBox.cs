@@ -54,7 +54,7 @@ namespace ParquetViewer
         {
             get
             {
-                return Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                return Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
             }
         }
 
@@ -114,7 +114,7 @@ namespace ParquetViewer
         {
             get
             {
-                byte[] publicKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
+                var publicKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
                 if (publicKey is null || publicKey.Length == 0)
                 {
                     return string.Empty;

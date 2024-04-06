@@ -19,12 +19,12 @@ namespace ParquetViewer
         private LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
         {
             var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
-            loadingIcon.OnShow += (object sender, EventArgs e) =>
+            loadingIcon.OnShow += (object? sender, EventArgs e) =>
             {
                 this.mainTableLayoutPanel.Enabled = false;
                 this.mainMenuStrip.Enabled = false;
             };
-            loadingIcon.OnHide += (object sender, EventArgs e) =>
+            loadingIcon.OnHide += (object? sender, EventArgs e) =>
             {
                 this.mainTableLayoutPanel.Enabled = true;
                 this.mainMenuStrip.Enabled = true;
@@ -36,8 +36,8 @@ namespace ParquetViewer
 
         private async void ExportResults(FileType defaultFileType)
         {
-            string filePath = null;
-            LoadingIcon loadingIcon = null;
+            string? filePath = null;
+            LoadingIcon? loadingIcon = null;
             try
             {
                 if (this.mainGridView.RowCount > 0)
@@ -59,7 +59,7 @@ namespace ParquetViewer
                         else if (selectedFileType == FileType.XLS)
                         {
                             const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
-                            if (this.MainDataSource.Columns.Count > MAX_XLS_COLUMN_COUNT)
+                            if (this.MainDataSource!.Columns.Count > MAX_XLS_COLUMN_COUNT)
                             {
                                 MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.\r\n\r\nPlease try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
                                     "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -102,7 +102,7 @@ namespace ParquetViewer
                 loadingIcon?.Dispose();
             }
 
-            static void CleanupFile(string filePath)
+            static void CleanupFile(string? filePath)
             {
                 try
                 {
@@ -119,7 +119,7 @@ namespace ParquetViewer
 
             var rowBuilder = new StringBuilder();
             bool isFirst = true;
-            foreach (DataColumn column in this.MainDataSource.Columns)
+            foreach (DataColumn column in this.MainDataSource!.Columns)
             {
                 if (!isFirst)
                 {
@@ -149,7 +149,7 @@ namespace ParquetViewer
 
                 isFirst = true;
                 string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                foreach (object value in row.Row.ItemArray)
+                foreach (object? value in row.Row.ItemArray)
                 {
                     if (!isFirst)
                     {
@@ -166,7 +166,8 @@ namespace ParquetViewer
                     }
                     else
                     {
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(value.ToString()));
+                        var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue)); 
                     }
                 }
 
@@ -182,7 +183,7 @@ namespace ParquetViewer
             excelWriter.BeginWrite();
 
             //Write headers
-            for (int i = 0; i < this.MainDataSource.Columns.Count; i++)
+            for (int i = 0; i < this.MainDataSource!.Columns.Count; i++)
             {
                 excelWriter.WriteCell(0, i, this.MainDataSource.Columns[i].ColumnName);
             }
@@ -197,7 +198,7 @@ namespace ParquetViewer
 
                 for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
                 {
-                    var value = this.mainDataSource.DefaultView[i][j];
+                    var value = this.MainDataSource.DefaultView[i][j];
                     if (value is null || value == DBNull.Value)
                     {
                         excelWriter.WriteCell(i + 1, j); //empty cell

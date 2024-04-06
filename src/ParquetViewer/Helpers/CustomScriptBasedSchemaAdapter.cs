@@ -8,14 +8,7 @@ namespace ParquetViewer.Helpers
 {
     public class CustomScriptBasedSchemaAdapter
     {
-        internal readonly static Hashtable TypeMap;
-
-        public string TablePrefix { get; set; }
-        public bool CascadeDeletes { get; set; }
-
-        static CustomScriptBasedSchemaAdapter()
-        {
-            Hashtable hashtable = new()
+        internal readonly static Hashtable TypeMap = new()
             {
                 { typeof(ulong), "BIGINT {1}NULL" },
                 { typeof(long), "BIGINT {1}NULL" },
@@ -40,8 +33,9 @@ namespace ParquetViewer.Helpers
                 { typeof(StructValue), "sql_variant {1}NULL /*STRUCT*/" },
                 { typeof(ByteArrayValue), "VARBINARY({0}) {1}NULL" },
             };
-            TypeMap = hashtable;
-        }
+
+        public string? TablePrefix { get; set; }
+        public bool CascadeDeletes { get; set; }
 
         public string GetCreateScript(string databaseName)
         {
@@ -98,7 +92,7 @@ namespace ParquetViewer.Helpers
 
         protected string GetTypeFor(DataColumn column)
         {
-            string item = (string)TypeMap[column.DataType];
+            var item = TypeMap[column.DataType] as string;
             if (item == null)
             {
                 throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));

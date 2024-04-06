@@ -42,7 +42,7 @@ namespace ParquetViewer
             this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
         }
 
-        private void RenderFieldsCheckboxes(List<Field> availableFields, List<string> preSelectedFields)
+        private void RenderFieldsCheckboxes(List<Field> availableFields, List<string>? preSelectedFields)
         {
             this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
             this.ClearAndDisposeCheckboxes();
@@ -95,9 +95,9 @@ namespace ParquetViewer
                             AutoSize = true
                         };
 
-                        selectAllCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+                        selectAllCheckbox.CheckedChanged += (object? checkboxSender, EventArgs checkboxEventArgs) =>
                         {
-                            var selectAllCheckBox = (CheckBox)checkboxSender;
+                            var selectAllCheckBox = checkboxSender as CheckBox ?? throw new ArgumentNullException(nameof(checkboxSender));
                             var isChecked = selectAllCheckBox.Enabled && selectAllCheckBox.Checked;
                             var showFilterControls = !(isChecked && string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text));
                             this.filterColumnsTextbox.Enabled = showFilterControls;
@@ -108,7 +108,8 @@ namespace ParquetViewer
                             {
                                 foreach (Control control in this.fieldsPanel.Controls)
                                 {
-                                    if (!control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                    var isSelectAllCheckbox = control.Tag?.Equals(SelectAllCheckboxName) == true;
+                                    if (!isSelectAllCheckbox && control is CheckBox checkbox)
                                     {
                                         if (checkbox.Enabled)
                                         {
@@ -129,23 +130,26 @@ namespace ParquetViewer
                         Name = string.Concat("checkbox_", field.Name),
                         Text = string.Concat(field.Name, isUnsupportedFieldType ? $" {UnsupportedFieldText}" : string.Empty),
                         Tag = field.Name,
-                        Checked = preSelectedFields.Contains(field.Name),
+                        Checked = preSelectedFields?.Contains(field.Name) == true,
                         Location = new Point(locationX, locationY),
                         AutoSize = true,
                         Enabled = !isUnsupportedFieldType
                     };
-                    fieldCheckbox.CheckedChanged += (object checkboxSender, EventArgs checkboxEventArgs) =>
+                    fieldCheckbox.CheckedChanged += (object? checkboxSender, EventArgs checkboxEventArgs) =>
                     {
+                        if (checkboxSender is null)
+                            return;
+
                         var fieldCheckBox = (CheckBox)checkboxSender;
 
                         if (fieldCheckBox.Checked)
                         {
-                            this.PreSelectedFields.Add((string)fieldCheckBox.Tag);
+                            this.PreSelectedFields.Add((string)fieldCheckBox.Tag!);
                             SetSelectedFieldCount();
                         }
                         else
                         {
-                            this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                            this.PreSelectedFields.Remove((string)fieldCheckBox.Tag!);
                             SetSelectedFieldCount();
                         }
 
@@ -153,13 +157,13 @@ namespace ParquetViewer
                         {
                             foreach (Control control in this.fieldsPanel.Controls)
                             {
-                                if (control.Tag.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                                if (control.Tag!.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
                                 {
                                     if (checkbox.Enabled && checkbox.Checked)
                                     {
                                         isClearingSelectAllCheckbox = true;
                                         checkbox.Checked = false;
-                                        this.PreSelectedFields.Remove((string)fieldCheckBox.Tag);
+                                        this.PreSelectedFields.Remove((string)fieldCheckBox.Tag!);
                                         isClearingSelectAllCheckbox = false;
                                         SetSelectedFieldCount();
                                         break;
@@ -174,7 +178,7 @@ namespace ParquetViewer
                 }
 
                 //Disable fields with dupe names because we don't support case sensitive fields right now
-                var duplicateFields = checkboxControls?.GroupBy(f => f.Text.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+                var duplicateFields = checkboxControls.GroupBy(f => f.Text.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
                 foreach (var duplicateField in duplicateFields)
                 {
                     duplicateField.Enabled = false;
@@ -269,7 +273,7 @@ namespace ParquetViewer
                     foreach (Control control in this.fieldsPanel.Controls)
                     {
                         if (control is CheckBox checkbox && checkbox.Checked && !checkbox.Name.Equals(SelectAllCheckboxName) && checkbox.Enabled)
-                            this.NewSelectedFields.Add((string)control.Tag);
+                            this.NewSelectedFields.Add((string)control.Tag!);
                     }
 
                     if (this.NewSelectedFields.Count == 0)
@@ -288,7 +292,7 @@ namespace ParquetViewer
             }
         }
 
-        private void ShowError(Exception ex, string customMessage = null, bool showStackTrace = true)
+        private void ShowError(Exception ex, string? customMessage = null, bool showStackTrace = true)
         {
             MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -320,7 +324,7 @@ namespace ParquetViewer
             }
         }
 
-        private void clearfilterColumnsButton_Click(object sender, EventArgs e)
+        private void clearfilterColumnsButton_Click(object? sender, EventArgs? e)
         {
             this.filterColumnsTextbox.Text = string.Empty;
         }

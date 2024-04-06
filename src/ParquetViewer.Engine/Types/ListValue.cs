@@ -5,14 +5,14 @@ namespace ParquetViewer.Engine.Types
 {
     public class ListValue
     {
-        public IList? Data { get; }
+        public IList Data { get; }
         public Type? Type { get; private set; }
         public static string? DateDisplayFormat { get; set; }
 
         public ListValue(Array data)
         {
-            Data = data;
-            Type = Data?.GetType().GetElementType();
+            Data = data ?? throw new ArgumentNullException(nameof(data));
+            Type = Data.GetType().GetElementType();
         }
 
         public ListValue(ArrayList data, Type type)
