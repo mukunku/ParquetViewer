@@ -285,7 +285,7 @@ namespace ParquetViewer
             else
             {
                 loadingIcon?.Dispose();
-                ShowError("The selected file doesn't have any fields", "No fields found");
+                ShowError("The selected file/folder doesn't have any fields", "No fields found");
                 return null;
             }
         }
@@ -314,7 +314,6 @@ namespace ParquetViewer
                 var intermediateResult = await Task.Run(async () =>
                 {
                     return await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
-
                 }, loadingIcon.CancellationToken);
 
                 loadTime = stopwatch.Elapsed;
