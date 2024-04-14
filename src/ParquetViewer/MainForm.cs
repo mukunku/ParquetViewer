@@ -227,14 +227,23 @@ namespace ParquetViewer
                         HandleMultipleSchemasFoundException(msfe);
                     }
                     else if (ex is not OperationCanceledException)
+                    {
                         throw;
+                    }
 
                     return null;
                 }
             }
 
-            var fields = this._openParquetEngine.Schema.Fields;
-            if (fields != null && fields.Count > 0)
+            Parquet.Schema.ParquetSchema? schema = null;
+            try
+            {
+                schema = this._openParquetEngine.Schema;
+            }
+            catch(ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
+
+            var fields = schema?.Fields;
+            if (fields?.Count > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
@@ -275,7 +284,9 @@ namespace ParquetViewer
             }
             else
             {
-                throw new FileLoadException("The selected file doesn't have any fields");
+                loadingIcon?.Dispose();
+                ShowError("The selected file doesn't have any fields", "No fields found");
+                return null;
             }
         }
 
