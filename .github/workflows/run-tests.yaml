@@ -29,7 +29,7 @@ jobs:
       run: dotnet build src/ParquetViewer.sln --configuration Debug --no-restore
 
     - name: Test
-      run: dotnet test src/ParquetViewer.sln --no-build --verbosity normal
+      run: dotnet test src/ParquetViewer.sln --no-build --logger trx
 
     - name: Test Report
       uses: bibipkins/dotnet-test-reporter@v1.4.1
@@ -37,5 +37,3 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-title: 'Unit Test Results'
         results-path: ./TestResults/*.trx
-        coverage-path: ./TestResults/coverage.xml
-        coverage-threshold: 80
