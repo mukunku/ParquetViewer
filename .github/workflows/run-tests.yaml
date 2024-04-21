@@ -11,8 +11,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - run: Move-Item -Path src -Destination (Get-Location).Path -Recurse
+
     - run: |
-       cd src
        dir
        pwd
 
