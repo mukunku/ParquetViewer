@@ -11,7 +11,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          .github
+          src
 
     - run: Move-Item -Path src/*.* -Destination (Get-Location).Path
 
