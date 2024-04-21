@@ -2,6 +2,8 @@ name: .NET Test
 
 on:
  push:
+  branches:
+   - master
  pull_request:
 
 jobs:
@@ -11,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - run: Move-Item -Path src -Destination (Get-Location).Path -Recurse
+    - run: Move-Item -Path src -Destination (Get-Location).Path
 
     - run: |
        dir
