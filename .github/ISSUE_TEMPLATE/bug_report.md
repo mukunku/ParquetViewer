@@ -24,5 +24,3 @@ If applicable, add screenshots to help explain your problem.
 
 **Additional context**
 Add any other context about the problem here.
-
-Note: This tool relies on the [parquet-dotnet](https://github.com/aloneguid/parquet-dotnet) library for all the actual Parquet processing. So any issues where that library cannot process a parquet file will not be addressed by us. Please open a ticket on that library's repo to address such issues.

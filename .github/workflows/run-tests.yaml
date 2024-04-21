@@ -1,0 +1,35 @@
+name: .NET Test
+
+on:
+ push:
+ pull_request:
+
+jobs:
+ test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+
+    - name: Test Report
+      uses: bibipkins/dotnet-test-reporter@v1.4.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        comment-title: 'Unit Test Results'
+        results-path: ./TestResults/*.trx
+        coverage-path: ./TestResults/coverage.xml
+        coverage-threshold: 80
