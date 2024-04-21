@@ -17,25 +17,19 @@ jobs:
           .github
           src
 
-    - run: Move-Item -Path src/*.* -Destination (Get-Location).Path
-
-    - run: |
-       dir
-       pwd
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/ParquetViewer.sln
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build src/ParquetViewer.sln --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test src/ParquetViewer.sln --no-build --verbosity normal
 
     - name: Test Report
       uses: bibipkins/dotnet-test-reporter@v1.4.1
