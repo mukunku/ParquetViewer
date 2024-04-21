@@ -26,7 +26,7 @@ jobs:
       run: dotnet restore src/ParquetViewer.sln
 
     - name: Build
-      run: dotnet build src/ParquetViewer.sln --configuration Release --no-restore
+      run: dotnet build src/ParquetViewer.sln --configuration Debug --no-restore
 
     - name: Test
       run: dotnet test src/ParquetViewer.sln --no-build --verbosity normal
