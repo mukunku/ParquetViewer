@@ -36,4 +36,4 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-title: 'Unit Test Results'
-        results-path: ./TestResults/*.trx
+        results-path: ./src/ParquetViewer.Tests/TestResults/*.trx
