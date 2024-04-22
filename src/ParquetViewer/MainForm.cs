@@ -407,6 +407,9 @@ namespace ParquetViewer
             {
                 if (this.IsAnyFileOpen)
                 {
+                    if (this.MainDataSource is null)
+                        throw new ApplicationException("This should never happen");
+
                     string queryText = this.searchFilterTextBox.Text ?? string.Empty;
                     queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
 
@@ -418,16 +421,29 @@ namespace ParquetViewer
                     {
                         //This isn't perfect but it should handle most cases
                         queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
-                    }                    
+                    }
+
+                    var stopwatch = Stopwatch.StartNew();
+                    var queryEvent = new ExecuteQueryEvent
+                    {
+                        RecordCount = this.MainDataSource.Rows.Count,
+                        ColumnCount = this.MainDataSource.Columns.Count
+                    };
 
                     try
                     {
-                        this.MainDataSource!.DefaultView.RowFilter = queryText;
+                        this.MainDataSource.DefaultView.RowFilter = queryText;
+                        queryEvent.IsValid = true;
                     }
                     catch (Exception ex)
                     {
-                        this.MainDataSource!.DefaultView.RowFilter = null;
+                        this.MainDataSource.DefaultView.RowFilter = null;
                         throw new InvalidQueryException(ex);
+                    }
+                    finally
+                    {
+                        queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                        var _ = queryEvent.Record(); //Fire and forget
                     }
                 }
             }

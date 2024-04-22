@@ -176,4 +176,19 @@ namespace ParquetViewer.Analytics
             var _ = new QuickPeekEvent { DataType = dataType }.Record();
         }
     }
+
+    public class ExecuteQueryEvent : AmplitudeEvent
+    {
+        private const string EVENT_TYPE = "sql.execute";
+
+        public bool IsValid { get; set; }
+        public int RecordCount { get; set; }
+        public int ColumnCount { get; set; }
+        public long RunTimeMS { get; set; }
+
+        public ExecuteQueryEvent() : base(EVENT_TYPE)
+        {
+
+        }
+    }
 }
