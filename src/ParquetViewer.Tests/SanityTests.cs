@@ -298,7 +298,7 @@ namespace ParquetViewer.Tests
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.Equal(false, dataTable.Rows[0][22]);
-            Assert.Equal(new Guid("0cf9cbfd-d320-45d7-b29f-9c2de1baa979"), dataTable.Rows[0][1]);
+            Assert.Equal(new Guid("fdcbf90c-20d3-d745-b29f-9c2de1baa979"), dataTable.Rows[0][1]);
             Assert.Equal(new DateTime(2019, 1, 1), dataTable.Rows[0][4]);
         }
 

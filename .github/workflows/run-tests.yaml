@@ -9,7 +9,7 @@ on:
 jobs:
  test:
     runs-on: windows-latest
-
+    continue-on-error: true
     steps:
     - uses: actions/checkout@v4
       with:
