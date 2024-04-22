@@ -26,7 +26,7 @@ Checkout the [ParquetViewer Analytics Dashboard](https://app.amplitude.com/analy
 [^1]: Full privacy policy here: https://github.com/mukunku/ParquetViewer/wiki/Privacy-Policy
 
 # Technical Details
-The latest version of this project was written in C# using Microsoft Visual Studio Community 2022 v17.8.3 and .NET 7
+The latest version of this project was written in C# using Microsoft Visual Studio Community 2022 v17.9.6 and .NET 8
 
 # Acknowledgements
 This utility would not be possible without: https://github.com/aloneguid/parquet-dotnet
