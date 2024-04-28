@@ -15,9 +15,9 @@
     public enum DateFormat
     {
         Default = 0,
-        Default_DateOnly,
+        Default_DateOnly, // obsolete
         ISO8601,
-        ISO8601_DateOnly,
+        ISO8601_DateOnly, // obsolete
         ISO8601_Alt1,
         ISO8601_Alt2
     }

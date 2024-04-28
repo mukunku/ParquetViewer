@@ -240,7 +240,7 @@ namespace ParquetViewer
             {
                 schema = this._openParquetEngine.Schema;
             }
-            catch(ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
+            catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
 
             var fields = schema?.Fields;
             if (fields?.Count > 0)
@@ -484,13 +484,13 @@ namespace ParquetViewer
                 case DateFormat.Default:
                     this.defaultToolStripMenuItem.Checked = true;
                     break;
-                case DateFormat.Default_DateOnly:
+                case DateFormat.Default_DateOnly: // obsolete
                     this.defaultDateOnlyToolStripMenuItem.Checked = true;
                     break;
                 case DateFormat.ISO8601:
                     this.iSO8601ToolStripMenuItem.Checked = true;
                     break;
-                case DateFormat.ISO8601_DateOnly:
+                case DateFormat.ISO8601_DateOnly: // obsolete
                     this.iSO8601DateOnlyToolStripMenuItem.Checked = true;
                     break;
                 case DateFormat.ISO8601_Alt1:

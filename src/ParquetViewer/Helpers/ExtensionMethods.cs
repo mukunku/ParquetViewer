@@ -50,24 +50,12 @@ namespace ParquetViewer.Helpers
         public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
         {
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
-            DateFormat.ISO8601_DateOnly => ISO8601DateOnlyFormat,
-            DateFormat.Default_DateOnly => DateOnlyDateTimeFormat,
+            DateFormat.ISO8601_DateOnly => ISO8601DateOnlyFormat, // obsolete
+            DateFormat.Default_DateOnly => DateOnlyDateTimeFormat, // obsolete
             DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
             DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
             _ => string.Empty
-        };
-
-        /// <summary>
-        /// Returns true if the date format does not contain a time component
-        /// </summary>
-        /// <param name="dateFormat">Date format to check</param>
-        /// <returns>True if the date format has time information</returns>
-        public static bool IsDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
-        {
-            DateFormat.ISO8601_DateOnly => true,
-            DateFormat.Default_DateOnly => true,
-            _ => false
         };
 
         public static string GetExtension(this FileType fileType) => fileType switch

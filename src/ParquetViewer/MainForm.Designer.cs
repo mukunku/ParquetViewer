@@ -427,6 +427,7 @@ namespace ParquetViewer
             defaultDateOnlyToolStripMenuItem.Tag = "1";
             defaultDateOnlyToolStripMenuItem.Text = "Default (Date Only)";
             defaultDateOnlyToolStripMenuItem.ToolTipText = "Local date format (date only)";
+            defaultDateOnlyToolStripMenuItem.Visible = false;
             defaultDateOnlyToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // iSO8601ToolStripMenuItem
@@ -445,6 +446,7 @@ namespace ParquetViewer
             iSO8601DateOnlyToolStripMenuItem.Tag = "3";
             iSO8601DateOnlyToolStripMenuItem.Text = "ISO 8601 (Date Only)";
             iSO8601DateOnlyToolStripMenuItem.ToolTipText = "yyyy-MM-dd";
+            iSO8601DateOnlyToolStripMenuItem.Visible = false;
             iSO8601DateOnlyToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // iSO8601Alt1ToolStripMenuItem
