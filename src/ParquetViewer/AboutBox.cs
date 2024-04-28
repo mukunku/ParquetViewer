@@ -240,12 +240,13 @@ namespace ParquetViewer
                     parquetViewerKey.SetValue(null, "Apache Parquet file");
                 }
 
-                if (!dryRun)
+                using var openKey = parquetViewerKey.CreateSubKey("shell\\open");
+                using var commandKey = openKey.CreateSubKey("command");
+                if (!$"\"{_exePath}\" \"%1\"".Equals(commandKey.GetValue(null)))
                 {
-                    using var openKey = parquetViewerKey.CreateSubKey("shell\\open");
-                    openKey.SetValue("icon", $"{_exePath},0");
+                    if (dryRun) return false;
 
-                    using var commandKey = openKey.CreateSubKey("command");
+                    openKey.SetValue("icon", $"{_exePath},0");
                     commandKey.SetValue(null, $"\"{_exePath}\" \"%1\"");
                 }
             }
