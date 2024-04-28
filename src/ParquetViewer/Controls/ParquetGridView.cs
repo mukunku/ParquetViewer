@@ -422,9 +422,10 @@ namespace ParquetViewer.Controls
                 var columnWidth = this.SortedColumn.Width;
 
                 //Widen the column a bit so the sorting arrow can be shown.
-                if (columnWidth - headerLength < 21)
+                var whitespaceWidth = columnWidth - headerLength;
+                if (whitespaceWidth >= 0 && whitespaceWidth < 21)
                 {
-                    this.SortedColumn.Width += Math.Max(21 - (columnWidth - headerLength), 0);
+                    this.SortedColumn.Width += 21 - whitespaceWidth;
                 }
 
                 //Don't widen the same column twice (this shouldn't be needed but I don't trust the logic above)

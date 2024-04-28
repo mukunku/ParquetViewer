@@ -33,7 +33,7 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             mainTableLayoutPanel = new TableLayoutPanel();
             recordsToLabel = new Label();
@@ -249,14 +249,14 @@ namespace ParquetViewer
             mainGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
             mainGridView.EnableHeadersVisualStyles = false;
@@ -412,7 +412,7 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
@@ -421,7 +421,7 @@ namespace ParquetViewer
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.fffZ";
@@ -430,7 +430,7 @@ namespace ParquetViewer
             // iSO8601Alt1ToolStripMenuItem
             // 
             iSO8601Alt1ToolStripMenuItem.Name = "iSO8601Alt1ToolStripMenuItem";
-            iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             iSO8601Alt1ToolStripMenuItem.Tag = "4";
             iSO8601Alt1ToolStripMenuItem.Text = "ISO 8601 (Alt 1)";
             iSO8601Alt1ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss.fff";
@@ -439,7 +439,7 @@ namespace ParquetViewer
             // iSO8601Alt2ToolStripMenuItem
             // 
             iSO8601Alt2ToolStripMenuItem.Name = "iSO8601Alt2ToolStripMenuItem";
-            iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             iSO8601Alt2ToolStripMenuItem.Tag = "5";
             iSO8601Alt2ToolStripMenuItem.Text = "ISO 8601 (Alt 2)";
             iSO8601Alt2ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss";
@@ -517,14 +517,14 @@ namespace ParquetViewer
             // 
             userGuideToolStripMenuItem.Image = Properties.Resources.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            userGuideToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             userGuideToolStripMenuItem.Text = "User Guide";
             userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
             // 
             // shareAnonymousUsageDataToolStripMenuItem
             // 
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
-            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
             shareAnonymousUsageDataToolStripMenuItem.ToolTipText = "See About page for link to privacy policy";
             shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
@@ -532,7 +532,7 @@ namespace ParquetViewer
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             aboutToolStripMenuItem.Text = "&About...";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 

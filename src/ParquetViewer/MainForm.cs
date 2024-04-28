@@ -398,7 +398,11 @@ namespace ParquetViewer
             }
 
             if (fieldList is not null)
+            {
                 this.SelectedFields = fieldList; //triggers a file load
+                AppSettings.OpenedFileCount++;
+
+            }
         }
 
         private void runQueryButton_Click(object sender, EventArgs? e)

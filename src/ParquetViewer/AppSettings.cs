@@ -18,6 +18,7 @@ namespace ParquetViewer
         private const string AnalyticsDeviceIdKey = "AnalyticsDeviceId";
         private const string AnalyticsDataGatheringConsentKey = "AnalyticsDataGatheringConsent";
         private const string AlwaysLoadAllRecordsKey = "AlwaysLoadAllRecords";
+        private const string OpenedFileCountKey = "OpenedFileCount";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -283,6 +284,42 @@ namespace ParquetViewer
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         registryKey.SetValue(AnalyticsDataGatheringConsentKey, value.ToString());
+                    }
+                }
+                catch { }
+            }
+        }
+
+        public static int OpenedFileCount
+        {
+            get
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        if (registryKey.GetValue(OpenedFileCountKey) is int count)
+                        {
+                            return count;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+            set
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        registryKey.SetValue(OpenedFileCountKey, value);
                     }
                 }
                 catch { }

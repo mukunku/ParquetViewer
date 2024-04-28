@@ -4,8 +4,6 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 
-#nullable enable
-
 namespace ParquetViewer
 {
     static class Program
@@ -14,14 +12,35 @@ namespace ParquetViewer
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        private static void Main(string[] args)
+        private static int Main(string[] args)
         {
             string? fileToOpen = null;
             try
             {
-                if (args?.Length > 0 && File.Exists(args[0]))
+                if (args?.Length > 0)
                 {
-                    fileToOpen = args[0];
+                    if (AboutBox.PERFORM_FILE_ASSOCIATION.Equals(args[0]))
+                    {
+                        try
+                        {
+                            if (args.Length > 1 && bool.TryParse(args[1], out bool associate))
+                            {
+                                return AboutBox.ToggleFileAssociation(associate) ? 0 : 1;
+                            }
+                            else
+                            {
+                                return 2; //no true/false flag passed
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            return 3;
+                        }
+                    }
+                    else if (File.Exists(args[0]))
+                    {
+                        fileToOpen = args[0];
+                    }
                 }
             }
             catch (Exception) { /*Swallow Exception*/ }
@@ -40,6 +59,7 @@ namespace ParquetViewer
             RouteUnhandledExceptions();
 
             Application.Run(mainForm);
+            return 0;
         }
 
         /// <summary>
@@ -111,6 +131,21 @@ namespace ParquetViewer
                     return 0;
                 }
             }
+        }
+
+        /// <summary>
+        /// We only ask for file extension association if the user opened at least 8 parquet files
+        /// </summary>
+        public static void AskUserForFileExtensionAssociation()
+        {
+            //if (AppSettings.OpenedFileCount == 8 && !AboutBox.IsDefaultViewerForParquetFiles)
+            //{
+            //    if (MessageBox.Show($"Would you like to associate ParquetViewer with .parquet files?{Environment.NewLine}{Environment.NewLine}" +
+            //            $"This will allow you to double-click to open your parquet files. You can also toggle this setting from the Help -> About page.", "Make ParquetViewer Default for .parquet Files?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            //    {
+            //        AboutBox.ToggleFileAssociation(true);
+            //    }
+            //}
         }
     }
 }

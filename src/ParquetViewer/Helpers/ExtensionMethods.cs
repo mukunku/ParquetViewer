@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Engine.Types;
+﻿using Microsoft.Win32;
+using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -125,6 +126,14 @@ namespace ParquetViewer.Helpers
                 return (T)Enum.ToObject(typeof(T), value);
             }
             return default;
+        }
+
+        public static void DeleteSubKeyTreeIfExists(this RegistryKey key, string name)
+        {
+            if (key.OpenSubKey(name) is not null)
+            {
+                key.DeleteSubKeyTree(name);
+            }
         }
     }
 }
