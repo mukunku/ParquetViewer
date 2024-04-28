@@ -154,7 +154,7 @@ namespace ParquetViewer
 
         public static bool ToggleFileAssociation(bool associate)
         {
-            if (!IsAdministrator)
+            if (!User.IsAdministrator)
             {
                 return false;
             }
@@ -187,7 +187,7 @@ namespace ParquetViewer
                 return;
             }
 
-            if (!IsAdministrator)
+            if (!User.IsAdministrator)
             {
                 bool? success = RunElevatedExeForFileAssociation(associateFileExtensionCheckBox.Checked, out int? exitCode);
                 if (success is null)
@@ -198,7 +198,7 @@ namespace ParquetViewer
                 else if (success == false)
                 {
                     MessageBox.Show(this, $"Something went wrong (Error code: {exitCode}). " +
-                        $"Try running ParquetViewer as administrator and try again.", 
+                        $"Try running ParquetViewer as administrator and try again.",
                         "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     SetCheckboxSilent(!associateFileExtensionCheckBox.Checked);
                 }
@@ -206,21 +206,21 @@ namespace ParquetViewer
                 {
                     //Success!
                 }
-
-                return;
             }
-
-            ToggleFileAssociation(associateFileExtensionCheckBox.Checked);
+            else
+            {
+                ToggleFileAssociation(associateFileExtensionCheckBox.Checked);
+            }
         }
 
         private static bool AssociateParquetFileExtension(bool dryRun)
         {
-            if (!IsAdministrator && !dryRun)
+            if (!User.IsAdministrator && !dryRun)
             {
                 throw new InvalidOperationException("Can't create file association without admin privileges");
             }
 
-            if (IsAdministrator)
+            if (User.IsAdministrator)
             {
                 //Add ParquetViewer to "Open With" list
                 using var parquetKey = Registry.ClassesRoot.CreateSubKey(".parquet");
@@ -317,11 +317,7 @@ namespace ParquetViewer
             }
         }
 
-        private static bool IsAdministrator =>
-            new WindowsPrincipal(WindowsIdentity.GetCurrent())
-                .IsInRole(WindowsBuiltInRole.Administrator);
-
-        private static bool? RunElevatedExeForFileAssociation(bool associate, out int? exitCode)
+        public static bool? RunElevatedExeForFileAssociation(bool associate, out int? exitCode)
         {
             exitCode = null;
             Process proc = new();

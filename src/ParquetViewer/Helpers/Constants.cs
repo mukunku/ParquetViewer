@@ -1,9 +1,18 @@
-﻿namespace ParquetViewer.Helpers
+﻿using System.Security.Principal;
+
+namespace ParquetViewer.Helpers
 {
     public static class Constants
     {
         public const string FILL_WEIGHT_EXCEPTION_MESSAGE = "FillWeight";
         public const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
+    }
+
+    public static class User
+    {
+        public static bool IsAdministrator =>
+            new WindowsPrincipal(WindowsIdentity.GetCurrent())
+                .IsInRole(WindowsBuiltInRole.Administrator);
     }
 
     public enum ParquetEngine

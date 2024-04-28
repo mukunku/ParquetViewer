@@ -401,7 +401,7 @@ namespace ParquetViewer
             {
                 this.SelectedFields = fieldList; //triggers a file load
                 AppSettings.OpenedFileCount++;
-
+                Program.AskUserForFileExtensionAssociation();
             }
         }
 

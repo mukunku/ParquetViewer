@@ -290,16 +290,23 @@ namespace ParquetViewer
             }
         }
 
+        private static int? _openedFileCount;
         public static int OpenedFileCount
         {
             get
             {
                 try
                 {
+                    if (_openedFileCount is not null)
+                    {
+                        return _openedFileCount.Value;
+                    }
+
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         if (registryKey.GetValue(OpenedFileCountKey) is int count)
                         {
+                            _openedFileCount = count;
                             return count;
                         }
                         else
@@ -319,6 +326,7 @@ namespace ParquetViewer
                 {
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
+                        _openedFileCount = value;
                         registryKey.SetValue(OpenedFileCountKey, value);
                     }
                 }
