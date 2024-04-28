@@ -35,22 +35,7 @@ namespace ParquetViewer.Engine.Types
                         jsonWriter.WritePropertyName(columnName);
 
                         object value = this.Data[i];
-                        if (truncateForDisplay)
-                        {
-                            if (value is ByteArrayValue byteArrayValue)
-                            {
-                                var byteArrayAsString = byteArrayValue.ToString();
-                                if (byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
-                                {
-                                    value = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
-                                }
-                                else
-                                {
-                                    value = byteArrayAsString;
-                                }
-                            }
-                        }
-                        WriteValue(jsonWriter, value);
+                        WriteValue(jsonWriter, value, truncateForDisplay);
                     }
                     jsonWriter.WriteEndObject();
                 }
@@ -65,7 +50,7 @@ namespace ParquetViewer.Engine.Types
             }
         }
 
-        private static void WriteValue(Utf8JsonWriter jsonWriter, object value)
+        private static void WriteValue(Utf8JsonWriter jsonWriter, object value, bool truncateForDisplay)
         {
             if (value is null)
             {
@@ -97,15 +82,24 @@ namespace ParquetViewer.Engine.Types
             {
                 jsonWriter.WriteStartObject();
                 jsonWriter.WritePropertyName("key");
-                WriteValue(jsonWriter, map.Key);
+                WriteValue(jsonWriter, map.Key, truncateForDisplay);
                 jsonWriter.WritePropertyName("value");
-                WriteValue(jsonWriter, map.Value);
+                WriteValue(jsonWriter, map.Value, truncateForDisplay);
                 jsonWriter.WriteEndObject();
             }
             else if (value is ListValue list)
             {
                 //Hopefully lists also generate valid JSON on .ToString()
                 jsonWriter.WriteRawValue(list.ToString());
+            }
+            else if (value is ByteArrayValue byteArray)
+            {
+                var byteArrayAsString = byteArray.ToString();
+                if (truncateForDisplay && byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
+                {
+                    byteArrayAsString = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
+                }
+                jsonWriter.WriteStringValue(byteArrayAsString);
             }
             else
             {

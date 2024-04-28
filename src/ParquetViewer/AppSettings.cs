@@ -41,10 +41,9 @@ namespace ParquetViewer
                             }
                             else
                             {
-                                value = (int)default(DateFormat);
+                                return default;
                             }
                         }
-
                         
                         return value.Value.ToEnum<DateFormat>();
                     }

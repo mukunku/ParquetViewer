@@ -456,7 +456,7 @@ namespace ParquetViewer.Controls
             // We need to iterate through all the data in the grid and a DataTable supports enumeration.
             if (this.DataSource is not DataTable gridTable)
                 return;
-            
+
             // Create a graphics object from the target grid. Used for measuring text size.
             using var gfx = this.CreateGraphics();
 
@@ -483,9 +483,19 @@ namespace ParquetViewer.Controls
                 else
                 {
                     // Collect all the rows into a string array, making sure to exclude null values.
-                    IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
-                        .Select(row => row.Field<object>(i)?.ToString())
-                        .Where(value => value is not null)!;
+                    IEnumerable<string> colStringCollection;
+                    if (gridTable.Columns[i].DataType == typeof(StructValue))
+                    {
+                        colStringCollection = gridTable.AsEnumerable()
+                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated())
+                            .Where(value => value is not null)!;
+                    }
+                    else
+                    {
+                        colStringCollection = gridTable.AsEnumerable()
+                            .Select(row => row.Field<object>(i)?.ToString())
+                            .Where(value => value is not null)!;
+                    }
 
                     // Sort the string array by string lengths.
                     colStringCollection = colStringCollection.OrderBy((x) => x.Length);
@@ -504,7 +514,12 @@ namespace ParquetViewer.Controls
             const string WHITESPACE_BUFFER = "#";
             try
             {
-                return (int)gfx.MeasureString(input + (appendWhitespaceBuffer ? WHITESPACE_BUFFER : string.Empty), this.Font).Width;
+                var width = (int)gfx.MeasureString(input + (appendWhitespaceBuffer ? WHITESPACE_BUFFER : string.Empty), this.Font).Width;
+
+                if (width <= 0) //happens with really long strings sometimes
+                    return int.MaxValue;
+                else
+                    return width;
             }
             catch (Exception)
             {
