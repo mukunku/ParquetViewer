@@ -213,6 +213,7 @@ namespace ParquetViewer
             }
         }
 
+        //I tested this logic on both Windows 10 & 11 and it works for both
         private static bool AssociateParquetFileExtension(bool dryRun)
         {
             if (!User.IsAdministrator && !dryRun)
@@ -353,11 +354,6 @@ namespace ParquetViewer
             {
                 return false;
             }
-        }
-
-        private static void Proc_Exited(object? sender, EventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         private void SetCheckboxSilent(bool @checked)
