@@ -4,8 +4,6 @@ using System;
 using System.Linq;
 using System.Text.Json;
 
-#nullable enable
-
 namespace ParquetViewer.Helpers
 {
     public static class ParquetMetadataAnalyzers

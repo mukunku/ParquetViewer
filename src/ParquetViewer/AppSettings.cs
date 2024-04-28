@@ -2,8 +2,6 @@
 using ParquetViewer.Helpers;
 using System;
 
-#nullable enable
-
 namespace ParquetViewer
 {
     public static class AppSettings
