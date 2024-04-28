@@ -117,5 +117,14 @@ namespace ParquetViewer.Helpers
         /// </summary>
         public static bool IsNumber(this Type type) => 
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
+
+        public static T ToEnum<T>(this int value) where T : struct, Enum
+        {
+            if (Enum.IsDefined(typeof(T), value))
+            {
+                return (T)Enum.ToObject(typeof(T), value);
+            }
+            return default;
+        }
     }
 }

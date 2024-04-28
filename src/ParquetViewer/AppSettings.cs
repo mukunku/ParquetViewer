@@ -45,7 +45,8 @@ namespace ParquetViewer
                             }
                         }
 
-                        return (DateFormat)value.Value;
+                        
+                        return value.Value.ToEnum<DateFormat>();
                     }
                 }
                 catch
