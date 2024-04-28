@@ -232,6 +232,7 @@ namespace ParquetViewer.Tests
             ""dateTimeDisplayFormat"": ""{AppSettings.DateTimeDisplayFormat}"",
             ""systemMemory"": {(int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/)},
             ""processorCount"": {Environment.ProcessorCount},
+            ""isDefaultParquetViewer"": {AboutBox.IsDefaultViewerForParquetFiles.ToString().ToLower()},
             ""selfContainedExecutable"": {(isSelfContainedExecutable ? "true" : "false")}
         }},
         ""event_properties"": {{
