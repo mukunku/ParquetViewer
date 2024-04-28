@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -14,9 +13,7 @@ namespace ParquetViewer.Helpers
     public static class ExtensionMethods
     {
         private const string DefaultDateTimeFormat = "g";
-        private const string DateOnlyDateTimeFormat = "d";
         private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
-        private const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
         private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
@@ -50,8 +47,6 @@ namespace ParquetViewer.Helpers
         public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
         {
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
-            DateFormat.ISO8601_DateOnly => ISO8601DateOnlyFormat, // obsolete
-            DateFormat.Default_DateOnly => DateOnlyDateTimeFormat, // obsolete
             DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
             DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,

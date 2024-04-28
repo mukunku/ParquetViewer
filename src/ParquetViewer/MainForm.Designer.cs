@@ -61,9 +61,7 @@ namespace ParquetViewer
             changeFieldsMenuStripButton = new ToolStripMenuItem();
             changeDateFormatToolStripMenuItem = new ToolStripMenuItem();
             defaultToolStripMenuItem = new ToolStripMenuItem();
-            defaultDateOnlyToolStripMenuItem = new ToolStripMenuItem();
             iSO8601ToolStripMenuItem = new ToolStripMenuItem();
-            iSO8601DateOnlyToolStripMenuItem = new ToolStripMenuItem();
             iSO8601Alt1ToolStripMenuItem = new ToolStripMenuItem();
             iSO8601Alt2ToolStripMenuItem = new ToolStripMenuItem();
             columnSizingToolStripMenuItem = new ToolStripMenuItem();
@@ -405,7 +403,7 @@ namespace ParquetViewer
             // 
             // changeDateFormatToolStripMenuItem
             // 
-            changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem, defaultDateOnlyToolStripMenuItem, iSO8601ToolStripMenuItem, iSO8601DateOnlyToolStripMenuItem, iSO8601Alt1ToolStripMenuItem, iSO8601Alt2ToolStripMenuItem });
+            changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem, iSO8601ToolStripMenuItem, iSO8601Alt1ToolStripMenuItem, iSO8601Alt2ToolStripMenuItem });
             changeDateFormatToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("changeDateFormatToolStripMenuItem.Image");
             changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
@@ -414,45 +412,25 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
             defaultToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
-            // defaultDateOnlyToolStripMenuItem
-            // 
-            defaultDateOnlyToolStripMenuItem.Name = "defaultDateOnlyToolStripMenuItem";
-            defaultDateOnlyToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            defaultDateOnlyToolStripMenuItem.Tag = "1";
-            defaultDateOnlyToolStripMenuItem.Text = "Default (Date Only)";
-            defaultDateOnlyToolStripMenuItem.ToolTipText = "Local date format (date only)";
-            defaultDateOnlyToolStripMenuItem.Visible = false;
-            defaultDateOnlyToolStripMenuItem.Click += DateFormatMenuItem_Click;
-            // 
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.fffZ";
             iSO8601ToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
-            // iSO8601DateOnlyToolStripMenuItem
-            // 
-            iSO8601DateOnlyToolStripMenuItem.Name = "iSO8601DateOnlyToolStripMenuItem";
-            iSO8601DateOnlyToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            iSO8601DateOnlyToolStripMenuItem.Tag = "3";
-            iSO8601DateOnlyToolStripMenuItem.Text = "ISO 8601 (Date Only)";
-            iSO8601DateOnlyToolStripMenuItem.ToolTipText = "yyyy-MM-dd";
-            iSO8601DateOnlyToolStripMenuItem.Visible = false;
-            iSO8601DateOnlyToolStripMenuItem.Click += DateFormatMenuItem_Click;
-            // 
             // iSO8601Alt1ToolStripMenuItem
             // 
             iSO8601Alt1ToolStripMenuItem.Name = "iSO8601Alt1ToolStripMenuItem";
-            iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             iSO8601Alt1ToolStripMenuItem.Tag = "4";
             iSO8601Alt1ToolStripMenuItem.Text = "ISO 8601 (Alt 1)";
             iSO8601Alt1ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss.fff";
@@ -461,7 +439,7 @@ namespace ParquetViewer
             // iSO8601Alt2ToolStripMenuItem
             // 
             iSO8601Alt2ToolStripMenuItem.Name = "iSO8601Alt2ToolStripMenuItem";
-            iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             iSO8601Alt2ToolStripMenuItem.Tag = "5";
             iSO8601Alt2ToolStripMenuItem.Text = "ISO 8601 (Alt 2)";
             iSO8601Alt2ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss";
@@ -710,8 +688,6 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem columnSizingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersContentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem defaultDateOnlyToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem iSO8601DateOnlyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt2ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem alwaysLoadAllRecordsToolStripMenuItem;

@@ -473,9 +473,7 @@ namespace ParquetViewer
         private void RefreshDateFormatMenuItemSelection()
         {
             this.defaultToolStripMenuItem.Checked = false;
-            this.defaultDateOnlyToolStripMenuItem.Checked = false;
             this.iSO8601ToolStripMenuItem.Checked = false;
-            this.iSO8601DateOnlyToolStripMenuItem.Checked = false;
             this.iSO8601Alt1ToolStripMenuItem.Checked = false;
             this.iSO8601Alt2ToolStripMenuItem.Checked = false;
 
@@ -484,14 +482,8 @@ namespace ParquetViewer
                 case DateFormat.Default:
                     this.defaultToolStripMenuItem.Checked = true;
                     break;
-                case DateFormat.Default_DateOnly: // obsolete
-                    this.defaultDateOnlyToolStripMenuItem.Checked = true;
-                    break;
                 case DateFormat.ISO8601:
                     this.iSO8601ToolStripMenuItem.Checked = true;
-                    break;
-                case DateFormat.ISO8601_DateOnly: // obsolete
-                    this.iSO8601DateOnlyToolStripMenuItem.Checked = true;
                     break;
                 case DateFormat.ISO8601_Alt1:
                     this.iSO8601Alt1ToolStripMenuItem.Checked = true;
