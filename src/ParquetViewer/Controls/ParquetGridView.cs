@@ -259,8 +259,8 @@ namespace ParquetViewer.Controls
                 dataType = QuickPeekEvent.DataTypeId.Map;
 
                 dt = new DataTable();
-                dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-key", mapValue.KeyType));
-                dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-value", mapValue.ValueType));
+                dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
+                dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
 
                 var row = dt.NewRow();
                 row[0] = mapValue.Key;
@@ -306,7 +306,7 @@ namespace ParquetViewer.Controls
             var uniqueCellTag = Guid.NewGuid();
             clickedCell.Tag = uniqueCellTag;
 
-            var quickPeakForm = new QuickPeekForm(null, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+            var quickPeakForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             quickPeakForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
             {
                 if (this.Rows.Count > tag.SourceRowIndex && this.Columns.Count > tag.SourceColumnIndex) //Can't be too safe
