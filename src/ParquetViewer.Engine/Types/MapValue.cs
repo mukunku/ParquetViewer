@@ -1,6 +1,6 @@
 ﻿namespace ParquetViewer.Engine.Types
 {
-    public class MapValue
+    public class MapValue : IComparable<MapValue>, IComparable
     {
         public object Key { get; } = DBNull.Value;
         public Type KeyType { get; }
@@ -46,5 +46,30 @@
 
             return $"({key},{value})";
         }
+
+        /// <summary>
+        /// Sorts by Key first, then Value.
+        /// </summary>
+        public int CompareTo(MapValue? other)
+        {
+            if (other is null)
+                return 1;
+
+            int comparison = Helpers.CompareTo(Key, other.Key);
+            if (comparison != 0) 
+                return comparison;
+
+            return Helpers.CompareTo(Value, other.Value);
+        }
+
+        public int CompareTo(object? obj)
+        {
+            if (obj is MapValue mapValue)
+                return CompareTo(mapValue);
+            else
+                return 1;
+        }
+
+
     }
 }

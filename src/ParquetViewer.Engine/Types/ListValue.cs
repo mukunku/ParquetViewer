@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ParquetViewer.Engine.Types
 {
-    public class ListValue
+    public class ListValue : IComparable<ListValue>, IComparable
     {
         public IList Data { get; }
         public Type? Type { get; private set; }
@@ -56,6 +56,38 @@ namespace ParquetViewer.Engine.Types
 
             sb.Append(']');
             return sb.ToString();
+        }
+
+        public int CompareTo(ListValue? other)
+        {
+            if (other?.Data is null)
+                return 1;
+            else if (this.Data is null)
+                return -1;
+            
+            for (var i = 0; i < Data.Count; i++)
+            {
+                if (other.Data.Count == i)
+                {
+                    //This list has more values, so lets say it's 'less than' in sort order
+                    return -1;
+                }
+
+                var value = Data[i];
+                var otherValue = other.Data[i];
+                int comparison = Helpers.CompareTo(value, otherValue);
+                if (comparison != 0)
+                    return comparison;
+            }
+            return 0; //the lists appear equal
+        }
+
+        public int CompareTo(object? obj)
+        {
+            if (obj is ListValue list)
+                return CompareTo(list);
+            else
+                return 1;
         }
     }
 }
