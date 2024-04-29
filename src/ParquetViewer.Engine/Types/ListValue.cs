@@ -79,6 +79,10 @@ namespace ParquetViewer.Engine.Types
                 if (comparison != 0)
                     return comparison;
             }
+
+            if (Data.Count < other.Data.Count)
+                return 1; //this list has less values so say it's 'more than' in sort order
+
             return 0; //the lists appear equal
         }
 
