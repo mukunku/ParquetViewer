@@ -90,8 +90,19 @@ namespace ParquetViewer.Engine
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.List:
-                        await ReadListField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
-                            readRecords, isFirstColumn, cancellationToken, progress);
+                        var listField = field.GetSingle("list");
+                        ParquetSchemaElement itemField;
+                        try
+                        {
+                            itemField = listField.GetSingle("item");
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Invalid List type.", ex);
+                        }
+                        var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
+                        await ReadListField(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
+                            skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.Map:
                         await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
@@ -115,64 +126,56 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
+            bool doesFieldBelongToAList = dataColumn.RepetitionLevels?.Any(l => l > 0) ?? false;
             int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
-            var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
-            foreach (var value in dataColumn.Data)
+            if (doesFieldBelongToAList)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (skipRecords > skippedRecords)
+                dataColumn = null;
+                await ReadListField(dataTable, groupReader, rowBeginIndex, field, fieldIndex, skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
+            }
+            else
+            {
+                var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
+                foreach (var value in dataColumn.Data)
                 {
-                    skippedRecords++;
-                    continue;
-                }
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                if (rowIndex - rowBeginIndex >= readRecords)
-                    break;
+                    if (skipRecords > skippedRecords)
+                    {
+                        skippedRecords++;
+                        continue;
+                    }
 
-                if (isFirstColumn)
-                {
-                    dataTable.NewRow();
-                }
+                    if (rowIndex - rowBeginIndex >= readRecords)
+                        break;
 
-                if (value == DBNull.Value || value is null)
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                }
-                else if (fieldType == byteArrayValueType)
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
-                }
-                else
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = FixDateTime(value, field);
-                }
+                    if (isFirstColumn)
+                    {
+                        dataTable.NewRow();
+                    }
 
-                rowIndex++;
-                progress?.Report(1);
+                    if (value == DBNull.Value || value is null)
+                    {
+                        dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
+                    }
+                    else if (fieldType == byteArrayValueType)
+                    {
+                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
+                    }
+                    else
+                    {
+                        dataTable.Rows[rowIndex]![fieldIndex] = FixDateTime(value, field);
+                    }
+
+                    rowIndex++;
+                    progress?.Report(1);
+                }
             }
         }
 
-        /// <summary>
-        /// This is a patch fix to handle malformed datetime fields. We assume TIMESTAMP fields are DateTime values.
-        /// </summary>
-        /// <param name="value">Original value</param>
-        /// <param name="field">Schema element</param>
-        /// <returns>If the field is a timestamp, a DateTime object will be returned. Otherwise the value will not be changed.</returns>
-        private async Task ReadListField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadListField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement itemField, int fieldIndex,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var listField = field.GetSingle("list");
-            ParquetSchemaElement itemField;
-            try
-            {
-                itemField = listField.GetSingle("item");
-            }
-            catch (Exception ex)
-            {
-                throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Invalid List type.", ex);
-            }
-
             if (itemField.FieldType() == ParquetSchemaElement.FieldTypeId.Primitive)
             {
                 int rowIndex = rowBeginIndex;
@@ -181,7 +184,6 @@ namespace ParquetViewer.Engine
                 var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
 
                 ArrayList? rowValue = null;
-                var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
                 for (int i = 0; i < dataColumn.Data.Length; i++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -228,6 +230,51 @@ namespace ParquetViewer.Engine
                         var value = dataColumn.Data.GetValue(i) ?? DBNull.Value;
                         rowValue.Add(value);
                     }
+                }
+            }
+            else if (itemField.FieldType() == ParquetSchemaElement.FieldTypeId.Struct)
+            {
+                //Read struct data as a new datatable
+                DataTableLite structFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
+
+                //Need to calculate progress differently for structs
+                var structFieldReadProgress = StructReadProgress(progress, structFieldTable.Columns.Count);
+
+                //Read the struct data and populate the datatable
+                await ProcessRowGroup(structFieldTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
+
+                int rowIndex = rowBeginIndex;
+                foreach (var values in structFieldTable.Rows)
+                {
+                    var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
+                    for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
+                    {
+                        var columnValues = (ListValue)values[columnOrdinal];
+                        for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
+                        {
+                            var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
+                            bool isFirstValueColumn = columnOrdinal == 0;
+                            if (isFirstValueColumn)
+                            {
+                                newStructFieldTable.NewRow();
+                            }
+                            newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
+                        }
+                    }
+
+                    if (isFirstColumn)
+                        dataTable.NewRow();
+
+                    var listValuesDataTable = newStructFieldTable.ToDataTable(cancellationToken);
+                    var listValues = new ArrayList(listValuesDataTable.Rows.Count);
+                    foreach (DataRow row in listValuesDataTable.Rows)
+                    {
+                        var newStructField = new StructValue(itemField.Path, row);
+                        listValues.Add(newStructField);
+                    }
+                    
+                    dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValue));
+                    rowIndex++;
                 }
             }
             else

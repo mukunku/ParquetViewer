@@ -221,7 +221,7 @@ namespace ParquetViewer
             field.SchemaType switch
             {
                 SchemaType.Data => true,
-                SchemaType.List when field is ListField lf && lf.Item.SchemaType == SchemaType.Data => true,
+                SchemaType.List when field is ListField lf && (lf.Item.SchemaType == SchemaType.Data || lf.Item.SchemaType == SchemaType.Struct) => true,
                 SchemaType.Map when field is MapField mp && mp.Key.SchemaType == SchemaType.Data && mp.Value.SchemaType == SchemaType.Data => true,
                 SchemaType.Struct when field is StructField sf => sf.Fields.All(IsSupportedFieldType),
                 _ => false

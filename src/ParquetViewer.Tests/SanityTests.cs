@@ -187,8 +187,6 @@ namespace ParquetViewer.Tests
             Assert.Equal(10, parquetEngine.RecordCount);
             Assert.Equal(6, parquetEngine.Fields.Count);
 
-            //We currently only support three of the fields in this test file
-            string[] supportedFields = { "txn", "remove", "protocol" };
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.IsType<StructValue>(dataTable.Rows[0][0]);
             Assert.Equal("{\"appId\":null,\"version\":0,\"lastUpdated\":null}", ((StructValue)dataTable.Rows[0][0]).ToString());
@@ -347,5 +345,24 @@ namespace ParquetViewer.Tests
             Assert.Equal("DEPOSIT", dataTable.Rows[0][0]);
             Assert.Equal((long)1, dataTable.Rows[0][1]);
         }
+
+        [Fact]
+        public async Task LIST_OF_STRUCTS_TEST1()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS1.parquet", default);
+            StructValue.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
+            Assert.Equal(2, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+            
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+
+            Assert.Equal("Product1", dataTable.Rows[0][0]);
+            Assert.Equal("Product2", dataTable.Rows[1][0]);
+
+            Assert.IsType<ListValue>(dataTable.Rows[0][1]);
+            Assert.Equal("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":10},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":20}]", dataTable.Rows[0][1].ToString());
+            Assert.IsType<ListValue>(dataTable.Rows[1][1]);
+            Assert.Equal("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":30},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":40}]", dataTable.Rows[1][1].ToString());
+            }
     }
 }

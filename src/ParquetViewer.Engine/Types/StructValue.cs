@@ -8,8 +8,9 @@ namespace ParquetViewer.Engine.Types
     {
         public string Name { get; }
 
-        //we are always guaranteed to have exactly one row in 'Data' as that is how we handle Structs
         public DataRow Data { get; }
+
+        public static string? DateDisplayFormat { get; set; }
 
         public StructValue(string name, DataRow data)
         {
@@ -100,6 +101,14 @@ namespace ParquetViewer.Engine.Types
                     byteArrayAsString = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
                 }
                 jsonWriter.WriteStringValue(byteArrayAsString);
+            }
+            else if (value is DateTime dt)
+            {
+                //Write dates as string
+                if (DateDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(dt.ToString(DateDisplayFormat));
+                else
+                    jsonWriter.WriteStringValue(dt.ToString());
             }
             else
             {

@@ -71,6 +71,9 @@
     <None Update="Data\DECIMALS_TEST.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\LIST_OF_STRUCTS1.parquet">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Data\LIST_TYPE_TEST1.parquet">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

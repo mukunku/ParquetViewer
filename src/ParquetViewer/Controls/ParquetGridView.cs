@@ -67,7 +67,7 @@ namespace ParquetViewer.Controls
             string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
             ListValue.DateDisplayFormat = dateFormat; //Need to tell the parquet engine how to render date values
             MapValue.DateDisplayFormat = dateFormat;
-
+            StructValue.DateDisplayFormat = dateFormat;
             foreach (DataGridViewColumn column in this.Columns)
             {
                 if (column.ValueType == typeof(DateTime))
