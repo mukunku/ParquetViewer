@@ -243,17 +243,24 @@ namespace ParquetViewer.Engine
                 //Read the struct data and populate the datatable
                 await ProcessRowGroup(structFieldTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
 
+                //We need to pivot the data into a new data table (because we read it in columnar fashion above)
                 int rowIndex = rowBeginIndex;
                 foreach (var values in structFieldTable.Rows)
                 {
                     var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
                     for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
                     {
+                        bool isFirstValueColumn = columnOrdinal == 0;
+                        if (values[columnOrdinal] == DBNull.Value) 
+                        {
+                            //Empty array
+                            continue;
+                        }
+
                         var columnValues = (ListValue)values[columnOrdinal];
                         for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
                         {
                             var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
-                            bool isFirstValueColumn = columnOrdinal == 0;
                             if (isFirstValueColumn)
                             {
                                 newStructFieldTable.NewRow();
@@ -272,7 +279,7 @@ namespace ParquetViewer.Engine
                         var newStructField = new StructValue(itemField.Path, row);
                         listValues.Add(newStructField);
                     }
-                    
+
                     dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValue));
                     rowIndex++;
                 }
