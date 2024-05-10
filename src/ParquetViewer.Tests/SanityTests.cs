@@ -87,7 +87,7 @@ namespace ParquetViewer.Tests
             Assert.Equal(14610, parquetEngine.RecordCount);
             Assert.Equal(12, parquetEngine.Fields.Count);
 
-            var ex = await Assert.ThrowsAsync<NotSupportedException>(async () 
+            var ex = await Assert.ThrowsAsync<NotSupportedException>(async ()
                 => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false));
             Assert.Equal("Duplicate column 'schema/TransPlan_NORMAL_v2' detected. Column names are case insensitive and must be unique.", ex.Message);
         }
@@ -191,7 +191,7 @@ namespace ParquetViewer.Tests
             Assert.IsType<StructValue>(dataTable.Rows[0][0]);
             Assert.Equal("{\"appId\":null,\"version\":0,\"lastUpdated\":null}", ((StructValue)dataTable.Rows[0][0]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][1]);
-            Assert.Equal("{\"path\":null,\"partitionValues\":{\"key\":null,\"value\":null},\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":{\"key\":null,\"value\":null}}", ((StructValue)dataTable.Rows[0][1]).ToString()); 
+            Assert.Equal("{\"path\":null,\"partitionValues\":{\"key\":null,\"value\":null},\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":{\"key\":null,\"value\":null}}", ((StructValue)dataTable.Rows[0][1]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][2]);
             Assert.Equal("{\"path\":null,\"deletionTimestamp\":null,\"dataChange\":false}", ((StructValue)dataTable.Rows[0][2]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][3]);
@@ -353,7 +353,7 @@ namespace ParquetViewer.Tests
             StructValue.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
-            
+
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
 
             Assert.Equal("Product1", dataTable.Rows[0][0]);
@@ -363,6 +363,24 @@ namespace ParquetViewer.Tests
             Assert.Equal("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":10},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":20}]", dataTable.Rows[0][1].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[1][1]);
             Assert.Equal("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":30},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":40}]", dataTable.Rows[1][1].ToString());
-            }
+        }
+
+        [Fact]
+        public async Task EMPTY_LIST_OF_STRUCTS_TEST1()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/EMPTY_LIST_OF_STRUCTS1.parquet", default);
+            Assert.Equal(2, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+
+            Assert.Equal("Product1", dataTable.Rows[0][0]);
+            Assert.Equal("Product2", dataTable.Rows[1][0]);
+
+            Assert.IsType<ListValue>(dataTable.Rows[0][1]);
+            Assert.Equal("[ ]", dataTable.Rows[0][1].ToString());
+            Assert.IsType<ListValue>(dataTable.Rows[1][1]);
+            Assert.Equal("[ ]", dataTable.Rows[1][1].ToString());
+        }
     }
 }
