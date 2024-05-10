@@ -3,6 +3,7 @@ using ParquetViewer.Analytics;
 using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,6 +24,8 @@ namespace ParquetViewer
         private bool isLoading = false;
 
         private static string _exePath => System.Windows.Forms.Application.ExecutablePath;
+
+        private static string _exeName => Path.GetFileName(_exePath);
 
         public static bool IsDefaultViewerForParquetFiles => AssociateParquetFileExtension(true);
 
@@ -266,7 +269,7 @@ namespace ParquetViewer
             {
                 if (dryRun) return false;
 
-                openWithListKey.SetValue("a", "ParquetViewer.exe");
+                openWithListKey.SetValue("a", _exeName);
                 openWithListKey.SetValue("MRUList", "a");
             }
             else
@@ -277,9 +280,9 @@ namespace ParquetViewer
                 {
                     if (dryRun) return false;
 
-                    openWithListKey.SetValue(mostRecentlyUsedProgram, "ParquetViewer.exe");
+                    openWithListKey.SetValue(mostRecentlyUsedProgram, _exeName);
                 }
-                else if (!mostRecentlyUsedProgram.Equals("ParquetViewer.exe"))
+                else if (!mostRecentlyUsedProgram.Equals(_exeName))
                 {
                     if (dryRun)
                         return false;
