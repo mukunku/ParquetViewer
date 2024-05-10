@@ -250,7 +250,6 @@ namespace ParquetViewer.Engine
                     var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
                     for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
                     {
-                        bool isFirstValueColumn = columnOrdinal == 0;
                         if (values[columnOrdinal] == DBNull.Value) 
                         {
                             //Empty array
@@ -261,6 +260,7 @@ namespace ParquetViewer.Engine
                         for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
                         {
                             var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
+                            bool isFirstValueColumn = columnOrdinal == 0;
                             if (isFirstValueColumn)
                             {
                                 newStructFieldTable.NewRow();
