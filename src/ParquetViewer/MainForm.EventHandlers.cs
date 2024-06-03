@@ -84,12 +84,12 @@ namespace ParquetViewer
 
         private void searchFilterLabel_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(@"NULL CHECK: 
+            MessageBox.Show(@"Detailed documentation : https://github.com/mukunku/ParquetViewer/wiki/Running-Queries
+NULL CHECK: 
     WHERE field_name IS NULL
     WHERE field_name IS NOT NULL
 DATETIME:   
     WHERE field_name >= #2000/12/31#
-    or
     WHERE field_name >= #12/31/2000#
 NUMERIC:
     WHERE field_name <= 123.4
