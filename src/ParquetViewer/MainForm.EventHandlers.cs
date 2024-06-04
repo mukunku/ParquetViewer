@@ -84,11 +84,13 @@ namespace ParquetViewer
 
         private void searchFilterLabel_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(@"NULL CHECK: 
+            MessageBox.Show(@"Detailed documentation : https://github.com/mukunku/ParquetViewer/wiki/Running-Queries
+NULL CHECK: 
     WHERE field_name IS NULL
     WHERE field_name IS NOT NULL
 DATETIME:   
-    WHERE field_name >= #01/01/2000#
+    WHERE field_name >= #2000/12/31#
+    WHERE field_name >= #12/31/2000#
 NUMERIC:
     WHERE field_name <= 123.4
 STRING:
@@ -96,7 +98,7 @@ STRING:
     WHERE field_name = 'equals value'
     WHERE field_name <> 'not equals'
 MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
+    WHERE (field_1 > #2000/12/31# AND field_1 < #2001/12/31#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
         }
 
         private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
