@@ -23,7 +23,7 @@ namespace ParquetViewer.Controls
         public ImagePreviewForm()
         {
             InitializeComponent();
-            MaximumSize = new Size(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+            MaximumSize = new Size(Screen.PrimaryScreen!.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
         }
 
         private void ImagePreviewForm_Load(object sender, EventArgs e)
@@ -33,7 +33,7 @@ namespace ParquetViewer.Controls
             this.Text += $" (Dimensions: {this.PreviewImage.PhysicalDimension.Width} x {this.PreviewImage.PhysicalDimension.Height})";
             this.Text += $" (Type: {this.PreviewImage.RawFormat})";
 
-            this.Width = Math.Max(Math.Min((int)(Screen.PrimaryScreen.Bounds.Width / 1.8), this.mainPictureBox.Image.Width), 400);
+            this.Width = Math.Max(Math.Min((int)(Screen.PrimaryScreen!.Bounds.Width / 1.8), this.mainPictureBox.Image.Width), 400);
             this.Height = Math.Max(Math.Min((int)(Screen.PrimaryScreen.Bounds.Height / 1.8), this.mainPictureBox.Image.Height), 400);
 
             this.Size = this.mainPictureBox.RenderedSize() + new Size(0, 60);

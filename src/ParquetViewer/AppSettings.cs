@@ -2,8 +2,6 @@
 using ParquetViewer.Helpers;
 using System;
 
-#nullable enable
-
 namespace ParquetViewer
 {
     public static class AppSettings
@@ -12,13 +10,13 @@ namespace ParquetViewer
         private const string UseISODateFormatKey = "UseISODateFormat";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
         private const string RememberLastRowCountKey = "RememberLastRowCount";
-        private const string ParquetReadingEngineKey = "ParquetReadingEngine";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
         private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
         private const string AnalyticsDeviceIdKey = "AnalyticsDeviceId";
         private const string AnalyticsDataGatheringConsentKey = "AnalyticsDataGatheringConsent";
         private const string AlwaysLoadAllRecordsKey = "AlwaysLoadAllRecords";
+        private const string OpenedFileCountKey = "OpenedFileCount";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -42,11 +40,11 @@ namespace ParquetViewer
                             }
                             else
                             {
-                                value = (int)default(DateFormat);
+                                return default;
                             }
                         }
-
-                        return (DateFormat)value.Value;
+                        
+                        return value.Value.ToEnum<DateFormat>();
                     }
                 }
                 catch
@@ -187,7 +185,7 @@ namespace ParquetViewer
                 }
                 catch
                 {
-                    return AutoSizeColumnsMode.None;
+                    return AutoSizeColumnsMode.ColumnHeader;
                 }
             }
             set
@@ -284,6 +282,50 @@ namespace ParquetViewer
                     using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
                     {
                         registryKey.SetValue(AnalyticsDataGatheringConsentKey, value.ToString());
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private static int? _openedFileCount;
+        public static int OpenedFileCount
+        {
+            get
+            {
+                try
+                {
+                    if (_openedFileCount is not null)
+                    {
+                        return _openedFileCount.Value;
+                    }
+
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        if (registryKey.GetValue(OpenedFileCountKey) is int count)
+                        {
+                            _openedFileCount = count;
+                            return count;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+            set
+            {
+                try
+                {
+                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
+                    {
+                        _openedFileCount = value;
+                        registryKey.SetValue(OpenedFileCountKey, value);
                     }
                 }
                 catch { }

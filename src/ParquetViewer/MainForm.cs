@@ -21,10 +21,10 @@ namespace ParquetViewer
         private readonly string DefaultFormTitle;
 
         #region Members
-        private readonly string fileToLoadOnLaunch = null;
+        private readonly string? fileToLoadOnLaunch = null;
 
-        private string _openFileOrFolderPath;
-        private string OpenFileOrFolderPath
+        private string? _openFileOrFolderPath;
+        private string? OpenFileOrFolderPath
         {
             get => this._openFileOrFolderPath;
             set
@@ -39,8 +39,8 @@ namespace ParquetViewer
                 this.metadataViewerToolStripMenuItem.Enabled = false;
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
-                this.MainDataSource.Clear();
-                this.MainDataSource.Columns.Clear();
+                this.MainDataSource?.Clear();
+                this.MainDataSource?.Columns.Clear();
                 this.loadAllRowsButton.Enabled = false;
                 this.searchFilterTextBox.PlaceholderText = "WHERE ";
 
@@ -61,8 +61,8 @@ namespace ParquetViewer
             }
         }
 
-        private List<string> selectedFields = null;
-        private List<string> SelectedFields
+        private List<string>? selectedFields = null;
+        private List<string>? SelectedFields
         {
             get => this.selectedFields;
             set
@@ -73,7 +73,7 @@ namespace ParquetViewer
                 var duplicateFields = this.selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
                 if (duplicateFields?.Count > 0)
                 {
-                    this.selectedFields = this.selectedFields.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
+                    this.selectedFields = this.selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
                     MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
                             $"\r\n\r\nCase sensitive field names are not currently supported.", "Duplicate fields detected",
@@ -118,22 +118,24 @@ namespace ParquetViewer
             => !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath)
                 && this._openParquetEngine is not null;
 
-        private DataTable mainDataSource;
-        private DataTable MainDataSource
+        private DataTable? mainDataSource;
+        private DataTable? MainDataSource
         {
             get => this.mainDataSource;
             set
             {
-                var dataTable = value;
-                this.mainDataSource = dataTable;
+                this.mainDataSource = value;
                 this.mainGridView.DataSource = this.mainDataSource;
 
-                this.loadAllRowsButton.Enabled = dataTable.Rows.Count < (this._openParquetEngine?.RecordCount ?? default);
-                SetSampleQueryAsPlaceHolder();
+                if (this.mainDataSource is not null)
+                {
+                    this.loadAllRowsButton.Enabled = this.mainDataSource.Rows.Count < (this._openParquetEngine?.RecordCount ?? default);
+                    SetSampleQueryAsPlaceHolder();
+                }
             }
         }
 
-        private Engine.ParquetEngine _openParquetEngine = null;
+        private Engine.ParquetEngine? _openParquetEngine = null;
         #endregion
 
         public MainForm()
@@ -182,14 +184,14 @@ namespace ParquetViewer
             this.shareAnonymousUsageDataToolStripMenuItem.Checked = AppSettings.AnalyticsDataGatheringConsent;
         }
 
-        private async Task<List<string>> OpenFieldSelectionDialog(bool forceOpenDialog)
+        private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)
         {
             if (string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath))
             {
                 return null;
             }
 
-            LoadingIcon loadingIcon = null;
+            LoadingIcon? loadingIcon = null;
             if (this._openParquetEngine == null)
             {
                 loadingIcon = this.ShowLoadingIcon("Loading Fields");
@@ -225,14 +227,23 @@ namespace ParquetViewer
                         HandleMultipleSchemasFoundException(msfe);
                     }
                     else if (ex is not OperationCanceledException)
+                    {
                         throw;
+                    }
 
                     return null;
                 }
             }
 
-            var fields = this._openParquetEngine.Schema.Fields;
-            if (fields != null && fields.Count > 0)
+            Parquet.Schema.ParquetSchema? schema = null;
+            try
+            {
+                schema = this._openParquetEngine.Schema;
+            }
+            catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
+
+            var fields = schema?.Fields;
+            if (fields?.Count > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
@@ -273,18 +284,23 @@ namespace ParquetViewer
             }
             else
             {
-                throw new FileLoadException("The selected file doesn't have any fields");
+                loadingIcon?.Dispose();
+                ShowError("The selected file/folder doesn't have any fields", "No fields found");
+                return null;
             }
         }
 
         private async void LoadFileToGridview()
         {
             var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
-            LoadingIcon loadingIcon = null;
+            LoadingIcon? loadingIcon = null;
             try
             {
                 if (!this.IsAnyFileOpen)
                     return;
+
+                if (this.SelectedFields is null)
+                    throw new FileLoadException("No fields selected");
 
                 if (!File.Exists(this.OpenFileOrFolderPath) && !Directory.Exists(this.OpenFileOrFolderPath))
                 {
@@ -292,13 +308,12 @@ namespace ParquetViewer
                     return;
                 }
 
-                long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine.RecordCount - this.CurrentOffset);
+                long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine!.RecordCount - this.CurrentOffset);
                 loadingIcon = this.ShowLoadingIcon("Loading Data", cellCount);
 
                 var intermediateResult = await Task.Run(async () =>
                 {
                     return await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
-
                 }, loadingIcon.CancellationToken);
 
                 loadTime = stopwatch.Elapsed;
@@ -315,7 +330,7 @@ namespace ParquetViewer
                 indexTime = stopwatch.Elapsed - loadTime;
 
                 this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
-                this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey].ToString();
+                this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey]!.ToString();
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                 this.MainDataSource = finalResult;
@@ -373,7 +388,7 @@ namespace ParquetViewer
 
             if (AppSettings.AlwaysLoadAllRecords)
             {
-                this.currentMaxRowCount = (int)this._openParquetEngine.RecordCount;
+                this.currentMaxRowCount = (int)this._openParquetEngine!.RecordCount;
                 this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
             }
             else
@@ -383,15 +398,22 @@ namespace ParquetViewer
             }
 
             if (fieldList is not null)
+            {
                 this.SelectedFields = fieldList; //triggers a file load
+                AppSettings.OpenedFileCount++;
+                Program.AskUserForFileExtensionAssociation();
+            }
         }
 
-        private void runQueryButton_Click(object sender, EventArgs e)
+        private void runQueryButton_Click(object sender, EventArgs? e)
         {
             try
             {
                 if (this.IsAnyFileOpen)
                 {
+                    if (this.MainDataSource is null)
+                        throw new ApplicationException("This should never happen");
+
                     string queryText = this.searchFilterTextBox.Text ?? string.Empty;
                     queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
 
@@ -403,16 +425,29 @@ namespace ParquetViewer
                     {
                         //This isn't perfect but it should handle most cases
                         queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
-                    }                    
+                    }
+
+                    var stopwatch = Stopwatch.StartNew();
+                    var queryEvent = new ExecuteQueryEvent
+                    {
+                        RecordCount = this.MainDataSource.Rows.Count,
+                        ColumnCount = this.MainDataSource.Columns.Count
+                    };
 
                     try
                     {
                         this.MainDataSource.DefaultView.RowFilter = queryText;
+                        queryEvent.IsValid = true;
                     }
                     catch (Exception ex)
                     {
                         this.MainDataSource.DefaultView.RowFilter = null;
                         throw new InvalidQueryException(ex);
+                    }
+                    finally
+                    {
+                        queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                        var _ = queryEvent.Record(); //Fire and forget
                     }
                 }
             }
@@ -427,9 +462,12 @@ namespace ParquetViewer
             }
         }
 
-        private void clearFilterButton_Click(object sender, EventArgs e)
+        private void clearFilterButton_Click(object sender, EventArgs? e)
         {
-            this.MainDataSource.DefaultView.RowFilter = null;
+            if (this.MainDataSource is not null)
+            {
+                this.MainDataSource.DefaultView.RowFilter = null;
+            }
         }
 
         /// <summary>
@@ -439,9 +477,7 @@ namespace ParquetViewer
         private void RefreshDateFormatMenuItemSelection()
         {
             this.defaultToolStripMenuItem.Checked = false;
-            this.defaultDateOnlyToolStripMenuItem.Checked = false;
             this.iSO8601ToolStripMenuItem.Checked = false;
-            this.iSO8601DateOnlyToolStripMenuItem.Checked = false;
             this.iSO8601Alt1ToolStripMenuItem.Checked = false;
             this.iSO8601Alt2ToolStripMenuItem.Checked = false;
 
@@ -450,14 +486,8 @@ namespace ParquetViewer
                 case DateFormat.Default:
                     this.defaultToolStripMenuItem.Checked = true;
                     break;
-                case DateFormat.Default_DateOnly:
-                    this.defaultDateOnlyToolStripMenuItem.Checked = true;
-                    break;
                 case DateFormat.ISO8601:
                     this.iSO8601ToolStripMenuItem.Checked = true;
-                    break;
-                case DateFormat.ISO8601_DateOnly:
-                    this.iSO8601DateOnlyToolStripMenuItem.Checked = true;
                     break;
                 case DateFormat.ISO8601_Alt1:
                     this.iSO8601Alt1ToolStripMenuItem.Checked = true;
@@ -471,9 +501,9 @@ namespace ParquetViewer
         }
 
         /// <summary>
-        /// Provides the user a sample query in <see cref="searchFilterTextBox"/> using 
-        /// the first primitive field available in the dataset. If none are found, the
-        /// placeholder won't contain a sample. Only the "WHERE ".
+        /// Provides the user with a sample query in <see cref="searchFilterTextBox"/> 
+        /// using the first primitive field available in the dataset. If none are found,
+        /// the placeholder won't contain a sample. Only the "WHERE ".
         /// </summary>
         private void SetSampleQueryAsPlaceHolder()
         {
@@ -513,7 +543,7 @@ namespace ParquetViewer
             }
             else
             {
-                string placeholder = sampleSimpleValue.ToString();
+                string placeholder = sampleSimpleValue.ToString()!;
                 if (placeholder.Length < 40)
                     this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = '{sampleSimpleValue}'";
             }

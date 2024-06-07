@@ -3,16 +3,16 @@ using System.Text;
 
 namespace ParquetViewer.Engine.Types
 {
-    public class ListValue
+    public class ListValue : IComparable<ListValue>, IComparable
     {
-        public IList? Data { get; }
+        public IList Data { get; }
         public Type? Type { get; private set; }
         public static string? DateDisplayFormat { get; set; }
 
         public ListValue(Array data)
         {
-            Data = data;
-            Type = Data?.GetType().GetElementType();
+            Data = data ?? throw new ArgumentNullException(nameof(data));
+            Type = Data.GetType().GetElementType();
         }
 
         public ListValue(ArrayList data, Type type)
@@ -56,6 +56,42 @@ namespace ParquetViewer.Engine.Types
 
             sb.Append(']');
             return sb.ToString();
+        }
+
+        public int CompareTo(ListValue? other)
+        {
+            if (other?.Data is null)
+                return 1;
+            else if (this.Data is null)
+                return -1;
+            
+            for (var i = 0; i < Data.Count; i++)
+            {
+                if (other.Data.Count == i)
+                {
+                    //This list has more values, so lets say it's 'less than' in sort order
+                    return -1;
+                }
+
+                var value = Data[i];
+                var otherValue = other.Data[i];
+                int comparison = Helpers.CompareTo(value, otherValue);
+                if (comparison != 0)
+                    return comparison;
+            }
+
+            if (Data.Count < other.Data.Count)
+                return 1; //this list has less values so say it's 'more than' in sort order
+
+            return 0; //the lists appear equal
+        }
+
+        public int CompareTo(object? obj)
+        {
+            if (obj is ListValue list)
+                return CompareTo(list);
+            else
+                return 1;
         }
     }
 }

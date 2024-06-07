@@ -1,9 +1,18 @@
-﻿namespace ParquetViewer.Helpers
+﻿using System.Security.Principal;
+
+namespace ParquetViewer.Helpers
 {
     public static class Constants
     {
         public const string FILL_WEIGHT_EXCEPTION_MESSAGE = "FillWeight";
         public const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
+    }
+
+    public static class User
+    {
+        public static bool IsAdministrator =>
+            new WindowsPrincipal(WindowsIdentity.GetCurrent())
+                .IsInRole(WindowsBuiltInRole.Administrator);
     }
 
     public enum ParquetEngine
@@ -15,11 +24,9 @@
     public enum DateFormat
     {
         Default = 0,
-        Default_DateOnly,
-        ISO8601,
-        ISO8601_DateOnly,
-        ISO8601_Alt1,
-        ISO8601_Alt2
+        ISO8601 = 2,
+        ISO8601_Alt1 = 4,
+        ISO8601_Alt2 = 5
     }
 
     public enum FileType

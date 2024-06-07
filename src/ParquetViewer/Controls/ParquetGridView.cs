@@ -67,7 +67,7 @@ namespace ParquetViewer.Controls
             string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
             ListValue.DateDisplayFormat = dateFormat; //Need to tell the parquet engine how to render date values
             MapValue.DateDisplayFormat = dateFormat;
-
+            StructValue.DateDisplayFormat = dateFormat;
             foreach (DataGridViewColumn column in this.Columns)
             {
                 if (column.ValueType == typeof(DateTime))
@@ -81,7 +81,7 @@ namespace ParquetViewer.Controls
 
             if (AppSettings.AutoSizeColumnsMode == Helpers.AutoSizeColumnsMode.AllCells)
                 this.FastAutoSizeColumns();
-            else if (AppSettings.AutoSizeColumnsMode != Helpers.AutoSizeColumnsMode.None)
+            else if (AppSettings.AutoSizeColumnsMode.ToDGVMode() != DataGridViewAutoSizeColumnsMode.None)
                 this.AutoResizeColumns(AppSettings.AutoSizeColumnsMode.ToDGVMode());
             else
             {
@@ -94,26 +94,7 @@ namespace ParquetViewer.Controls
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
-            {
-                //Add warnings to date field headers if the user is using a "Date Only" date format.
-                //We want to be helpful so people don't accidentally leave a date only format on and think they are missing time information in their data.
-
-                bool isDateTimeCell = this.Columns[e.ColumnIndex].ValueType == typeof(DateTime);
-                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
-                if (isDateTimeCell && isUserUsingDateOnlyFormat)
-                {
-                    var img = Properties.Resources.exclamation_icon_yellow;
-                    Rectangle r1 = new(e.CellBounds.Left + e.CellBounds.Width - img.Width, 4, img.Width, img.Height);
-                    Rectangle r2 = new(0, 0, img.Width, img.Height);
-                    e.PaintBackground(e.CellBounds, true);
-                    e.PaintContent(e.CellBounds);
-                    e.Graphics.DrawImage(img, r1, r2, GraphicsUnit.Pixel);
-
-                    e.Handled = true;
-                }
-            }
-            else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 //Draw NULLs
                 if (e.Value == DBNull.Value || e.Value == null)
@@ -121,19 +102,19 @@ namespace ParquetViewer.Controls
                     e.Paint(e.CellBounds, DataGridViewPaintParts.All
                         & ~(DataGridViewPaintParts.ContentForeground));
 
-                    var font = new Font(e.CellStyle.Font, FontStyle.Italic);
+                    var font = new Font(e.CellStyle!.Font, FontStyle.Italic);
                     var color = SystemColors.ActiveCaptionText;
                     if (this.SelectedCells.Contains(this[e.ColumnIndex, e.RowIndex]))
                         color = Color.White;
 
-                    TextRenderer.DrawText(e.Graphics, "NULL", font, e.CellBounds, color,
+                    TextRenderer.DrawText(e.Graphics!, "NULL", font, e.CellBounds, color,
                         TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
 
                     e.Handled = true;
                 }
                 else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
                 {
-                    e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
+                    e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
                 }
                 else if (e.Value is ByteArrayValue byteArrayValue)
@@ -147,7 +128,7 @@ namespace ParquetViewer.Controls
 
                     if (tag.Equals("IMAGE"))
                     {
-                        e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
+                        e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                         e.CellStyle.ForeColor = Color.Blue;
                     }
                 }
@@ -189,7 +170,7 @@ namespace ParquetViewer.Controls
                 if (rowIndex >= 0 && columnIndex >= 0)
                 {
                     var copy = new ToolStripMenuItem("Copy");
-                    copy.Click += (object clickSender, EventArgs clickArgs) =>
+                    copy.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
                         this.isCopyingToClipboard = true;
                         Clipboard.SetDataObject(this.GetClipboardContent());
@@ -197,7 +178,7 @@ namespace ParquetViewer.Controls
                     };
 
                     var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
-                    copyWithHeaders.Click += (object clickSender, EventArgs clickArgs) =>
+                    copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
                         this.isCopyingToClipboard = true;
                         this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
@@ -230,23 +211,6 @@ namespace ParquetViewer.Controls
             base.OnColumnAdded(e);
         }
 
-        protected override void OnCellMouseEnter(DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
-            {
-                bool isDateTimeCell = this.Columns[e.ColumnIndex].ValueType == typeof(DateTime);
-                bool isUserUsingDateOnlyFormat = AppSettings.DateTimeDisplayFormat.IsDateOnlyFormat();
-                if (isDateTimeCell && isUserUsingDateOnlyFormat)
-                {
-                    var relativeMousePosition = this.PointToClient(Cursor.Position);
-                    this.dateOnlyFormatWarningToolTip.Show($"Date only format enabled. To see time values: Edit -> Date Format",
-                        Parent ?? this, relativeMousePosition, 10000);
-                }
-            }
-
-            base.OnCellMouseEnter(e);
-        }
-
         protected override void OnCellMouseLeave(DataGridViewCellEventArgs e)
         {
             this.dateOnlyFormatWarningToolTip.Hide(this);
@@ -275,13 +239,13 @@ namespace ParquetViewer.Controls
             }
 
             var dataType = QuickPeekEvent.DataTypeId.Unknown;
-            DataTable dt = null;
+            DataTable? dt = null;
             if (clickedCell.Value is ListValue listValue)
             {
                 dataType = QuickPeekEvent.DataTypeId.List;
 
                 dt = new DataTable();
-                dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type));
+                dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type!));
 
                 foreach (var item in listValue.Data)
                 {
@@ -295,8 +259,8 @@ namespace ParquetViewer.Controls
                 dataType = QuickPeekEvent.DataTypeId.Map;
 
                 dt = new DataTable();
-                dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-key", mapValue.KeyType));
-                dt.Columns.Add(new DataColumn($"{this.Columns[e.ColumnIndex].Name}-value", mapValue.ValueType));
+                dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
+                dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
 
                 var row = dt.NewRow();
                 row[0] = mapValue.Key;
@@ -314,7 +278,7 @@ namespace ParquetViewer.Controls
             }
             else if (clickedCell.Value is ByteArrayValue byteArray)
             {
-                Image image = null;
+                Image? image = null;
                 try
                 {
                     image = byteArray.ToImage();
@@ -342,8 +306,8 @@ namespace ParquetViewer.Controls
             var uniqueCellTag = Guid.NewGuid();
             clickedCell.Tag = uniqueCellTag;
 
-            var quickPeakForm = new QuickPeekForm(null, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
-            quickPeakForm.TakeMeBackEvent += (object form, TakeMeBackEventArgs tag) =>
+            var quickPeakForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+            quickPeakForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
             {
                 if (this.Rows.Count > tag.SourceRowIndex && this.Columns.Count > tag.SourceColumnIndex) //Can't be too safe
                 {
@@ -377,7 +341,7 @@ namespace ParquetViewer.Controls
                 }
             };
 
-            quickPeakForm.FormClosed += (object sender, FormClosedEventArgs _) =>
+            quickPeakForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
             {
                 if (openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
                     && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
@@ -421,7 +385,7 @@ namespace ParquetViewer.Controls
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
             if (cellValueType == typeof(ByteArrayValue))
             {
-                string value = e.Value.ToString();
+                string value = e.Value!.ToString()!; //We never put `null` in cells. Only `DBNull.Value` so it can't be null.
                 if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
                 {
                     e.Value = value[..(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2)]
@@ -431,7 +395,7 @@ namespace ParquetViewer.Controls
             }
             else if (cellValueType == typeof(string))
             {
-                string value = e.Value.ToString();
+                string value = e.Value!.ToString()!;
                 if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
                 {
                     e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
@@ -440,13 +404,34 @@ namespace ParquetViewer.Controls
             }
             else if (cellValueType == typeof(StructValue))
             {
-                string value = e.Value.ToString();
+                string value = e.Value!.ToString()!;
                 if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
                 {
                     e.Value = ((StructValue)e.Value).ToStringTruncated();
                     e.FormattingApplied = true;
                 }
             }
+        }
+
+        protected override void OnSorted(EventArgs e)
+        {
+            if (!(this.SortedColumn.Tag is string tag && tag.Equals("WIDENED")))
+            {
+                using var gfx = this.CreateGraphics();
+                var headerLength = MeasureStringWidth(gfx, this.SortedColumn.Name, true);
+                var columnWidth = this.SortedColumn.Width;
+
+                //Widen the column a bit so the sorting arrow can be shown.
+                var whitespaceWidth = columnWidth - headerLength;
+                if (whitespaceWidth >= 0 && whitespaceWidth < 21)
+                {
+                    this.SortedColumn.Width += 21 - whitespaceWidth;
+                }
+
+                //Don't widen the same column twice (this shouldn't be needed but I don't trust the logic above)
+                this.SortedColumn.Tag = "WIDENED";
+            }
+            base.OnSorted(e);
         }
 
         public void ClearQuickPeekForms()
@@ -466,86 +451,80 @@ namespace ParquetViewer.Controls
         /// </summary>
         private void FastAutoSizeColumns()
         {
-            const string WHITESPACE_BUFFER = "#|";
             const int MAX_WIDTH = 400;
 
             // Cast out a DataTable from the target grid datasource.
             // We need to iterate through all the data in the grid and a DataTable supports enumeration.
-            var gridTable = this.DataSource as DataTable;
-            if (gridTable is null)
+            if (this.DataSource is not DataTable gridTable)
                 return;
 
             // Create a graphics object from the target grid. Used for measuring text size.
-            using (var gfx = this.CreateGraphics())
+            using var gfx = this.CreateGraphics();
+
+            // Iterate through the columns.
+            for (int i = 0; i < gridTable.Columns.Count; i++)
             {
-                // Iterate through the columns.
-                for (int i = 0; i < gridTable.Columns.Count; i++)
+                //Don't autosize the same column twice
+                if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
+                    continue;
+                else
+                    this.Columns[i].Tag = "AUTOSIZED";
+
+                //Fit header by default. If header is short, make sure NULLs will fit at least
+                string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
+                var newColumnSize = MeasureStringWidth(gfx, columnNameOrNull, true);
+
+                if (gridTable.Columns[i].DataType == typeof(DateTime))
                 {
-                    //Don't autosize the same column twice
-                    if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
-                        continue;
-                    else
-                        this.Columns[i].Tag = "AUTOSIZED";
-
-                    //Fit header by default. If header is short, make sure NULLs will fit at least
-                    string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
-                    var newColumnSize = MeasureStringWidth(columnNameOrNull + WHITESPACE_BUFFER);
-
-                    if (gridTable.Columns[i].DataType == typeof(DateTime))
+                    //All date time's will have the same string length so no need to go through actual values.
+                    //We can just measure one and use that.
+                    string formattedDateTimeValue = DateTime.Now.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
+                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
+                }
+                else
+                {
+                    // Collect all the rows into a string array, making sure to exclude null values.
+                    IEnumerable<string> colStringCollection;
+                    if (gridTable.Columns[i].DataType == typeof(StructValue))
                     {
-                        //All date time's will have the same string length so no need to go through actual values.
-                        //We can just measure one and use that.
-                        string formattedDateTimeValue = DateTime.Now.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
-                        var maxDateTimeWidth = MeasureStringWidth(formattedDateTimeValue + WHITESPACE_BUFFER);
-
-                        // If the calculated width is larger than the column header width, use that instead
-                        if (maxDateTimeWidth > newColumnSize)
-                            newColumnSize = maxDateTimeWidth;
+                        colStringCollection = gridTable.AsEnumerable()
+                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated())
+                            .Where(value => value is not null)!;
                     }
                     else
                     {
-                        // Collect all the rows into a string array, making sure to exclude null values.
-                        IEnumerable<string> colStringCollection = gridTable.AsEnumerable()
+                        colStringCollection = gridTable.AsEnumerable()
                             .Select(row => row.Field<object>(i)?.ToString())
-                            .Where(value => value is not null);
-
-                        // Sort the string array by string lengths.
-                        colStringCollection = colStringCollection.OrderBy((x) => x.Length);
-
-                        // Get the last and longest string in the array.
-                        string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
-
-                        if (longestColString.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
-                        {
-                            newColumnSize = int.MaxValue;
-                        }
-                        else
-                        {
-                            if (gridTable.Columns[i].ColumnName.Length > longestColString.Length)
-                                longestColString = gridTable.Columns[i].ColumnName + WHITESPACE_BUFFER;
-
-                            var maxColWidth = MeasureStringWidth(longestColString + WHITESPACE_BUFFER);
-
-                            // If the calculated width is larger than the column header width, use that instead
-                            if (maxColWidth > newColumnSize)
-                                newColumnSize = maxColWidth;
-                        }
+                            .Where(value => value is not null)!;
                     }
 
-                    this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
+                    // Sort the string array by string lengths.
+                    colStringCollection = colStringCollection.OrderBy((x) => x.Length);
+
+                    // Get the last and longest string in the array.
+                    string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
+                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, longestColString, true));
                 }
 
-                int MeasureStringWidth(string input)
-                {
-                    try
-                    {
-                        return (int)gfx.MeasureString(input, this.Font).Width;
-                    }
-                    catch (Exception)
-                    {
-                        return int.MaxValue; //Assume worst case
-                    }
-                }
+                this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
+            }
+        }
+
+        private int MeasureStringWidth(Graphics gfx, string input, bool appendWhitespaceBuffer)
+        {
+            const string WHITESPACE_BUFFER = "#";
+            try
+            {
+                var width = (int)gfx.MeasureString(input + (appendWhitespaceBuffer ? WHITESPACE_BUFFER : string.Empty), this.Font).Width;
+
+                if (width <= 0) //happens with really long strings sometimes
+                    return int.MaxValue;
+                else
+                    return width;
+            }
+            catch (Exception)
+            {
+                return int.MaxValue; //Assume worst case
             }
         }
 

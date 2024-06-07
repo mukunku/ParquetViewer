@@ -33,7 +33,7 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             mainTableLayoutPanel = new TableLayoutPanel();
             recordsToLabel = new Label();
@@ -61,13 +61,10 @@ namespace ParquetViewer
             changeFieldsMenuStripButton = new ToolStripMenuItem();
             changeDateFormatToolStripMenuItem = new ToolStripMenuItem();
             defaultToolStripMenuItem = new ToolStripMenuItem();
-            defaultDateOnlyToolStripMenuItem = new ToolStripMenuItem();
             iSO8601ToolStripMenuItem = new ToolStripMenuItem();
-            iSO8601DateOnlyToolStripMenuItem = new ToolStripMenuItem();
             iSO8601Alt1ToolStripMenuItem = new ToolStripMenuItem();
             iSO8601Alt2ToolStripMenuItem = new ToolStripMenuItem();
             columnSizingToolStripMenuItem = new ToolStripMenuItem();
-            defaultToolStripMenuItem1 = new ToolStripMenuItem();
             columnHeadersToolStripMenuItem = new ToolStripMenuItem();
             columnHeadersContentToolStripMenuItem = new ToolStripMenuItem();
             alwaysLoadAllRecordsToolStripMenuItem = new ToolStripMenuItem();
@@ -184,7 +181,7 @@ namespace ParquetViewer
             // 
             runQueryButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             runQueryButton.FlatStyle = FlatStyle.Popup;
-            runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold);
             runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
             runQueryButton.Image = Properties.Resources.exclamation_icon;
             runQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -203,7 +200,7 @@ namespace ParquetViewer
             searchFilterLabel.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             searchFilterLabel.AutoSize = true;
             mainTableLayoutPanel.SetColumnSpan(searchFilterLabel, 2);
-            searchFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point);
+            searchFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Underline);
             searchFilterLabel.LinkColor = System.Drawing.Color.Navy;
             searchFilterLabel.Location = new System.Drawing.Point(4, 9);
             searchFilterLabel.Margin = new Padding(4, 0, 4, 0);
@@ -233,7 +230,7 @@ namespace ParquetViewer
             // 
             clearFilterButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             clearFilterButton.FlatStyle = FlatStyle.Popup;
-            clearFilterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            clearFilterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F);
             clearFilterButton.ForeColor = System.Drawing.Color.Black;
             clearFilterButton.Location = new System.Drawing.Point(587, 3);
             clearFilterButton.Margin = new Padding(4, 3, 4, 3);
@@ -252,14 +249,14 @@ namespace ParquetViewer
             mainGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
-            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
             mainGridView.EnableHeadersVisualStyles = false;
@@ -284,7 +281,7 @@ namespace ParquetViewer
             loadAllRowsButton.FlatAppearance.BorderSize = 0;
             loadAllRowsButton.FlatAppearance.MouseOverBackColor = System.Drawing.SystemColors.Control;
             loadAllRowsButton.FlatStyle = FlatStyle.Flat;
-            loadAllRowsButton.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            loadAllRowsButton.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             loadAllRowsButton.Image = Properties.Resources.next_blue;
             loadAllRowsButton.Location = new System.Drawing.Point(926, 9);
             loadAllRowsButton.Margin = new Padding(2, 0, 5, 0);
@@ -406,7 +403,7 @@ namespace ParquetViewer
             // 
             // changeDateFormatToolStripMenuItem
             // 
-            changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem, defaultDateOnlyToolStripMenuItem, iSO8601ToolStripMenuItem, iSO8601DateOnlyToolStripMenuItem, iSO8601Alt1ToolStripMenuItem, iSO8601Alt2ToolStripMenuItem });
+            changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem, iSO8601ToolStripMenuItem, iSO8601Alt1ToolStripMenuItem, iSO8601Alt2ToolStripMenuItem });
             changeDateFormatToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("changeDateFormatToolStripMenuItem.Image");
             changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
@@ -415,43 +412,25 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
             defaultToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
-            // defaultDateOnlyToolStripMenuItem
-            // 
-            defaultDateOnlyToolStripMenuItem.Name = "defaultDateOnlyToolStripMenuItem";
-            defaultDateOnlyToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            defaultDateOnlyToolStripMenuItem.Tag = "1";
-            defaultDateOnlyToolStripMenuItem.Text = "Default (Date Only)";
-            defaultDateOnlyToolStripMenuItem.ToolTipText = "Local date format (date only)";
-            defaultDateOnlyToolStripMenuItem.Click += DateFormatMenuItem_Click;
-            // 
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.fffZ";
             iSO8601ToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
-            // iSO8601DateOnlyToolStripMenuItem
-            // 
-            iSO8601DateOnlyToolStripMenuItem.Name = "iSO8601DateOnlyToolStripMenuItem";
-            iSO8601DateOnlyToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            iSO8601DateOnlyToolStripMenuItem.Tag = "3";
-            iSO8601DateOnlyToolStripMenuItem.Text = "ISO 8601 (Date Only)";
-            iSO8601DateOnlyToolStripMenuItem.ToolTipText = "yyyy-MM-dd";
-            iSO8601DateOnlyToolStripMenuItem.Click += DateFormatMenuItem_Click;
-            // 
             // iSO8601Alt1ToolStripMenuItem
             // 
             iSO8601Alt1ToolStripMenuItem.Name = "iSO8601Alt1ToolStripMenuItem";
-            iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             iSO8601Alt1ToolStripMenuItem.Tag = "4";
             iSO8601Alt1ToolStripMenuItem.Text = "ISO 8601 (Alt 1)";
             iSO8601Alt1ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss.fff";
@@ -460,7 +439,7 @@ namespace ParquetViewer
             // iSO8601Alt2ToolStripMenuItem
             // 
             iSO8601Alt2ToolStripMenuItem.Name = "iSO8601Alt2ToolStripMenuItem";
-            iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             iSO8601Alt2ToolStripMenuItem.Tag = "5";
             iSO8601Alt2ToolStripMenuItem.Text = "ISO 8601 (Alt 2)";
             iSO8601Alt2ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss";
@@ -468,26 +447,17 @@ namespace ParquetViewer
             // 
             // columnSizingToolStripMenuItem
             // 
-            columnSizingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem1, columnHeadersToolStripMenuItem, columnHeadersContentToolStripMenuItem });
+            columnSizingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { columnHeadersToolStripMenuItem, columnHeadersContentToolStripMenuItem });
             columnSizingToolStripMenuItem.Name = "columnSizingToolStripMenuItem";
             columnSizingToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             columnSizingToolStripMenuItem.Text = "Column Sizing";
-            // 
-            // defaultToolStripMenuItem1
-            // 
-            defaultToolStripMenuItem1.Name = "defaultToolStripMenuItem1";
-            defaultToolStripMenuItem1.Size = new System.Drawing.Size(192, 22);
-            defaultToolStripMenuItem1.Tag = "None";
-            defaultToolStripMenuItem1.Text = "Default";
-            defaultToolStripMenuItem1.ToolTipText = "All columns will start with the same size, regardless of their contents";
-            defaultToolStripMenuItem1.Click += changeColumnSizingToolStripMenuItem_Click;
             // 
             // columnHeadersToolStripMenuItem
             // 
             columnHeadersToolStripMenuItem.Name = "columnHeadersToolStripMenuItem";
             columnHeadersToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
             columnHeadersToolStripMenuItem.Tag = "ColumnHeader";
-            columnHeadersToolStripMenuItem.Text = "Fit Column Headers";
+            columnHeadersToolStripMenuItem.Text = "Fit Headers Only";
             columnHeadersToolStripMenuItem.ToolTipText = "Columns will be as wide as their name requires";
             columnHeadersToolStripMenuItem.Click += changeColumnSizingToolStripMenuItem_Click;
             // 
@@ -547,14 +517,14 @@ namespace ParquetViewer
             // 
             userGuideToolStripMenuItem.Image = Properties.Resources.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            userGuideToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             userGuideToolStripMenuItem.Text = "User Guide";
             userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
             // 
             // shareAnonymousUsageDataToolStripMenuItem
             // 
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
-            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
             shareAnonymousUsageDataToolStripMenuItem.ToolTipText = "See About page for link to privacy policy";
             shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
@@ -562,7 +532,7 @@ namespace ParquetViewer
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             aboutToolStripMenuItem.Text = "&About...";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
@@ -574,7 +544,7 @@ namespace ParquetViewer
             // 
             // actualShownRecordCountLabel
             // 
-            actualShownRecordCountLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            actualShownRecordCountLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             actualShownRecordCountLabel.Name = "actualShownRecordCountLabel";
             actualShownRecordCountLabel.Size = new System.Drawing.Size(14, 17);
             actualShownRecordCountLabel.Text = "0";
@@ -600,7 +570,7 @@ namespace ParquetViewer
             // 
             // recordCountStatusBarLabel
             // 
-            recordCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            recordCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             recordCountStatusBarLabel.Name = "recordCountStatusBarLabel";
             recordCountStatusBarLabel.Size = new System.Drawing.Size(14, 17);
             recordCountStatusBarLabel.Text = "0";
@@ -613,7 +583,7 @@ namespace ParquetViewer
             // 
             // totalRowCountStatusBarLabel
             // 
-            totalRowCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            totalRowCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             totalRowCountStatusBarLabel.Name = "totalRowCountStatusBarLabel";
             totalRowCountStatusBarLabel.Size = new System.Drawing.Size(14, 17);
             totalRowCountStatusBarLabel.Text = "0";
@@ -716,11 +686,8 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem getSQLCreateTableScriptToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem metadataViewerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnSizingToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersContentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem defaultDateOnlyToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem iSO8601DateOnlyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iSO8601Alt2ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem alwaysLoadAllRecordsToolStripMenuItem;

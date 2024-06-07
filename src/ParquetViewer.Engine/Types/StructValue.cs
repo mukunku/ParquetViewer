@@ -4,12 +4,13 @@ using System.Text.Json;
 
 namespace ParquetViewer.Engine.Types
 {
-    public class StructValue
+    public class StructValue : IComparable<StructValue>, IComparable
     {
         public string Name { get; }
 
-        //we are always guaranteed to have exactly one row in 'Data' since we don't allow nested structs right now
         public DataRow Data { get; }
+
+        public static string? DateDisplayFormat { get; set; }
 
         public StructValue(string name, DataRow data)
         {
@@ -35,22 +36,7 @@ namespace ParquetViewer.Engine.Types
                         jsonWriter.WritePropertyName(columnName);
 
                         object value = this.Data[i];
-                        if (truncateForDisplay)
-                        {
-                            if (value is ByteArrayValue byteArrayValue)
-                            {
-                                var byteArrayAsString = byteArrayValue.ToString();
-                                if (byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
-                                {
-                                    value = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
-                                }
-                                else
-                                {
-                                    value = byteArrayAsString;
-                                }
-                            }
-                        }
-                        WriteValue(jsonWriter, value);
+                        WriteValue(jsonWriter, value, truncateForDisplay);
                     }
                     jsonWriter.WriteEndObject();
                 }
@@ -65,7 +51,7 @@ namespace ParquetViewer.Engine.Types
             }
         }
 
-        private static void WriteValue(Utf8JsonWriter jsonWriter, object value)
+        private static void WriteValue(Utf8JsonWriter jsonWriter, object value, bool truncateForDisplay)
         {
             if (value is null)
             {
@@ -97,15 +83,32 @@ namespace ParquetViewer.Engine.Types
             {
                 jsonWriter.WriteStartObject();
                 jsonWriter.WritePropertyName("key");
-                WriteValue(jsonWriter, map.Key);
+                WriteValue(jsonWriter, map.Key, truncateForDisplay);
                 jsonWriter.WritePropertyName("value");
-                WriteValue(jsonWriter, map.Value);
+                WriteValue(jsonWriter, map.Value, truncateForDisplay);
                 jsonWriter.WriteEndObject();
             }
             else if (value is ListValue list)
             {
                 //Hopefully lists also generate valid JSON on .ToString()
                 jsonWriter.WriteRawValue(list.ToString());
+            }
+            else if (value is ByteArrayValue byteArray)
+            {
+                var byteArrayAsString = byteArray.ToString();
+                if (truncateForDisplay && byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
+                {
+                    byteArrayAsString = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
+                }
+                jsonWriter.WriteStringValue(byteArrayAsString);
+            }
+            else if (value is DateTime dt)
+            {
+                //Write dates as string
+                if (DateDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(dt.ToString(DateDisplayFormat));
+                else
+                    jsonWriter.WriteStringValue(dt.ToString());
             }
             else
             {
@@ -119,5 +122,56 @@ namespace ParquetViewer.Engine.Types
         /// </summary>
         private static bool IsNumber(Type type) =>
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
+
+        private IReadOnlyCollection<string>? _columnNames = null;
+        private IReadOnlyCollection<string> GetFieldNames() =>
+            _columnNames ??= GetColumns(Data).Select(c => c.ColumnName).ToList().AsReadOnly();
+
+        /// <summary>
+        /// Sorts by field names first, then by values
+        /// </summary>
+        public int CompareTo(StructValue? other)
+        {
+            if (other?.Data is null || other.GetFieldNames().Count == 0)
+                return 1;
+
+            if (Data is null || GetFieldNames().Count == 0)
+                return -1;
+
+            var otherColumnNames = string.Join("|", other.GetFieldNames());
+            var columnNames = string.Join("|", this.GetFieldNames());
+
+            int schemaComparison = columnNames.CompareTo(otherColumnNames);
+            if (schemaComparison != 0)
+                return schemaComparison;
+
+            int fieldCount = GetFieldNames().Count;
+            for (var i = 0; i < fieldCount; i++)
+            {
+                var otherValue = other.Data[i];
+                var value = Data[i];
+                int comparison = Helpers.CompareTo(value, otherValue);
+                if (comparison != 0)
+                    return comparison;
+            }
+
+            return 0; //Both structs appear equal
+        }
+
+        private static IEnumerable<DataColumn> GetColumns(DataRow dataRow)
+        {
+            foreach (DataColumn column in dataRow.Table.Columns)
+            {
+                yield return column;
+            }
+        }
+
+        public int CompareTo(object? obj)
+        {
+            if (obj is StructValue @struct)
+                return CompareTo(@struct);
+            else
+                return 1;
+        }
     }
 }

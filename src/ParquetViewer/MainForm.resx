@@ -127,6 +127,24 @@
     <value>382, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAArpJREFUWEftV01rE1EUjUOsKVTaleCiP8CmUvqR76RJC2aRIKSLIBbETW0tBGJa
+        22CkaJddBqoli4JIpLsIUoylaBf9ABFNM5LGjywFF+LCHzC5nffyXvpm8maSJkVd5MCBmXvvnHPmTmYg
+        hv8e5deGC/DKAPBG5paKch31yagmeh72wPrButcUN0HXcpfXGDVCYC0AqE5GlJC2L/+ummQN8Gv3Lhzl
+        3oGYz0FeLGAWcnvw4+AR7tNZaVN4TySaBzXNi59BFMWGieZpGCKli1gm5uVuAAnwDBplowE0gQR+7ie4
+        4vX4ZydwNhuglLIm+PoxA4fiEdfwUPwCpQ/PobwlVK9BJFLNgRVqiOi57/UDlB5Xa0RKFw1tQJel5Yop
+        S9IjUs1BYaLHdoB2gHYAOYBUjG9MT0c2fD4/NoXtS7iHhTTg9wf1A9YYaZFsQCreK1itbnC7x8DjGQfp
+        0823RKoGaAZxYMCiHYJrpiKeYx/B9wSYzYNY3Gbz1IinUqnz1JxyeNjBD8EzVJOMyiEqAcrfHnhZcdLG
+        SKfTV9keotPp5Zsj8AzVRHOsUSQSnaHiLteJeDy+dJ3WKdHjIm0+eIZqlnf7J9TCLGOx+xNIa2jIrqij
+        c2yih3Jx4SLPVE00y4pTzs5Gr4TDN56g3wJbt9nq3DkPsMk3p5R2zCkyiuF2j8Pq6toL1thqdZ3euFXY
+        7Sd3T0p/DyMjDrDbR+VNPL01OXkbB+jrG9QP0jHXcSZJ0evl813DWuh4amrmDt2ExeLU9gg/C7ccwOMZ
+        g1BIqUPNKdF2SEuJzsXOlgK4XD75Dl375FQBdQiHg/MRMs4bmw6ARIPBkO71tSFGlfPzL+ey5PBUQGJO
+        p6+h8GhLbAhSrqA70Y0LwqIAK9kVj7AgQCKTgN6lXk1x9FVLJpN1/5iyYMzPVSr/HAbDMUiXlYfiKZ6T
+        AAAAAElFTkSuQmCC
+</value>
+  </data>
   <data name="newToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -227,24 +245,6 @@
         gvfnz1cn5Y9HRvz1/iruPuAkvouloL63Crz7F3WpLFpZiyDKMnfRK9X3VkGUZaKSlbUIoixjlZgqrBJT
         hVViqnCDyawBXQNulSWjWdcA3BiZwg0mc6wBuDEyRVRmZAo3mMyxBuDGyBRRmZEp3GAya8DPAXv4EE2s
         MsPFRkovkH56TwbQBuIAAAAASUVORK5CYII=
-</value>
-  </data>
-  <data name="getSQLCreateTableScriptToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAArpJREFUWEftV01rE1EUjUOsKVTaleCiP8CmUvqR76RJC2aRIKSLIBbETW0tBGJa
-        22CkaJddBqoli4JIpLsIUoylaBf9ABFNM5LGjywFF+LCHzC5nffyXvpm8maSJkVd5MCBmXvvnHPmTmYg
-        hv8e5deGC/DKAPBG5paKch31yagmeh72wPrButcUN0HXcpfXGDVCYC0AqE5GlJC2L/+ummQN8Gv3Lhzl
-        3oGYz0FeLGAWcnvw4+AR7tNZaVN4TySaBzXNi59BFMWGieZpGCKli1gm5uVuAAnwDBplowE0gQR+7ie4
-        4vX4ZydwNhuglLIm+PoxA4fiEdfwUPwCpQ/PobwlVK9BJFLNgRVqiOi57/UDlB5Xa0RKFw1tQJel5Yop
-        S9IjUs1BYaLHdoB2gHYAOYBUjG9MT0c2fD4/NoXtS7iHhTTg9wf1A9YYaZFsQCreK1itbnC7x8DjGQfp
-        0823RKoGaAZxYMCiHYJrpiKeYx/B9wSYzYNY3Gbz1IinUqnz1JxyeNjBD8EzVJOMyiEqAcrfHnhZcdLG
-        SKfTV9keotPp5Zsj8AzVRHOsUSQSnaHiLteJeDy+dJ3WKdHjIm0+eIZqlnf7J9TCLGOx+xNIa2jIrqij
-        c2yih3Jx4SLPVE00y4pTzs5Gr4TDN56g3wJbt9nq3DkPsMk3p5R2zCkyiuF2j8Pq6toL1thqdZ3euFXY
-        7Sd3T0p/DyMjDrDbR+VNPL01OXkbB+jrG9QP0jHXcSZJ0evl813DWuh4amrmDt2ExeLU9gg/C7ccwOMZ
-        g1BIqUPNKdF2SEuJzsXOlgK4XD75Dl375FQBdQiHg/MRMs4bmw6ARIPBkO71tSFGlfPzL+ey5PBUQGJO
-        p6+h8GhLbAhSrqA70Y0LwqIAK9kVj7AgQCKTgN6lXk1x9FVLJpN1/5iyYMzPVSr/HAbDMUiXlYfiKZ6T
-        AAAAAElFTkSuQmCC
 </value>
   </data>
   <metadata name="mainStatusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

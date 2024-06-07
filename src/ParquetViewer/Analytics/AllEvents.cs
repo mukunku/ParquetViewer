@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Analytics
@@ -20,7 +21,7 @@ namespace ParquetViewer.Analytics
 
         public FileOpenEvent() : base(EVENT_TYPE)
         {
-
+            this.FieldTypes = [];
         }
 
         public static void FireAndForget(bool isFolder, int numPartitions, long numRows, int numRowGroups, int numFields,
@@ -115,9 +116,9 @@ namespace ParquetViewer.Analytics
         private const string EVENT_TYPE = "exception.thrown";
 
         [JsonIgnore]
-        public System.Exception Exception { get; set; }
+        public System.Exception? Exception { get; set; }
 
-        public string Message
+        public string? Message
         {
             get
             {
@@ -132,8 +133,8 @@ namespace ParquetViewer.Analytics
             }
         }
 
-        public string StackTrace => Exception?.StackTrace?.ToString();
-        public string InnerException => Exception?.InnerException?.ToString();
+        public string? StackTrace => Exception?.StackTrace?.ToString();
+        public string? InnerException => Exception?.InnerException?.ToString();
 
         public ExceptionEvent(AmplitudeConfiguration? amplitudeConfiguration = null)
             : base(EVENT_TYPE, amplitudeConfiguration)
@@ -173,6 +174,21 @@ namespace ParquetViewer.Analytics
         public static void FireAndForget(DataTypeId dataType)
         {
             var _ = new QuickPeekEvent { DataType = dataType }.Record();
+        }
+    }
+
+    public class ExecuteQueryEvent : AmplitudeEvent
+    {
+        private const string EVENT_TYPE = "sql.execute";
+
+        public bool IsValid { get; set; }
+        public int RecordCount { get; set; }
+        public int ColumnCount { get; set; }
+        public long RunTimeMS { get; set; }
+
+        public ExecuteQueryEvent() : base(EVENT_TYPE)
+        {
+
         }
     }
 }

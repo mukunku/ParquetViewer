@@ -8,14 +8,7 @@ namespace ParquetViewer.Helpers
 {
     public class CustomScriptBasedSchemaAdapter
     {
-        internal readonly static Hashtable TypeMap;
-
-        public string TablePrefix { get; set; }
-        public bool CascadeDeletes { get; set; }
-
-        static CustomScriptBasedSchemaAdapter()
-        {
-            Hashtable hashtable = new()
+        internal readonly static Hashtable TypeMap = new()
             {
                 { typeof(ulong), "BIGINT {1}NULL" },
                 { typeof(long), "BIGINT {1}NULL" },
@@ -40,14 +33,15 @@ namespace ParquetViewer.Helpers
                 { typeof(StructValue), "sql_variant {1}NULL /*STRUCT*/" },
                 { typeof(ByteArrayValue), "VARBINARY({0}) {1}NULL" },
             };
-            TypeMap = hashtable;
-        }
+
+        public string? TablePrefix { get; set; }
+        public bool CascadeDeletes { get; set; }
 
         public string GetCreateScript(string databaseName)
         {
             if (databaseName == null || databaseName.Trim().Length == 0)
             {
-                throw new ArgumentException(string.Format("The database name passed is {0}", databaseName == null ? "null" : "empty"), "databaseName");
+                throw new ArgumentException(string.Format("The database name passed is {0}", databaseName == null ? "null" : "empty"), nameof(databaseName));
             }
 
             return string.Format("IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'{0}') BEGIN CREATE DATABASE {1};\n END\n", databaseName, MakeSafe(databaseName));
@@ -57,7 +51,7 @@ namespace ParquetViewer.Helpers
         {
             if (dataSet == null)
             {
-                throw new ArgumentException("null is not a valid parameter value", "dataSet");
+                throw new ArgumentException("null is not a valid parameter value", nameof(dataSet));
             }
             StringBuilder stringBuilder = new StringBuilder();
             foreach (DataTable table in dataSet.Tables)
@@ -96,9 +90,9 @@ namespace ParquetViewer.Helpers
             return stringBuilder.ToString();
         }
 
-        protected string GetTypeFor(DataColumn column)
+        protected static string GetTypeFor(DataColumn column)
         {
-            string item = (string)TypeMap[column.DataType];
+            var item = TypeMap[column.DataType] as string;
             if (item == null)
             {
                 throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
@@ -111,9 +105,9 @@ namespace ParquetViewer.Helpers
         {
             if (columns == null || columns.Length < 1)
             {
-                throw new ArgumentException("Invalid column list!", "columns");
+                throw new ArgumentException("Invalid column list!", nameof(columns));
             }
-            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new();
             bool flag = true;
             DataColumn[] dataColumnArray = columns;
             for (int i = 0; i < dataColumnArray.Length; i++)
@@ -133,7 +127,7 @@ namespace ParquetViewer.Helpers
         {
             if (columns == null || columns.Count < 1)
             {
-                throw new ArgumentException("Invalid column list!", "columns");
+                throw new ArgumentException("Invalid column list!", nameof(columns));
             }
             StringBuilder stringBuilder = new StringBuilder();
             bool flag = true;
@@ -155,7 +149,7 @@ namespace ParquetViewer.Helpers
         {
             if (relation == null)
             {
-                throw new ArgumentException("Invalid argument value (null)", "relation");
+                throw new ArgumentException("Invalid argument value (null)", nameof(relation));
             }
 
             string childTable = MakeSafe(string.Concat(TablePrefix, relation.ChildTable.TableName));
@@ -178,7 +172,7 @@ namespace ParquetViewer.Helpers
 
         private string MakeTable(DataTable table, bool markTablesAsLocalTemp)
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
             string str = MakeSafe(string.Concat(markTablesAsLocalTemp ? "#" : string.Empty, TablePrefix, table.TableName));
             string str1 = MakeList(table.Columns);
             stringBuilder.AppendFormat("CREATE TABLE {0} ({1}\n);", str, str1);

@@ -29,16 +29,16 @@ namespace ParquetViewer
 
         private void offsetTextBox_TextChanged(object sender, EventArgs e)
         {
-            var textbox = sender as TextBox;
+            var textbox = (TextBox)sender;
             if (int.TryParse(textbox.Text, out var offset))
                 this.CurrentOffset = offset;
             else
                 textbox.Text = this.CurrentOffset.ToString();
         }
 
-        private void recordsToTextBox_TextChanged(object sender, EventArgs e)
+        private void recordsToTextBox_TextChanged(object sender, EventArgs? e)
         {
-            var textbox = sender as TextBox;
+            var textbox = (TextBox)sender;
             if (int.TryParse(textbox.Text, out var recordCount))
                 this.CurrentMaxRowCount = recordCount;
             else
@@ -61,7 +61,7 @@ namespace ParquetViewer
         {
             try
             {
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                var files = e.Data?.GetData(DataFormats.FileDrop) as string[];
                 if (files != null && files.Length > 0)
                 {
                     this.Cursor = Cursors.WaitCursor;
@@ -78,17 +78,19 @@ namespace ParquetViewer
 
         private void MainForm_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
                 e.Effect = DragDropEffects.Copy;
         }
 
         private void searchFilterLabel_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(@"NULL CHECK: 
+            MessageBox.Show(@"Detailed documentation : https://github.com/mukunku/ParquetViewer/wiki/Running-Queries
+NULL CHECK: 
     WHERE field_name IS NULL
     WHERE field_name IS NOT NULL
 DATETIME:   
-    WHERE field_name >= #01/01/2000#
+    WHERE field_name >= #2000/12/31#
+    WHERE field_name >= #12/31/2000#
 NUMERIC:
     WHERE field_name <= 123.4
 STRING:
@@ -96,7 +98,7 @@ STRING:
     WHERE field_name = 'equals value'
     WHERE field_name <> 'not equals'
 MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #01/01/2000# AND field_1 < #01/01/2001#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
+    WHERE (field_1 > #2000/12/31# AND field_1 < #2001/12/31#) OR field_2 <> 100 OR field_3 = 'string value'", "Filtering Query Syntax Examples");
         }
 
         private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
@@ -152,7 +154,7 @@ MULTIPLE CONDITIONS:
             }
         }
 
-        private void loadAllRowsButton_Click(object _, EventArgs e)
+        private void loadAllRowsButton_Click(object? sender, EventArgs? e)
         {
             if (this._openParquetEngine is not null)
             {
@@ -162,7 +164,6 @@ MULTIPLE CONDITIONS:
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.LoadAllRows);
             }
         }
-
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {

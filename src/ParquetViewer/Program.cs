@@ -1,10 +1,9 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Exceptions;
+using ParquetViewer.Helpers;
 using System;
 using System.IO;
 using System.Windows.Forms;
-
-#nullable enable
 
 namespace ParquetViewer
 {
@@ -14,14 +13,35 @@ namespace ParquetViewer
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        private static void Main(string[] args)
+        private static int Main(string[] args)
         {
             string? fileToOpen = null;
             try
             {
-                if (args?.Length > 0 && File.Exists(args[0]))
+                if (args?.Length > 0)
                 {
-                    fileToOpen = args[0];
+                    if (AboutBox.PERFORM_FILE_ASSOCIATION.Equals(args[0]))
+                    {
+                        try
+                        {
+                            if (args.Length > 1 && bool.TryParse(args[1], out bool associate))
+                            {
+                                return AboutBox.ToggleFileAssociation(associate) ? 0 : 1;
+                            }
+                            else
+                            {
+                                return 2; //no true/false flag passed
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            return 3;
+                        }
+                    }
+                    else if (File.Exists(args[0]))
+                    {
+                        fileToOpen = args[0];
+                    }
                 }
             }
             catch (Exception) { /*Swallow Exception*/ }
@@ -33,13 +53,14 @@ namespace ParquetViewer
             Form mainForm;
             bool isOpeningFile = !string.IsNullOrWhiteSpace(fileToOpen);
             if (isOpeningFile)
-                mainForm = new MainForm(fileToOpen);
+                mainForm = new MainForm(fileToOpen!);
             else
                 mainForm = new MainForm();
 
             RouteUnhandledExceptions();
 
             Application.Run(mainForm);
+            return 0;
         }
 
         /// <summary>
@@ -90,8 +111,9 @@ namespace ParquetViewer
                 else if (AppSettings.ConsentLastAskedOnVersion != DateTime.Now.Day.ToString())
                 {
                     AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
-                    if (MessageBox.Show($"Would you like to share anonymous usage data to help make ParquetViewer better?{Environment.NewLine}{Environment.NewLine}" +
-                        $"You can always change this setting later from the Help menu.", "Share Anonymous Usage Data?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    if (MessageBox.Show($"Would you like to share anonymous usage data to help make ParquetViewer better?" +
+                        $"{Environment.NewLine}{Environment.NewLine}You can always change this setting later from the Help menu.", 
+                        "Share Anonymous Usage Data?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         //We got consent! Start gathering some data..
                         AppSettings.AnalyticsDataGatheringConsent = true;
@@ -109,6 +131,61 @@ namespace ParquetViewer
                 {
                     ExceptionEvent.FireAndForget(new UnsupportedAssemblyVersionException(ex));
                     return 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// We only ask for file extension association if the user opened at least 8 parquet files
+        /// </summary>
+        /// <remarks>
+        /// We want to make sure we're not annoying the user and that the user is committed to
+        /// using ParquetViewer. The user opening 8 files seemed like a decent benchmark for that.
+        /// </remarks>
+        public static void AskUserForFileExtensionAssociation()
+        {
+            if (AppSettings.OpenedFileCount == 8 && !AboutBox.IsDefaultViewerForParquetFiles)
+            {
+                if (MessageBox.Show($"Would you like to associate ParquetViewer with .parquet files?{Environment.NewLine}{Environment.NewLine}" +
+                        $"Executable path: {System.Windows.Forms.Application.ExecutablePath}{Environment.NewLine}{Environment.NewLine}" +
+                        $"You can also toggle this setting from the Help -> About page.", 
+                        "ParquetViewer file association request", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    if (!User.IsAdministrator)
+                    {
+                        bool? success = AboutBox.RunElevatedExeForFileAssociation(true, out int? exitCode);
+                        if (success is null)
+                        {
+                            MessageBox.Show("File association cancelled. If you change your mind and would like to change .parquet file association visit the Help -> About page.",
+                                "File association cancelled", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        else if (success == false)
+                        {
+                            MessageBox.Show($"Something went wrong (Error code: {exitCode}).{Environment.NewLine}{Environment.NewLine}" +
+                                $"You can try again from the Help -> About page.",
+                                "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Success! ParquetViewer is now your default application for .parquet files.",
+                                "File association succeeded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            AboutBox.ToggleFileAssociation(true);
+                            MessageBox.Show("Success! ParquetViewer is now your default application for .parquet files.",
+                                "File association succeeded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Something went wrong (Error message: {ex.Message}).{Environment.NewLine}{Environment.NewLine}" +
+                                $"You can try again from the Help -> About page.",
+                                "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
                 }
             }
         }

@@ -37,6 +37,7 @@ namespace ParquetViewer.Analytics
             DateTimeDisplayFormat = AppSettings.DateTimeDisplayFormat.ToString(),
             SystemMemory = _systemRAM,
             Environment.ProcessorCount,
+            IsDefaultParquetViewer = AboutBox.IsDefaultViewerForParquetFiles,
 #if RELEASE_SELFCONTAINED
             SelfContainedExecutable = true,
 #else

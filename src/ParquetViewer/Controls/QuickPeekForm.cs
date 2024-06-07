@@ -6,9 +6,9 @@ namespace ParquetViewer.Controls
 {
     public partial class QuickPeekForm : Form
     {
-        private string originalTitle;
+        private string originalTitle = string.Empty;
 
-        private string titleSuffix;
+        private string titleSuffix = string.Empty;
         public string TitleSuffix
         {
             get => titleSuffix;
@@ -27,7 +27,7 @@ namespace ParquetViewer.Controls
             }
         }
 
-        private object data;
+        private object data = new();
         public object Data
         {
             get => data;
@@ -43,7 +43,7 @@ namespace ParquetViewer.Controls
         public int SourceRowIndex { get; set; }
         public int SourceColumnIndex { get; set; }
 
-        public event EventHandler<TakeMeBackEventArgs> TakeMeBackEvent;
+        public event EventHandler<TakeMeBackEventArgs>? TakeMeBackEvent;
 
         public QuickPeekForm()
         {
@@ -52,10 +52,10 @@ namespace ParquetViewer.Controls
             this.closeWindowButton.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
         }
 
-        public QuickPeekForm(string titleSuffix, object data, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
+        public QuickPeekForm(string? titleSuffix, object data, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
         {
-            this.TitleSuffix = titleSuffix;
-            this.Data = data;
+            this.TitleSuffix = titleSuffix ?? string.Empty;
+            this.Data = data ?? throw new ArgumentNullException(nameof(data));
             this.UniqueTag = uniqueTag;
             this.SourceRowIndex = sourceRowIndex;
             this.SourceColumnIndex = sourceColumnIndex;

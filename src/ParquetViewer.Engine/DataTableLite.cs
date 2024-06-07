@@ -74,7 +74,8 @@ namespace ParquetViewer.Engine
                     throw new NotSupportedException($"Duplicate column '{columnPath}' detected. Column names are case insensitive and must be unique.");
                 }
 
-                dataTable.Columns.Add(new DataColumn(columnLite.Name, columnLite.Type));
+                var columnType = columnLite.Type;
+                dataTable.Columns.Add(new DataColumn(columnName: columnLite.Name, dataType: columnType));
             }
 
             dataTable.BeginLoadData();

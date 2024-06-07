@@ -104,7 +104,7 @@ namespace ParquetViewer
             if (IsAnyFileOpen)
             {
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.MetadataViewer);
-                using var metadataViewer = new MetadataViewer(this._openParquetEngine);
+                using var metadataViewer = new MetadataViewer(this._openParquetEngine!);
                 metadataViewer.ShowDialog(this);
             }
         }
@@ -116,7 +116,7 @@ namespace ParquetViewer
                 && AppSettings.AutoSizeColumnsMode != columnSizingMode)
             {
                 AppSettings.AutoSizeColumnsMode = columnSizingMode;
-                foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent().Items)
+                foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent()!.Items)
                 {
                     toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
                 }
@@ -150,9 +150,9 @@ namespace ParquetViewer
 
         private void DateFormatMenuItem_Click(object sender, EventArgs e)
         {
-            if (sender is ToolStripMenuItem item)
+            if (sender is ToolStripMenuItem item && item.Tag is string tag)
             {
-                var selectedDateFormat = (DateFormat)(int.Parse((string)item.Tag));
+                var selectedDateFormat = (DateFormat)int.Parse(tag);
                 AppSettings.DateTimeDisplayFormat = selectedDateFormat;
                 this.RefreshDateFormatMenuItemSelection();
                 this.mainGridView.UpdateDateFormats();

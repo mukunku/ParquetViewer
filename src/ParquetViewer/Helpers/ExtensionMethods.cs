@@ -1,8 +1,8 @@
-﻿using ParquetViewer.Engine.Types;
+﻿using Microsoft.Win32;
+using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -14,9 +14,7 @@ namespace ParquetViewer.Helpers
     public static class ExtensionMethods
     {
         private const string DefaultDateTimeFormat = "g";
-        private const string DateOnlyDateTimeFormat = "d";
         private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
-        private const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
         private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
@@ -24,7 +22,6 @@ namespace ParquetViewer.Helpers
         {
             AutoSizeColumnsMode.ColumnHeader => DataGridViewAutoSizeColumnsMode.ColumnHeader,
             AutoSizeColumnsMode.AllCells => DataGridViewAutoSizeColumnsMode.AllCells,
-            AutoSizeColumnsMode.None => DataGridViewAutoSizeColumnsMode.None,
             _ => DataGridViewAutoSizeColumnsMode.None
         };
 
@@ -51,24 +48,10 @@ namespace ParquetViewer.Helpers
         public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
         {
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
-            DateFormat.ISO8601_DateOnly => ISO8601DateOnlyFormat,
-            DateFormat.Default_DateOnly => DateOnlyDateTimeFormat,
             DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
             DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
             _ => string.Empty
-        };
-
-        /// <summary>
-        /// Returns true if the date format does not contain a time component
-        /// </summary>
-        /// <param name="dateFormat">Date format to check</param>
-        /// <returns>True if the date format has time information</returns>
-        public static bool IsDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
-        {
-            DateFormat.ISO8601_DateOnly => true,
-            DateFormat.Default_DateOnly => true,
-            _ => false
         };
 
         public static string GetExtension(this FileType fileType) => fileType switch
@@ -135,5 +118,22 @@ namespace ParquetViewer.Helpers
         /// </summary>
         public static bool IsNumber(this Type type) => 
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
+
+        public static T ToEnum<T>(this int value) where T : struct, Enum
+        {
+            if (Enum.IsDefined(typeof(T), value))
+            {
+                return (T)Enum.ToObject(typeof(T), value);
+            }
+            return default;
+        }
+
+        public static void DeleteSubKeyTreeIfExists(this RegistryKey key, string name)
+        {
+            if (key.OpenSubKey(name) is not null)
+            {
+                key.DeleteSubKeyTree(name);
+            }
+        }
     }
 }

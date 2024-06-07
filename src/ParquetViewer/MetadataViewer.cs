@@ -13,7 +13,7 @@ namespace ParquetViewer
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
         private static readonly string PANDAS_SCHEMA = "pandas";
-        private Engine.ParquetEngine parquetEngine;
+        private Engine.ParquetEngine? parquetEngine;
 
         public MetadataViewer(Engine.ParquetEngine parquetEngine) : this()
         {
@@ -56,7 +56,7 @@ namespace ParquetViewer
         private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var metadataResult = new List<(string TabName, string Text)>();
-            if (parquetEngine.ThriftMetadata != null)
+            if (parquetEngine!.ThriftMetadata != null)
             {
                 string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine, parquetEngine.RecordCount, parquetEngine.Fields.Count);
                 metadataResult.Add((THRIFT_METADATA, json));
@@ -122,7 +122,7 @@ namespace ParquetViewer
 
         private void copyRawThriftMetadataButton_Click(object sender, EventArgs e)
         {
-            var rawJson = JsonSerializer.Serialize(this.parquetEngine.ThriftMetadata,
+            var rawJson = JsonSerializer.Serialize(this.parquetEngine!.ThriftMetadata,
                 new JsonSerializerOptions()
                 {
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, //don't escape anything to make it human readable

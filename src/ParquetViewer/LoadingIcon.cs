@@ -20,8 +20,8 @@ namespace ParquetViewer
 
         public CancellationToken CancellationToken => this._cancellationToken.Token;
 
-        public event EventHandler OnShow;
-        public event EventHandler OnHide;
+        public event EventHandler? OnShow;
+        public event EventHandler? OnHide;
 
         public LoadingIcon(Form form, string message, long loadingBarMax = 0)
         {
@@ -57,24 +57,27 @@ namespace ParquetViewer
                 Dock = DockStyle.Bottom,
                 Enabled = this._cancellationToken.Token.CanBeCanceled
             };
-            this._cancelButton.Click += (object buttonSender, EventArgs buttonClickEventArgs) =>
+            this._cancelButton.Click += (object? buttonSender, EventArgs buttonClickEventArgs) =>
             {
                 this._cancellationToken.Cancel();
 
-                ((Button)buttonSender).Enabled = false;
-                ((Button)buttonSender).Text = "Cancelling...";
+                if (buttonSender is Button button)
+                {
+                    button.Enabled = false;
+                    button.Text = "Cancelling...";
+                }
             };
             this._panel.Controls.Add(this._cancelButton);
             this._cancelButton.BringToFront();
 
             //Center on form resize
-            this._form.SizeChanged += (object sender, EventArgs e) =>
+            this._form.SizeChanged += (object? sender, EventArgs e) =>
             {
                 this._panel.Location = this.GetFormCenter();
             };
         }
 
-        public void Reset(string newMessage = null)
+        public void Reset(string? newMessage = null)
         {
             if (newMessage is not null)
             {
