@@ -1,5 +1,6 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -43,12 +45,13 @@ namespace ParquetViewer
                 if (this.mainGridView.RowCount > 0)
                 {
                     this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
-                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
+                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel file (*.xls)|*.xls";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
                     if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         filePath = this.exportFileDialog.FileName;
-                        var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
+                        var fileExtension = Path.GetExtension(filePath);
+                        FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
 
                         var stopWatch = Stopwatch.StartNew();
                         loadingIcon = this.ShowLoadingIcon("Exporting Data");
@@ -61,7 +64,8 @@ namespace ParquetViewer
                             const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
                             if (this.MainDataSource!.Columns.Count > MAX_XLS_COLUMN_COUNT)
                             {
-                                MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.\r\n\r\nPlease try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
+                                MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.{Environment.NewLine}{Environment.NewLine}" +
+                                    $"Please try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
                                     "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                                 return;
@@ -69,9 +73,13 @@ namespace ParquetViewer
 
                             await Task.Run(() => this.WriteDataToExcelFile(filePath, loadingIcon.CancellationToken));
                         }
+                        else if (selectedFileType == FileType.JSON)
+                        {
+                            await Task.Run(() => this.WriteDataToJSONFile(filePath, loadingIcon.CancellationToken));
+                        }
                         else
                         {
-                            throw new Exception(string.Format("Unsupported export type: '{0}'", selectedFileType.ToString()));
+                            throw new Exception(string.Format("Unsupported export type: '{0}'", fileExtension));
                         }
 
                         if (loadingIcon.CancellationToken.IsCancellationRequested)
@@ -81,7 +89,8 @@ namespace ParquetViewer
                         }
                         else
                         {
-                            FileExportEvent.FireAndForget(selectedFileType, new FileInfo(filePath).Length, this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
+                            FileExportEvent.FireAndForget(selectedFileType.Value, new FileInfo(filePath).Length, 
+                                this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
                             MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
@@ -248,14 +257,16 @@ namespace ParquetViewer
                     break;
                 }
 
-                for (var i = 0; i < row.Row.ItemArray.Count; i++)
+                jsonWriter.WriteStartObject();
+                for (var i = 0; i < row.Row.ItemArray.Length; i++)
                 {
-                    var columnName = this.MainDataSource.Columns[i].Name;
+                    var columnName = this.MainDataSource.Columns[i].ColumnName;
                     jsonWriter.WritePropertyName(columnName);
 
                     object? value = row.Row.ItemArray[i];
                     StructValue.WriteValue(jsonWriter, value!, false);
                 }
+                jsonWriter.WriteEndObject();
             }
             jsonWriter.WriteEndArray();
         }

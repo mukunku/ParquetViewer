@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
+﻿using System;
+using System.IO;
 
 namespace ParquetViewer.Helpers
 {
@@ -14,9 +12,15 @@ namespace ParquetViewer.Helpers
                 //In RFC 4180 we escape quotes with double quotes
                 string formattedValue = value.Replace("\"", "\"\"");
 
-                //Enclose value with quotes if it contains commas,line feeds or other quotes
-                if (formattedValue.Contains(",") || formattedValue.Contains("\r") || formattedValue.Contains("\n") || formattedValue.Contains("\"\"") || alwaysEncloseInQuotes)
-                    formattedValue = string.Concat("\"", formattedValue, "\"");
+                //Enclose value with quotes if it contains commas, line feeds, or other quotes
+                foreach (char c in formattedValue)
+                {
+                    if (c == ',' || c == '\r' || c == '\n' || c == '\"' || alwaysEncloseInQuotes)
+                    {
+                        formattedValue = string.Concat("\"", formattedValue, "\"");
+                        break;
+                    }
+                }                    
 
                 return formattedValue;
             }
@@ -24,34 +28,19 @@ namespace ParquetViewer.Helpers
                 return string.Empty;
         }
 
-        public static IEnumerable<IList<T>> Split<T>(ICollection<T> src, int splitIntoPieces)
+        /// <summary>
+        /// Returns a <see cref="FileType"/> if a matching one if found for a given file extension.
+        /// </summary>
+        /// <param name="extension">File extension in ".xyz" format</param>
+        /// <returns>null if no matching file type is found</returns>
+        public static FileType? ExtensionToFileType(string extension)
         {
-            int maxItems = src.Count / splitIntoPieces;
-            int remainder = src.Count % splitIntoPieces;
-            bool pieceDone = false;
-
-            var list = new List<T>();
-            foreach (var t in src)
+            foreach (FileType fileType in Enum.GetValues(typeof(FileType)))
             {
-                list.Add(t);
-
-                if (remainder > 0 && !pieceDone)
-                {
-                    remainder--;
-                    pieceDone = true;
-                    continue;
-                }
-
-                if (list.Count == maxItems || pieceDone)
-                {
-                    pieceDone = false;
-                    yield return list;
-                    list = new List<T>();
-                }
+                if (fileType.GetExtension().Equals(extension))
+                    return fileType;
             }
-
-            if (list.Count > 0)
-                yield return list;
+            return null;
         }
     }
 }

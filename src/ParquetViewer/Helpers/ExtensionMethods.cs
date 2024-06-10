@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using Parquet.Schema;
 using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,7 @@ namespace ParquetViewer.Helpers
         {
             FileType.CSV => ".csv",
             FileType.XLS => ".xls",
+            FileType.JSON => ".json",
             _ => throw new ArgumentOutOfRangeException(nameof(fileType))
         };
 
@@ -110,13 +112,13 @@ namespace ParquetViewer.Helpers
         /// Returns true if the type is a "simple" type. Basically anything that isn't a class or array.
         /// </summary>
         /// <remarks>Source: https://stackoverflow.com/a/65079923/1458738</remarks>
-        public static bool IsSimple(this Type type) 
+        public static bool IsSimple(this Type type)
             => TypeDescriptor.GetConverter(type).CanConvertFrom(typeof(string));
 
         /// <summary>
         /// Returns true if the type is a number type.
         /// </summary>
-        public static bool IsNumber(this Type type) => 
+        public static bool IsNumber(this Type type) =>
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
         public static T ToEnum<T>(this int value) where T : struct, Enum
