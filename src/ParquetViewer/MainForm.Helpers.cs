@@ -50,7 +50,7 @@ namespace ParquetViewer
                     if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         filePath = this.exportFileDialog.FileName;
-                        File.Delete(filePath); //Delete any existing file (user already confirmed any overwrite)
+                        CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
 
                         var fileExtension = Path.GetExtension(filePath);
                         FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
