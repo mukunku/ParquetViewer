@@ -235,6 +235,31 @@ namespace ParquetViewer
             excelWriter.EndWrite();
         }
 
+        private void WriteDataToJSONFile(string path, CancellationToken cancellationToken)
+        {
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            using var jsonWriter = new Utf8JsonWriter(fs);
+            
+            jsonWriter.WriteStartArray();
+            foreach (DataRowView row in this.MainDataSource.DefaultView)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                for (var i = 0; i < row.Row.ItemArray.Count; i++)
+                {
+                    var columnName = this.MainDataSource.Columns[i].Name;
+                    jsonWriter.WritePropertyName(columnName);
+
+                    object? value = row.Row.ItemArray[i];
+                    StructValue.WriteValue(jsonWriter, value!, false);
+                }
+            }
+            jsonWriter.WriteEndArray();
+        }
+
         private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
         {
             var sb = new StringBuilder();

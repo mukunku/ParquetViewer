@@ -51,7 +51,7 @@ namespace ParquetViewer.Engine.Types
             }
         }
 
-        private static void WriteValue(Utf8JsonWriter jsonWriter, object value, bool truncateForDisplay)
+        public static void WriteValue(Utf8JsonWriter jsonWriter, object value, bool truncateForDisplay)
         {
             if (value is null)
             {
