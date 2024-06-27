@@ -298,7 +298,7 @@ namespace ParquetViewer
         private static void HandleFileReadException(FileReadException ex)
         {
             ShowError($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
-                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}{Environment.NewLine}" +
+                $"If the problem persists please consider opening a bug ticket in the project repo: Help → About{Environment.NewLine}{Environment.NewLine}" +
                 $"{ex}");
         }
 

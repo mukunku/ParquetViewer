@@ -92,12 +92,13 @@ DATETIME:
     WHERE field_name = #12/31/2000#
 NUMERIC:
     WHERE field_name <= 123.4
+    WHERE (field1 * field2) / 100 > 0.1
 STRING:
     WHERE field_name LIKE '%value%' 
     WHERE field_name = 'equals value'
     WHERE field_name <> 'not equals'
 MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #2000/12/31# AND field_1 < #2001/12/31#) OR field_2 * 5 > 100 OR field_3 <> 'string value'
+    WHERE (field_1 > #2000/12/31# AND field_1 < #2001/12/31#) OR field_2 <> 100
 
 Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax Examples");
         }
