@@ -91,9 +91,10 @@ namespace ParquetViewer
                         }
                         else
                         {
-                            FileExportEvent.FireAndForget(selectedFileType.Value, new FileInfo(filePath).Length, 
+                            long fileSizeInBytes = new FileInfo(filePath).Length;
+                            FileExportEvent.FireAndForget(selectedFileType.Value, fileSizeInBytes, 
                                 this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
-                            MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show($"Export successful!{Environment.NewLine}{Environment.NewLine}File size: { Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2) } MB", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }
