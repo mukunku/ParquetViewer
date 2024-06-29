@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace ParquetViewer.Helpers
 {
@@ -29,7 +28,7 @@ namespace ParquetViewer.Helpers
         }
 
         /// <summary>
-        /// Returns a <see cref="FileType"/> if a matching one if found for a given file extension.
+        /// Returns a <see cref="FileType"/> if a matching one is found for a given file extension.
         /// </summary>
         /// <param name="extension">File extension in ".xyz" format</param>
         /// <returns>null if no matching file type is found</returns>
