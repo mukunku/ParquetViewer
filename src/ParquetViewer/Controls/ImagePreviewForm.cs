@@ -59,26 +59,23 @@ namespace ParquetViewer.Controls
             }
         }
 
-        private async void copyToClipboardButton_Click(object sender, EventArgs e)
-        {
-            Clipboard.SetImage(this.mainPictureBox.Image);
-            if (sender is Button button)
-            {
-                string buttonText = button.Text;
-                button.Text = "Copied!";
-                button.Enabled = false;
-                await Task.Delay(2000);
-                button.Enabled = true;
-                button.Text = buttonText;
-            }
-        }
-
         private void closeButton_Click(object sender, EventArgs e)
         {
             this.Close();
         }
 
-        private void copyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
-            => copyToClipboardButton_Click(sender, e);
+        private async void copyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                this.mainPictureBox.Cursor = Cursors.WaitCursor;
+                Clipboard.SetImage(this.mainPictureBox.Image);
+                await Task.Delay(100);
+            }
+            finally
+            {
+                this.mainPictureBox.Cursor = Cursors.Default;
+            }
+        }
     }
 }

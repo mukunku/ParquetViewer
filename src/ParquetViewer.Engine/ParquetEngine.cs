@@ -195,7 +195,7 @@ namespace ParquetViewer.Engine
                         file.EndsWith(".parquet.gz")
                 );
 
-            if (parquetFiles.Count() == 0)
+            if (!parquetFiles.Any())
             {
                 //Check for extensionless files
                 parquetFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories);
@@ -221,19 +221,6 @@ namespace ParquetViewer.Engine
             }
         }
 
-        public void Dispose()
-        {
-            if (_parquetFiles is not null)
-            {
-                foreach (var parquetFile in _parquetFiles)
-                {
-                    try
-                    {
-                        parquetFile?.Dispose();
-                    }
-                    catch { /* Swallow */ }
-                }
-            }
-        }
+        public void Dispose() => EZDispose(_parquetFiles);
     }
 }
