@@ -42,11 +42,17 @@ namespace ParquetViewer
             LoadingIcon? loadingIcon = null;
             try
             {
-                if (this.mainGridView.RowCount > 0)
+                if (this.mainGridView?.RowCount > 0)
                 {
                     this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel file (*.xls)|*.xls";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+
+                    if (this._openParquetEngine?.ParquetSchemaTree?.Children.All(s => s.FieldType() == Engine.ParquetSchemaElement.FieldTypeId.Primitive) == true)
+                    {
+                        this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+                    }
+
                     if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         filePath = this.exportFileDialog.FileName;
@@ -79,6 +85,10 @@ namespace ParquetViewer
                         {
                             await Task.Run(() => this.WriteDataToJSONFile(filePath, loadingIcon.CancellationToken));
                         }
+                        else if (selectedFileType == FileType.PARQUET)
+                        {
+                            await Task.Run(async () => await this.WriteDataToParquetFile(filePath, loadingIcon.CancellationToken));
+                        }
                         else
                         {
                             throw new Exception(string.Format("Unsupported export type: '{0}'", fileExtension));
@@ -92,9 +102,9 @@ namespace ParquetViewer
                         else
                         {
                             long fileSizeInBytes = new FileInfo(filePath).Length;
-                            FileExportEvent.FireAndForget(selectedFileType.Value, fileSizeInBytes, 
+                            FileExportEvent.FireAndForget(selectedFileType.Value, fileSizeInBytes,
                                 this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
-                            MessageBox.Show($"Export successful!{Environment.NewLine}{Environment.NewLine}File size: { Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2) } MB", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show($"Export successful!{Environment.NewLine}{Environment.NewLine}File size: {Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)} MB", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }
@@ -179,7 +189,7 @@ namespace ParquetViewer
                     else
                     {
                         var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue)); 
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
                     }
                 }
 
@@ -251,7 +261,7 @@ namespace ParquetViewer
         {
             using var fs = new FileStream(path, FileMode.OpenOrCreate);
             using var jsonWriter = new Utf8JsonWriter(fs);
-            
+
             jsonWriter.WriteStartArray();
             foreach (DataRowView row in this.MainDataSource!.DefaultView)
             {
@@ -272,6 +282,46 @@ namespace ParquetViewer
                 jsonWriter.WriteEndObject();
             }
             jsonWriter.WriteEndArray();
+        }
+
+        private async Task WriteDataToParquetFile(string path, CancellationToken cancellationToken)
+        {
+            var fields = new List<Parquet.Schema.Field>(this.MainDataSource!.Columns.Count);
+            foreach (DataColumn column in this.MainDataSource.Columns)
+            {
+                fields.Add(this._openParquetEngine!.Schema!.Fields
+                    .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
+                    .First());
+            }
+            var parquetSchema = new Parquet.Schema.ParquetSchema(fields);
+
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            using var parquetWriter = await Parquet.ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
+            parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
+            parquetWriter.CustomMetadata = new Dictionary<string, string>
+            {
+                { "ParquetViewer", @"
+{
+    ""CreatedBy"": ""ParquetViewer"",
+    ""Website"": ""https://github.com/mukunku/ParquetViewer"",
+    ""CreationDate"": """ + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + @"""
+}
+" }
+            };
+
+            using var rowGroup = parquetWriter.CreateRowGroup();
+            foreach (var dataField in parquetSchema.DataFields)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                var type = dataField.IsNullable ? dataField.ClrType.GetNullableVersion() : dataField.ClrType;
+                var values = this.MainDataSource.GetColumnValues(type, dataField.Name);
+                var dataColumn = new Parquet.Data.DataColumn(dataField, values);
+                await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
+            }
         }
 
         private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)

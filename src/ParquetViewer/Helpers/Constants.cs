@@ -33,7 +33,8 @@ namespace ParquetViewer.Helpers
     {
         CSV = 0,
         XLS,
-        JSON
+        JSON,
+        PARQUET
     }
 
     public enum AutoSizeColumnsMode

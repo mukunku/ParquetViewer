@@ -60,6 +60,7 @@ namespace ParquetViewer.Helpers
             FileType.CSV => ".csv",
             FileType.XLS => ".xls",
             FileType.JSON => ".json",
+            FileType.PARQUET => ".parquet",
             _ => throw new ArgumentOutOfRangeException(nameof(fileType))
         };
 
@@ -137,5 +138,37 @@ namespace ParquetViewer.Helpers
                 key.DeleteSubKeyTree(name);
             }
         }
+
+        public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
+        {
+            if (dataTable is null)
+                throw new ArgumentNullException(nameof(dataTable));
+
+            if (!dataTable.Columns.Contains(columnName))
+                throw new ArgumentException($"Column '{columnName}' does not exist in the datatable");
+
+            var values = Array.CreateInstance(type, dataTable.Rows.Count);
+            for (var i = 0; i < dataTable.Rows.Count; i++)
+            {
+                var value = dataTable.Rows[i][columnName];
+                if (value == DBNull.Value)
+                    value = null;
+                else if (value is ByteArrayValue byteArray)
+                    value = byteArray.Data;
+                else if (value is ListValue || value is MapValue || value is StructValue)
+                    throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
+
+                values.SetValue(value, i);
+            }
+            return values;
+        }
+
+        public static Type GetNullableVersion(this Type sourceType) => sourceType == null
+                ? throw new ArgumentNullException(nameof(sourceType))
+                : !sourceType.IsValueType
+                    || (sourceType.IsGenericType
+                        && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                ? sourceType
+                : typeof(Nullable<>).MakeGenericType(sourceType);
     }
 }
