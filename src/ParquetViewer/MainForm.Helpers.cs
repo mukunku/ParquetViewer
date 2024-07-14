@@ -353,6 +353,11 @@ namespace ParquetViewer
                 $"{ex}");
         }
 
+        private static void HandleFileNotFoundException(FileNotFoundException ex)
+        {
+            ShowError(ex.Message);
+        }
+
         private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
         {
             var sb = new StringBuilder();

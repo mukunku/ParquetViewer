@@ -70,11 +70,6 @@ namespace ParquetViewer.Engine
             OpenFileOrFolderPath = fileOrFolderPath;
         }
 
-        public Task<ParquetEngine> CloneAsync(CancellationToken cancellationToken)
-        {
-            return OpenFileOrFolderAsync(this.OpenFileOrFolderPath, cancellationToken);
-        }
-
         public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath, CancellationToken cancellationToken)
         {
             if (File.Exists(fileOrFolderPath)) //Handles null
