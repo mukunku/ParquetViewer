@@ -6,6 +6,10 @@ on:
    - master
  pull_request:
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
  test:
     runs-on: windows-latest
@@ -32,6 +36,9 @@ jobs:
       run: dotnet test src/ParquetViewer.sln --no-build --logger trx
 
     - name: Test Report
-      uses: EnricoMi/publish-unit-test-result-action/windows@v2
+      uses: bibipkins/dotnet-test-reporter@v1.4.1
       with:
-        files: src/ParquetViewer.Tests/TestResults/*.trx
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        comment-title: 'Unit Test Results'
+        results-path: ./src/ParquetViewer.Tests/TestResults/*.trx
+
