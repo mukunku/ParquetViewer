@@ -32,8 +32,6 @@ jobs:
       run: dotnet test src/ParquetViewer.sln --no-build --logger trx
 
     - name: Test Report
-      uses: bibipkins/dotnet-test-reporter@v1.4.1
+      uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        comment-title: 'Unit Test Results'
-        results-path: ./src/ParquetViewer.Tests/TestResults/*.trx
+        files: src/ParquetViewer.Tests/TestResults/*.trx
