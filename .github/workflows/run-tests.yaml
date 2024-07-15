@@ -32,6 +32,6 @@ jobs:
       run: dotnet test src/ParquetViewer.sln --no-build --logger trx
 
     - name: Test Report
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action/windows@v2
       with:
         files: src/ParquetViewer.Tests/TestResults/*.trx
