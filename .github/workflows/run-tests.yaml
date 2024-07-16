@@ -22,7 +22,7 @@ jobs:
           src
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4.0.1
       with:
         dotnet-version: '8.0.x'
 
