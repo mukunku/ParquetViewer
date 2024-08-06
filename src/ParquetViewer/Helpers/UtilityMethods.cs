@@ -4,17 +4,22 @@ namespace ParquetViewer.Helpers
 {
     public static class UtilityMethods
     {
-        public static string CleanCSVValue(string value, bool alwaysEncloseInQuotes = false)
+        /// <summary>
+        /// Formats a value to make it is RFC-4180 compliant
+        /// </summary>
+        /// <param name="value">Raw string value to be added to a CSV file</param>
+        /// <returns>Possibly formatted value</returns>
+        public static string CleanCSVValue(string value)
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
-                //In RFC 4180 we escape quotes with double quotes
+                //Escape quotes with double quotes
                 string formattedValue = value.Replace("\"", "\"\"");
 
                 //Enclose value with quotes if it contains commas, line feeds, or other quotes
                 foreach (char c in formattedValue)
                 {
-                    if (c == ',' || c == '\r' || c == '\n' || c == '\"' || alwaysEncloseInQuotes)
+                    if (c == ',' || c == '\r' || c == '\n' || c == '\"')
                     {
                         formattedValue = string.Concat("\"", formattedValue, "\"");
                         break;

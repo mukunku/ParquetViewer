@@ -160,19 +160,19 @@ namespace ParquetViewer
             }
             writer.WriteLine(rowBuilder.ToString());
 
+            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
             foreach (DataRowView row in this.MainDataSource.DefaultView)
             {
                 rowBuilder.Clear();
 
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
                 isFirst = true;
-                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                 foreach (object? value in row.Row.ItemArray)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     if (!isFirst)
                     {
                         rowBuilder.Append(',');

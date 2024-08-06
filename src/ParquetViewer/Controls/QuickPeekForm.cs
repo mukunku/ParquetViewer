@@ -66,7 +66,8 @@ namespace ParquetViewer.Controls
             var width = 0;
             if (this.mainGridView is not null)
             {
-                width = this.mainGridView.RowHeadersWidth + 26; /* magic number? */
+                //Make the form as wide as the number of columns
+                width = this.mainGridView.RowHeadersWidth + 26; // needed to add this magic number in my testing
                 foreach (DataGridViewColumn column in this.mainGridView.Columns)
                 {
                     width += column.Width;
@@ -93,17 +94,10 @@ namespace ParquetViewer.Controls
         }
     }
 
-    public class TakeMeBackEventArgs : EventArgs
+    public class TakeMeBackEventArgs(Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : EventArgs
     {
-        public Guid UniqueTag { get; }
-        public int SourceRowIndex { get; }
-        public int SourceColumnIndex { get; }
-
-        public TakeMeBackEventArgs(Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex)
-        {
-            this.UniqueTag = uniqueTag;
-            this.SourceRowIndex = sourceRowIndex;
-            this.SourceColumnIndex = sourceColumnIndex;
-        }
+        public Guid UniqueTag { get; } = uniqueTag;
+        public int SourceRowIndex { get; } = sourceRowIndex;
+        public int SourceColumnIndex { get; } = sourceColumnIndex;
     }
 }
