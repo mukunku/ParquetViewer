@@ -6,7 +6,7 @@ namespace ParquetViewer.Controls
 {
     public partial class QuickPeekForm : Form
     {
-        private string originalTitle = string.Empty;
+        private readonly string originalTitle = string.Empty;
 
         private string titleSuffix = string.Empty;
         public string TitleSuffix
@@ -82,7 +82,7 @@ namespace ParquetViewer.Controls
                 TakeMeBackEvent?.Invoke(this, new TakeMeBackEventArgs(this.UniqueTag, this.SourceRowIndex, this.SourceColumnIndex));
         }
 
-        public void TakeMeBackLinkDisable()
+        public void DisableTakeMeBackLink()
         {
             this.takeMeBackLinkLabel.Text = "<<< can't go back";
         }
