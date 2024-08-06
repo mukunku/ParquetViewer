@@ -71,10 +71,10 @@
             // 
             // closeButton
             // 
-            closeButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            closeButton.Location = new System.Drawing.Point(273, 297);
+            closeButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            closeButton.Location = new System.Drawing.Point(272, 297);
             closeButton.Name = "closeButton";
-            closeButton.Size = new System.Drawing.Size(263, 26);
+            closeButton.Size = new System.Drawing.Size(264, 26);
             closeButton.TabIndex = 4;
             closeButton.TabStop = false;
             closeButton.Text = "Close";
