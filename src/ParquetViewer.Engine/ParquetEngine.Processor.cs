@@ -36,7 +36,43 @@ namespace ParquetViewer.Engine
             };
         }
 
-        private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
+    /// <summary>
+    /// Method for reading one entire field. If the field is a Map, the entire map up to int.Max will be read.
+    /// </summary>
+    /// <param name="field">Name of the field to read (column name)</param>
+    /// <param name="rowIndex">Row to read</param>
+    /// <param name="progress">Optionally reports the progress</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+		public async Task<Func<bool, DataTable>> ReadFieldAsync(string field, int rowIndex, CancellationToken cancellationToken, IProgress<int>? progress = null)
+		{
+			DataTableLite result = BuildDataTable(null, new List<string> { field}, Math.Min(1, (int)this.RecordCount));
+
+			foreach (var reader in this.GetReaders(rowIndex))
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+
+				using (ParquetRowGroupReader groupReader = reader.ParquetReader.OpenRowGroupReader(0))
+        {
+					if (groupReader.RowCount > int.MaxValue)
+						throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
+
+          await ProcessField(result, groupReader, cancellationToken, progress);
+
+				}
+				break;
+			}
+
+			result.DataSetSize = this.RecordCount;
+
+			return (logProgress) =>
+			{
+				var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
+				datatable.ExtendedProperties[TotalRecordCountExtendedPropertyKey] = result.DataSetSize;
+				return datatable;
+			};
+		}
+
+		private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
             long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read column by column to generate each row in the datatable
@@ -118,7 +154,61 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="dataTable"></param>
+    /// <param name="groupReader"></param>
+    /// <param name="skipRecords"></param>
+
+    /// <remarks>Very similar to <see cref="ProcessRowGroup(DataTableLite, ParquetRowGroupReader, long, long, CancellationToken, IProgress{int}?)"/></remarks>
+    /// <exception cref="UnsupportedFieldException"></exception>
+		private async Task ProcessField(DataTableLite dataTable, ParquetRowGroupReader groupReader, CancellationToken cancellationToken, IProgress<int>? progress)
+		{
+			int rowBeginIndex = dataTable.Rows.Count;
+			bool isFirstColumn = true;
+
+			foreach (DataTableLite.ColumnLite column in dataTable.Columns.Values)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+
+				var field = column.ParentSchema.GetChild(column.Name);
+				switch (field.FieldType())
+				{
+					case ParquetSchemaElement.FieldTypeId.Primitive:
+						await ReadPrimitiveField(dataTable, groupReader, rowBeginIndex, field, 0,
+								1, isFirstColumn, cancellationToken, progress);
+						break;
+					case ParquetSchemaElement.FieldTypeId.List:
+						var listField = field.GetSingle("list");
+						ParquetSchemaElement itemField;
+						try
+						{
+							itemField = listField.GetSingle("item");
+						}
+						catch (Exception ex)
+						{
+							throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Invalid List type.", ex);
+						}
+						var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
+						await ReadListField(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
+								0, 1, isFirstColumn, cancellationToken, progress);
+						break;
+					case ParquetSchemaElement.FieldTypeId.Map:
+						await ReadMapField(dataTable, groupReader, rowBeginIndex, field, 0,
+								int.MaxValue, isFirstColumn, cancellationToken, progress);
+						break;
+					case ParquetSchemaElement.FieldTypeId.Struct:
+						await ReadStructField(dataTable, groupReader, rowBeginIndex, field, 0,
+								1, isFirstColumn, cancellationToken, progress);
+						break;
+				}
+
+				isFirstColumn = false;
+			}
+		}
+
+		private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
@@ -335,7 +425,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+		private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read struct data as a new datatable
