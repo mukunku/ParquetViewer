@@ -199,6 +199,7 @@ namespace ParquetViewer
                 try
                 {
                     this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, loadingIcon.CancellationToken);
+                    mainGridView.Engine = this._openParquetEngine;
                 }
                 catch (Exception ex)
                 {

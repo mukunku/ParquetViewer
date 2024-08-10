@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
@@ -19,6 +20,7 @@ namespace ParquetViewer.Controls
         private readonly ToolTip dateOnlyFormatWarningToolTip = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
         private bool isCopyingToClipboard = false;
+        public Engine.ParquetEngine? Engine { private get; set; }
 
         public ParquetGridView() : base()
         {
@@ -219,7 +221,7 @@ namespace ParquetViewer.Controls
             base.OnCellMouseLeave(e);
         }
 
-        protected override void OnCellContentClick(DataGridViewCellEventArgs e)
+        protected async override void OnCellContentClick(DataGridViewCellEventArgs e)
         {
             base.OnCellContentClick(e);
 
@@ -256,16 +258,32 @@ namespace ParquetViewer.Controls
             }
             else if (clickedCell.Value is MapValue mapValue)
             {
-                dataType = QuickPeekEvent.DataTypeId.Map;
+                LoadingIcon? icon = ShowLoadingIcon("Loading Field", 3);
+                await Task.Run(async () => {
+                  dataType = QuickPeekEvent.DataTypeId.Map;
 
-                dt = new DataTable();
-                dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
-                dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
+				          DataGridViewColumn column = this.Columns[e.ColumnIndex];
+				          string columnName = column.HeaderText;
 
-                var row = dt.NewRow();
-                row[0] = mapValue.Key;
-                row[1] = mapValue.Value;
-                dt.Rows.Add(row);
+                  //TODO could use cancellation token and loading anim
+				          //This code is only accessible if the Engine was already instantiated in the Parent.
+				          var res = await Engine!.ReadFieldAsync(columnName, e.RowIndex, icon.CancellationToken, icon);
+                  DataTable dtResult = res.Invoke(true);
+
+        				  dt = new DataTable();
+                  dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
+                  dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
+
+                  foreach (DataRow row in dtResult.Rows) 
+                  {
+					          var newRow = dt.NewRow();
+                    var mv = (MapValue)row[0];
+					          newRow[0] =   mv.Key;
+					          newRow[1] = mv.Value;
+                    dt.Rows.Add(newRow);
+				          }
+                });
+                icon?.Dispose();
             }
             else if (clickedCell.Value is StructValue structValue)
             {
@@ -433,6 +451,12 @@ namespace ParquetViewer.Controls
             }
             base.OnSorted(e);
         }
+        
+        public LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
+	      {
+          MainForm f = (MainForm) Parent!.FindForm()!;
+          return f.ShowLoadingIcon(message, loadingBarMax);
+	      }
 
         public void ClearQuickPeekForms()
         {
