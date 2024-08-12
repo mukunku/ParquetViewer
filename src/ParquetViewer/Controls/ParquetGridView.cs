@@ -20,7 +20,6 @@ namespace ParquetViewer.Controls
         private readonly ToolTip dateOnlyFormatWarningToolTip = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
         private bool isCopyingToClipboard = false;
-        public Engine.ParquetEngine? Engine { private get; set; }
 
         public ParquetGridView() : base()
         {
@@ -114,11 +113,11 @@ namespace ParquetViewer.Controls
 
                     e.Handled = true;
                 }
-                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
+                else if (e.Value is ListValue || e.Value is MapValueCollection || e.Value is StructValue)
                 {
                     e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
-                }
+				        } 
                 else if (e.Value is ByteArrayValue byteArrayValue)
                 {
                     var tag = this.Columns[e.ColumnIndex].Tag as string;
@@ -256,28 +255,22 @@ namespace ParquetViewer.Controls
                     dt.Rows.Add(row);
                 }
             }
-            else if (clickedCell.Value is MapValue mapValue)
+            else if (clickedCell.Value is MapValueCollection mapValue)
             {
                 LoadingIcon? icon = ShowLoadingIcon("Loading Field", 3);
-                await Task.Run(async () => {
+                await Task.Run(() => {
                   dataType = QuickPeekEvent.DataTypeId.Map;
 
 				          DataGridViewColumn column = this.Columns[e.ColumnIndex];
 				          string columnName = column.HeaderText;
 
-                  //TODO could use cancellation token and loading anim
-				          //This code is only accessible if the Engine was already instantiated in the Parent.
-				          var res = await Engine!.ReadFieldAsync(columnName, e.RowIndex, icon.CancellationToken, icon);
-                  DataTable dtResult = res.Invoke(true);
-
         				  dt = new DataTable();
-                  dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
-                  dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
+                  dt.Columns.Add(new DataColumn($"key", mapValue.values[0].KeyType));
+                  dt.Columns.Add(new DataColumn($"value", mapValue.values[0].ValueType));
 
-                  foreach (DataRow row in dtResult.Rows) 
+                  foreach (MapValue mv in mapValue.values) 
                   {
 					          var newRow = dt.NewRow();
-                    var mv = (MapValue)row[0];
 					          newRow[0] =   mv.Key;
 					          newRow[1] = mv.Value;
                     dt.Rows.Add(newRow);
