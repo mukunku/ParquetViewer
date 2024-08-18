@@ -178,6 +178,48 @@ namespace ParquetViewer.Tests
             Assert.Equal("id", ((MapValue)dataTable.Rows[1][0]).Key);
             Assert.Equal("something2", ((MapValue)dataTable.Rows[1][0]).Value);
         }
+        
+        [Fact]
+        public async Task MAP_TYPE_TEST2()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet", default);
+
+            Assert.Equal(5, parquetEngine.RecordCount);
+            Assert.Equal(4, parquetEngine.Fields.Count);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 2, default))(false);
+            Assert.IsType<MapValue>(dataTable.Rows[0][2]);
+
+            // attempt to read all entires of a single map record (can contain multiple map values)
+            MapValue mapRecord = (MapValue)dataTable.Rows[0][2];
+            var expectedValues = new Dictionary<object, string>()
+            {
+                {"age", "35" },
+                {"city", "Chicago" },
+                {"another key", "another value" },
+                {"lalala", "lili" },
+            };
+            foreach (var row in mapRecord)
+            {
+                bool wasFound = expectedValues.Remove(row.Key, out string? value);
+                Assert.True(wasFound);
+                Assert.Equal(value, row.Value);
+            }
+
+            // assure that maps from the same column can have variable lengths
+            mapRecord = (MapValue)dataTable.Rows[1][2];
+            expectedValues = new Dictionary<object, string>()
+            {
+                {"age", "28" },
+                {"city", "San Francisco" },
+            };
+            foreach (var row in mapRecord)
+            {
+                bool wasFound = expectedValues.Remove(row.Key, out string? value);
+                Assert.True(wasFound);
+                Assert.Equal(value, row.Value);
+            }
+        }
 
         [Fact]
         public async Task STRUCT_TYPE_TEST1()
