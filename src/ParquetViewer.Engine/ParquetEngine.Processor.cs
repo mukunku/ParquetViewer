@@ -4,8 +4,6 @@ using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
-using System.Reflection.Metadata.Ecma335;
-
 namespace ParquetViewer.Engine
 {
     public partial class ParquetEngine
@@ -291,6 +289,7 @@ namespace ParquetViewer.Engine
             }
         }
 
+
         private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
@@ -305,53 +304,50 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
             var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
-            int totalRecords = keyDataColumn.RepetitionLevels.Count(p => p == 0);
             
-            var entries = new MapValueCollection();
             int rowCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
             var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-            for (int i = 0; i < rowCount; i++)
+
+            // Evaluates the MapValues at rowIndex when called.
+            MapValue? MapEntiresClojure(int rowIndex, bool forceEval)
+            {
+                if ((rowIndex < rowCount && keyDataColumn.RepetitionLevels[rowIndex] != 0) || forceEval)
+                {
+                    var key = keyDataColumn.Data.Length > rowIndex ? keyDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
+                    var value = valueDataColumn.Data.Length > rowIndex ? valueDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
+                    return new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType, () => MapEntiresClojure(rowIndex + 1, false));
+                }
+                return null;
+            };
+
+            // Evaluate the first MapValue of each not skipped record that is requested to be read.
+            for (int i = 0; i < keyDataColumn.RepetitionLevels.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (skipRecords > 0 && skippedRecords <= skipRecords)
-                {
-					        if (keyDataColumn.RepetitionLevels[i] == 0)
-					        {
-						        skippedRecords++;
-					        }
-                  if (skippedRecords <= skipRecords)
-                  {
-            			  continue;
-                  }
-                }
-
-                if (isFirstColumn)
-                {
-                    dataTable.NewRow();
-                }
-
                 if (keyDataColumn.RepetitionLevels[i] == 0)
                 {
-                  if (currentRecord > 0) 
-                  {
-                    dataTable.Rows[currentRecord-1]![fieldIndex] = entries;
-                    entries = new MapValueCollection();
-                  }
-                  if (currentRecord > readRecords || currentRecord == totalRecords)
-                  {
-                    break;
-                  }
-                  currentRecord++;
-                }
-                var key = keyDataColumn.Data.Length > i ? keyDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
-                var value = valueDataColumn.Data.Length > i ? valueDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
-				        entries.values.Add(new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType));
+                    if (skippedRecords++ < skipRecords)
+                    {
+                        continue;
+                    }
 
-                progress?.Report(1);
+
+                    if (isFirstColumn)
+                    {
+                        dataTable.NewRow();
+                    }
+
+                    dataTable.Rows[currentRecord++]![fieldIndex] = MapEntiresClojure(i, true);
+
+                    if (currentRecord == readRecords)
+                    {
+                        return;
+                    }
+
+                    progress?.Report(1);
+                }
             }
-            // RepretitionLevels has no trailing 0 this is why we need to do one more step afterwards. 
-			      dataTable.Rows[currentRecord - 1]![fieldIndex] = entries;
 		}
 
 		private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
@@ -418,7 +414,7 @@ namespace ParquetViewer.Engine
                 }
                 else if (schema.SchemaElement.ConvertedType == ConvertedType.MAP)
                 {
-                    dataTable.AddColumn(field, typeof(MapValueCollection), parent);
+                    dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
                 else if (this.FixMalformedDateTime
                     && schema.SchemaElement.LogicalType?.TIMESTAMP is not null

@@ -113,7 +113,7 @@ namespace ParquetViewer.Controls
 
                     e.Handled = true;
                 }
-                else if (e.Value is ListValue || e.Value is MapValueCollection || e.Value is StructValue)
+                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
                 {
                     e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
@@ -255,7 +255,7 @@ namespace ParquetViewer.Controls
                     dt.Rows.Add(row);
                 }
             }
-            else if (clickedCell.Value is MapValueCollection mapValue)
+            else if (clickedCell.Value is MapValue mapValue)
             {
                 LoadingIcon? icon = ShowLoadingIcon("Loading Field", 3);
                 await Task.Run(() => {
@@ -265,16 +265,16 @@ namespace ParquetViewer.Controls
 				          string columnName = column.HeaderText;
 
         				  dt = new DataTable();
-                  dt.Columns.Add(new DataColumn($"key", mapValue.values[0].KeyType));
-                  dt.Columns.Add(new DataColumn($"value", mapValue.values[0].ValueType));
+                  dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
+                  dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
 
-                  foreach (MapValue mv in mapValue.values) 
+                  foreach (MapValue mv in mapValue) 
                   {
 					          var newRow = dt.NewRow();
 					          newRow[0] =   mv.Key;
 					          newRow[1] = mv.Value;
                     dt.Rows.Add(newRow);
-				          }
+				  }
                 });
                 icon?.Dispose();
             }
