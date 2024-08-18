@@ -175,8 +175,8 @@ namespace ParquetViewer.Tests
             Assert.Equal("id", ((MapValue)dataTable.Rows[0][0]).Key);
             Assert.Equal("something", ((MapValue)dataTable.Rows[0][0]).Value);
             Assert.IsType<MapValue>(dataTable.Rows[1][0]);
-            Assert.Equal("value2", ((MapValue)dataTable.Rows[1][0]).Key);
-            Assert.Equal("else", ((MapValue)dataTable.Rows[1][0]).Value);
+            Assert.Equal("id", ((MapValue)dataTable.Rows[1][0]).Key);
+            Assert.Equal("something2", ((MapValue)dataTable.Rows[1][0]).Value);
         }
 
         [Fact]
