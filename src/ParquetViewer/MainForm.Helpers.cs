@@ -18,7 +18,7 @@ namespace ParquetViewer
 {
     public partial class MainForm
     {
-        private LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
+        public LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
         {
             var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
             loadingIcon.OnShow += (object? sender, EventArgs e) =>
