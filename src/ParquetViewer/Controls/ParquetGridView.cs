@@ -16,7 +16,6 @@ namespace ParquetViewer.Controls
         //But lets use something smaller to increase rendering performance.
         private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
 
-        private readonly ToolTip dateOnlyFormatWarningToolTip = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
         private bool isCopyingToClipboard = false;
 
@@ -213,7 +212,6 @@ namespace ParquetViewer.Controls
 
         protected override void OnCellMouseLeave(DataGridViewCellEventArgs e)
         {
-            this.dateOnlyFormatWarningToolTip.Hide(this);
             this.Cursor = Cursors.Default;
 
             base.OnCellMouseLeave(e);
@@ -233,7 +231,7 @@ namespace ParquetViewer.Controls
                 && openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
                 && quickPeekForm.UniqueTag.Equals(cellUniqueTag))
             {
-                //TODO: Move the form to the cursor location, maybe? Might help for multi monitor setups.
+                //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
                 quickPeekForm.Focus();
                 return;
             }
@@ -330,14 +328,14 @@ namespace ParquetViewer.Controls
                     {
                         //Can't find return row
                         if (form is QuickPeekForm f)
-                            f.TakeMeBackLinkDisable();
+                            f.DisableTakeMeBackLink();
                     }
                 }
                 else
                 {
                     //User has navigated the file. We can't find the same cell again
                     if (form is QuickPeekForm f)
-                        f.TakeMeBackLinkDisable();
+                        f.DisableTakeMeBackLink();
                 }
             };
 

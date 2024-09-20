@@ -1,5 +1,6 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -40,15 +42,24 @@ namespace ParquetViewer
             LoadingIcon? loadingIcon = null;
             try
             {
-                if (this.mainGridView.RowCount > 0)
+                if (this.mainGridView?.RowCount > 0)
                 {
                     this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
-                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|Excel file (*.xls)|*.xls";
+                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel file (*.xls)|*.xls";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+
+                    if (this._openParquetEngine?.ParquetSchemaTree?.Children.All(s => s.FieldType() == Engine.ParquetSchemaElement.FieldTypeId.Primitive) == true)
+                    {
+                        this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+                    }
+
                     if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         filePath = this.exportFileDialog.FileName;
-                        var selectedFileType = Path.GetExtension(filePath).Equals(FileType.XLS.GetExtension()) ? FileType.XLS : FileType.CSV;
+                        CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
+
+                        var fileExtension = Path.GetExtension(filePath);
+                        FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
 
                         var stopWatch = Stopwatch.StartNew();
                         loadingIcon = this.ShowLoadingIcon("Exporting Data");
@@ -61,7 +72,8 @@ namespace ParquetViewer
                             const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
                             if (this.MainDataSource!.Columns.Count > MAX_XLS_COLUMN_COUNT)
                             {
-                                MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.\r\n\r\nPlease try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
+                                MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.{Environment.NewLine}{Environment.NewLine}" +
+                                    $"Please try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
                                     "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                                 return;
@@ -69,9 +81,17 @@ namespace ParquetViewer
 
                             await Task.Run(() => this.WriteDataToExcelFile(filePath, loadingIcon.CancellationToken));
                         }
+                        else if (selectedFileType == FileType.JSON)
+                        {
+                            await Task.Run(() => this.WriteDataToJSONFile(filePath, loadingIcon.CancellationToken));
+                        }
+                        else if (selectedFileType == FileType.PARQUET)
+                        {
+                            await Task.Run(async () => await this.WriteDataToParquetFile(filePath, loadingIcon.CancellationToken));
+                        }
                         else
                         {
-                            throw new Exception(string.Format("Unsupported export type: '{0}'", selectedFileType.ToString()));
+                            throw new Exception(string.Format("Unsupported export type: '{0}'", fileExtension));
                         }
 
                         if (loadingIcon.CancellationToken.IsCancellationRequested)
@@ -81,8 +101,10 @@ namespace ParquetViewer
                         }
                         else
                         {
-                            FileExportEvent.FireAndForget(selectedFileType, new FileInfo(filePath).Length, this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
-                            MessageBox.Show("Export successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            long fileSizeInBytes = new FileInfo(filePath).Length;
+                            FileExportEvent.FireAndForget(selectedFileType.Value, fileSizeInBytes,
+                                this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
+                            MessageBox.Show($"Export successful!{Environment.NewLine}{Environment.NewLine}File size: {Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)} MB", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }
@@ -138,19 +160,19 @@ namespace ParquetViewer
             }
             writer.WriteLine(rowBuilder.ToString());
 
+            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
             foreach (DataRowView row in this.MainDataSource.DefaultView)
             {
                 rowBuilder.Clear();
 
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
                 isFirst = true;
-                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                 foreach (object? value in row.Row.ItemArray)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     if (!isFirst)
                     {
                         rowBuilder.Append(',');
@@ -167,7 +189,7 @@ namespace ParquetViewer
                     else
                     {
                         var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue)); 
+                        rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
                     }
                 }
 
@@ -235,6 +257,73 @@ namespace ParquetViewer
             excelWriter.EndWrite();
         }
 
+        private void WriteDataToJSONFile(string path, CancellationToken cancellationToken)
+        {
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            using var jsonWriter = new Utf8JsonWriter(fs);
+
+            jsonWriter.WriteStartArray();
+            foreach (DataRowView row in this.MainDataSource!.DefaultView)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                jsonWriter.WriteStartObject();
+                for (var i = 0; i < row.Row.ItemArray.Length; i++)
+                {
+                    var columnName = this.MainDataSource.Columns[i].ColumnName;
+                    jsonWriter.WritePropertyName(columnName);
+
+                    object? value = row.Row.ItemArray[i];
+                    StructValue.WriteValue(jsonWriter, value!, false);
+                }
+                jsonWriter.WriteEndObject();
+            }
+            jsonWriter.WriteEndArray();
+        }
+
+        private async Task WriteDataToParquetFile(string path, CancellationToken cancellationToken)
+        {
+            var fields = new List<Parquet.Schema.Field>(this.MainDataSource!.Columns.Count);
+            foreach (DataColumn column in this.MainDataSource.Columns)
+            {
+                fields.Add(this._openParquetEngine!.Schema!.Fields
+                    .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
+                    .First());
+            }
+            var parquetSchema = new Parquet.Schema.ParquetSchema(fields);
+
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            using var parquetWriter = await Parquet.ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
+            parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
+            parquetWriter.CustomMetadata = new Dictionary<string, string>
+            {
+                { "ParquetViewer", @"
+{
+    ""CreatedBy"": ""ParquetViewer"",
+    ""Website"": ""https://github.com/mukunku/ParquetViewer"",
+    ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + @"""
+}
+" }
+            };
+
+            using var rowGroup = parquetWriter.CreateRowGroup();
+            foreach (var dataField in parquetSchema.DataFields)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                var type = dataField.IsNullable ? dataField.ClrType.GetNullableVersion() : dataField.ClrType;
+                var values = this.MainDataSource.GetColumnValues(type, dataField.Name);
+                var dataColumn = new Parquet.Data.DataColumn(dataField, values);
+                await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
+            }
+        }
+
         private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
         {
             var sb = new StringBuilder();
@@ -260,8 +349,13 @@ namespace ParquetViewer
         private static void HandleFileReadException(FileReadException ex)
         {
             ShowError($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
-                $"If the problem persists please consider opening a bug ticket in the project repo: Help -> About{Environment.NewLine}{Environment.NewLine}" +
+                $"If the problem persists please consider opening a bug ticket in the project repo: Help → About{Environment.NewLine}{Environment.NewLine}" +
                 $"{ex}");
+        }
+
+        private static void HandleFileNotFoundException(FileNotFoundException ex)
+        {
+            ShowError(ex.Message);
         }
 
         private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)

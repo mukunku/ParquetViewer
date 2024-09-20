@@ -5,12 +5,10 @@
     <AssemblyName>ParquetViewer</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-	<SelfContained>false</SelfContained>
-	<PublishSingleFile>true</PublishSingleFile>
-	<PublishReadyToRun>false</PublishReadyToRun>
-	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-	<Configurations>Debug;Release;Release_SelfContained</Configurations>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <Configurations>Debug;Release;Release_SelfContained</Configurations>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\parquet_icon.ico</ApplicationIcon>

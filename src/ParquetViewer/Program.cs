@@ -148,7 +148,7 @@ namespace ParquetViewer
             {
                 if (MessageBox.Show($"Would you like to associate ParquetViewer with .parquet files?{Environment.NewLine}{Environment.NewLine}" +
                         $"Executable path: {System.Windows.Forms.Application.ExecutablePath}{Environment.NewLine}{Environment.NewLine}" +
-                        $"You can also toggle this setting from the Help -> About page.", 
+                        $"You can also toggle this setting from the Help → About page.", 
                         "ParquetViewer file association request", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     if (!User.IsAdministrator)
@@ -156,13 +156,13 @@ namespace ParquetViewer
                         bool? success = AboutBox.RunElevatedExeForFileAssociation(true, out int? exitCode);
                         if (success is null)
                         {
-                            MessageBox.Show("File association cancelled. If you change your mind and would like to change .parquet file association visit the Help -> About page.",
+                            MessageBox.Show("File association cancelled. If you change your mind and would like to change .parquet file association visit the Help → About page.",
                                 "File association cancelled", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         }
                         else if (success == false)
                         {
                             MessageBox.Show($"Something went wrong (Error code: {exitCode}).{Environment.NewLine}{Environment.NewLine}" +
-                                $"You can try again from the Help -> About page.",
+                                $"You can try again from the Help → About page.",
                                 "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                         else
@@ -182,7 +182,7 @@ namespace ParquetViewer
                         catch (Exception ex)
                         {
                             MessageBox.Show($"Something went wrong (Error message: {ex.Message}).{Environment.NewLine}{Environment.NewLine}" +
-                                $"You can try again from the Help -> About page.",
+                                $"You can try again from the Help → About page.",
                                 "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }

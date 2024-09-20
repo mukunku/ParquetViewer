@@ -18,11 +18,11 @@ namespace ParquetViewer.Engine.Types
             Data = data ?? throw new ArgumentNullException(nameof(data));
         }
 
-        public override string ToString() => ToJSONWithJavaScriptSerializer(false);
+        public override string ToString() => ToJSON(false);
 
-        public string ToStringTruncated() => ToJSONWithJavaScriptSerializer(true);
+        public string ToStringTruncated() => ToJSON(true);
 
-        private string ToJSONWithJavaScriptSerializer(bool truncateForDisplay)
+        private string ToJSON(bool truncateForDisplay)
         {
             try
             {
@@ -51,7 +51,7 @@ namespace ParquetViewer.Engine.Types
             }
         }
 
-        private static void WriteValue(Utf8JsonWriter jsonWriter, object value, bool truncateForDisplay)
+        public static void WriteValue(Utf8JsonWriter jsonWriter, object value, bool truncateForDisplay)
         {
             if (value is null)
             {

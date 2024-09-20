@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using Parquet.Schema;
 using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,8 @@ namespace ParquetViewer.Helpers
         {
             FileType.CSV => ".csv",
             FileType.XLS => ".xls",
+            FileType.JSON => ".json",
+            FileType.PARQUET => ".parquet",
             _ => throw new ArgumentOutOfRangeException(nameof(fileType))
         };
 
@@ -110,13 +113,13 @@ namespace ParquetViewer.Helpers
         /// Returns true if the type is a "simple" type. Basically anything that isn't a class or array.
         /// </summary>
         /// <remarks>Source: https://stackoverflow.com/a/65079923/1458738</remarks>
-        public static bool IsSimple(this Type type) 
+        public static bool IsSimple(this Type type)
             => TypeDescriptor.GetConverter(type).CanConvertFrom(typeof(string));
 
         /// <summary>
         /// Returns true if the type is a number type.
         /// </summary>
-        public static bool IsNumber(this Type type) => 
+        public static bool IsNumber(this Type type) =>
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
         public static T ToEnum<T>(this int value) where T : struct, Enum
@@ -135,5 +138,37 @@ namespace ParquetViewer.Helpers
                 key.DeleteSubKeyTree(name);
             }
         }
+
+        public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
+        {
+            if (dataTable is null)
+                throw new ArgumentNullException(nameof(dataTable));
+
+            if (!dataTable.Columns.Contains(columnName))
+                throw new ArgumentException($"Column '{columnName}' does not exist in the datatable");
+
+            var values = Array.CreateInstance(type, dataTable.Rows.Count);
+            for (var i = 0; i < dataTable.Rows.Count; i++)
+            {
+                var value = dataTable.Rows[i][columnName];
+                if (value == DBNull.Value)
+                    value = null;
+                else if (value is ByteArrayValue byteArray)
+                    value = byteArray.Data;
+                else if (value is ListValue || value is MapValue || value is StructValue)
+                    throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
+
+                values.SetValue(value, i);
+            }
+            return values;
+        }
+
+        public static Type GetNullableVersion(this Type sourceType) => sourceType == null
+                ? throw new ArgumentNullException(nameof(sourceType))
+                : !sourceType.IsValueType
+                    || (sourceType.IsGenericType
+                        && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                ? sourceType
+                : typeof(Nullable<>).MakeGenericType(sourceType);
     }
 }

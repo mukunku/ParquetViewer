@@ -33,7 +33,7 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             mainTableLayoutPanel = new TableLayoutPanel();
             recordsToLabel = new Label();
@@ -102,9 +102,9 @@ namespace ParquetViewer
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 117F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 93F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 54F));
+            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 55F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 54F));
+            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 55F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
             mainTableLayoutPanel.Controls.Add(recordsToLabel, 8, 0);
@@ -156,7 +156,7 @@ namespace ParquetViewer
             // showRecordsFromLabel
             // 
             showRecordsFromLabel.Anchor = AnchorStyles.Right;
-            showRecordsFromLabel.Location = new System.Drawing.Point(681, 0);
+            showRecordsFromLabel.Location = new System.Drawing.Point(680, 0);
             showRecordsFromLabel.Margin = new Padding(0, 0, 4, 0);
             showRecordsFromLabel.Name = "showRecordsFromLabel";
             showRecordsFromLabel.Size = new System.Drawing.Size(45, 35);
@@ -168,7 +168,7 @@ namespace ParquetViewer
             // 
             offsetTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             offsetTextBox.DelayedTextChangedTimeout = 1000;
-            offsetTextBox.Location = new System.Drawing.Point(734, 6);
+            offsetTextBox.Location = new System.Drawing.Point(733, 6);
             offsetTextBox.Margin = new Padding(4, 3, 4, 3);
             offsetTextBox.Name = "offsetTextBox";
             offsetTextBox.Size = new System.Drawing.Size(62, 23);
@@ -185,7 +185,7 @@ namespace ParquetViewer
             runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
             runQueryButton.Image = Properties.Resources.exclamation_icon;
             runQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            runQueryButton.Location = new System.Drawing.Point(470, 3);
+            runQueryButton.Location = new System.Drawing.Point(468, 3);
             runQueryButton.Margin = new Padding(4, 3, 4, 3);
             runQueryButton.Name = "runQueryButton";
             runQueryButton.Size = new System.Drawing.Size(109, 29);
@@ -220,7 +220,7 @@ namespace ParquetViewer
             searchFilterTextBox.Margin = new Padding(4, 3, 4, 3);
             searchFilterTextBox.Name = "searchFilterTextBox";
             searchFilterTextBox.PlaceholderText = "WHERE ";
-            searchFilterTextBox.Size = new System.Drawing.Size(353, 23);
+            searchFilterTextBox.Size = new System.Drawing.Size(351, 23);
             searchFilterTextBox.TabIndex = 1;
             searchFilterTextBox.Enter += searchFilterTextBox_Enter;
             searchFilterTextBox.KeyPress += searchFilterTextBox_KeyPress;
@@ -232,7 +232,7 @@ namespace ParquetViewer
             clearFilterButton.FlatStyle = FlatStyle.Popup;
             clearFilterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F);
             clearFilterButton.ForeColor = System.Drawing.Color.Black;
-            clearFilterButton.Location = new System.Drawing.Point(587, 3);
+            clearFilterButton.Location = new System.Drawing.Point(585, 3);
             clearFilterButton.Margin = new Padding(4, 3, 4, 3);
             clearFilterButton.Name = "clearFilterButton";
             clearFilterButton.Size = new System.Drawing.Size(85, 29);
@@ -249,14 +249,14 @@ namespace ParquetViewer
             mainGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
-            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
             mainGridView.EnableHeadersVisualStyles = false;
@@ -517,14 +517,14 @@ namespace ParquetViewer
             // 
             userGuideToolStripMenuItem.Image = Properties.Resources.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            userGuideToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             userGuideToolStripMenuItem.Text = "User Guide";
             userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
             // 
             // shareAnonymousUsageDataToolStripMenuItem
             // 
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
-            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
             shareAnonymousUsageDataToolStripMenuItem.ToolTipText = "See About page for link to privacy policy";
             shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
@@ -532,7 +532,7 @@ namespace ParquetViewer
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            aboutToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             aboutToolStripMenuItem.Text = "&About...";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 

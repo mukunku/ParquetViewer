@@ -255,9 +255,6 @@ namespace ParquetViewer
         {
             try
             {
-                //Clear filter text so all checked fields are loaded
-                clearfilterColumnsButton_Click(null, null);
-
                 if (this.rememberMyChoiceCheckBox.Enabled && this.rememberMyChoiceCheckBox.Checked)
                     AppSettings.AlwaysSelectAllFields = true;
                 else
@@ -268,19 +265,14 @@ namespace ParquetViewer
                 {
                     this.NewSelectedFields.AddRange(this.AvailableFields.Where(IsSupportedFieldType).Select(f => f.Name));
                 }
+                else if (this.PreSelectedFields.Count > 0)
+                {
+                    this.NewSelectedFields.AddRange(this.PreSelectedFields);
+                }
                 else
                 {
-                    foreach (Control control in this.fieldsPanel.Controls)
-                    {
-                        if (control is CheckBox checkbox && checkbox.Checked && !checkbox.Name.Equals(SelectAllCheckboxName) && checkbox.Enabled)
-                            this.NewSelectedFields.Add((string)control.Tag!);
-                    }
-
-                    if (this.NewSelectedFields.Count == 0)
-                    {
-                        MessageBox.Show("Please select at least 1 field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
+                    MessageBox.Show("Please select at least 1 field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
                 this.DialogResult = DialogResult.OK;

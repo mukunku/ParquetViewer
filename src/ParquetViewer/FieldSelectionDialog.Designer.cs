@@ -30,12 +30,12 @@
         {
             mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             doneButton = new System.Windows.Forms.Button();
-            fieldsPanel = new System.Windows.Forms.Panel();
-            filterColumnsTextbox = new System.Windows.Forms.TextBox();
             clearfilterColumnsButton = new System.Windows.Forms.Button();
             showSelectedFieldsRadioButton = new System.Windows.Forms.RadioButton();
             allFieldsRadioButton = new System.Windows.Forms.RadioButton();
             rememberMyChoiceCheckBox = new System.Windows.Forms.CheckBox();
+            filterColumnsTextbox = new System.Windows.Forms.TextBox();
+            fieldsPanel = new System.Windows.Forms.Panel();
             mainTableLayoutPanel.SuspendLayout();
             SuspendLayout();
             // 
@@ -49,16 +49,17 @@
             mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 34F));
             mainTableLayoutPanel.Controls.Add(doneButton, 2, 5);
-            mainTableLayoutPanel.Controls.Add(fieldsPanel, 1, 3);
-            mainTableLayoutPanel.Controls.Add(filterColumnsTextbox, 1, 2);
             mainTableLayoutPanel.Controls.Add(clearfilterColumnsButton, 3, 2);
             mainTableLayoutPanel.Controls.Add(showSelectedFieldsRadioButton, 0, 1);
             mainTableLayoutPanel.Controls.Add(allFieldsRadioButton, 0, 0);
             mainTableLayoutPanel.Controls.Add(rememberMyChoiceCheckBox, 2, 0);
+            mainTableLayoutPanel.Controls.Add(filterColumnsTextbox, 0, 2);
+            mainTableLayoutPanel.Controls.Add(fieldsPanel, 1, 3);
             mainTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
             mainTableLayoutPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             mainTableLayoutPanel.Name = "mainTableLayoutPanel";
+            mainTableLayoutPanel.Padding = new System.Windows.Forms.Padding(6, 0, 4, 0);
             mainTableLayoutPanel.RowCount = 6;
             mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
@@ -74,7 +75,7 @@
             // 
             doneButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
             mainTableLayoutPanel.SetColumnSpan(doneButton, 2);
-            doneButton.Location = new System.Drawing.Point(468, 381);
+            doneButton.Location = new System.Drawing.Point(464, 381);
             doneButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             doneButton.Name = "doneButton";
             doneButton.Size = new System.Drawing.Size(113, 29);
@@ -83,52 +84,26 @@
             doneButton.UseVisualStyleBackColor = true;
             doneButton.Click += doneButton_Click;
             // 
-            // fieldsPanel
-            // 
-            fieldsPanel.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            fieldsPanel.AutoScroll = true;
-            mainTableLayoutPanel.SetColumnSpan(fieldsPanel, 3);
-            fieldsPanel.Enabled = false;
-            fieldsPanel.Location = new System.Drawing.Point(27, 105);
-            fieldsPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            fieldsPanel.Name = "fieldsPanel";
-            mainTableLayoutPanel.SetRowSpan(fieldsPanel, 2);
-            fieldsPanel.Size = new System.Drawing.Size(554, 270);
-            fieldsPanel.TabIndex = 2;
-            // 
-            // filterColumnsTextbox
-            // 
-            filterColumnsTextbox.Anchor = System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            mainTableLayoutPanel.SetColumnSpan(filterColumnsTextbox, 2);
-            filterColumnsTextbox.Enabled = false;
-            filterColumnsTextbox.Location = new System.Drawing.Point(27, 74);
-            filterColumnsTextbox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            filterColumnsTextbox.Name = "filterColumnsTextbox";
-            filterColumnsTextbox.PlaceholderText = "search by name";
-            filterColumnsTextbox.Size = new System.Drawing.Size(520, 23);
-            filterColumnsTextbox.TabIndex = 0;
-            filterColumnsTextbox.TextChanged += filterColumnsTextbox_TextChanged;
-            // 
             // clearfilterColumnsButton
             // 
             clearfilterColumnsButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
             clearfilterColumnsButton.Enabled = false;
-            clearfilterColumnsButton.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            clearfilterColumnsButton.Location = new System.Drawing.Point(555, 73);
+            clearfilterColumnsButton.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            clearfilterColumnsButton.Location = new System.Drawing.Point(551, 73);
             clearfilterColumnsButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             clearfilterColumnsButton.Name = "clearfilterColumnsButton";
             clearfilterColumnsButton.Size = new System.Drawing.Size(26, 26);
             clearfilterColumnsButton.TabIndex = 4;
             clearfilterColumnsButton.Text = "X";
-            clearfilterColumnsButton.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             clearfilterColumnsButton.UseVisualStyleBackColor = true;
+            clearfilterColumnsButton.Click += clearfilterColumnsButton_Click;
             // 
             // showSelectedFieldsRadioButton
             // 
             showSelectedFieldsRadioButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
             showSelectedFieldsRadioButton.AutoSize = true;
             mainTableLayoutPanel.SetColumnSpan(showSelectedFieldsRadioButton, 3);
-            showSelectedFieldsRadioButton.Location = new System.Drawing.Point(4, 38);
+            showSelectedFieldsRadioButton.Location = new System.Drawing.Point(10, 38);
             showSelectedFieldsRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             showSelectedFieldsRadioButton.Name = "showSelectedFieldsRadioButton";
             showSelectedFieldsRadioButton.Size = new System.Drawing.Size(169, 29);
@@ -143,7 +118,7 @@
             allFieldsRadioButton.AutoSize = true;
             allFieldsRadioButton.Checked = true;
             mainTableLayoutPanel.SetColumnSpan(allFieldsRadioButton, 2);
-            allFieldsRadioButton.Location = new System.Drawing.Point(4, 8);
+            allFieldsRadioButton.Location = new System.Drawing.Point(10, 8);
             allFieldsRadioButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             allFieldsRadioButton.Name = "allFieldsRadioButton";
             allFieldsRadioButton.Size = new System.Drawing.Size(72, 19);
@@ -157,13 +132,40 @@
             // 
             rememberMyChoiceCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             rememberMyChoiceCheckBox.AutoSize = true;
-            rememberMyChoiceCheckBox.Location = new System.Drawing.Point(86, 8);
+            rememberMyChoiceCheckBox.Location = new System.Drawing.Point(92, 8);
             rememberMyChoiceCheckBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 3);
             rememberMyChoiceCheckBox.Name = "rememberMyChoiceCheckBox";
             rememberMyChoiceCheckBox.Size = new System.Drawing.Size(144, 19);
             rememberMyChoiceCheckBox.TabIndex = 6;
             rememberMyChoiceCheckBox.Text = "Remember My Choice";
             rememberMyChoiceCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // filterColumnsTextbox
+            // 
+            filterColumnsTextbox.Anchor = System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            mainTableLayoutPanel.SetColumnSpan(filterColumnsTextbox, 3);
+            filterColumnsTextbox.Enabled = false;
+            filterColumnsTextbox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            filterColumnsTextbox.Location = new System.Drawing.Point(10, 74);
+            filterColumnsTextbox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            filterColumnsTextbox.Name = "filterColumnsTextbox";
+            filterColumnsTextbox.PlaceholderText = "Search by name";
+            filterColumnsTextbox.Size = new System.Drawing.Size(533, 23);
+            filterColumnsTextbox.TabIndex = 0;
+            filterColumnsTextbox.TextChanged += filterColumnsTextbox_TextChanged;
+            // 
+            // fieldsPanel
+            // 
+            fieldsPanel.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            fieldsPanel.AutoScroll = true;
+            mainTableLayoutPanel.SetColumnSpan(fieldsPanel, 3);
+            fieldsPanel.Enabled = false;
+            fieldsPanel.Location = new System.Drawing.Point(33, 105);
+            fieldsPanel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            fieldsPanel.Name = "fieldsPanel";
+            mainTableLayoutPanel.SetRowSpan(fieldsPanel, 2);
+            fieldsPanel.Size = new System.Drawing.Size(544, 270);
+            fieldsPanel.TabIndex = 2;
             // 
             // FieldsToLoadForm
             // 

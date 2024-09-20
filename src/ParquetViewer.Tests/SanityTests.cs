@@ -323,10 +323,9 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task COLUMN_NAME_WITH_FORWARD_SLASH_TEST1()
         {
-            //TODO: need to make this file smaller
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH2.parquet", default);
 
-            Assert.Equal(181966, parquetEngine.RecordCount);
+            Assert.Equal(1, parquetEngine.RecordCount);
             Assert.Equal(320, parquetEngine.Fields.Count);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 1, default))(false);

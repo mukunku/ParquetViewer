@@ -226,6 +226,10 @@ namespace ParquetViewer
                     {
                         HandleMultipleSchemasFoundException(msfe);
                     }
+                    else if (ex is FileNotFoundException fnfe)
+                    {
+                        HandleFileNotFoundException(fnfe);
+                    }
                     else if (ex is not OperationCanceledException)
                     {
                         throw;
@@ -385,8 +389,9 @@ namespace ParquetViewer
             this.searchFilterTextBox.PlaceholderText = "WHERE ";
 
             var fieldList = await this.OpenFieldSelectionDialog(false);
+            var wasOpenSuccess = this._openParquetEngine is not null;
 
-            if (AppSettings.AlwaysLoadAllRecords)
+            if (wasOpenSuccess && AppSettings.AlwaysLoadAllRecords)
             {
                 this.currentMaxRowCount = (int)this._openParquetEngine!.RecordCount;
                 this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
