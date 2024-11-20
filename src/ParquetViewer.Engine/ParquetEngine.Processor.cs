@@ -4,7 +4,6 @@ using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
-
 namespace ParquetViewer.Engine
 {
     public partial class ParquetEngine
@@ -36,7 +35,7 @@ namespace ParquetViewer.Engine
             };
         }
 
-        private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
+		private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
             long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read column by column to generate each row in the datatable
@@ -105,7 +104,7 @@ namespace ParquetViewer.Engine
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.Map:
-                        await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
+                        await ReadMapField(dataTable, groupReader, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.Struct:
@@ -118,7 +117,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+		private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
@@ -290,7 +289,8 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+
+        private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var keyValueField = field.GetSingle("key_value");
@@ -300,42 +300,57 @@ namespace ParquetViewer.Engine
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested map types are not supported");
 
-            int rowIndex = rowBeginIndex;
-
+            int currentRecord = 0;
             int skippedRecords = 0;
             var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
             var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
-
+            
             int rowCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
             var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-            for (int i = 0; i < rowCount; i++)
+
+            // Evaluates the MapValues at rowIndex when called.
+            MapValue? MapEntiresClojure(int rowIndex, bool forceEval)
+            {
+                if ((rowIndex < rowCount && keyDataColumn.RepetitionLevels[rowIndex] != 0) || forceEval)
+                {
+                    var key = keyDataColumn.Data.Length > rowIndex ? keyDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
+                    var value = valueDataColumn.Data.Length > rowIndex ? valueDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
+                    return new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType, () => MapEntiresClojure(rowIndex + 1, false));
+                }
+                return null;
+            };
+
+            // Evaluate the first MapValue of each not skipped record that is requested to be read.
+            for (int i = 0; i < keyDataColumn.RepetitionLevels.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (skippedRecords < skipRecords)
+                if (keyDataColumn.RepetitionLevels[i] == 0)
                 {
-                    skippedRecords++;
-                    continue;
+                    if (skippedRecords++ < skipRecords)
+                    {
+                        continue;
+                    }
+
+
+                    if (isFirstColumn)
+                    {
+                        dataTable.NewRow();
+                    }
+
+                    dataTable.Rows[currentRecord++]![fieldIndex] = MapEntiresClojure(i, true);
+
+                    if (currentRecord == readRecords)
+                    {
+                        return;
+                    }
+
+                    progress?.Report(1);
                 }
-
-                if (isFirstColumn)
-                {
-                    dataTable.NewRow();
-                }
-
-                var key = keyDataColumn.Data.Length > i ? keyDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
-                var value = valueDataColumn.Data.Length > i ? valueDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
-                dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType);
-
-                rowIndex++;
-                progress?.Report(1);
-
-                if (rowIndex - rowBeginIndex >= readRecords)
-                    break;
             }
-        }
+		}
 
-        private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+		private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read struct data as a new datatable
