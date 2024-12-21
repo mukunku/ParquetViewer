@@ -81,12 +81,17 @@ namespace ParquetViewer.Engine.Types
             }
             else if (value is MapValue map)
             {
-                jsonWriter.WriteStartObject();
-                jsonWriter.WritePropertyName("key");
-                WriteValue(jsonWriter, map.Key, truncateForDisplay);
-                jsonWriter.WritePropertyName("value");
-                WriteValue(jsonWriter, map.Value, truncateForDisplay);
-                jsonWriter.WriteEndObject();
+                jsonWriter.WriteStartArray();
+                foreach ((object mapKey, object mapValue) in map)
+                {
+                    jsonWriter.WriteStartObject();
+                    jsonWriter.WritePropertyName("key");
+                    WriteValue(jsonWriter, mapKey, truncateForDisplay);
+                    jsonWriter.WritePropertyName("value");
+                    WriteValue(jsonWriter, mapValue, truncateForDisplay);
+                    jsonWriter.WriteEndObject();
+                }
+                jsonWriter.WriteEndArray();
             }
             else if (value is ListValue list)
             {

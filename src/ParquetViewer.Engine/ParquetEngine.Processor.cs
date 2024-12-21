@@ -1,4 +1,5 @@
 ﻿using Parquet;
+using Parquet.Data;
 using Parquet.Meta;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
@@ -35,7 +36,7 @@ namespace ParquetViewer.Engine
             };
         }
 
-		private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
+        private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
             long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read column by column to generate each row in the datatable
@@ -104,7 +105,7 @@ namespace ParquetViewer.Engine
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.Map:
-                        await ReadMapField(dataTable, groupReader, field, skipRecords,
+                        await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.Struct:
@@ -117,7 +118,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-		private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
@@ -187,24 +188,19 @@ namespace ParquetViewer.Engine
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    rowValue ??= new ArrayList();
-
                     bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels!.Length
                         || dataColumn.RepetitionLevels[i + 1] == 0; //0 means new list
 
                     //Skip rows
-                    while (skipRecords > skippedRecords)
+                    if (skipRecords > skippedRecords)
                     {
                         if (IsEndOfRow())
                             skippedRecords++;
 
-                        i++;
+                        continue;
                     }
 
-                    //If we skipped to the end then just exit
-                    if (i == dataColumn.Data.Length)
-                        break;
-
+                    rowValue ??= new ArrayList();
                     if (IsEndOfRow())
                     {
                         if (isFirstColumn)
@@ -215,7 +211,20 @@ namespace ParquetViewer.Engine
                         var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
                         rowValue.Add(lastItem);
 
-                        dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
+                        if (rowValue.Count == 1 && lastItem == DBNull.Value
+                            //definition level of 0 means null list
+                            //source: https://www.aloneguid.uk/posts/2023/04/parquet-empty-vs-null
+                            && dataColumn.DefinitionLevels?.Length > i
+                            && dataColumn.DefinitionLevels[i] == 0)
+                        {
+                            //If the list only contains null, then consider the whole list null
+                            dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
+                        }
+                        else
+                        {
+                            dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
+                        }
+
                         rowValue = null;
 
                         rowIndex++;
@@ -249,14 +258,14 @@ namespace ParquetViewer.Engine
                     var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
                     for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
                     {
-                        if (values[columnOrdinal] == DBNull.Value) 
+                        if (values[columnOrdinal] == DBNull.Value)
                         {
                             //Empty array
                             continue;
                         }
 
                         var columnValues = (ListValue)values[columnOrdinal];
-                        for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
+                        for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
                         {
                             var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
                             bool isFirstValueColumn = columnOrdinal == 0;
@@ -289,8 +298,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-
-        private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, ParquetSchemaElement field,
+        private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var keyValueField = field.GetSingle("key_value");
@@ -300,57 +308,103 @@ namespace ParquetViewer.Engine
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested map types are not supported");
 
-            int currentRecord = 0;
+            int rowIndex = rowBeginIndex;
+
             int skippedRecords = 0;
             var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
             var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
-            
-            int rowCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
+
+            int dataLength = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
             var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
 
-            // Evaluates the MapValues at rowIndex when called.
-            MapValue? MapEntiresClojure(int rowIndex, bool forceEval)
-            {
-                if ((rowIndex < rowCount && keyDataColumn.RepetitionLevels[rowIndex] != 0) || forceEval)
-                {
-                    var key = keyDataColumn.Data.Length > rowIndex ? keyDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
-                    var value = valueDataColumn.Data.Length > rowIndex ? valueDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
-                    return new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType, () => MapEntiresClojure(rowIndex + 1, false));
-                }
-                return null;
-            };
-
-            // Evaluate the first MapValue of each not skipped record that is requested to be read.
-            for (int i = 0; i < keyDataColumn.RepetitionLevels.Length; i++)
+            ArrayList? mapKeys = null;
+            ArrayList? mapValues = null;
+            for (int i = 0; i < dataLength; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (keyDataColumn.RepetitionLevels[i] == 0)
+                bool IsEndOfRow() => (i + 1) == dataLength
+                    || GetRepetitionLevel(i + 1) == 0; //0 means new map
+
+                //Skip rows
+                if (skipRecords > skippedRecords)
                 {
-                    if (skippedRecords++ < skipRecords)
-                    {
-                        continue;
-                    }
+                    if (IsEndOfRow())
+                        skippedRecords++;
 
+                    continue;
+                }
 
+                mapKeys ??= [];
+                mapValues ??= [];
+                if (IsEndOfRow())
+                {
                     if (isFirstColumn)
                     {
                         dataTable.NewRow();
                     }
 
-                    dataTable.Rows[currentRecord++]![fieldIndex] = MapEntiresClojure(i, true);
+                    var key = keyDataColumn.Data.Length > i ? keyDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
+                    var value = valueDataColumn.Data.Length > i ? valueDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
+                    mapKeys.Add(key);
+                    mapValues.Add(value);
 
-                    if (currentRecord == readRecords)
+                    if (mapKeys.Count == 1 && mapValues.Count == 1
+                        && key == DBNull.Value && value == DBNull.Value
+                        //definition level of 0 means null list
+                        //source: https://www.aloneguid.uk/posts/2023/04/parquet-empty-vs-null
+                        && GetDefinitionLevel(i) == 0)
                     {
-                        return;
+                        //If the map only contains null, then consider the map itself null
+                        dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
+                    }
+                    else
+                    {
+                        dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.DataField!.ClrType, mapValues, valueField.DataField!.ClrType);
                     }
 
+                    mapKeys = null;
+                    mapValues = null;
+
+                    rowIndex++;
                     progress?.Report(1);
+
+                    if (rowIndex - rowBeginIndex >= readRecords)
+                        break;
+                }
+                else
+                {
+                    var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
+                    var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
+                    mapKeys.Add(key);
+                    mapValues.Add(value);
+                }
+
+                int GetRepetitionLevel(int dataIndex)
+                {
+                    if (keyDataColumn.RepetitionLevels is null && valueDataColumn.RepetitionLevels is null)
+                        return 0; // assume each entry is a new row since we have no repetition levels
+                    else if (keyDataColumn.RepetitionLevels?.Length > dataIndex)
+                        return keyDataColumn.RepetitionLevels[dataIndex];
+                    else if (valueDataColumn.RepetitionLevels?.Length > dataIndex)
+                        return valueDataColumn.RepetitionLevels[dataIndex];
+                    else
+                        throw new ArgumentOutOfRangeException(nameof(dataIndex));
+                }
+
+                int GetDefinitionLevel(int dataIndex)
+                {
+                    if (keyDataColumn.DefinitionLevels?.Length > dataIndex)
+                        return keyDataColumn.DefinitionLevels[dataIndex];
+                    else if (valueDataColumn.DefinitionLevels?.Length > dataIndex)
+                        return valueDataColumn.DefinitionLevels[dataIndex];
+                    else
+                        return 0; // assume 0 which means null
                 }
             }
-		}
+        }
 
-		private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read struct data as a new datatable

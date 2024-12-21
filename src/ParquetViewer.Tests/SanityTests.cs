@@ -154,7 +154,7 @@ namespace ParquetViewer.Tests
             Assert.IsType<ListValue>(dataTable.Rows[1][0]);
             Assert.Equal("[,1]", ((ListValue)dataTable.Rows[1][0]).ToString());
             Assert.IsType<ListValue>(dataTable.Rows[2][1]);
-            Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Data?.Count);
+            Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Length);
             Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data![0]);
             Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data![1]);
             Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data![3]);
@@ -169,14 +169,22 @@ namespace ParquetViewer.Tests
             Assert.Equal(2, parquetEngine.Fields.Count);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 2, default))(false);
+
             Assert.IsType<MapValue>(dataTable.Rows[0][0]);
-            Assert.Equal("(id,something)", ((MapValue)dataTable.Rows[0][0]).ToString());
-            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
-            Assert.Equal("id", ((MapValue)dataTable.Rows[0][0]).Key);
-            Assert.Equal("something", ((MapValue)dataTable.Rows[0][0]).Value);
+            var row = (MapValue)dataTable.Rows[0][0];
+            Assert.Equal("id", row.FirstOrDefault().Key);
+            Assert.Equal("something", row.FirstOrDefault().Value);
+            Assert.Equal("value2", row.Skip(1).FirstOrDefault().Key);
+            Assert.Equal("else", row.Skip(1).FirstOrDefault().Value);
+            Assert.Equal("[(id,something),(value2,else)]", row.ToString());
+
             Assert.IsType<MapValue>(dataTable.Rows[1][0]);
-            Assert.Equal("id", ((MapValue)dataTable.Rows[1][0]).Key);
-            Assert.Equal("something2", ((MapValue)dataTable.Rows[1][0]).Value);
+            row = (MapValue)dataTable.Rows[1][0];
+            Assert.Equal("id", row.FirstOrDefault().Key);
+            Assert.Equal("something2", row.FirstOrDefault().Value);
+            Assert.Equal("value", row.Skip(1).FirstOrDefault().Key);
+            Assert.Equal("else2", row.Skip(1).FirstOrDefault().Value);
+            Assert.Equal("[(id,something2),(value,else2)]", row.ToString());
         }
         
         [Fact]
@@ -190,8 +198,7 @@ namespace ParquetViewer.Tests
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 2, default))(false);
             Assert.IsType<MapValue>(dataTable.Rows[0][2]);
 
-            // attempt to read all entires of a single map record (can contain multiple map values)
-            MapValue mapRecord = (MapValue)dataTable.Rows[0][2];
+            // attempt to read all entries of a single map record (can contain multiple map values)
             var expectedValues = new Dictionary<object, string>()
             {
                 {"age", "35" },
@@ -199,6 +206,8 @@ namespace ParquetViewer.Tests
                 {"another key", "another value" },
                 {"lalala", "lili" },
             };
+
+            MapValue mapRecord = (MapValue)dataTable.Rows[0][2];
             foreach (var row in mapRecord)
             {
                 bool wasFound = expectedValues.Remove(row.Key, out string? value);
@@ -207,12 +216,13 @@ namespace ParquetViewer.Tests
             }
 
             // assure that maps from the same column can have variable lengths
-            mapRecord = (MapValue)dataTable.Rows[1][2];
             expectedValues = new Dictionary<object, string>()
             {
                 {"age", "28" },
                 {"city", "San Francisco" },
             };
+
+            mapRecord = (MapValue)dataTable.Rows[1][2];
             foreach (var row in mapRecord)
             {
                 bool wasFound = expectedValues.Remove(row.Key, out string? value);
@@ -233,15 +243,15 @@ namespace ParquetViewer.Tests
             Assert.IsType<StructValue>(dataTable.Rows[0][0]);
             Assert.Equal("{\"appId\":null,\"version\":0,\"lastUpdated\":null}", ((StructValue)dataTable.Rows[0][0]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][1]);
-            Assert.Equal("{\"path\":null,\"partitionValues\":{\"key\":null,\"value\":null},\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":{\"key\":null,\"value\":null}}", ((StructValue)dataTable.Rows[0][1]).ToString());
+            Assert.Equal("{\"path\":null,\"partitionValues\":null,\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":null}", ((StructValue)dataTable.Rows[0][1]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][2]);
             Assert.Equal("{\"path\":null,\"deletionTimestamp\":null,\"dataChange\":false}", ((StructValue)dataTable.Rows[0][2]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][3]);
-            Assert.Equal("{\"id\":null,\"name\":null,\"description\":null,\"format\":{\"provider\":null,\"options\":{\"key\":null,\"value\":null}},\"schemaString\":null,\"partitionColumns\":[],\"configuration\":{\"key\":null,\"value\":null},\"createdTime\":null}", ((StructValue)dataTable.Rows[0][3]).ToString());
+            Assert.Equal("{\"id\":null,\"name\":null,\"description\":null,\"format\":{\"provider\":null,\"options\":null},\"schemaString\":null,\"partitionColumns\":null,\"configuration\":null,\"createdTime\":null}", ((StructValue)dataTable.Rows[0][3]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][4]);
             Assert.Equal("{\"minReaderVersion\":1,\"minWriterVersion\":2}", ((StructValue)dataTable.Rows[0][4]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][5]);
-            Assert.Equal("{\"version\":null,\"timestamp\":null,\"userId\":null,\"userName\":null,\"operation\":null,\"operationParameters\":{\"key\":null,\"value\":null},\"job\":{\"jobId\":null,\"jobName\":null,\"runId\":null,\"jobOwnerId\":null,\"triggerType\":null},\"notebook\":{\"notebookId\":null},\"clusterId\":null,\"readVersion\":null,\"isolationLevel\":null,\"isBlindAppend\":null}", ((StructValue)dataTable.Rows[0][5]).ToString());
+            Assert.Equal("{\"version\":null,\"timestamp\":null,\"userId\":null,\"userName\":null,\"operation\":null,\"operationParameters\":null,\"job\":{\"jobId\":null,\"jobName\":null,\"runId\":null,\"jobOwnerId\":null,\"triggerType\":null},\"notebook\":{\"notebookId\":null},\"clusterId\":null,\"readVersion\":null,\"isolationLevel\":null,\"isBlindAppend\":null}", ((StructValue)dataTable.Rows[0][5]).ToString());
             Assert.IsType<DBNull>(dataTable.Rows[9][4]);
             Assert.Equal(DBNull.Value, dataTable.Rows[9][4]);
             Assert.Equal("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":null,\"lastUpdated\":1564524299648}", ((StructValue)dataTable.Rows[2][0]).ToString());
@@ -286,14 +296,10 @@ namespace ParquetViewer.Tests
     }}]
 }}";
 
-            //mock the http request
+            //mock the http response
             _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
             {
-                //Verify the request we're sending is what we expect it to be
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
-
-                string a = Regex.Replace(requestJsonBody, "\\s", string.Empty);
-                string b = Regex.Replace(expectedRequestJson, "\\s", string.Empty);
 
                 if (Regex.Replace(requestJsonBody, "\\s", string.Empty)
                     .Equals(Regex.Replace(expectedRequestJson, "\\s", string.Empty)))
@@ -313,10 +319,9 @@ namespace ParquetViewer.Tests
             var testEvent = new ExceptionEvent(testAmplitudeEvent.CloneAmplitudeConfiguration());
             testEvent.Exception = new Exception("Exception with `sensitive` data");
 
-            //mock the http request
+            //mock the http response
             _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
             {
-                //Verify the request we're sending is what we expect it to be
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
 
                 if (requestJsonBody.Contains($"Exception with {ExceptionEvent.MASK_SENTINEL} data"))
