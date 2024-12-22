@@ -51,9 +51,6 @@ namespace ParquetViewer.Engine.Types
 
                     isFirst = false;
                 }
-
-                if (isFirst)
-                    sb.Append(' ');
             }
 
             sb.Append(']');

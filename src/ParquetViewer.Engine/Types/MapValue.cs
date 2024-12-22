@@ -53,6 +53,7 @@ namespace ParquetViewer.Engine.Types
 
                 mapValuesStringBuilder.Append(FormatString(GetMapValue(i)));
             }
+
             mapValuesStringBuilder.Append(']');
             return mapValuesStringBuilder.ToString();
 

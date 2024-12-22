@@ -139,7 +139,7 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task LIST_TYPE_TEST()
+        public async Task LIST_TYPE_TEST1()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
 
@@ -148,16 +148,47 @@ namespace ParquetViewer.Tests
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.IsType<ListValue>(dataTable.Rows[0][0]);
-            Assert.Equal("[1,2,3]", ((ListValue)dataTable.Rows[0][0]).ToString());
+            Assert.Equal("[1,2,3]", dataTable.Rows[0][0].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[0][1]);
-            Assert.Equal("[abc,efg,hij]", ((ListValue)dataTable.Rows[0][1]).ToString());
+            Assert.Equal("[abc,efg,hij]", dataTable.Rows[0][1].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[1][0]);
-            Assert.Equal("[,1]", ((ListValue)dataTable.Rows[1][0]).ToString());
+            Assert.Equal("[,1]", dataTable.Rows[1][0].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[2][1]);
             Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Length);
             Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data![0]);
             Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data![1]);
             Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data![3]);
+
+            //Also try reading with a record offset
+            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
+            Assert.IsType<ListValue>(dataTable.Rows[0][0]);
+            Assert.Equal("[,1]", dataTable.Rows[0][0].ToString());
+        }
+
+        [Fact]
+        public async Task LIST_TYPE_TEST2()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST2.parquet", default);
+
+            Assert.Equal(8, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 4, default))(false);
+            Assert.IsType<ListValue>(dataTable.Rows[0][1]);
+
+            Assert.Equal("[1,2]", dataTable.Rows[0][1].ToString());
+            Assert.Equal(1, ((ListValue)dataTable.Rows[0][1]).Data[0]);
+            Assert.Equal(2, ((ListValue)dataTable.Rows[0][1]).Data[1]);
+
+            Assert.Equal(string.Empty, dataTable.Rows[1][1].ToString());
+            Assert.Equal(DBNull.Value, dataTable.Rows[1][1]);
+
+            Assert.Equal("[]", dataTable.Rows[2][1].ToString());
+            Assert.Empty(((ListValue)dataTable.Rows[2][1]).Data);
+
+            Assert.Equal("[3,4]", dataTable.Rows[3][1].ToString());
+            Assert.Equal(3, ((ListValue)dataTable.Rows[3][1]).Data[0]);
+            Assert.Equal(4, ((ListValue)dataTable.Rows[3][1]).Data[1]);
         }
 
         [Fact]
@@ -411,9 +442,9 @@ namespace ParquetViewer.Tests
             Assert.Equal("Product2", dataTable.Rows[1][0]);
 
             Assert.IsType<ListValue>(dataTable.Rows[0][1]);
-            Assert.Equal("[ ]", dataTable.Rows[0][1].ToString());
+            Assert.Equal("[]", dataTable.Rows[0][1].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[1][1]);
-            Assert.Equal("[ ]", dataTable.Rows[1][1].ToString());
+            Assert.Equal("[]", dataTable.Rows[1][1].ToString());
         }
     }
 }
