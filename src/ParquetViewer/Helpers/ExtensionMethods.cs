@@ -55,6 +55,7 @@ namespace ParquetViewer.Helpers
             DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
             DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
+            DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
             _ => string.Empty
         };
 

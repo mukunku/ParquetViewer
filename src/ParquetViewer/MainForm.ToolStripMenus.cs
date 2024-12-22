@@ -153,17 +153,31 @@ namespace ParquetViewer
             if (sender is ToolStripMenuItem item && item.Tag is string tag)
             {
                 var selectedDateFormat = (DateFormat)int.Parse(tag);
+
                 if (selectedDateFormat != DateFormat.Custom)
                 {
                     AppSettings.DateTimeDisplayFormat = selectedDateFormat;
-                    this.RefreshDateFormatMenuItemSelection();
-                    this.mainGridView.UpdateDateFormats();
-                    this.mainGridView.Refresh();
                 }
                 else
                 {
-                    new CustomDateFormatInputForm().ShowDialog(this);
+                    //TODO: Get rid of this code that handles obsolete date formats after a few releases
+                    string? customDateFormat = null;
+                    if (AppSettings.DateTimeDisplayFormat == DateFormat.ISO8601_Alt1 || AppSettings.DateTimeDisplayFormat == DateFormat.ISO8601_Alt2)
+                    {
+                        customDateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                    }
+
+                    var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
+                    if (customDateFormatInputForm.ShowDialog(this) == DialogResult.OK)
+                    {
+                        AppSettings.DateTimeDisplayFormat = DateFormat.Custom;
+                        AppSettings.CustomDateFormat = customDateFormatInputForm.UserEnteredDateFormat;
+                    }
                 }
+
+                this.RefreshDateFormatMenuItemSelection();
+                this.mainGridView.UpdateDateFormats();
+                this.mainGridView.Refresh();
             }
         }
 

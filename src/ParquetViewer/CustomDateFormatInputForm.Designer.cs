@@ -1,4 +1,7 @@
-﻿namespace ParquetViewer
+﻿using ParquetViewer.Properties;
+using System.Resources;
+
+namespace ParquetViewer
 {
     partial class CustomDateFormatInputForm
     {
@@ -29,6 +32,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CustomDateFormatInputForm));
             mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             livePreviewTextBox = new System.Windows.Forms.TextBox();
             label56 = new System.Windows.Forms.Label();
@@ -99,17 +103,19 @@
             mainTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             mainTableLayoutPanel.Controls.Add(livePreviewTextBox, 1, 1);
             mainTableLayoutPanel.Controls.Add(label56, 1, 0);
-            mainTableLayoutPanel.Controls.Add(instructionsTableLayoutPanel, 0, 3);
+            mainTableLayoutPanel.Controls.Add(instructionsTableLayoutPanel, 0, 5);
             mainTableLayoutPanel.Controls.Add(label1, 0, 0);
             mainTableLayoutPanel.Controls.Add(desiredDateFormatTextBox, 0, 1);
-            mainTableLayoutPanel.Controls.Add(saveDateFormatButton, 0, 2);
+            mainTableLayoutPanel.Controls.Add(saveDateFormatButton, 0, 3);
             mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
             mainTableLayoutPanel.Name = "mainTableLayoutPanel";
             mainTableLayoutPanel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            mainTableLayoutPanel.RowCount = 4;
+            mainTableLayoutPanel.RowCount = 6;
             mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 24F));
             mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 24F));
-            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 38F));
+            mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 8F));
             mainTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             mainTableLayoutPanel.Size = new System.Drawing.Size(578, 373);
             mainTableLayoutPanel.TabIndex = 0;
@@ -117,11 +123,13 @@
             // livePreviewTextBox
             // 
             livePreviewTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            livePreviewTextBox.Enabled = false;
+            livePreviewTextBox.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
             livePreviewTextBox.Location = new System.Drawing.Point(292, 33);
             livePreviewTextBox.Name = "livePreviewTextBox";
-            livePreviewTextBox.PlaceholderText = "Start typing to preview your date format";
+            livePreviewTextBox.PlaceholderText = "👈🏽 Start typing to preview your date format";
             livePreviewTextBox.ReadOnly = true;
-            livePreviewTextBox.Size = new System.Drawing.Size(283, 23);
+            livePreviewTextBox.Size = new System.Drawing.Size(283, 25);
             livePreviewTextBox.TabIndex = 4;
             // 
             // label56
@@ -194,8 +202,8 @@
             instructionsTableLayoutPanel.Controls.Add(label46, 2, 15);
             instructionsTableLayoutPanel.Controls.Add(dateFormatDocsLinkLabel, 0, 16);
             instructionsTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            instructionsTableLayoutPanel.Location = new System.Drawing.Point(6, 91);
-            instructionsTableLayoutPanel.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            instructionsTableLayoutPanel.Location = new System.Drawing.Point(6, 113);
+            instructionsTableLayoutPanel.Margin = new System.Windows.Forms.Padding(6, 3, 6, 6);
             instructionsTableLayoutPanel.Name = "instructionsTableLayoutPanel";
             instructionsTableLayoutPanel.RowCount = 17;
             instructionsTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
@@ -214,9 +222,8 @@
             instructionsTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
             instructionsTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
             instructionsTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
-            instructionsTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
-            instructionsTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            instructionsTableLayoutPanel.Size = new System.Drawing.Size(566, 279);
+            instructionsTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 24F));
+            instructionsTableLayoutPanel.Size = new System.Drawing.Size(566, 254);
             instructionsTableLayoutPanel.TabIndex = 1;
             // 
             // label32
@@ -723,9 +730,9 @@
             dateFormatDocsLinkLabel.Anchor = System.Windows.Forms.AnchorStyles.None;
             dateFormatDocsLinkLabel.AutoSize = true;
             instructionsTableLayoutPanel.SetColumnSpan(dateFormatDocsLinkLabel, 3);
-            dateFormatDocsLinkLabel.Image = Properties.Resources.external_link_icon;
+            dateFormatDocsLinkLabel.Image = Resources.external_link_icon;
             dateFormatDocsLinkLabel.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            dateFormatDocsLinkLabel.Location = new System.Drawing.Point(171, 570);
+            dateFormatDocsLinkLabel.Location = new System.Drawing.Point(171, 565);
             dateFormatDocsLinkLabel.Name = "dateFormatDocsLinkLabel";
             dateFormatDocsLinkLabel.Padding = new System.Windows.Forms.Padding(0, 0, 18, 0);
             dateFormatDocsLinkLabel.Size = new System.Drawing.Size(217, 15);
@@ -748,25 +755,29 @@
             // desiredDateFormatTextBox
             // 
             desiredDateFormatTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            desiredDateFormatTextBox.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
             desiredDateFormatTextBox.Location = new System.Drawing.Point(3, 33);
             desiredDateFormatTextBox.Name = "desiredDateFormatTextBox";
             desiredDateFormatTextBox.PlaceholderText = "E.g. yyyy-MM-dd hh:mm:ss tt";
-            desiredDateFormatTextBox.Size = new System.Drawing.Size(283, 23);
+            desiredDateFormatTextBox.Size = new System.Drawing.Size(283, 25);
             desiredDateFormatTextBox.TabIndex = 2;
             desiredDateFormatTextBox.TextChanged += desiredDateFormatTextBox_TextChanged;
             // 
             // saveDateFormatButton
             // 
-            saveDateFormatButton.Anchor = System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            saveDateFormatButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             mainTableLayoutPanel.SetColumnSpan(saveDateFormatButton, 2);
             saveDateFormatButton.Enabled = false;
-            saveDateFormatButton.Location = new System.Drawing.Point(3, 60);
+            saveDateFormatButton.Image = (System.Drawing.Image)resources.GetObject("saveDateFormatButton.Image");
+            saveDateFormatButton.Location = new System.Drawing.Point(3, 69);
             saveDateFormatButton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 3);
             saveDateFormatButton.Name = "saveDateFormatButton";
-            saveDateFormatButton.Size = new System.Drawing.Size(572, 23);
+            saveDateFormatButton.Padding = new System.Windows.Forms.Padding(0, 0, 16, 0);
+            saveDateFormatButton.Size = new System.Drawing.Size(572, 30);
             saveDateFormatButton.TabIndex = 5;
-            saveDateFormatButton.Text = "Save";
+            saveDateFormatButton.Text = "                Save";
             saveDateFormatButton.UseVisualStyleBackColor = true;
+            saveDateFormatButton.Click += saveDateFormatButton_Click;
             // 
             // timer
             // 

@@ -431,7 +431,7 @@ namespace ParquetViewer
             customDateFormatToolStripMenuItem.Name = "customDateFormatToolStripMenuItem";
             customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             customDateFormatToolStripMenuItem.Tag = "6";
-            customDateFormatToolStripMenuItem.Text = "Custom";
+            customDateFormatToolStripMenuItem.Text = "Custom...";
             customDateFormatToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // columnSizingToolStripMenuItem

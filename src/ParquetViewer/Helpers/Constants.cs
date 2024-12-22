@@ -1,4 +1,5 @@
-﻿using System.Security.Principal;
+﻿using System;
+using System.Security.Principal;
 
 namespace ParquetViewer.Helpers
 {
@@ -26,7 +27,9 @@ namespace ParquetViewer.Helpers
     {
         Default = 0,
         ISO8601 = 2,
+        [Obsolete]
         ISO8601_Alt1 = 4,
+        [Obsolete]
         ISO8601_Alt2 = 5,
         Custom = 6
     }

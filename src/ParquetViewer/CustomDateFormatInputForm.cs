@@ -7,9 +7,16 @@ namespace ParquetViewer
 {
     public partial class CustomDateFormatInputForm : Form
     {
+        public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
+
         public CustomDateFormatInputForm()
         {
             InitializeComponent();
+        }
+
+        public CustomDateFormatInputForm(string? customDateFormat) : this()
+        {
+            this.desiredDateFormatTextBox.Text = customDateFormat ?? string.Empty;
         }
 
         public void dateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -40,21 +47,33 @@ namespace ParquetViewer
         private void CustomDateFormatInputForm_Load(object sender, EventArgs e)
         {
             this.timer.Enabled = true;
+            this.saveDateFormatButton.Enabled = false; //always start disabled
         }
 
-        //HACK: For some reason resetting the auto scroll position doesn't work in the Load event.
-        //So I'm using this timer as a once-off setTimeout() to reset the scroll position.
+        //This timer exists to deal with visual bugs
         private void timer_Tick(object sender, EventArgs e)
         {
+            //We only wanted to run this once
             this.timer.Enabled = false;
 
-            
-
-            //Also need to widen the form a tiny bit to get rid of the horizontal scrollbar :shrug:
+            //HACK: need to widen the form a tiny bit to get rid of the horizontal scrollbar :shrug:
             this.Width += 20;
 
-            //reset scroll position
+            //HACK: For some reason resetting the auto scroll position doesn't work in the Load event.
             this.instructionsTableLayoutPanel.AutoScrollPosition = new System.Drawing.Point(0, 0);
+        }
+
+        private void saveDateFormatButton_Click(object sender, EventArgs e)
+        {
+            if (UtilityMethods.IsValidDateFormat(this.desiredDateFormatTextBox.Text))
+            {
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("Invalid date format. Please refer to the documentation for valid date format specifiers.", "Invalid Date Format", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
