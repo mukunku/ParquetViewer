@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using Parquet.Schema;
 using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
@@ -37,7 +36,7 @@ namespace ParquetViewer.Helpers
         public static IList<string> GetColumnNames(this DataTable datatable)
         {
             List<string> columns = new List<string>(datatable.Columns.Count);
-            foreach (DataColumn column in datatable.Columns)
+            foreach (System.Data.DataColumn column in datatable.Columns)
             {
                 columns.Add(column.ColumnName);
             }
@@ -49,15 +48,18 @@ namespace ParquetViewer.Helpers
         /// </summary>
         /// <param name="dateFormat">Date format to get formatting string for</param>
         /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
+#pragma warning disable CS0612 // Type or member is obsolete
         public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
         {
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
+            //TODO: Get rid of this code that handles obsolete date formats after a few releases
             DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
             DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
             DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
             _ => string.Empty
         };
+#pragma warning restore CS0612 // Type or member is obsolete
 
         public static string GetExtension(this FileType fileType) => fileType switch
         {
@@ -105,9 +107,9 @@ namespace ParquetViewer.Helpers
             return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
         }
 
-        public static IEnumerable<DataColumn> AsEnumerable(this DataColumnCollection columns)
+        public static IEnumerable<System.Data.DataColumn> AsEnumerable(this DataColumnCollection columns)
         {
-            foreach (DataColumn column in columns)
+            foreach (System.Data.DataColumn column in columns)
             {
                 yield return column;
             }

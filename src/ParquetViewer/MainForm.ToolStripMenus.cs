@@ -160,8 +160,9 @@ namespace ParquetViewer
                 }
                 else
                 {
-                    //TODO: Get rid of this code that handles obsolete date formats after a few releases
                     string? customDateFormat = null;
+#pragma warning disable CS0612 // Type or member is obsolete
+                    //TODO: Get rid of this code that handles obsolete date formats after a few releases
                     if (AppSettings.DateTimeDisplayFormat == DateFormat.ISO8601_Alt1 || AppSettings.DateTimeDisplayFormat == DateFormat.ISO8601_Alt2)
                     {
                         customDateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
@@ -170,6 +171,7 @@ namespace ParquetViewer
                     {
                         customDateFormat = AppSettings.CustomDateFormat;
                     }
+#pragma warning restore CS0612 // Type or member is obsolete
 
                     var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
                     if (customDateFormatInputForm.ShowDialog(this) == DialogResult.OK)

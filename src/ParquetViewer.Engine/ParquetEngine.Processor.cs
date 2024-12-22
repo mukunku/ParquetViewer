@@ -183,47 +183,80 @@ namespace ParquetViewer.Engine
                 int skippedRecords = 0;
                 var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
 
+                var dataEnumerable = dataColumn.Data.Cast<object?>().Select(d => d ?? DBNull.Value);
+                //Some parquet writers don't write null entries into the data array for empty and null lists.
+                //This throws off our logic below so lets find all empty/null lists and add a null entry into 
+                //the data array to align it with the repetition levels.
+                int levelCount = dataColumn.RepetitionLevels?.Length ?? 0;
+                if (levelCount > dataColumn.Data.Length)
+                {
+                    if (dataColumn.RepetitionLevels?.Length != dataColumn.DefinitionLevels?.Length)
+                    {
+                        throw new MalformedFieldException($"Field `{itemField.Path}` appears malformed due to different lengths in repetition and definition levels");
+                    }
+
+                    dataEnumerable = GetDataWithPaddedNulls();
+
+                    IEnumerable<object> GetDataWithPaddedNulls()
+                    {
+                        var index = -1;
+                        foreach (var data in dataColumn.Data)
+                        {
+                            index++;
+
+                            while (dataColumn.IsEmpty(index) || dataColumn.IsNull(index))
+                            {
+                                yield return DBNull.Value;
+                                index++;
+                            }
+
+                            yield return data ?? DBNull.Value;
+                        }
+
+                        //Need to handle case where last N rows are null/empty
+                        while (levelCount > index + 1)
+                        {
+                            yield return DBNull.Value;
+                            index++;
+                        }
+                    }
+                }
+
                 ArrayList? rowValue = null;
-                for (int i = 0; i < dataColumn.Data.Length; i++)
+                int index = -1;
+                foreach (var data in dataEnumerable)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    index++;
 
-                    bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels!.Length
-                        || dataColumn.RepetitionLevels[i + 1] == 0; //0 means new list
+                    bool IsEndOfRow(int index) => (index + 1) == dataColumn.RepetitionLevels!.Length
+                        || dataColumn.RepetitionLevels[index + 1] == 0; //0 means new list
 
                     //Skip rows
                     if (skipRecords > skippedRecords)
                     {
-                        if (IsEndOfRow())
+                        if (IsEndOfRow(index))
                             skippedRecords++;
 
                         continue;
                     }
 
                     rowValue ??= new ArrayList();
-                    if (IsEndOfRow())
+                    if (IsEndOfRow(index))
                     {
                         if (isFirstColumn)
                         {
                             dataTable.NewRow();
                         }
 
-                        var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
-                        rowValue.Add(lastItem);
+                        rowValue.Add(data);
 
-                        if (rowValue.Count == 1 && lastItem == DBNull.Value
-                            //definition level of 0 means null list
-                            //source: https://www.aloneguid.uk/posts/2023/04/parquet-empty-vs-null
-                            && dataColumn.DefinitionLevels?.Length > i
-                            && dataColumn.DefinitionLevels[i] == 0)
-                        {
-                            //If the list only contains null, then consider the whole list null
+                        if (dataColumn.IsNull(index))
                             dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                        }
+                        else if (dataColumn.IsEmpty(index))
+                            dataTable.Rows[rowIndex]![fieldIndex] = new ListValue([], itemField.DataField!.ClrType);
                         else
-                        {
                             dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
-                        }
 
                         rowValue = null;
 
@@ -235,8 +268,7 @@ namespace ParquetViewer.Engine
                     }
                     else
                     {
-                        var value = dataColumn.Data.GetValue(i) ?? DBNull.Value;
-                        rowValue.Add(value);
+                        rowValue.Add(data);
                     }
                 }
             }
@@ -298,7 +330,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private static async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var keyValueField = field.GetSingle("key_value");
@@ -314,17 +346,58 @@ namespace ParquetViewer.Engine
             var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
             var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
 
-            int dataLength = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
-            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
+            var dataEnumerable = Helpers.PairEnumerables(keyDataColumn.Data.Cast<object?>(), valueDataColumn.Data.Cast<object?>(), DBNull.Value);
+            //Some parquet writers don't write null entries into the data array for empty and null maps.
+            //This throws off our logic below so lets find all empty/null maps and add a null entry into 
+            //the data array to align it with the repetition levels.
+            int levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
+            int dataCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
+            if (levelCount > dataCount)
+            {
+                if (keyDataColumn.RepetitionLevels?.Length != keyDataColumn.DefinitionLevels?.Length)
+                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed keys due to different lengths in repetition and definition levels");
+                else if (valueDataColumn.RepetitionLevels?.Length != valueDataColumn.DefinitionLevels?.Length)
+                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed values due to different lengths in repetition and definition levels");
 
+                dataEnumerable = GetDataWithPaddedNulls();
+
+                IEnumerable<(object?, object?)> GetDataWithPaddedNulls()
+                {
+                    var index = -1;
+                    foreach ((var key, var value) in Helpers.PairEnumerables(keyDataColumn.Data.Cast<object?>(), valueDataColumn.Data.Cast<object?>(), DBNull.Value))
+                    {
+                        index++;
+
+                        while (keyDataColumn.IsNull(index) || valueDataColumn.IsNull(index)
+                            || keyDataColumn.IsEmpty(index) || valueDataColumn.IsEmpty(index))
+                        {
+                            yield return (DBNull.Value, DBNull.Value);
+                            index++;
+                        }
+
+                        yield return (key ?? DBNull.Value, value ?? DBNull.Value);
+                    }
+
+                    //Need to handle case where last N rows are null/empty
+                    while (levelCount > index + 1)
+                    {
+                        yield return (DBNull.Value, DBNull.Value);
+                        index++;
+                    }
+                }
+            }
+
+            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
             ArrayList? mapKeys = null;
             ArrayList? mapValues = null;
-            for (int i = 0; i < dataLength; i++)
+            int index = -1;
+            foreach (var (key, value) in dataEnumerable)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                index++;
 
-                bool IsEndOfRow() => (i + 1) == dataLength
-                    || GetRepetitionLevel(i + 1) == 0; //0 means new map
+                bool IsEndOfRow() => (index + 1) == levelCount
+                    || GetRepetitionLevel(index + 1) == 0; //0 means new map
 
                 //Skip rows
                 if (skipRecords > skippedRecords)
@@ -344,24 +417,15 @@ namespace ParquetViewer.Engine
                         dataTable.NewRow();
                     }
 
-                    var key = keyDataColumn.Data.Length > i ? keyDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
-                    var value = valueDataColumn.Data.Length > i ? valueDataColumn.Data.GetValue(i) ?? DBNull.Value : DBNull.Value;
                     mapKeys.Add(key);
                     mapValues.Add(value);
 
-                    if (mapKeys.Count == 1 && mapValues.Count == 1
-                        && key == DBNull.Value && value == DBNull.Value
-                        //definition level of 0 means null list
-                        //source: https://www.aloneguid.uk/posts/2023/04/parquet-empty-vs-null
-                        && GetDefinitionLevel(i) == 0)
-                    {
-                        //If the map only contains null, then consider the map itself null
+                    if (keyDataColumn.IsNull(index) || valueDataColumn.IsNull(index)) //If one is null the other should be as well
                         dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                    }
+                    else if (keyDataColumn.IsEmpty(index) || valueDataColumn.IsEmpty(index)) //If one is empty the other should be as well
+                        dataTable.Rows[rowIndex]![fieldIndex] = new MapValue([], keyField.DataField!.ClrType, [], valueField.DataField!.ClrType);
                     else
-                    {
                         dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.DataField!.ClrType, mapValues, valueField.DataField!.ClrType);
-                    }
 
                     mapKeys = null;
                     mapValues = null;
@@ -374,8 +438,6 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    var key = keyDataColumn.Data.GetValue(i) ?? DBNull.Value;
-                    var value = valueDataColumn.Data.GetValue(i) ?? DBNull.Value;
                     mapKeys.Add(key);
                     mapValues.Add(value);
                 }
@@ -390,16 +452,6 @@ namespace ParquetViewer.Engine
                         return valueDataColumn.RepetitionLevels[dataIndex];
                     else
                         throw new ArgumentOutOfRangeException(nameof(dataIndex));
-                }
-
-                int GetDefinitionLevel(int dataIndex)
-                {
-                    if (keyDataColumn.DefinitionLevels?.Length > dataIndex)
-                        return keyDataColumn.DefinitionLevels[dataIndex];
-                    else if (valueDataColumn.DefinitionLevels?.Length > dataIndex)
-                        return valueDataColumn.DefinitionLevels[dataIndex];
-                    else
-                        return 0; // assume 0 which means null
                 }
             }
         }

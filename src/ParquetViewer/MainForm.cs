@@ -485,6 +485,7 @@ namespace ParquetViewer
             this.iSO8601ToolStripMenuItem.Checked = false;
             this.customDateFormatToolStripMenuItem.Checked = false;
 
+#pragma warning disable CS0612 // Type or member is obsolete
             switch (AppSettings.DateTimeDisplayFormat)
             {
                 case DateFormat.Default:
@@ -493,6 +494,7 @@ namespace ParquetViewer
                 case DateFormat.ISO8601:
                     this.iSO8601ToolStripMenuItem.Checked = true;
                     break;
+                //TODO: Get rid of this code that handles obsolete date formats after a few releases
                 case DateFormat.ISO8601_Alt1:
                 case DateFormat.ISO8601_Alt2:
                 case DateFormat.Custom:
@@ -501,6 +503,7 @@ namespace ParquetViewer
                 default:
                     break;
             }
+#pragma warning restore CS0612 // Type or member is obsolete
         }
 
         /// <summary>
