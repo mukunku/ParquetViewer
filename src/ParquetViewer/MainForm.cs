@@ -483,8 +483,7 @@ namespace ParquetViewer
         {
             this.defaultToolStripMenuItem.Checked = false;
             this.iSO8601ToolStripMenuItem.Checked = false;
-            this.iSO8601Alt1ToolStripMenuItem.Checked = false;
-            this.iSO8601Alt2ToolStripMenuItem.Checked = false;
+            this.customDateFormatToolStripMenuItem.Checked = false;
 
             switch (AppSettings.DateTimeDisplayFormat)
             {
@@ -495,10 +494,9 @@ namespace ParquetViewer
                     this.iSO8601ToolStripMenuItem.Checked = true;
                     break;
                 case DateFormat.ISO8601_Alt1:
-                    this.iSO8601Alt1ToolStripMenuItem.Checked = true;
-                    break;
                 case DateFormat.ISO8601_Alt2:
-                    this.iSO8601Alt2ToolStripMenuItem.Checked = true;
+                case DateFormat.Custom:
+                    this.customDateFormatToolStripMenuItem.Checked = true;
                     break;
                 default:
                     break;

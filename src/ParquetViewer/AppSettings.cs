@@ -1,7 +1,6 @@
 ﻿using Microsoft.Win32;
 using ParquetViewer.Helpers;
 using System;
-using System.Data.SqlTypes;
 
 namespace ParquetViewer
 {

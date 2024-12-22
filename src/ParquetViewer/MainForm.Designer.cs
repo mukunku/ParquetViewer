@@ -33,7 +33,7 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             mainTableLayoutPanel = new TableLayoutPanel();
             recordsToLabel = new Label();
@@ -62,8 +62,7 @@ namespace ParquetViewer
             changeDateFormatToolStripMenuItem = new ToolStripMenuItem();
             defaultToolStripMenuItem = new ToolStripMenuItem();
             iSO8601ToolStripMenuItem = new ToolStripMenuItem();
-            iSO8601Alt1ToolStripMenuItem = new ToolStripMenuItem();
-            iSO8601Alt2ToolStripMenuItem = new ToolStripMenuItem();
+            customDateFormatToolStripMenuItem = new ToolStripMenuItem();
             columnSizingToolStripMenuItem = new ToolStripMenuItem();
             columnHeadersToolStripMenuItem = new ToolStripMenuItem();
             columnHeadersContentToolStripMenuItem = new ToolStripMenuItem();
@@ -249,14 +248,14 @@ namespace ParquetViewer
             mainGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
-            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
             mainGridView.EnableHeadersVisualStyles = false;
@@ -403,7 +402,7 @@ namespace ParquetViewer
             // 
             // changeDateFormatToolStripMenuItem
             // 
-            changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem, iSO8601ToolStripMenuItem, iSO8601Alt1ToolStripMenuItem, iSO8601Alt2ToolStripMenuItem });
+            changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem, iSO8601ToolStripMenuItem, customDateFormatToolStripMenuItem });
             changeDateFormatToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("changeDateFormatToolStripMenuItem.Image");
             changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
             changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
@@ -412,7 +411,7 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
@@ -421,29 +420,19 @@ namespace ParquetViewer
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.fffZ";
             iSO8601ToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
-            // iSO8601Alt1ToolStripMenuItem
+            // customDateFormatToolStripMenuItem
             // 
-            iSO8601Alt1ToolStripMenuItem.Name = "iSO8601Alt1ToolStripMenuItem";
-            iSO8601Alt1ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
-            iSO8601Alt1ToolStripMenuItem.Tag = "4";
-            iSO8601Alt1ToolStripMenuItem.Text = "ISO 8601 (Alt 1)";
-            iSO8601Alt1ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss.fff";
-            iSO8601Alt1ToolStripMenuItem.Click += DateFormatMenuItem_Click;
-            // 
-            // iSO8601Alt2ToolStripMenuItem
-            // 
-            iSO8601Alt2ToolStripMenuItem.Name = "iSO8601Alt2ToolStripMenuItem";
-            iSO8601Alt2ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
-            iSO8601Alt2ToolStripMenuItem.Tag = "5";
-            iSO8601Alt2ToolStripMenuItem.Text = "ISO 8601 (Alt 2)";
-            iSO8601Alt2ToolStripMenuItem.ToolTipText = "yyyy-MM-dd HH:mm:ss";
-            iSO8601Alt2ToolStripMenuItem.Click += DateFormatMenuItem_Click;
+            customDateFormatToolStripMenuItem.Name = "customDateFormatToolStripMenuItem";
+            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            customDateFormatToolStripMenuItem.Tag = "6";
+            customDateFormatToolStripMenuItem.Text = "Custom";
+            customDateFormatToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // columnSizingToolStripMenuItem
             // 
@@ -688,14 +677,13 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem columnSizingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem columnHeadersContentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem iSO8601Alt1ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem iSO8601Alt2ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem alwaysLoadAllRecordsToolStripMenuItem;
         private System.Windows.Forms.FolderBrowserDialog openFolderDialog;
         private System.Windows.Forms.ToolStripMenuItem openFolderToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem shareAnonymousUsageDataToolStripMenuItem;
         private System.Windows.Forms.Button loadAllRowsButton;
         private ToolTip loadAllRowsButtonTooltip;
+        private ToolStripMenuItem customDateFormatToolStripMenuItem;
     }
 }
 

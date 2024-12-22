@@ -65,7 +65,7 @@ namespace ParquetViewer
         {
             MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.ChangeFields);
             var fieldList = await this.OpenFieldSelectionDialog(true);
-            if (fieldList is not null) 
+            if (fieldList is not null)
                 this.SelectedFields = fieldList; //triggers a file load
         }
 
@@ -153,10 +153,17 @@ namespace ParquetViewer
             if (sender is ToolStripMenuItem item && item.Tag is string tag)
             {
                 var selectedDateFormat = (DateFormat)int.Parse(tag);
-                AppSettings.DateTimeDisplayFormat = selectedDateFormat;
-                this.RefreshDateFormatMenuItemSelection();
-                this.mainGridView.UpdateDateFormats();
-                this.mainGridView.Refresh();
+                if (selectedDateFormat != DateFormat.Custom)
+                {
+                    AppSettings.DateTimeDisplayFormat = selectedDateFormat;
+                    this.RefreshDateFormatMenuItemSelection();
+                    this.mainGridView.UpdateDateFormats();
+                    this.mainGridView.Refresh();
+                }
+                else
+                {
+                    new CustomDateFormatInputForm().ShowDialog(this);
+                }
             }
         }
 

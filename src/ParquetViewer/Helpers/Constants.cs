@@ -6,6 +6,7 @@ namespace ParquetViewer.Helpers
     {
         public const string FILL_WEIGHT_EXCEPTION_MESSAGE = "FillWeight";
         public const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
+        public const string DateFormatDocsURL = "https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings";
     }
 
     public static class User
