@@ -1,15 +1,14 @@
 ﻿using Microsoft.Win32;
 using ParquetViewer.Helpers;
 using System;
+using System.Data.SqlTypes;
 
 namespace ParquetViewer
 {
     public static class AppSettings
     {
         private const string RegistrySubKey = "ParquetViewer";
-        private const string UseISODateFormatKey = "UseISODateFormat";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
-        private const string RememberLastRowCountKey = "RememberLastRowCount";
         private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
         private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
@@ -17,319 +16,113 @@ namespace ParquetViewer
         private const string AnalyticsDataGatheringConsentKey = "AnalyticsDataGatheringConsent";
         private const string AlwaysLoadAllRecordsKey = "AlwaysLoadAllRecords";
         private const string OpenedFileCountKey = "OpenedFileCount";
+        private const string CustomDateFormatKey = "CustomDateFormat";
 
         public static DateFormat DateTimeDisplayFormat
         {
-            get
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        int? value = registryKey.GetValue(DateTimeDisplayFormatKey) as int?;
-                        if (value is null)
-                        {
-                            //Fallback to legacy site setting until everyone switches over to this new site setting
-                            var useIsoFormat = false;
-                            if (bool.TryParse(registryKey.GetValue(UseISODateFormatKey)?.ToString(), out useIsoFormat))
-                            {
-                                value = (int)(useIsoFormat ? DateFormat.ISO8601 : DateFormat.Default);
-
-                                //Also set the new app setting registry key value
-                                DateTimeDisplayFormat = (DateFormat)value;
-                            }
-                            else
-                            {
-                                return default;
-                            }
-                        }
-                        
-                        return value.Value.ToEnum<DateFormat>();
-                    }
-                }
-                catch
-                {
-                    return default;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(DateTimeDisplayFormatKey, (int)value);
-                    }
-                }
-                catch { }
-            }
+            get => ReadRegistryValue(DateTimeDisplayFormatKey, out int value) ? value.ToEnum(DateFormat.Default) : DateFormat.Default;
+            set => SetRegistryValue(DateTimeDisplayFormatKey, (int)value);
         }
 
         public static bool AlwaysSelectAllFields
         {
-            get
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        bool.TryParse(registryKey.GetValue(AlwaysSelectAllFieldsKey)?.ToString(), out var value);
-                        return value;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(AlwaysSelectAllFieldsKey, value.ToString());
-                    }
-                }
-                catch { }
-            }
-        }
-
-        [Obsolete("Retired in favor of AlwaysLoadAllRecords. Do not use!")]
-        private static bool RememberLastRowCount
-        {
-            get
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        bool.TryParse(registryKey.GetValue(RememberLastRowCountKey)?.ToString(), out var value);
-                        return value;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(RememberLastRowCountKey, value.ToString());
-                    }
-                }
-                catch { }
-            }
+            get => ReadRegistryValue(AlwaysSelectAllFieldsKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+            set => SetRegistryValue(AlwaysSelectAllFieldsKey, value.ToString());
         }
 
         public static bool AlwaysLoadAllRecords
         {
-            get
-            {
-                try
-                {
-                    bool value;
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        if (!bool.TryParse(registryKey.GetValue(AlwaysLoadAllRecordsKey)?.ToString(), out value))
-                        {
-#pragma warning disable CS0618 // Type or member is obsolete
-                            if (RememberLastRowCount)
-                            {
-                                //Replace obsolete setting with new one
-                                AlwaysLoadAllRecords = true;
-                                value = true;
-                            }
-#pragma warning restore CS0618 // Type or member is obsolete
-                        }
-                    }
-
-                    return value;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(AlwaysLoadAllRecordsKey, value.ToString());
-                    }
-                }
-                catch { }
-            }
+            get => ReadRegistryValue(AlwaysLoadAllRecordsKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+            set => SetRegistryValue(AlwaysLoadAllRecordsKey, value.ToString());
         }
 
         public static AutoSizeColumnsMode AutoSizeColumnsMode
         {
-            get
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        int? value = registryKey.GetValue(AutoSizeColumnsModeKey) as int?;
-                        if (value != null && Enum.IsDefined(typeof(AutoSizeColumnsMode), value))
-                            return (AutoSizeColumnsMode)value;
-                        else
-                            return AutoSizeColumnsMode.AllCells;
-                    }
-                }
-                catch
-                {
-                    return AutoSizeColumnsMode.ColumnHeader;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(AutoSizeColumnsModeKey, (int)value);
-                    }
-                }
-                catch { }
-            }
+            get => ReadRegistryValue(AutoSizeColumnsModeKey, out int value) ? value.ToEnum(AutoSizeColumnsMode.AllCells) : AutoSizeColumnsMode.AllCells;
+            set => SetRegistryValue(AutoSizeColumnsModeKey, (int)value);
         }
 
         public static string? ConsentLastAskedOnVersion
         {
-            get
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        return registryKey.GetValue(ConsentLastAskedOnVersionKey)?.ToString();
-                    }
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(ConsentLastAskedOnVersionKey, value ?? string.Empty);
-                    }
-                }
-                catch { }
-            }
+            get => ReadRegistryValue(ConsentLastAskedOnVersionKey, out string? value) ? value : null;
+            set => SetRegistryValue(ConsentLastAskedOnVersionKey, value ?? string.Empty);
         }
 
-        public static Guid AnalyticsDeviceId
+        public static Guid AnalyticsDeviceId 
+            => ReadRegistryValue(AnalyticsDeviceIdKey, out string? temp) && Guid.TryParse(temp, out var value) ? value : SetAnalyticsDeviceId();
+
+        private static Guid SetAnalyticsDeviceId()
         {
-            get
+            try
             {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        if (Guid.TryParse(registryKey.GetValue(AnalyticsDeviceIdKey)?.ToString(), out var value))
-                        {
-                            return value;
-                        }
-                        else
-                        {
-                            //This user doesn't have an analytics device id yet, so create one
-                            Guid newDeviceId = Guid.NewGuid();
-                            registryKey.SetValue(AnalyticsDeviceIdKey, newDeviceId);
-                            return newDeviceId;
-                        }
-                    }
-                }
-                catch
-                {
-                    return Guid.Empty;
-                }
+                using var registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey);
+                Guid newDeviceId = Guid.NewGuid();
+                registryKey.SetValue(AnalyticsDeviceIdKey, newDeviceId);
+                return newDeviceId;
+            }
+            catch
+            {
+                return Guid.Empty;
             }
         }
 
         public static bool AnalyticsDataGatheringConsent
         {
-            get
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        bool.TryParse(registryKey.GetValue(AnalyticsDataGatheringConsentKey)?.ToString(), out var value);
-                        return value;
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            set
-            {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        registryKey.SetValue(AnalyticsDataGatheringConsentKey, value.ToString());
-                    }
-                }
-                catch { }
-            }
+            get => ReadRegistryValue(AnalyticsDataGatheringConsentKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+            set => SetRegistryValue(AnalyticsDataGatheringConsentKey, value.ToString());
         }
 
         private static int? _openedFileCount;
         public static int OpenedFileCount
         {
-            get
+            get => _openedFileCount ??= ReadRegistryValue(OpenedFileCountKey, out int value) ? value : 0;
+            set 
             {
-                try
-                {
-                    if (_openedFileCount is not null)
-                    {
-                        return _openedFileCount.Value;
-                    }
+                _openedFileCount = value;
+                SetRegistryValue(OpenedFileCountKey, value);
+            }
+        }
 
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        if (registryKey.GetValue(OpenedFileCountKey) is int count)
-                        {
-                            _openedFileCount = count;
-                            return count;
-                        }
-                        else
-                        {
-                            return 0;
-                        }
-                    }
-                }
-                catch
-                {
-                    return 0;
-                }
-            }
-            set
+        public static string? CustomDateFormat
+        {
+            get => ReadRegistryValue(CustomDateFormatKey, out string? value) && UtilityMethods.IsValidDateFormat(value) ? value : null;
+            set => SetRegistryValue(CustomDateFormatKey, value ?? string.Empty);
+        }
+
+        private static bool ReadRegistryValue<T>(string key, out T? value)
+        {
+            try
             {
-                try
+                using var registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey);
+                if (registryKey.GetValue(key) is T castValue)
                 {
-                    using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey))
-                    {
-                        _openedFileCount = value;
-                        registryKey.SetValue(OpenedFileCountKey, value);
-                    }
+                    value = castValue;
+                    return true;
                 }
-                catch { }
+                else
+                {
+                    value = default;
+                    return false;
+                }
             }
+            catch
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        private static void SetRegistryValue<T>(string key, T value)
+        {
+            if (value is null) //registry can't store null values
+                throw new ArgumentNullException(nameof(value));
+
+            try
+            {
+                using var registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey);
+                registryKey.SetValue(key, value);
+            }
+            catch { }
         }
     }
 }

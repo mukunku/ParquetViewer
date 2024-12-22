@@ -16,7 +16,10 @@ namespace ParquetViewer.Helpers
     {
         private const string DefaultDateTimeFormat = "g";
         private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+        
+        [Obsolete]
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+        [Obsolete]
         private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public static DataGridViewAutoSizeColumnsMode ToDGVMode(this AutoSizeColumnsMode mode) => mode switch
@@ -122,13 +125,13 @@ namespace ParquetViewer.Helpers
         public static bool IsNumber(this Type type) =>
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
-        public static T ToEnum<T>(this int value) where T : struct, Enum
+        public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
         {
             if (Enum.IsDefined(typeof(T), value))
             {
                 return (T)Enum.ToObject(typeof(T), value);
             }
-            return default;
+            return @default;
         }
 
         public static void DeleteSubKeyTreeIfExists(this RegistryKey key, string name)

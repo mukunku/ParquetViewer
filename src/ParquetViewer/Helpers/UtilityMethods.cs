@@ -46,5 +46,21 @@ namespace ParquetViewer.Helpers
             }
             return null;
         }
+
+        public static bool IsValidDateFormat(string? dateFormat)
+        {
+            if (string.IsNullOrWhiteSpace(dateFormat))
+                return false;
+
+            try
+            {
+                DateTime.UtcNow.ToString(dateFormat);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }

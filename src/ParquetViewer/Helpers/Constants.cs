@@ -26,7 +26,8 @@ namespace ParquetViewer.Helpers
         Default = 0,
         ISO8601 = 2,
         ISO8601_Alt1 = 4,
-        ISO8601_Alt2 = 5
+        ISO8601_Alt2 = 5,
+        Custom = 6
     }
 
     public enum FileType
