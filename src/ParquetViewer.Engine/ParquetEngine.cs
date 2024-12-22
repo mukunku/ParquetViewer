@@ -29,8 +29,6 @@ namespace ParquetViewer.Engine
 
         public string OpenFileOrFolderPath { get; }
 
-        public bool FixMalformedDateTime { get; set; } = true;
-
         private ParquetSchemaElement BuildParquetSchemaTree()
         {
             var thriftSchema = ThriftMetadata.Schema ?? throw new Exception("No thrift metadata was found");

@@ -373,16 +373,7 @@ namespace ParquetViewer.Tests
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.Equal(typeof(DateTime), dataTable.Rows[0]["ds"]?.GetType());
-
-            //Check if the malformed datetime still needs to be fixed
-            parquetEngine.FixMalformedDateTime = false;
-
-            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
-            if (dataTable.Rows[0]["ds"]?.GetType() == typeof(DateTime))
-            {
-                Assert.Fail("Looks like the Malformed DateTime Fix is no longer needed! Remove that part of the code.");
-            }
-            Assert.Equal(typeof(long), dataTable.Rows[0]["ds"]?.GetType()); //If it's not a datetime, then it should be a long.
+            Assert.Equal(new DateTime(2017, 1, 1), dataTable.Rows[0]["ds"]);
         }
 
         [Fact]

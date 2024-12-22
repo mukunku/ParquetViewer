@@ -163,7 +163,7 @@ namespace ParquetViewer.Engine
                     }
                     else
                     {
-                        dataTable.Rows[rowIndex]![fieldIndex] = FixDateTime(value, field);
+                        dataTable.Rows[rowIndex]![fieldIndex] = value;
                     }
 
                     rowIndex++;
@@ -521,13 +521,6 @@ namespace ParquetViewer.Engine
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (this.FixMalformedDateTime
-                    && schema.SchemaElement.LogicalType?.TIMESTAMP is not null
-                    && schema.SchemaElement?.ConvertedType is null)
-                {
-                    //Fix for malformed datetime fields (#88)
-                    dataTable.AddColumn(field, typeof(DateTime), parent);
-                }
                 else if (schema.SchemaElement.NumChildren > 0) //Struct
                 {
                     dataTable.AddColumn(field, typeof(StructValue), parent);
@@ -545,45 +538,6 @@ namespace ParquetViewer.Engine
                 }
             }
             return dataTable;
-        }
-
-        private object FixDateTime(object value, ParquetSchemaElement field)
-        {
-            if (!this.FixMalformedDateTime)
-                return value;
-
-            var timestampSchema = field.SchemaElement?.LogicalType?.TIMESTAMP;
-            if (timestampSchema is not null && field.SchemaElement?.ConvertedType is null)
-            {
-                long castValue;
-                if (field.DataField?.ClrType == typeof(long?))
-                {
-                    castValue = ((long?)value).Value; //We know this isn't null from the null check above
-                }
-                else if (field.DataField?.ClrType == typeof(long))
-                {
-                    castValue = (long)value;
-                }
-                else
-                {
-                    throw new UnsupportedFieldException($"Field {field.Path} is not a valid timestamp field");
-                }
-
-                int divideBy = 0;
-                if (timestampSchema.Unit.NANOS != null)
-                    divideBy = 1000 * 1000;
-                else if (timestampSchema.Unit.MICROS != null)
-                    divideBy = 1000;
-                else if (timestampSchema.Unit.MILLIS != null)
-                    divideBy = 1;
-
-                if (divideBy > 0)
-                    value = DateTimeOffset.FromUnixTimeMilliseconds(castValue / divideBy).DateTime;
-                else //Not sure if this 'else' is correct but adding just in case
-                    value = DateTimeOffset.FromUnixTimeSeconds(castValue).DateTime;
-            }
-
-            return value;
         }
 
         private class SimpleProgress : IProgress<int>
