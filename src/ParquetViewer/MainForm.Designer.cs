@@ -205,7 +205,7 @@ namespace ParquetViewer
             searchFilterLabel.Margin = new Padding(4, 0, 4, 0);
             searchFilterLabel.Name = "searchFilterLabel";
             searchFilterLabel.Size = new System.Drawing.Size(97, 16);
-            searchFilterLabel.TabIndex = 7;
+            searchFilterLabel.TabIndex = 8;
             searchFilterLabel.TabStop = true;
             searchFilterLabel.Text = "Filter Query (?):";
             searchFilterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -267,7 +267,7 @@ namespace ParquetViewer
             mainTableLayoutPanel.SetRowSpan(mainGridView, 2);
             mainGridView.ShowCellToolTips = false;
             mainGridView.Size = new System.Drawing.Size(936, 356);
-            mainGridView.TabIndex = 6;
+            mainGridView.TabIndex = 7;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
             mainGridView.DataError += MainGridView_DataError;
             // 
@@ -286,7 +286,7 @@ namespace ParquetViewer
             loadAllRowsButton.Margin = new Padding(2, 0, 5, 0);
             loadAllRowsButton.Name = "loadAllRowsButton";
             loadAllRowsButton.Size = new System.Drawing.Size(13, 16);
-            loadAllRowsButton.TabIndex = 8;
+            loadAllRowsButton.TabIndex = 6;
             loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, "Load all records (Ctrl+E)");
             loadAllRowsButton.UseVisualStyleBackColor = true;
             loadAllRowsButton.EnabledChanged += loadAllRowsButton_EnabledChanged;
@@ -411,7 +411,7 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
@@ -420,7 +420,7 @@ namespace ParquetViewer
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.fffZ";
@@ -429,7 +429,7 @@ namespace ParquetViewer
             // customDateFormatToolStripMenuItem
             // 
             customDateFormatToolStripMenuItem.Name = "customDateFormatToolStripMenuItem";
-            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             customDateFormatToolStripMenuItem.Tag = "6";
             customDateFormatToolStripMenuItem.Text = "Custom...";
             customDateFormatToolStripMenuItem.Click += DateFormatMenuItem_Click;
