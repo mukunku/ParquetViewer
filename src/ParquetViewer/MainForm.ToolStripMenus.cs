@@ -166,6 +166,10 @@ namespace ParquetViewer
                     {
                         customDateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                     }
+                    else if (AppSettings.DateTimeDisplayFormat == DateFormat.Custom)
+                    {
+                        customDateFormat = AppSettings.CustomDateFormat;
+                    }
 
                     var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
                     if (customDateFormatInputForm.ShowDialog(this) == DialogResult.OK)

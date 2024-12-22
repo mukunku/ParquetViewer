@@ -34,8 +34,16 @@ namespace ParquetViewer
         {
             try
             {
-                this.livePreviewTextBox.Text = DateTime.Now.ToString(this.desiredDateFormatTextBox.Text);
-                this.saveDateFormatButton.Enabled = true;
+                if (string.IsNullOrWhiteSpace(this.desiredDateFormatTextBox.Text))
+                {
+                    this.livePreviewTextBox.Text = string.Empty;
+                    this.saveDateFormatButton.Enabled = false;
+                }
+                else
+                {
+                    this.livePreviewTextBox.Text = DateTime.Now.ToString(this.desiredDateFormatTextBox.Text);
+                    this.saveDateFormatButton.Enabled = true;
+                }
             }
             catch (Exception)
             {

@@ -538,7 +538,7 @@ namespace ParquetViewer
             if (dataType == typeof(DateTime))
             {
                 //Use a standard date format since we allow users to set custom date formats now and we need the data to be accurate.
-                const string queryDateFormat = "yyyy-MM-dd HH:mm:ss.FFF";
+                const string queryDateFormat = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
                 this.searchFilterTextBox.PlaceholderText =
                     $"WHERE {simpleColumn.ColumnName} = #{((DateTime)sampleSimpleValue).ToString(queryDateFormat)}#";
             }
