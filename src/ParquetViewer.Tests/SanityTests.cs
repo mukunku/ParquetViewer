@@ -192,43 +192,30 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet", default);
 
-            Assert.Equal(5, parquetEngine.RecordCount);
-            Assert.Equal(4, parquetEngine.Fields.Count);
+            Assert.Equal(8, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
 
-            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 2, default))(false);
-            Assert.IsType<MapValue>(dataTable.Rows[0][2]);
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 4, default))(false);
+            Assert.IsType<MapValue>(dataTable.Rows[0][1]);
 
-            // attempt to read all entries of a single map record (can contain multiple map values)
-            var expectedValues = new Dictionary<object, string>()
-            {
-                {"age", "35" },
-                {"city", "Chicago" },
-                {"another key", "another value" },
-                {"lalala", "lili" },
-            };
+            Assert.Equal("[(1,1),(2,2)]", dataTable.Rows[0][1].ToString());
+            Assert.Equal(1, ((MapValue)dataTable.Rows[0][1]).Keys[0]);
+            Assert.Equal(1, ((MapValue)dataTable.Rows[0][1]).Values[0]);
+            Assert.Equal(2, ((MapValue)dataTable.Rows[0][1]).Keys[1]);
+            Assert.Equal(2, ((MapValue)dataTable.Rows[0][1]).Values[1]);
 
-            MapValue mapRecord = (MapValue)dataTable.Rows[0][2];
-            foreach (var row in mapRecord)
-            {
-                bool wasFound = expectedValues.Remove(row.Key, out string? value);
-                Assert.True(wasFound);
-                Assert.Equal(value, row.Value);
-            }
+            Assert.Equal(string.Empty, dataTable.Rows[1][1].ToString());
+            Assert.Equal(DBNull.Value, dataTable.Rows[1][1]);
 
-            // assure that maps from the same column can have variable lengths
-            expectedValues = new Dictionary<object, string>()
-            {
-                {"age", "28" },
-                {"city", "San Francisco" },
-            };
+            Assert.Equal("[]", dataTable.Rows[2][1].ToString());
+            Assert.Empty(((MapValue)dataTable.Rows[2][1]).Keys);
+            Assert.Empty(((MapValue)dataTable.Rows[2][1]).Values);
 
-            mapRecord = (MapValue)dataTable.Rows[1][2];
-            foreach (var row in mapRecord)
-            {
-                bool wasFound = expectedValues.Remove(row.Key, out string? value);
-                Assert.True(wasFound);
-                Assert.Equal(value, row.Value);
-            }
+            Assert.Equal("[(3,3),(4,4)]", dataTable.Rows[3][1].ToString());
+            Assert.Equal(3, ((MapValue)dataTable.Rows[3][1]).Keys[0]);
+            Assert.Equal(3, ((MapValue)dataTable.Rows[3][1]).Values[0]);
+            Assert.Equal(4, ((MapValue)dataTable.Rows[3][1]).Keys[1]);
+            Assert.Equal(4, ((MapValue)dataTable.Rows[3][1]).Values[1]);
         }
 
         [Fact]

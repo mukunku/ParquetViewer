@@ -1,5 +1,4 @@
 ﻿using Parquet;
-using Parquet.Data;
 using Parquet.Meta;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
