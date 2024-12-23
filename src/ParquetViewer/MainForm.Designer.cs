@@ -411,7 +411,7 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
@@ -420,7 +420,7 @@ namespace ParquetViewer
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.fffZ";
@@ -429,9 +429,10 @@ namespace ParquetViewer
             // customDateFormatToolStripMenuItem
             // 
             customDateFormatToolStripMenuItem.Name = "customDateFormatToolStripMenuItem";
-            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             customDateFormatToolStripMenuItem.Tag = "6";
             customDateFormatToolStripMenuItem.Text = "Custom...";
+            customDateFormatToolStripMenuItem.ToolTipText = "Configure a custom date format";
             customDateFormatToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // columnSizingToolStripMenuItem

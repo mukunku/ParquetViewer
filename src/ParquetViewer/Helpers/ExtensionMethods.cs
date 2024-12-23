@@ -14,7 +14,7 @@ namespace ParquetViewer.Helpers
     public static class ExtensionMethods
     {
         private const string DefaultDateTimeFormat = "g";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fff";
         
         [Obsolete]
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
