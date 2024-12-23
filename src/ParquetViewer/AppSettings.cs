@@ -82,10 +82,15 @@ namespace ParquetViewer
             }
         }
 
+        private static string? _customDateFormat;
         public static string? CustomDateFormat
         {
-            get => ReadRegistryValue(CustomDateFormatKey, out string? value) && UtilityMethods.IsValidDateFormat(value) ? value : null;
-            set => SetRegistryValue(CustomDateFormatKey, value ?? string.Empty);
+            get => _customDateFormat ??= ReadRegistryValue(CustomDateFormatKey, out string? value) && UtilityMethods.IsValidDateFormat(value) ? value : null;
+            set
+            {
+                _customDateFormat = value;
+                SetRegistryValue(CustomDateFormatKey, value ?? string.Empty);
+            }
         }
 
         private static bool ReadRegistryValue<T>(string key, out T? value)
