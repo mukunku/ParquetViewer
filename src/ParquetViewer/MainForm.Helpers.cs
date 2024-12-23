@@ -314,7 +314,7 @@ namespace ParquetViewer
     ""CreatedWith"": ""ParquetViewer"",
     ""Version"": """ + AboutBox.AssemblyVersion + @""",
     ""Website"": ""https://github.com/mukunku/ParquetViewer"",
-    ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC") + @"""
+    ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + @"""
 }"
                                 }
                             };
