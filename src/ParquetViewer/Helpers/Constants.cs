@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security.Principal;
+using System.Threading;
 
 namespace ParquetViewer.Helpers
 {
@@ -15,6 +16,9 @@ namespace ParquetViewer.Helpers
         public static bool IsAdministrator =>
             new WindowsPrincipal(WindowsIdentity.GetCurrent())
                 .IsInRole(WindowsBuiltInRole.Administrator);
+
+        public static char NumberDecimalSeparator = 
+            Thread.CurrentThread.CurrentUICulture.NumberFormat.NumberDecimalSeparator.ToCharArray()[0];
     }
 
     public enum ParquetEngine

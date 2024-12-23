@@ -176,5 +176,28 @@ namespace ParquetViewer.Helpers
                         && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 ? sourceType
                 : typeof(Nullable<>).MakeGenericType(sourceType);
+
+        /// <summary>
+        /// Converts a float to a string without using the scientific notation
+        /// </summary>
+        public static string ToDecimalString(this float floatValue) => ToDecimalStringImpl(floatValue);
+
+        /// <summary>
+        /// Converts a float to a string without using the scientific notation
+        /// </summary>
+        public static string ToDecimalString(this double doubleValue) => ToDecimalStringImpl(doubleValue);
+
+        private static string ToDecimalStringImpl(object value)
+        {
+            var formattedValue = value?.ToString() ?? string.Empty;
+            
+            var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
+            if (isUsingScientificNotation)
+            {
+                //Convert the float/double to a decimal which is formatted much nicer as string
+                formattedValue = Convert.ToDecimal(value).ToString();
+            }
+            return formattedValue;
+        }
     }
 }
