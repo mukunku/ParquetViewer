@@ -14,7 +14,7 @@ namespace ParquetViewer.Helpers
     public static class ExtensionMethods
     {
         private const string DefaultDateTimeFormat = "g";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFZ";
+        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ";
         
         [Obsolete]
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
@@ -183,7 +183,7 @@ namespace ParquetViewer.Helpers
         public static string ToDecimalString(this float floatValue) => ToDecimalStringImpl(floatValue);
 
         /// <summary>
-        /// Converts a float to a string without using the scientific notation
+        /// Converts a double to a string without using the scientific notation
         /// </summary>
         public static string ToDecimalString(this double doubleValue) => ToDecimalStringImpl(doubleValue);
 
