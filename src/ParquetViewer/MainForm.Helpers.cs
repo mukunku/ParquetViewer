@@ -198,7 +198,7 @@ namespace ParquetViewer
 
                         writer.WriteLine(rowBuilder.ToString());
                     }
-                });
+                }, cancellationToken);
 
         private static Task WriteDataToExcelFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
             => Task.Run(() =>
@@ -260,7 +260,7 @@ namespace ParquetViewer
                         || value.GetType() == typeof(long);
 
                     excelWriter.EndWrite();
-                });
+                }, cancellationToken);
 
         private static Task WriteDataToJSONFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
             => Task.Run(() =>
@@ -289,7 +289,7 @@ namespace ParquetViewer
                         jsonWriter.WriteEndObject();
                     }
                     jsonWriter.WriteEndArray();
-                });
+                }, cancellationToken);
 
         private Task WriteDataToParquetFile(string path, CancellationToken cancellationToken, IProgress<int> progress)
             => Task.Run(async () =>
@@ -333,7 +333,7 @@ namespace ParquetViewer
                         await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
                         progress.Report(values.Length); //No way to report progress for each row, so do it by column
                     }
-                });
+                }, cancellationToken);
 
         private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
         {
