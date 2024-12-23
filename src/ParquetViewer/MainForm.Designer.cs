@@ -423,7 +423,7 @@ namespace ParquetViewer
             iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
-            iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.FFFZ";
+            iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ";
             iSO8601ToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // customDateFormatToolStripMenuItem
