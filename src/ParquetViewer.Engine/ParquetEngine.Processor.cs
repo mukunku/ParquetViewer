@@ -35,7 +35,7 @@ namespace ParquetViewer.Engine
             };
         }
 
-		private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
+        private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
             long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read column by column to generate each row in the datatable
@@ -104,7 +104,7 @@ namespace ParquetViewer.Engine
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.Map:
-                        await ReadMapField(dataTable, groupReader, field, skipRecords,
+                        await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.Struct:
@@ -117,7 +117,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-		private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
@@ -163,7 +163,7 @@ namespace ParquetViewer.Engine
                     }
                     else
                     {
-                        dataTable.Rows[rowIndex]![fieldIndex] = FixDateTime(value, field);
+                        dataTable.Rows[rowIndex]![fieldIndex] = value;
                     }
 
                     rowIndex++;
@@ -182,40 +182,81 @@ namespace ParquetViewer.Engine
                 int skippedRecords = 0;
                 var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
 
-                ArrayList? rowValue = null;
-                for (int i = 0; i < dataColumn.Data.Length; i++)
+                var dataEnumerable = dataColumn.Data.Cast<object?>().Select(d => d ?? DBNull.Value);
+                //Some parquet writers don't write null entries into the data array for empty and null lists.
+                //This throws off our logic below so lets find all empty/null lists and add a null entry into 
+                //the data array to align it with the repetition levels.
+                int levelCount = dataColumn.RepetitionLevels?.Length ?? 0;
+                if (levelCount > dataColumn.Data.Length)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    rowValue ??= new ArrayList();
-
-                    bool IsEndOfRow() => (i + 1) == dataColumn.RepetitionLevels!.Length
-                        || dataColumn.RepetitionLevels[i + 1] == 0; //0 means new list
-
-                    //Skip rows
-                    while (skipRecords > skippedRecords)
+                    if (dataColumn.RepetitionLevels?.Length != dataColumn.DefinitionLevels?.Length)
                     {
-                        if (IsEndOfRow())
-                            skippedRecords++;
-
-                        i++;
+                        throw new MalformedFieldException($"Field `{itemField.Path}` appears malformed due to different lengths in repetition and definition levels");
                     }
 
-                    //If we skipped to the end then just exit
-                    if (i == dataColumn.Data.Length)
-                        break;
+                    dataEnumerable = GetDataWithPaddedNulls();
 
-                    if (IsEndOfRow())
+                    IEnumerable<object> GetDataWithPaddedNulls()
+                    {
+                        var index = -1;
+                        foreach (var data in dataColumn.Data)
+                        {
+                            index++;
+
+                            while (dataColumn.IsEmpty(index) || dataColumn.IsNull(index))
+                            {
+                                yield return DBNull.Value;
+                                index++;
+                            }
+
+                            yield return data ?? DBNull.Value;
+                        }
+
+                        //Need to handle case where last N rows are null/empty
+                        while (levelCount > index + 1)
+                        {
+                            yield return DBNull.Value;
+                            index++;
+                        }
+                    }
+                }
+
+                ArrayList? rowValue = null;
+                int index = -1;
+                foreach (var data in dataEnumerable)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    index++;
+
+                    bool IsEndOfRow(int index) => (index + 1) == dataColumn.RepetitionLevels!.Length
+                        || dataColumn.RepetitionLevels[index + 1] == 0; //0 means new list
+
+                    //Skip rows
+                    if (skipRecords > skippedRecords)
+                    {
+                        if (IsEndOfRow(index))
+                            skippedRecords++;
+
+                        continue;
+                    }
+
+                    rowValue ??= new ArrayList();
+                    if (IsEndOfRow(index))
                     {
                         if (isFirstColumn)
                         {
                             dataTable.NewRow();
                         }
 
-                        var lastItem = dataColumn.Data.GetValue(i) ?? DBNull.Value;
-                        rowValue.Add(lastItem);
+                        rowValue.Add(data);
 
-                        dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
+                        if (dataColumn.IsNull(index))
+                            dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
+                        else if (dataColumn.IsEmpty(index))
+                            dataTable.Rows[rowIndex]![fieldIndex] = new ListValue([], itemField.DataField!.ClrType);
+                        else
+                            dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
+
                         rowValue = null;
 
                         rowIndex++;
@@ -226,8 +267,7 @@ namespace ParquetViewer.Engine
                     }
                     else
                     {
-                        var value = dataColumn.Data.GetValue(i) ?? DBNull.Value;
-                        rowValue.Add(value);
+                        rowValue.Add(data);
                     }
                 }
             }
@@ -249,14 +289,14 @@ namespace ParquetViewer.Engine
                     var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
                     for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
                     {
-                        if (values[columnOrdinal] == DBNull.Value) 
+                        if (values[columnOrdinal] == DBNull.Value)
                         {
                             //Empty array
                             continue;
                         }
 
                         var columnValues = (ListValue)values[columnOrdinal];
-                        for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
+                        for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
                         {
                             var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
                             bool isFirstValueColumn = columnOrdinal == 0;
@@ -289,8 +329,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-
-        private async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, ParquetSchemaElement field,
+        private static async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var keyValueField = field.GetSingle("key_value");
@@ -300,57 +339,123 @@ namespace ParquetViewer.Engine
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested map types are not supported");
 
-            int currentRecord = 0;
+            int rowIndex = rowBeginIndex;
+
             int skippedRecords = 0;
             var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
             var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
-            
-            int rowCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
-            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
 
-            // Evaluates the MapValues at rowIndex when called.
-            MapValue? MapEntiresClojure(int rowIndex, bool forceEval)
+            var dataEnumerable = Helpers.PairEnumerables(keyDataColumn.Data.Cast<object?>(), valueDataColumn.Data.Cast<object?>(), DBNull.Value);
+            //Some parquet writers don't write null entries into the data array for empty and null maps.
+            //This throws off our logic below so lets find all empty/null maps and add a null entry into 
+            //the data array to align it with the repetition levels.
+            int levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
+            int dataCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
+            if (levelCount > dataCount)
             {
-                if ((rowIndex < rowCount && keyDataColumn.RepetitionLevels[rowIndex] != 0) || forceEval)
-                {
-                    var key = keyDataColumn.Data.Length > rowIndex ? keyDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
-                    var value = valueDataColumn.Data.Length > rowIndex ? valueDataColumn.Data.GetValue(rowIndex) ?? DBNull.Value : DBNull.Value;
-                    return new MapValue(key, keyField.DataField!.ClrType, value, valueField.DataField!.ClrType, () => MapEntiresClojure(rowIndex + 1, false));
-                }
-                return null;
-            };
+                if (keyDataColumn.RepetitionLevels?.Length != keyDataColumn.DefinitionLevels?.Length)
+                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed keys due to different lengths in repetition and definition levels");
+                else if (valueDataColumn.RepetitionLevels?.Length != valueDataColumn.DefinitionLevels?.Length)
+                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed values due to different lengths in repetition and definition levels");
 
-            // Evaluate the first MapValue of each not skipped record that is requested to be read.
-            for (int i = 0; i < keyDataColumn.RepetitionLevels.Length; i++)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
+                dataEnumerable = GetDataWithPaddedNulls();
 
-                if (keyDataColumn.RepetitionLevels[i] == 0)
+                IEnumerable<(object?, object?)> GetDataWithPaddedNulls()
                 {
-                    if (skippedRecords++ < skipRecords)
+                    var index = -1;
+                    foreach ((var key, var value) in Helpers.PairEnumerables(keyDataColumn.Data.Cast<object?>(), valueDataColumn.Data.Cast<object?>(), DBNull.Value))
                     {
-                        continue;
+                        index++;
+
+                        while (keyDataColumn.IsNull(index) || valueDataColumn.IsNull(index)
+                            || keyDataColumn.IsEmpty(index) || valueDataColumn.IsEmpty(index))
+                        {
+                            yield return (DBNull.Value, DBNull.Value);
+                            index++;
+                        }
+
+                        yield return (key ?? DBNull.Value, value ?? DBNull.Value);
                     }
 
+                    //Need to handle case where last N rows are null/empty
+                    while (levelCount > index + 1)
+                    {
+                        yield return (DBNull.Value, DBNull.Value);
+                        index++;
+                    }
+                }
+            }
 
+            var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
+            ArrayList? mapKeys = null;
+            ArrayList? mapValues = null;
+            int index = -1;
+            foreach (var (key, value) in dataEnumerable)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                index++;
+
+                bool IsEndOfRow() => (index + 1) == levelCount
+                    || GetRepetitionLevel(index + 1) == 0; //0 means new map
+
+                //Skip rows
+                if (skipRecords > skippedRecords)
+                {
+                    if (IsEndOfRow())
+                        skippedRecords++;
+
+                    continue;
+                }
+
+                mapKeys ??= [];
+                mapValues ??= [];
+                if (IsEndOfRow())
+                {
                     if (isFirstColumn)
                     {
                         dataTable.NewRow();
                     }
 
-                    dataTable.Rows[currentRecord++]![fieldIndex] = MapEntiresClojure(i, true);
+                    mapKeys.Add(key);
+                    mapValues.Add(value);
 
-                    if (currentRecord == readRecords)
-                    {
-                        return;
-                    }
+                    if (keyDataColumn.IsNull(index) || valueDataColumn.IsNull(index)) //If one is null the other should be as well
+                        dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
+                    else if (keyDataColumn.IsEmpty(index) || valueDataColumn.IsEmpty(index)) //If one is empty the other should be as well
+                        dataTable.Rows[rowIndex]![fieldIndex] = new MapValue([], keyField.DataField!.ClrType, [], valueField.DataField!.ClrType);
+                    else
+                        dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.DataField!.ClrType, mapValues, valueField.DataField!.ClrType);
 
+                    mapKeys = null;
+                    mapValues = null;
+
+                    rowIndex++;
                     progress?.Report(1);
+
+                    if (rowIndex - rowBeginIndex >= readRecords)
+                        break;
+                }
+                else
+                {
+                    mapKeys.Add(key);
+                    mapValues.Add(value);
+                }
+
+                int GetRepetitionLevel(int dataIndex)
+                {
+                    if (keyDataColumn.RepetitionLevels is null && valueDataColumn.RepetitionLevels is null)
+                        return 0; // assume each entry is a new row since we have no repetition levels
+                    else if (keyDataColumn.RepetitionLevels?.Length > dataIndex)
+                        return keyDataColumn.RepetitionLevels[dataIndex];
+                    else if (valueDataColumn.RepetitionLevels?.Length > dataIndex)
+                        return valueDataColumn.RepetitionLevels[dataIndex];
+                    else
+                        throw new ArgumentOutOfRangeException(nameof(dataIndex));
                 }
             }
-		}
+        }
 
-		private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+        private async Task ReadStructField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             //Read struct data as a new datatable
@@ -416,13 +521,6 @@ namespace ParquetViewer.Engine
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (this.FixMalformedDateTime
-                    && schema.SchemaElement.LogicalType?.TIMESTAMP is not null
-                    && schema.SchemaElement?.ConvertedType is null)
-                {
-                    //Fix for malformed datetime fields (#88)
-                    dataTable.AddColumn(field, typeof(DateTime), parent);
-                }
                 else if (schema.SchemaElement.NumChildren > 0) //Struct
                 {
                     dataTable.AddColumn(field, typeof(StructValue), parent);
@@ -440,45 +538,6 @@ namespace ParquetViewer.Engine
                 }
             }
             return dataTable;
-        }
-
-        private object FixDateTime(object value, ParquetSchemaElement field)
-        {
-            if (!this.FixMalformedDateTime)
-                return value;
-
-            var timestampSchema = field.SchemaElement?.LogicalType?.TIMESTAMP;
-            if (timestampSchema is not null && field.SchemaElement?.ConvertedType is null)
-            {
-                long castValue;
-                if (field.DataField?.ClrType == typeof(long?))
-                {
-                    castValue = ((long?)value).Value; //We know this isn't null from the null check above
-                }
-                else if (field.DataField?.ClrType == typeof(long))
-                {
-                    castValue = (long)value;
-                }
-                else
-                {
-                    throw new UnsupportedFieldException($"Field {field.Path} is not a valid timestamp field");
-                }
-
-                int divideBy = 0;
-                if (timestampSchema.Unit.NANOS != null)
-                    divideBy = 1000 * 1000;
-                else if (timestampSchema.Unit.MICROS != null)
-                    divideBy = 1000;
-                else if (timestampSchema.Unit.MILLIS != null)
-                    divideBy = 1;
-
-                if (divideBy > 0)
-                    value = DateTimeOffset.FromUnixTimeMilliseconds(castValue / divideBy).DateTime;
-                else //Not sure if this 'else' is correct but adding just in case
-                    value = DateTimeOffset.FromUnixTimeSeconds(castValue).DateTime;
-            }
-
-            return value;
         }
 
         private class SimpleProgress : IProgress<int>

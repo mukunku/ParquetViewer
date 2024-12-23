@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers
 {
@@ -45,6 +46,22 @@ namespace ParquetViewer.Helpers
                     return fileType;
             }
             return null;
+        }
+
+        public static bool IsValidDateFormat(string? dateFormat)
+        {
+            if (string.IsNullOrWhiteSpace(dateFormat))
+                return false;
+
+            try
+            {
+                DateTime.UtcNow.ToString(dateFormat);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

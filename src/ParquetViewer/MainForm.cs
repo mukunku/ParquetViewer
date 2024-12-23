@@ -483,9 +483,9 @@ namespace ParquetViewer
         {
             this.defaultToolStripMenuItem.Checked = false;
             this.iSO8601ToolStripMenuItem.Checked = false;
-            this.iSO8601Alt1ToolStripMenuItem.Checked = false;
-            this.iSO8601Alt2ToolStripMenuItem.Checked = false;
+            this.customDateFormatToolStripMenuItem.Checked = false;
 
+#pragma warning disable CS0612 // Type or member is obsolete
             switch (AppSettings.DateTimeDisplayFormat)
             {
                 case DateFormat.Default:
@@ -494,15 +494,16 @@ namespace ParquetViewer
                 case DateFormat.ISO8601:
                     this.iSO8601ToolStripMenuItem.Checked = true;
                     break;
+                //TODO: Get rid of this code that handles obsolete date formats after a few releases
                 case DateFormat.ISO8601_Alt1:
-                    this.iSO8601Alt1ToolStripMenuItem.Checked = true;
-                    break;
                 case DateFormat.ISO8601_Alt2:
-                    this.iSO8601Alt2ToolStripMenuItem.Checked = true;
+                case DateFormat.Custom:
+                    this.customDateFormatToolStripMenuItem.Checked = true;
                     break;
                 default:
                     break;
             }
+#pragma warning restore CS0612 // Type or member is obsolete
         }
 
         /// <summary>
@@ -539,8 +540,11 @@ namespace ParquetViewer
             var dataType = simpleColumn.DataType;
             if (dataType == typeof(DateTime))
             {
+                //Use a standard date format since we allow users to set custom date formats now
+                //and we need the suggested query to be syntactically correct
+                const string queryDateFormat = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
                 this.searchFilterTextBox.PlaceholderText =
-                    $"WHERE {simpleColumn.ColumnName} = #{((DateTime)sampleSimpleValue).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat())}#";
+                    $"WHERE {simpleColumn.ColumnName} = #{((DateTime)sampleSimpleValue).ToString(queryDateFormat)}#";
             }
             else if (dataType.IsNumber())
             {

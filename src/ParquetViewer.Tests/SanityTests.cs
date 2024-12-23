@@ -139,7 +139,7 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task LIST_TYPE_TEST()
+        public async Task LIST_TYPE_TEST1()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
 
@@ -148,16 +148,47 @@ namespace ParquetViewer.Tests
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.IsType<ListValue>(dataTable.Rows[0][0]);
-            Assert.Equal("[1,2,3]", ((ListValue)dataTable.Rows[0][0]).ToString());
+            Assert.Equal("[1,2,3]", dataTable.Rows[0][0].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[0][1]);
-            Assert.Equal("[abc,efg,hij]", ((ListValue)dataTable.Rows[0][1]).ToString());
+            Assert.Equal("[abc,efg,hij]", dataTable.Rows[0][1].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[1][0]);
-            Assert.Equal("[,1]", ((ListValue)dataTable.Rows[1][0]).ToString());
+            Assert.Equal("[,1]", dataTable.Rows[1][0].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[2][1]);
-            Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Data?.Count);
+            Assert.Equal(4, ((ListValue)dataTable.Rows[2][1]).Length);
             Assert.Equal("efg", ((ListValue)dataTable.Rows[2][1]).Data![0]);
             Assert.Equal(DBNull.Value, ((ListValue)dataTable.Rows[2][1]).Data![1]);
             Assert.Equal("xyz", ((ListValue)dataTable.Rows[2][1]).Data![3]);
+
+            //Also try reading with a record offset
+            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
+            Assert.IsType<ListValue>(dataTable.Rows[0][0]);
+            Assert.Equal("[,1]", dataTable.Rows[0][0].ToString());
+        }
+
+        [Fact]
+        public async Task LIST_TYPE_TEST2()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST2.parquet", default);
+
+            Assert.Equal(8, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 4, default))(false);
+            Assert.IsType<ListValue>(dataTable.Rows[0][1]);
+
+            Assert.Equal("[1,2]", dataTable.Rows[0][1].ToString());
+            Assert.Equal(1, ((ListValue)dataTable.Rows[0][1]).Data[0]);
+            Assert.Equal(2, ((ListValue)dataTable.Rows[0][1]).Data[1]);
+
+            Assert.Equal(string.Empty, dataTable.Rows[1][1].ToString());
+            Assert.Equal(DBNull.Value, dataTable.Rows[1][1]);
+
+            Assert.Equal("[]", dataTable.Rows[2][1].ToString());
+            Assert.Empty(((ListValue)dataTable.Rows[2][1]).Data);
+
+            Assert.Equal("[3,4]", dataTable.Rows[3][1].ToString());
+            Assert.Equal(3, ((ListValue)dataTable.Rows[3][1]).Data[0]);
+            Assert.Equal(4, ((ListValue)dataTable.Rows[3][1]).Data[1]);
         }
 
         [Fact]
@@ -169,14 +200,22 @@ namespace ParquetViewer.Tests
             Assert.Equal(2, parquetEngine.Fields.Count);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 2, default))(false);
+
             Assert.IsType<MapValue>(dataTable.Rows[0][0]);
-            Assert.Equal("(id,something)", ((MapValue)dataTable.Rows[0][0]).ToString());
-            Assert.IsType<MapValue>(dataTable.Rows[0][0]);
-            Assert.Equal("id", ((MapValue)dataTable.Rows[0][0]).Key);
-            Assert.Equal("something", ((MapValue)dataTable.Rows[0][0]).Value);
+            var row = (MapValue)dataTable.Rows[0][0];
+            Assert.Equal("id", row.FirstOrDefault().Key);
+            Assert.Equal("something", row.FirstOrDefault().Value);
+            Assert.Equal("value2", row.Skip(1).FirstOrDefault().Key);
+            Assert.Equal("else", row.Skip(1).FirstOrDefault().Value);
+            Assert.Equal("[(id,something),(value2,else)]", row.ToString());
+
             Assert.IsType<MapValue>(dataTable.Rows[1][0]);
-            Assert.Equal("id", ((MapValue)dataTable.Rows[1][0]).Key);
-            Assert.Equal("something2", ((MapValue)dataTable.Rows[1][0]).Value);
+            row = (MapValue)dataTable.Rows[1][0];
+            Assert.Equal("id", row.FirstOrDefault().Key);
+            Assert.Equal("something2", row.FirstOrDefault().Value);
+            Assert.Equal("value", row.Skip(1).FirstOrDefault().Key);
+            Assert.Equal("else2", row.Skip(1).FirstOrDefault().Value);
+            Assert.Equal("[(id,something2),(value,else2)]", row.ToString());
         }
         
         [Fact]
@@ -184,41 +223,30 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet", default);
 
-            Assert.Equal(5, parquetEngine.RecordCount);
-            Assert.Equal(4, parquetEngine.Fields.Count);
+            Assert.Equal(8, parquetEngine.RecordCount);
+            Assert.Equal(2, parquetEngine.Fields.Count);
 
-            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 2, default))(false);
-            Assert.IsType<MapValue>(dataTable.Rows[0][2]);
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 4, default))(false);
+            Assert.IsType<MapValue>(dataTable.Rows[0][1]);
 
-            // attempt to read all entires of a single map record (can contain multiple map values)
-            MapValue mapRecord = (MapValue)dataTable.Rows[0][2];
-            var expectedValues = new Dictionary<object, string>()
-            {
-                {"age", "35" },
-                {"city", "Chicago" },
-                {"another key", "another value" },
-                {"lalala", "lili" },
-            };
-            foreach (var row in mapRecord)
-            {
-                bool wasFound = expectedValues.Remove(row.Key, out string? value);
-                Assert.True(wasFound);
-                Assert.Equal(value, row.Value);
-            }
+            Assert.Equal("[(1,1),(2,2)]", dataTable.Rows[0][1].ToString());
+            Assert.Equal(1, ((MapValue)dataTable.Rows[0][1]).Keys[0]);
+            Assert.Equal(1, ((MapValue)dataTable.Rows[0][1]).Values[0]);
+            Assert.Equal(2, ((MapValue)dataTable.Rows[0][1]).Keys[1]);
+            Assert.Equal(2, ((MapValue)dataTable.Rows[0][1]).Values[1]);
 
-            // assure that maps from the same column can have variable lengths
-            mapRecord = (MapValue)dataTable.Rows[1][2];
-            expectedValues = new Dictionary<object, string>()
-            {
-                {"age", "28" },
-                {"city", "San Francisco" },
-            };
-            foreach (var row in mapRecord)
-            {
-                bool wasFound = expectedValues.Remove(row.Key, out string? value);
-                Assert.True(wasFound);
-                Assert.Equal(value, row.Value);
-            }
+            Assert.Equal(string.Empty, dataTable.Rows[1][1].ToString());
+            Assert.Equal(DBNull.Value, dataTable.Rows[1][1]);
+
+            Assert.Equal("[]", dataTable.Rows[2][1].ToString());
+            Assert.Empty(((MapValue)dataTable.Rows[2][1]).Keys);
+            Assert.Empty(((MapValue)dataTable.Rows[2][1]).Values);
+
+            Assert.Equal("[(3,3),(4,4)]", dataTable.Rows[3][1].ToString());
+            Assert.Equal(3, ((MapValue)dataTable.Rows[3][1]).Keys[0]);
+            Assert.Equal(3, ((MapValue)dataTable.Rows[3][1]).Values[0]);
+            Assert.Equal(4, ((MapValue)dataTable.Rows[3][1]).Keys[1]);
+            Assert.Equal(4, ((MapValue)dataTable.Rows[3][1]).Values[1]);
         }
 
         [Fact]
@@ -233,15 +261,15 @@ namespace ParquetViewer.Tests
             Assert.IsType<StructValue>(dataTable.Rows[0][0]);
             Assert.Equal("{\"appId\":null,\"version\":0,\"lastUpdated\":null}", ((StructValue)dataTable.Rows[0][0]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][1]);
-            Assert.Equal("{\"path\":null,\"partitionValues\":{\"key\":null,\"value\":null},\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":{\"key\":null,\"value\":null}}", ((StructValue)dataTable.Rows[0][1]).ToString());
+            Assert.Equal("{\"path\":null,\"partitionValues\":null,\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":null}", ((StructValue)dataTable.Rows[0][1]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][2]);
             Assert.Equal("{\"path\":null,\"deletionTimestamp\":null,\"dataChange\":false}", ((StructValue)dataTable.Rows[0][2]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][3]);
-            Assert.Equal("{\"id\":null,\"name\":null,\"description\":null,\"format\":{\"provider\":null,\"options\":{\"key\":null,\"value\":null}},\"schemaString\":null,\"partitionColumns\":[],\"configuration\":{\"key\":null,\"value\":null},\"createdTime\":null}", ((StructValue)dataTable.Rows[0][3]).ToString());
+            Assert.Equal("{\"id\":null,\"name\":null,\"description\":null,\"format\":{\"provider\":null,\"options\":null},\"schemaString\":null,\"partitionColumns\":null,\"configuration\":null,\"createdTime\":null}", ((StructValue)dataTable.Rows[0][3]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][4]);
             Assert.Equal("{\"minReaderVersion\":1,\"minWriterVersion\":2}", ((StructValue)dataTable.Rows[0][4]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][5]);
-            Assert.Equal("{\"version\":null,\"timestamp\":null,\"userId\":null,\"userName\":null,\"operation\":null,\"operationParameters\":{\"key\":null,\"value\":null},\"job\":{\"jobId\":null,\"jobName\":null,\"runId\":null,\"jobOwnerId\":null,\"triggerType\":null},\"notebook\":{\"notebookId\":null},\"clusterId\":null,\"readVersion\":null,\"isolationLevel\":null,\"isBlindAppend\":null}", ((StructValue)dataTable.Rows[0][5]).ToString());
+            Assert.Equal("{\"version\":null,\"timestamp\":null,\"userId\":null,\"userName\":null,\"operation\":null,\"operationParameters\":null,\"job\":{\"jobId\":null,\"jobName\":null,\"runId\":null,\"jobOwnerId\":null,\"triggerType\":null},\"notebook\":{\"notebookId\":null},\"clusterId\":null,\"readVersion\":null,\"isolationLevel\":null,\"isBlindAppend\":null}", ((StructValue)dataTable.Rows[0][5]).ToString());
             Assert.IsType<DBNull>(dataTable.Rows[9][4]);
             Assert.Equal(DBNull.Value, dataTable.Rows[9][4]);
             Assert.Equal("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":null,\"lastUpdated\":1564524299648}", ((StructValue)dataTable.Rows[2][0]).ToString());
@@ -286,14 +314,10 @@ namespace ParquetViewer.Tests
     }}]
 }}";
 
-            //mock the http request
+            //mock the http response
             _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
             {
-                //Verify the request we're sending is what we expect it to be
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
-
-                string a = Regex.Replace(requestJsonBody, "\\s", string.Empty);
-                string b = Regex.Replace(expectedRequestJson, "\\s", string.Empty);
 
                 if (Regex.Replace(requestJsonBody, "\\s", string.Empty)
                     .Equals(Regex.Replace(expectedRequestJson, "\\s", string.Empty)))
@@ -313,10 +337,9 @@ namespace ParquetViewer.Tests
             var testEvent = new ExceptionEvent(testAmplitudeEvent.CloneAmplitudeConfiguration());
             testEvent.Exception = new Exception("Exception with `sensitive` data");
 
-            //mock the http request
+            //mock the http response
             _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
             {
-                //Verify the request we're sending is what we expect it to be
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
 
                 if (requestJsonBody.Contains($"Exception with {ExceptionEvent.MASK_SENTINEL} data"))
@@ -350,16 +373,7 @@ namespace ParquetViewer.Tests
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.Equal(typeof(DateTime), dataTable.Rows[0]["ds"]?.GetType());
-
-            //Check if the malformed datetime still needs to be fixed
-            parquetEngine.FixMalformedDateTime = false;
-
-            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
-            if (dataTable.Rows[0]["ds"]?.GetType() == typeof(DateTime))
-            {
-                Assert.Fail("Looks like the Malformed DateTime Fix is no longer needed! Remove that part of the code.");
-            }
-            Assert.Equal(typeof(long), dataTable.Rows[0]["ds"]?.GetType()); //If it's not a datetime, then it should be a long.
+            Assert.Equal(new DateTime(2017, 1, 1), dataTable.Rows[0]["ds"]);
         }
 
         [Fact]
@@ -419,9 +433,9 @@ namespace ParquetViewer.Tests
             Assert.Equal("Product2", dataTable.Rows[1][0]);
 
             Assert.IsType<ListValue>(dataTable.Rows[0][1]);
-            Assert.Equal("[ ]", dataTable.Rows[0][1].ToString());
+            Assert.Equal("[]", dataTable.Rows[0][1].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[1][1]);
-            Assert.Equal("[ ]", dataTable.Rows[1][1].ToString());
+            Assert.Equal("[]", dataTable.Rows[1][1].ToString());
         }
     }
 }

@@ -1,57 +1,82 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 
 namespace ParquetViewer.Engine.Types
 {
-    public class MapValue : IComparable<MapValue>, IComparable, IEnumerable<MapValue>
+    public class MapValue : IComparable<MapValue>, IComparable, IEnumerable<(object Key, object Value)>
     {
-        public object Key { get; } = DBNull.Value;
+        public ArrayList Keys { get; }
         public Type KeyType { get; }
-        public object Value { get; } = DBNull.Value;
+        public ArrayList Values { get; }
         public Type ValueType { get; }
         public static string? DateDisplayFormat { get; set; }
 
-        // Evaluates to MapValue if more than one MapValues exist in the same map and this is not the last one.
-        public Func<MapValue?> Next { get; }
-
-        public MapValue(object key, Type keyType, object value, Type valueType, Func<MapValue?> nextMapValue)
+        public MapValue(ArrayList keys, Type keyType, ArrayList values, Type valueType)
         {
-            if (key is null)
-                throw new ArgumentNullException(nameof(key));
-            else if (value is null)
-                throw new ArgumentNullException(nameof(value));
+            if (keys is null)
+                throw new ArgumentNullException(nameof(keys));
+            else if (values is null)
+                throw new ArgumentNullException(nameof(values));
+            else if (keys.Count != values.Count)
+                throw new ArrayTypeMismatchException("The keys and values must be of the same length");
 
-            Key = key;
-            Value = value;
+            Keys = keys;
+            Values = values;
 
-            //We need the types because if the key/value is null itself,
+            var mismatchedType = keys.Cast<object?>().Where(key => key != DBNull.Value && key != null).FirstOrDefault(key => key!.GetType() != keyType);
+            if (mismatchedType != null)
+                throw new ArgumentException($"The key's type {mismatchedType} doesn't match the passed key-type {keyType}");
+
+            mismatchedType = values.Cast<object?>().Where(value => value != DBNull.Value && value != null).FirstOrDefault(value => value!.GetType() != valueType);
+            if (mismatchedType != null)
+                throw new ArgumentException($"The value's type {mismatchedType} doesn't match the passed value-type {valueType}");
+
+            //We need the types because if the key/value arraylists are empty
             //there's no way to determine what the type's supposed to be
             KeyType = keyType;
             ValueType = valueType;
-            Next = nextMapValue;
-
-            if (key != DBNull.Value && key.GetType() != keyType)
-                throw new ArgumentException($"The key's type {key.GetType()} doesn't match the passed key-type {keyType}");
-
-            if (value != DBNull.Value && value.GetType() != valueType)
-                throw new ArgumentException($"The value's type {value.GetType()} doesn't match the passed value-type {valueType}");
         }
+
+        public int Length => Keys.Count;
 
         public override string ToString()
         {
-            string key;
-            if (Key is DateTime dt && DateDisplayFormat is not null)
-                key = dt.ToString(DateDisplayFormat);
-            else
-                key = Key?.ToString() ?? string.Empty;
+            var mapValuesStringBuilder = new StringBuilder("[");
+            for (var i = 0; i < Length; i++)
+            {
+                if (i != 0)
+                {
+                    mapValuesStringBuilder.Append(',');
+                }
 
-            string value;
-            if (Value is DateTime dt2 && DateDisplayFormat is not null)
-                value = dt2.ToString(DateDisplayFormat);
-            else
-                value = Value?.ToString() ?? string.Empty;
+                mapValuesStringBuilder.Append(FormatString(GetMapValue(i)));
+            }
 
-            return $"({key},{value})";
+            mapValuesStringBuilder.Append(']');
+            return mapValuesStringBuilder.ToString();
+
+            static string FormatString((object Key, object Value) map)
+            {
+                string key;
+                if (map.Key is DateTime dt && DateDisplayFormat is not null)
+                    key = dt.ToString(DateDisplayFormat);
+                else
+                    key = map.Key?.ToString() ?? string.Empty;
+
+                string value;
+                if (map.Value is DateTime dt2 && DateDisplayFormat is not null)
+                    value = dt2.ToString(DateDisplayFormat);
+                else
+                    value = map.Value?.ToString() ?? string.Empty;
+
+                return $"({key},{value})";
+            }
         }
+
+        private (object Key, object Value) GetMapValue(int index) 
+            => (Keys[index] ?? DBNull.Value, Values[index] ?? DBNull.Value);
 
         /// <summary>
         /// Sorts by Key first, then Value.
@@ -60,12 +85,33 @@ namespace ParquetViewer.Engine.Types
         {
             if (other is null)
                 return 1;
+            else if (this is null)
+                return -1;
 
-            int comparison = Helpers.CompareTo(Key, other.Key);
-            if (comparison != 0) 
-                return comparison;
+            for (var i = 0; i < Length; i++)
+            {
+                if (other.Length == i)
+                {
+                    //This map has more records, so lets say it's 'less than' in sort order
+                    return -1;
+                }
 
-            return Helpers.CompareTo(Value, other.Value);
+                var (key, value) = this.GetMapValue(i);
+                var (otherKey, otherValue) = other.GetMapValue(i);
+
+                int comparison = Helpers.CompareTo(key, otherKey);
+                if (comparison != 0)
+                    return comparison;
+
+                comparison = Helpers.CompareTo(value, otherValue);
+                if (comparison != 0)
+                    return comparison;
+            }
+
+            if (this.Length < other.Length)
+                return 1; //this map's records is a subset of the other's records so say it's 'more than' in sort order
+
+            return 0; //the map records appear equal
         }
 
         public int CompareTo(object? obj)
@@ -76,26 +122,14 @@ namespace ParquetViewer.Engine.Types
                 return 1;
         }
 
-        /// <summary>
-        /// Creates lazy iterator over all MapValues that physically follow 'behind' this one  and are part of the same map.
-        /// </summary>
-        /// <remarks>e.g.: Given a map that spans rows [5, 10], if this is called on the MapValue retireved from
-        /// row 7 this will return all MapValues from within [7, 10] lazily when iterated over. 
-        /// </remarks>
-        public IEnumerator<MapValue> GetEnumerator()
+        public IEnumerator<(object Key, object Value)> GetEnumerator()
         {
-            MapValue? current = this;
-            while (current != null)
-            {   
-                yield return current;
-                current = current.Next();
+            for (var i = 0; i < Length; i++)
+            {
+                yield return GetMapValue(i);
             }
-            yield break;
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

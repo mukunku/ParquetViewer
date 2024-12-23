@@ -261,7 +261,7 @@ namespace ParquetViewer
                     AppSettings.AlwaysSelectAllFields = false;
 
                 this.NewSelectedFields.Clear();
-                if (this.allFieldsRadioButton.Checked || ((CheckBox)(this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true)[0])).Checked)
+                if (this.allFieldsRadioButton.Checked || (this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true).FirstOrDefault() as CheckBox)?.Checked == true)
                 {
                     this.NewSelectedFields.AddRange(this.AvailableFields.Where(IsSupportedFieldType).Select(f => f.Name));
                 }

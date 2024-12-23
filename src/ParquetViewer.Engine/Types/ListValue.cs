@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ParquetViewer.Engine.Types
 {
-    public class ListValue : IComparable<ListValue>, IComparable
+    public class ListValue : IComparable<ListValue>, IComparable, IEnumerable<object>
     {
         public IList Data { get; }
         public Type? Type { get; private set; }
@@ -25,10 +25,12 @@ namespace ParquetViewer.Engine.Types
                 if (d != DBNull.Value && d is not null
                     && Type != d.GetType())
                 {
-                    throw new ArgumentException($"Data type {d.GetType()} doesn't match the passed type {type}");
+                    throw new ArrayTypeMismatchException($"Data type {d.GetType()} doesn't match the passed type {type}");
                 }
             }
         }
+
+        public int Length => Data.Count;
 
         public override string ToString()
         {
@@ -49,9 +51,6 @@ namespace ParquetViewer.Engine.Types
 
                     isFirst = false;
                 }
-
-                if (isFirst)
-                    sb.Append(' ');
             }
 
             sb.Append(']');
@@ -60,9 +59,9 @@ namespace ParquetViewer.Engine.Types
 
         public int CompareTo(ListValue? other)
         {
-            if (other?.Data is null)
+            if (other is null)
                 return 1;
-            else if (this.Data is null)
+            else if (this is null)
                 return -1;
             
             for (var i = 0; i < Data.Count; i++)
@@ -93,5 +92,15 @@ namespace ParquetViewer.Engine.Types
             else
                 return 1;
         }
+
+        public IEnumerator<object> GetEnumerator()
+        {
+            foreach(var item in Data)
+            {
+                yield return item;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

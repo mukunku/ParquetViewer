@@ -1,4 +1,6 @@
-﻿using System.Security.Principal;
+﻿using System;
+using System.Security.Principal;
+using System.Threading;
 
 namespace ParquetViewer.Helpers
 {
@@ -6,6 +8,7 @@ namespace ParquetViewer.Helpers
     {
         public const string FILL_WEIGHT_EXCEPTION_MESSAGE = "FillWeight";
         public const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
+        public const string DateFormatDocsURL = "https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings";
     }
 
     public static class User
@@ -13,6 +16,9 @@ namespace ParquetViewer.Helpers
         public static bool IsAdministrator =>
             new WindowsPrincipal(WindowsIdentity.GetCurrent())
                 .IsInRole(WindowsBuiltInRole.Administrator);
+
+        public static char NumberDecimalSeparator = 
+            Thread.CurrentThread.CurrentUICulture.NumberFormat.NumberDecimalSeparator.ToCharArray()[0];
     }
 
     public enum ParquetEngine
@@ -25,8 +31,11 @@ namespace ParquetViewer.Helpers
     {
         Default = 0,
         ISO8601 = 2,
+        [Obsolete]
         ISO8601_Alt1 = 4,
-        ISO8601_Alt2 = 5
+        [Obsolete]
+        ISO8601_Alt2 = 5,
+        Custom = 6
     }
 
     public enum FileType

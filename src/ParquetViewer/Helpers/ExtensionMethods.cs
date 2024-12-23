@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using Parquet.Schema;
 using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
@@ -15,8 +14,11 @@ namespace ParquetViewer.Helpers
     public static class ExtensionMethods
     {
         private const string DefaultDateTimeFormat = "g";
-        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+        private const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ";
+        
+        [Obsolete]
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+        [Obsolete]
         private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public static DataGridViewAutoSizeColumnsMode ToDGVMode(this AutoSizeColumnsMode mode) => mode switch
@@ -34,7 +36,7 @@ namespace ParquetViewer.Helpers
         public static IList<string> GetColumnNames(this DataTable datatable)
         {
             List<string> columns = new List<string>(datatable.Columns.Count);
-            foreach (DataColumn column in datatable.Columns)
+            foreach (System.Data.DataColumn column in datatable.Columns)
             {
                 columns.Add(column.ColumnName);
             }
@@ -46,14 +48,18 @@ namespace ParquetViewer.Helpers
         /// </summary>
         /// <param name="dateFormat">Date format to get formatting string for</param>
         /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
+#pragma warning disable CS0612 // Type or member is obsolete
         public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
         {
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
+            //TODO: Get rid of this code that handles obsolete date formats after a few releases
             DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
             DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
+            DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
             _ => string.Empty
         };
+#pragma warning restore CS0612 // Type or member is obsolete
 
         public static string GetExtension(this FileType fileType) => fileType switch
         {
@@ -101,9 +107,9 @@ namespace ParquetViewer.Helpers
             return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
         }
 
-        public static IEnumerable<DataColumn> AsEnumerable(this DataColumnCollection columns)
+        public static IEnumerable<System.Data.DataColumn> AsEnumerable(this DataColumnCollection columns)
         {
-            foreach (DataColumn column in columns)
+            foreach (System.Data.DataColumn column in columns)
             {
                 yield return column;
             }
@@ -122,13 +128,13 @@ namespace ParquetViewer.Helpers
         public static bool IsNumber(this Type type) =>
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
-        public static T ToEnum<T>(this int value) where T : struct, Enum
+        public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
         {
             if (Enum.IsDefined(typeof(T), value))
             {
                 return (T)Enum.ToObject(typeof(T), value);
             }
-            return default;
+            return @default;
         }
 
         public static void DeleteSubKeyTreeIfExists(this RegistryKey key, string name)
@@ -170,5 +176,28 @@ namespace ParquetViewer.Helpers
                         && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 ? sourceType
                 : typeof(Nullable<>).MakeGenericType(sourceType);
+
+        /// <summary>
+        /// Converts a float to a string without using the scientific notation
+        /// </summary>
+        public static string ToDecimalString(this float floatValue) => ToDecimalStringImpl(floatValue);
+
+        /// <summary>
+        /// Converts a double to a string without using the scientific notation
+        /// </summary>
+        public static string ToDecimalString(this double doubleValue) => ToDecimalStringImpl(doubleValue);
+
+        private static string ToDecimalStringImpl(object value)
+        {
+            var formattedValue = value?.ToString() ?? string.Empty;
+            
+            var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
+            if (isUsingScientificNotation)
+            {
+                //Convert the float/double to a decimal which is formatted much nicer as string
+                formattedValue = Convert.ToDecimal(value).ToString();
+            }
+            return formattedValue;
+        }
     }
 }
