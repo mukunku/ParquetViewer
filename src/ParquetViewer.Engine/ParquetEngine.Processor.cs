@@ -89,11 +89,11 @@ namespace ParquetViewer.Engine
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.List:
-                        var listField = field.GetSingle("list");
+                        var listField = field.GetSingleOrByName("list");
                         ParquetSchemaElement itemField;
                         try
                         {
-                            itemField = listField.GetSingle("item");
+                            itemField = listField.GetSingleOrByName("item");
                         }
                         catch (Exception ex)
                         {
@@ -332,7 +332,7 @@ namespace ParquetViewer.Engine
         private static async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var keyValueField = field.GetSingle("key_value");
+            var keyValueField = field.GetSingleOrByName("key_value");
             var keyField = keyValueField.GetChildCI("key");
             var valueField = keyValueField.GetChildCI("value");
 

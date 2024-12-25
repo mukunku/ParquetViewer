@@ -49,19 +49,21 @@ namespace ParquetViewer.Engine
         private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
                 ? result : throw new Exception($"Field schema path not found: `{Path}/{name}`");
 
-        public ParquetSchemaElement GetSingle(string name)
+        public ParquetSchemaElement GetSingleOrByName(string name)
         {
+            if (_children.Count == 0)
+            {
+                throw new MalformedFieldException($"Field `{Path}` has no children. Expected '{name}'.");
+            }
+
             if (_children.Count == 1)
             {
                 return _children.First().Value;
             }
-            else if (_children.Count == 0)
-            {
-                throw new Exception($"Field `{Path}` has no children. Expected '{name}'. The field is malformed.");
-            }
             else
             {
-                throw new Exception($"Field `{Path}` has more than one child. Expected only '{name}'. The field might be malformed.");
+                return _children.ContainsKey(name) 
+                    ? _children[name] : throw new MalformedFieldException($"Field `{Path}` has no child named '{name}'");
             }
         }
 
