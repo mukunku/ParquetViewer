@@ -82,32 +82,40 @@ namespace ParquetViewer.Engine
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var field = column.ParentSchema.GetChild(column.Name);
+                var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
+
+                if (field.FieldType() == ParquetSchemaElement.FieldTypeId.List)
+                {
+                    var listField = field.GetSingleOrByName("list");
+                    try
+                    {
+                        field = listField.GetSingleOrByName("item");
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new UnsupportedFieldException($"Cannot load field `{column.Name}`. Invalid List type.", ex);
+                    }
+                }
+
+                var doesFieldBelongToList = field.BelongToListField();
                 switch (field.FieldType())
                 {
-                    case ParquetSchemaElement.FieldTypeId.Primitive:
+                    case ParquetSchemaElement.FieldTypeId.Primitive when !doesFieldBelongToList:
                         await ReadPrimitiveField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
+                    case ParquetSchemaElement.FieldTypeId.Primitive when doesFieldBelongToList:
+                    case ParquetSchemaElement.FieldTypeId.Struct when doesFieldBelongToList:
+                    case ParquetSchemaElement.FieldTypeId.Map when doesFieldBelongToList:
                     case ParquetSchemaElement.FieldTypeId.List:
-                        var listField = field.GetSingleOrByName("list");
-                        ParquetSchemaElement itemField;
-                        try
-                        {
-                            itemField = listField.GetSingleOrByName("item");
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Invalid List type.", ex);
-                        }
-                        var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-                        await ReadListField(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
+                        await ReadListField(dataTable, groupReader, rowBeginIndex, field, fieldIndex,
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case ParquetSchemaElement.FieldTypeId.Map:
+                    case ParquetSchemaElement.FieldTypeId.Map when !doesFieldBelongToList:
                         await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case ParquetSchemaElement.FieldTypeId.Struct:
+                    case ParquetSchemaElement.FieldTypeId.Struct when !doesFieldBelongToList:
                         await ReadStructField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
@@ -125,50 +133,41 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
-            bool doesFieldBelongToAList = dataColumn.RepetitionLevels?.Any(l => l > 0) ?? false;
             int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
-            if (doesFieldBelongToAList)
+            var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
+            foreach (var value in dataColumn.Data)
             {
-                dataColumn = null;
-                await ReadListField(dataTable, groupReader, rowBeginIndex, field, fieldIndex, skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
-            }
-            else
-            {
-                var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
-                foreach (var value in dataColumn.Data)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (skipRecords > skippedRecords)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (skipRecords > skippedRecords)
-                    {
-                        skippedRecords++;
-                        continue;
-                    }
-
-                    if (rowIndex - rowBeginIndex >= readRecords)
-                        break;
-
-                    if (isFirstColumn)
-                    {
-                        dataTable.NewRow();
-                    }
-
-                    if (value == DBNull.Value || value is null)
-                    {
-                        dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                    }
-                    else if (fieldType == byteArrayValueType)
-                    {
-                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
-                    }
-                    else
-                    {
-                        dataTable.Rows[rowIndex]![fieldIndex] = value;
-                    }
-
-                    rowIndex++;
-                    progress?.Report(1);
+                    skippedRecords++;
+                    continue;
                 }
+
+                if (rowIndex - rowBeginIndex >= readRecords)
+                    break;
+
+                if (isFirstColumn)
+                {
+                    dataTable.NewRow();
+                }
+
+                if (value == DBNull.Value || value is null)
+                {
+                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
+                }
+                else if (fieldType == byteArrayValueType)
+                {
+                    dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
+                }
+                else
+                {
+                    dataTable.Rows[rowIndex]![fieldIndex] = value;
+                }
+
+                rowIndex++;
+                progress?.Report(1);
             }
         }
 
@@ -286,27 +285,7 @@ namespace ParquetViewer.Engine
                 int rowIndex = rowBeginIndex;
                 foreach (var values in structFieldTable.Rows)
                 {
-                    var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
-                    for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
-                    {
-                        if (values[columnOrdinal] == DBNull.Value)
-                        {
-                            //Empty array
-                            continue;
-                        }
-
-                        var columnValues = (ListValue)values[columnOrdinal];
-                        for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
-                        {
-                            var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
-                            bool isFirstValueColumn = columnOrdinal == 0;
-                            if (isFirstValueColumn)
-                            {
-                                newStructFieldTable.NewRow();
-                            }
-                            newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
-                        }
-                    }
+                    var newStructFieldTable = PivotTable(itemField, values.Length, values);
 
                     if (isFirstColumn)
                         dataTable.NewRow();
@@ -327,6 +306,32 @@ namespace ParquetViewer.Engine
             {
                 throw new NotSupportedException($"Lists of {itemField.FieldType()}s are not currently supported");
             }
+        }
+
+        private DataTableLite PivotTable(ParquetSchemaElement itemField, int numExpectedRecords, object[] values)
+        {
+            var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), numExpectedRecords);
+            for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
+            {
+                if (values[columnOrdinal] == DBNull.Value)
+                {
+                    //Empty array
+                    continue;
+                }
+
+                var columnValues = (ListValue)values[columnOrdinal];
+                for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
+                {
+                    var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
+                    bool isFirstValueColumn = columnOrdinal == 0;
+                    if (isFirstValueColumn)
+                    {
+                        newStructFieldTable.NewRow();
+                    }
+                    newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
+                }
+            }
+            return newStructFieldTable;
         }
 
         private static async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
