@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
@@ -116,7 +115,7 @@ namespace ParquetViewer.Controls
                 {
                     e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
                     e.CellStyle.ForeColor = Color.Blue;
-				        } 
+                }
                 else if (e.Value is ByteArrayValue byteArrayValue)
                 {
                     var tag = this.Columns[e.ColumnIndex].Tag as string;
@@ -218,7 +217,7 @@ namespace ParquetViewer.Controls
             base.OnCellMouseLeave(e);
         }
 
-        protected async override void OnCellContentClick(DataGridViewCellEventArgs e)
+        protected override void OnCellContentClick(DataGridViewCellEventArgs e)
         {
             base.OnCellContentClick(e);
 
@@ -246,7 +245,7 @@ namespace ParquetViewer.Controls
                 dt = new DataTable();
                 dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type!));
 
-                foreach (var item in listValue.Data)
+                foreach (var item in listValue)
                 {
                     var row = dt.NewRow();
                     row[0] = item;
@@ -255,26 +254,19 @@ namespace ParquetViewer.Controls
             }
             else if (clickedCell.Value is MapValue mapValue)
             {
-                LoadingIcon? icon = ShowLoadingIcon("Loading Field", 3);
-                await Task.Run(() => {
-                  dataType = QuickPeekEvent.DataTypeId.Map;
+                dataType = QuickPeekEvent.DataTypeId.Map;
 
-				          DataGridViewColumn column = this.Columns[e.ColumnIndex];
-				          string columnName = column.HeaderText;
+                dt = new DataTable();
+                dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
+                dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
 
-        				  dt = new DataTable();
-                  dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
-                  dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
-
-                  foreach (MapValue mv in mapValue) 
-                  {
-					          var newRow = dt.NewRow();
-					          newRow[0] =   mv.Key;
-					          newRow[1] = mv.Value;
-                    dt.Rows.Add(newRow);
-				  }
-                });
-                icon?.Dispose();
+                foreach ((object key, object value) in mapValue)
+                {
+                    var row = dt.NewRow();
+                    row[0] = key;
+                    row[1] = value;
+                    dt.Rows.Add(row);
+                }
             }
             else if (clickedCell.Value is StructValue structValue)
             {
@@ -384,14 +376,30 @@ namespace ParquetViewer.Controls
         {
             base.OnCellFormatting(e);
 
+            var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
+            if (cellValueType == typeof(float) && e.Value is float f)
+            {
+                e.Value = f.ToDecimalString();
+                e.FormattingApplied = true;
+            }
+            else if (cellValueType == typeof(double) && e.Value is double d)
+            {
+                e.Value = d.ToDecimalString();
+                e.FormattingApplied = true;
+            }
+
             if (this.isCopyingToClipboard)
             {
-                //In order to get the full values into the clipboard we need to
-                //disable formatting during a copy to clipboard operation
+                //In order to get full cell values into the clipboard during a copy to
+                //clipboard operation we need to skip the truncation formatting below 
+                return;
+            }
+            else if (e.FormattingApplied)
+            {
+                //We already formatted the value above so exit early.
                 return;
             }
 
-            var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
             if (cellValueType == typeof(ByteArrayValue))
             {
                 string value = e.Value!.ToString()!; //We never put `null` in cells. Only `DBNull.Value` so it can't be null.
@@ -442,12 +450,6 @@ namespace ParquetViewer.Controls
             }
             base.OnSorted(e);
         }
-        
-        public LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
-	      {
-          MainForm f = (MainForm) Parent!.FindForm()!;
-          return f.ShowLoadingIcon(message, loadingBarMax);
-	      }
 
         public void ClearQuickPeekForms()
         {
@@ -466,17 +468,17 @@ namespace ParquetViewer.Controls
         /// </summary>
         private void FastAutoSizeColumns()
         {
-            const int MAX_WIDTH = 400;
+            const int MAX_WIDTH = 360;
+            const int DECIMAL_PREFERRED_WIDTH = 180;
 
-            // Cast out a DataTable from the target grid datasource.
-            // We need to iterate through all the data in the grid and a DataTable supports enumeration.
             if (this.DataSource is not DataTable gridTable)
                 return;
+
+            var maxWidth = MAX_WIDTH;
 
             // Create a graphics object from the target grid. Used for measuring text size.
             using var gfx = this.CreateGraphics();
 
-            // Iterate through the columns.
             for (int i = 0; i < gridTable.Columns.Count; i++)
             {
                 //Don't autosize the same column twice
@@ -506,6 +508,24 @@ namespace ParquetViewer.Controls
                             .Select(row => row.Field<StructValue>(i)?.ToStringTruncated())
                             .Where(value => value is not null)!;
                     }
+                    else if (gridTable.Columns[i].DataType == typeof(float))
+                    {
+                        colStringCollection = gridTable.AsEnumerable()
+                            .Where(row => row[i] != DBNull.Value)
+                            .Select(row => row.Field<float>(i).ToDecimalString());
+                        
+                        //Allow longer than preferred width if header is longer
+                        maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                    }
+                    else if (gridTable.Columns[i].DataType == typeof(double))
+                    {
+                        colStringCollection = gridTable.AsEnumerable()
+                            .Where(row => row[i] != DBNull.Value)
+                            .Select(row => row.Field<double>(i).ToDecimalString());
+
+                        //Allow longer than preferred width if header is longer
+                        maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                    }
                     else
                     {
                         colStringCollection = gridTable.AsEnumerable()
@@ -513,15 +533,13 @@ namespace ParquetViewer.Controls
                             .Where(value => value is not null)!;
                     }
 
-                    // Sort the string array by string lengths.
-                    colStringCollection = colStringCollection.OrderBy((x) => x.Length);
-
-                    // Get the last and longest string in the array.
-                    string longestColString = colStringCollection.LastOrDefault() ?? string.Empty;
+                    // Get the longest string in the array.
+                    string longestColString = colStringCollection
+                        .OrderByDescending((x) => x.Length).FirstOrDefault() ?? string.Empty;
                     newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, longestColString, true));
                 }
 
-                this.Columns[i].Width = Math.Min(newColumnSize, MAX_WIDTH);
+                this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
             }
         }
 

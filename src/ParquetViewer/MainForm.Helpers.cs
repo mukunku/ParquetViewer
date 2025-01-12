@@ -42,9 +42,9 @@ namespace ParquetViewer
             LoadingIcon? loadingIcon = null;
             try
             {
-                if (this.mainGridView?.RowCount > 0)
+                if (this.MainDataSource?.DefaultView.Count > 0)
                 {
-                    this.exportFileDialog.Title = string.Format("{0} records will be exported", this.mainGridView.RowCount);
+                    this.exportFileDialog.Title = string.Format("{0} records will be exported", this.MainDataSource.DefaultView.Count);
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel file (*.xls)|*.xls";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
@@ -62,10 +62,10 @@ namespace ParquetViewer
                         FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
 
                         var stopWatch = Stopwatch.StartNew();
-                        loadingIcon = this.ShowLoadingIcon("Exporting Data");
+                        loadingIcon = this.ShowLoadingIcon("Exporting Data", this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
                         if (selectedFileType == FileType.CSV)
                         {
-                            await Task.Run(() => this.WriteDataToCSVFile(filePath, loadingIcon.CancellationToken));
+                            await WriteDataToCSVFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
                         }
                         else if (selectedFileType == FileType.XLS)
                         {
@@ -79,15 +79,15 @@ namespace ParquetViewer
                                 return;
                             }
 
-                            await Task.Run(() => this.WriteDataToExcelFile(filePath, loadingIcon.CancellationToken));
+                            await WriteDataToExcelFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
                         }
                         else if (selectedFileType == FileType.JSON)
                         {
-                            await Task.Run(() => this.WriteDataToJSONFile(filePath, loadingIcon.CancellationToken));
+                            await WriteDataToJSONFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
                         }
                         else if (selectedFileType == FileType.PARQUET)
                         {
-                            await Task.Run(async () => await this.WriteDataToParquetFile(filePath, loadingIcon.CancellationToken));
+                            await this.WriteDataToParquetFile(filePath, loadingIcon.CancellationToken, loadingIcon);
                         }
                         else
                         {
@@ -135,194 +135,205 @@ namespace ParquetViewer
             }
         }
 
-        private void WriteDataToCSVFile(string path, CancellationToken cancellationToken)
-        {
-            using var writer = new StreamWriter(path, false, Encoding.UTF8);
-
-            var rowBuilder = new StringBuilder();
-            bool isFirst = true;
-            foreach (DataColumn column in this.MainDataSource!.Columns)
-            {
-                if (!isFirst)
+        private static Task WriteDataToCSVFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+            => Task.Run(() =>
                 {
-                    rowBuilder.Append(',');
-                }
-                else
+                    using var writer = new StreamWriter(path, false, Encoding.UTF8);
+
+                    var rowBuilder = new StringBuilder();
+                    bool isFirst = true;
+                    foreach (DataColumn column in dataTable.Columns)
+                    {
+                        if (!isFirst)
+                        {
+                            rowBuilder.Append(',');
+                        }
+                        else
+                        {
+                            isFirst = false;
+                        }
+
+                        rowBuilder.Append(
+                            column.ColumnName
+                                .Replace("\r", string.Empty)
+                                .Replace("\n", string.Empty)
+                                .Replace(",", string.Empty));
+                    }
+                    writer.WriteLine(rowBuilder.ToString());
+
+                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                    foreach (DataRowView row in dataTable.DefaultView)
+                    {
+                        rowBuilder.Clear();
+
+                        isFirst = true;
+                        foreach (object? value in row.Row.ItemArray)
+                        {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
+
+                            if (!isFirst)
+                            {
+                                rowBuilder.Append(',');
+                            }
+                            else
+                            {
+                                isFirst = false;
+                            }
+
+                            if (value is DateTime dt)
+                            {
+                                rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
+                            }
+                            else
+                            {
+                                var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
+                                rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
+                            }
+
+                            progress.Report(1);
+                        }
+
+                        writer.WriteLine(rowBuilder.ToString());
+                    }
+                }, cancellationToken);
+
+        private static Task WriteDataToExcelFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+            => Task.Run(() =>
                 {
-                    isFirst = false;
-                }
+                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                    using var fs = new FileStream(path, FileMode.OpenOrCreate);
+                    var excelWriter = new ExcelWriter(fs);
+                    excelWriter.BeginWrite();
 
-                rowBuilder.Append(
-                    column.ColumnName
-                        .Replace("\r", string.Empty)
-                        .Replace("\n", string.Empty)
-                        .Replace(",", string.Empty));
-            }
-            writer.WriteLine(rowBuilder.ToString());
+                    //Write headers
+                    for (int i = 0; i < dataTable.Columns.Count; i++)
+                    {
+                        excelWriter.WriteCell(0, i, dataTable.Columns[i].ColumnName);
+                    }
 
-            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-            foreach (DataRowView row in this.MainDataSource.DefaultView)
-            {
-                rowBuilder.Clear();
+                    //Write data
+                    for (int i = 0; i < dataTable.DefaultView.Count; i++)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
 
-                isFirst = true;
-                foreach (object? value in row.Row.ItemArray)
+                        for (int j = 0; j < dataTable.Columns.Count; j++)
+                        {
+                            var value = dataTable.DefaultView[i][j];
+                            if (value is null || value == DBNull.Value)
+                            {
+                                excelWriter.WriteCell(i + 1, j); //empty cell
+                            }
+                            else if (IsIntCastSafe(value))
+                            {
+                                excelWriter.WriteCell(i + 1, j, Convert.ToInt32(value));
+                            }
+                            else if (IsDoubleCastSafe(value))
+                            {
+                                excelWriter.WriteCell(i + 1, j, Convert.ToDouble(value));
+                            }
+                            else if (value is DateTime dt)
+                            {
+                                excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
+                            }
+                            else
+                            {
+                                excelWriter.WriteCell(i + 1, j, value?.ToString() ?? string.Empty);
+                            }
+                            progress.Report(1);
+                        }
+                    }
+
+                    bool IsIntCastSafe(object value) => value.GetType() == typeof(int)
+                        || value.GetType() == typeof(uint)
+                        || value.GetType() == typeof(sbyte)
+                        || value.GetType() == typeof(byte);
+
+                    bool IsDoubleCastSafe(object value) => value.GetType() == typeof(double)
+                        || value.GetType() == typeof(decimal)
+                        || value.GetType() == typeof(float)
+                        || value.GetType() == typeof(long);
+
+                    excelWriter.EndWrite();
+                }, cancellationToken);
+
+        private static Task WriteDataToJSONFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+            => Task.Run(() =>
                 {
-                    if (cancellationToken.IsCancellationRequested)
+                    using var fs = new FileStream(path, FileMode.OpenOrCreate);
+                    using var jsonWriter = new Utf8JsonWriter(fs);
+
+                    jsonWriter.WriteStartArray();
+                    foreach (DataRowView row in dataTable.DefaultView)
                     {
-                        break;
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
+
+                        jsonWriter.WriteStartObject();
+                        for (var i = 0; i < row.Row.ItemArray.Length; i++)
+                        {
+                            var columnName = dataTable.Columns[i].ColumnName;
+                            jsonWriter.WritePropertyName(columnName);
+
+                            object? value = row.Row.ItemArray[i];
+                            StructValue.WriteValue(jsonWriter, value!, false);
+                            progress.Report(1);
+                        }
+                        jsonWriter.WriteEndObject();
                     }
+                    jsonWriter.WriteEndArray();
+                }, cancellationToken);
 
-                    if (!isFirst)
-                    {
-                        rowBuilder.Append(',');
-                    }
-                    else
-                    {
-                        isFirst = false;
-                    }
-
-                    if (value is DateTime dt)
-                    {
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
-                    }
-                    else
-                    {
-                        var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
-                        rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
-                    }
-                }
-
-                writer.WriteLine(rowBuilder.ToString());
-            }
-        }
-
-        private void WriteDataToExcelFile(string path, CancellationToken cancellationToken)
-        {
-            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-            using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            var excelWriter = new ExcelWriter(fs);
-            excelWriter.BeginWrite();
-
-            //Write headers
-            for (int i = 0; i < this.MainDataSource!.Columns.Count; i++)
-            {
-                excelWriter.WriteCell(0, i, this.MainDataSource.Columns[i].ColumnName);
-            }
-
-            //Write data
-            for (int i = 0; i < this.MainDataSource.DefaultView.Count; i++)
-            {
-                if (cancellationToken.IsCancellationRequested)
+        private Task WriteDataToParquetFile(string path, CancellationToken cancellationToken, IProgress<int> progress)
+            => Task.Run(async () =>
                 {
-                    break;
-                }
-
-                for (int j = 0; j < this.MainDataSource.Columns.Count; j++)
-                {
-                    var value = this.MainDataSource.DefaultView[i][j];
-                    if (value is null || value == DBNull.Value)
+                    var fields = new List<Parquet.Schema.Field>(this.MainDataSource!.Columns.Count);
+                    foreach (DataColumn column in this.MainDataSource.Columns)
                     {
-                        excelWriter.WriteCell(i + 1, j); //empty cell
+                        fields.Add(this._openParquetEngine!.Schema!.Fields
+                            .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
+                            .First());
                     }
-                    else if (IsIntCastSafe(value))
-                    {
-                        excelWriter.WriteCell(i + 1, j, Convert.ToInt32(value));
-                    }
-                    else if (IsDoubleCastSafe(value))
-                    {
-                        excelWriter.WriteCell(i + 1, j, Convert.ToDouble(value));
-                    }
-                    else if (value is DateTime dt)
-                    {
-                        excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
-                    }
-                    else
-                    {
-                        excelWriter.WriteCell(i + 1, j, value?.ToString() ?? string.Empty);
-                    }
-                }
-            }
+                    var parquetSchema = new Parquet.Schema.ParquetSchema(fields);
 
-            bool IsIntCastSafe(object value) => value.GetType() == typeof(int)
-                || value.GetType() == typeof(uint)
-                || value.GetType() == typeof(sbyte)
-                || value.GetType() == typeof(byte);
-
-            bool IsDoubleCastSafe(object value) => value.GetType() == typeof(double)
-                || value.GetType() == typeof(decimal)
-                || value.GetType() == typeof(float)
-                || value.GetType() == typeof(long);
-
-            excelWriter.EndWrite();
-        }
-
-        private void WriteDataToJSONFile(string path, CancellationToken cancellationToken)
-        {
-            using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            using var jsonWriter = new Utf8JsonWriter(fs);
-
-            jsonWriter.WriteStartArray();
-            foreach (DataRowView row in this.MainDataSource!.DefaultView)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                jsonWriter.WriteStartObject();
-                for (var i = 0; i < row.Row.ItemArray.Length; i++)
-                {
-                    var columnName = this.MainDataSource.Columns[i].ColumnName;
-                    jsonWriter.WritePropertyName(columnName);
-
-                    object? value = row.Row.ItemArray[i];
-                    StructValue.WriteValue(jsonWriter, value!, false);
-                }
-                jsonWriter.WriteEndObject();
-            }
-            jsonWriter.WriteEndArray();
-        }
-
-        private async Task WriteDataToParquetFile(string path, CancellationToken cancellationToken)
-        {
-            var fields = new List<Parquet.Schema.Field>(this.MainDataSource!.Columns.Count);
-            foreach (DataColumn column in this.MainDataSource.Columns)
-            {
-                fields.Add(this._openParquetEngine!.Schema!.Fields
-                    .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
-                    .First());
-            }
-            var parquetSchema = new Parquet.Schema.ParquetSchema(fields);
-
-            using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            using var parquetWriter = await Parquet.ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
-            parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
-            parquetWriter.CustomMetadata = new Dictionary<string, string>
-            {
-                { "ParquetViewer", @"
+                    using var fs = new FileStream(path, FileMode.OpenOrCreate);
+                    using var parquetWriter = await Parquet.ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
+                    parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
+                    parquetWriter.CustomMetadata = new Dictionary<string, string>
+                            {
+                                {
+"ParquetViewer", @"
 {
-    ""CreatedBy"": ""ParquetViewer"",
+    ""CreatedWith"": ""ParquetViewer"",
+    ""Version"": """ + AboutBox.AssemblyVersion + @""",
     ""Website"": ""https://github.com/mukunku/ParquetViewer"",
-    ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + @"""
-}
-" }
-            };
+    ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + @"""
+}"
+                                }
+                            };
 
-            using var rowGroup = parquetWriter.CreateRowGroup();
-            foreach (var dataField in parquetSchema.DataFields)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
+                    using var rowGroup = parquetWriter.CreateRowGroup();
+                    foreach (var dataField in parquetSchema.DataFields)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
 
-                var type = dataField.IsNullable ? dataField.ClrType.GetNullableVersion() : dataField.ClrType;
-                var values = this.MainDataSource.GetColumnValues(type, dataField.Name);
-                var dataColumn = new Parquet.Data.DataColumn(dataField, values);
-                await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
-            }
-        }
+                        var type = dataField.IsNullable ? dataField.ClrType.GetNullableVersion() : dataField.ClrType;
+                        var values = this.MainDataSource.GetColumnValues(type, dataField.Name);
+                        var dataColumn = new Parquet.Data.DataColumn(dataField, values);
+                        await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
+                        progress.Report(values.Length); //No way to report progress for each row, so do it by column
+                    }
+                }, cancellationToken);
 
         private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
         {
