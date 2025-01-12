@@ -9,33 +9,19 @@ namespace ParquetViewer.Engine
         public string Path => SchemaElement.Name;
         public SchemaElement SchemaElement { get; set; }
         public DataField? DataField { get; set; }
-        public ParquetSchemaElement? Parent { get; private set; }
-
 
         private readonly Dictionary<string, ParquetSchemaElement> _children = new();
         public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
 
         public void AddChild(ParquetSchemaElement child)
         {
-            child.SetParent(this);
             _children.Add(child.Path, child);
-        }
-
-        public void SetParent(ParquetSchemaElement parent)
-        {
-            if (Parent is null)
-            {
-                Parent = parent;
-            }
-            else
-            {
-                throw new Exception("Parent already set");
-            }    
         }
 
         public ParquetSchemaElement(SchemaElement schemaElement)
         {
-            ArgumentNullException.ThrowIfNull(schemaElement);
+            if (schemaElement is null)
+                throw new ArgumentNullException(nameof(schemaElement));
 
             this.SchemaElement = schemaElement;
         }
@@ -103,22 +89,6 @@ namespace ParquetViewer.Engine
             List,
             Struct,
             Map
-        }
-
-
-        //No clue if this makes sense but it works for now
-        public bool BelongToListField()
-        {
-            var parent = this.Parent;
-            while (parent is not null)
-            {
-                if (parent.FieldType() == FieldTypeId.List)
-                {
-                    return true;
-                }
-                parent = parent.Parent;
-            }
-            return false;
         }
     }
 }
