@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ParquetViewer.Engine.Exceptions
+﻿namespace ParquetViewer.Engine.Exceptions
 {
     public class FileReadException : Exception
     {

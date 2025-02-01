@@ -72,19 +72,19 @@ namespace ParquetViewer.Helpers
 
         public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
 
+        //Can't put this into ByteArrayValue as it doesn't reference System.Drawing.
         public static Image ToImage(this ByteArrayValue byteArrayValue)
         {
-            if (byteArrayValue is null)
-                throw new ArgumentNullException(nameof(byteArrayValue));
+            ArgumentNullException.ThrowIfNull(byteArrayValue);
 
             using var ms = new MemoryStream(byteArrayValue.Data);
             return Image.FromStream(ms);
         }
 
+        //Can't put this into ByteArrayValue as it doesn't reference System.Drawing.
         public static bool IsImage(this ByteArrayValue byteArrayValue)
         {
-            if (byteArrayValue is null)
-                throw new ArgumentNullException(nameof(byteArrayValue));
+            ArgumentNullException.ThrowIfNull(byteArrayValue);
 
             try
             {
@@ -116,7 +116,7 @@ namespace ParquetViewer.Helpers
         }
 
         /// <summary>
-        /// Returns true if the type is a "simple" type. Basically anything that isn't a class or array.
+        /// Returns true if the type is a "simple" type. Basically anything that isn't a class, struct or array.
         /// </summary>
         /// <remarks>Source: https://stackoverflow.com/a/65079923/1458738</remarks>
         public static bool IsSimple(this Type type)
@@ -147,8 +147,7 @@ namespace ParquetViewer.Helpers
 
         public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
         {
-            if (dataTable is null)
-                throw new ArgumentNullException(nameof(dataTable));
+            ArgumentNullException.ThrowIfNull(dataTable);
 
             if (!dataTable.Columns.Contains(columnName))
                 throw new ArgumentException($"Column '{columnName}' does not exist in the datatable");
