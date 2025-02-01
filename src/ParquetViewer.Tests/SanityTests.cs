@@ -12,7 +12,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task DECIMALS_AND_BOOLS_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_AND_BOOLS_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_AND_BOOLS_TEST.parquet", default);
 
             Assert.Equal(30, parquetEngine.RecordCount);
             Assert.Equal(337, parquetEngine.Fields.Count);
@@ -26,7 +26,7 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task DATETIME_TEST1_TEST()
+        public async Task DATETIME_TEST1()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST1.parquet", default);
 
@@ -40,7 +40,7 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task DATETIME_TEST2_TEST()
+        public async Task DATETIME_TEST2()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST2.parquet", default);
 
@@ -62,9 +62,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task RANDOM_TEST_FILE1_TEST()
+        public async Task RANDOM_TEST_FILE_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/RANDOM_TEST_FILE1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/RANDOM_TEST_FILE.parquet", default);
 
             Assert.Equal(5, parquetEngine.RecordCount);
             Assert.Equal(42, parquetEngine.Fields.Count);
@@ -82,7 +82,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task SAME_COLUMN_NAME_DIFFERENT_CASING_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING.parquet", default);
 
             Assert.Equal(14610, parquetEngine.RecordCount);
             Assert.Equal(12, parquetEngine.Fields.Count);
@@ -102,7 +102,7 @@ namespace ParquetViewer.Tests
         [Fact]
         public async Task PARTITIONED_PARQUET_FILE_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST1", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST", default);
 
             Assert.Equal(2000, parquetEngine.RecordCount);
             Assert.Equal(9, parquetEngine.Fields.Count);
@@ -125,9 +125,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task COLUMN_ENDING_IN_PERIOD_TEST1()
+        public async Task COLUMN_ENDING_IN_PERIOD_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST.parquet", default);
 
             Assert.Equal(1, parquetEngine.RecordCount);
             Assert.Equal(11, parquetEngine.Fields.Count);
@@ -250,9 +250,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task STRUCT_TYPE_TEST1()
+        public async Task STRUCT_TYPE_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/STRUCT_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/STRUCT_TYPE_TEST.parquet", default);
 
             Assert.Equal(10, parquetEngine.RecordCount);
             Assert.Equal(6, parquetEngine.Fields.Count);
@@ -353,9 +353,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task NULLABLE_GUID_TEST1()
+        public async Task NULLABLE_GUID_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/NULLABLE_GUID_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/NULLABLE_GUID_TEST.parquet", default);
 
             Assert.Equal(1, parquetEngine.RecordCount);
             Assert.Equal(33, parquetEngine.Fields.Count);
@@ -367,9 +367,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task MALFORMED_DATETIME_TEST1()
+        public async Task MALFORMED_DATETIME_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST.parquet", default);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.Equal(typeof(DateTime), dataTable.Rows[0]["ds"]?.GetType());
@@ -377,9 +377,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task COLUMN_NAME_WITH_FORWARD_SLASH_TEST1()
+        public async Task COLUMN_NAME_WITH_FORWARD_SLASH_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH2.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH.parquet", default);
 
             Assert.Equal(1, parquetEngine.RecordCount);
             Assert.Equal(320, parquetEngine.Fields.Count);
@@ -389,9 +389,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task ORACLE_MALFORMED_INT64_TEST1()
+        public async Task ORACLE_MALFORMED_INT64_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/ORACLE_MALFORMED_INT64_TEST1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/ORACLE_MALFORMED_INT64_TEST.parquet", default);
 
             Assert.Equal(126, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
@@ -402,9 +402,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task LIST_OF_STRUCTS_TEST1()
+        public async Task LIST_OF_STRUCTS_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS.parquet", default);
             StructValue.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
@@ -421,9 +421,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task EMPTY_LIST_OF_STRUCTS_TEST1()
+        public async Task EMPTY_LIST_OF_STRUCTS_TEST()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/EMPTY_LIST_OF_STRUCTS1.parquet", default);
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/EMPTY_LIST_OF_STRUCTS.parquet", default);
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
 
@@ -439,7 +439,7 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task PARQUET_MR_BREAKING_CHANGE_TEST1()
+        public async Task PARQUET_MR_BREAKING_CHANGE_TEST()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARQUET-MR_1.15.0.parquet", default);
             Assert.Equal(5, parquetEngine.RecordCount);
