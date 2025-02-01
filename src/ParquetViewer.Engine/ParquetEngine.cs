@@ -14,11 +14,11 @@ namespace ParquetViewer.Engine
 
         public int NumberOfPartitions => _parquetFiles.Count;
 
-        private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new Exception("No parquet readers available");
+        private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new ParquetEngineException("No parquet readers available");
 
         public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList() ?? new();
 
-        public FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new Exception("No thrift metadata was found");
+        public FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
 
         public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata ?? new();
 
@@ -31,13 +31,13 @@ namespace ParquetViewer.Engine
 
         private ParquetSchemaElement BuildParquetSchemaTree()
         {
-            var thriftSchema = ThriftMetadata.Schema ?? throw new Exception("No thrift metadata was found");
+            var thriftSchema = ThriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
             var schemaElements = thriftSchema.GetEnumerator();
             var thriftSchemaTree = ReadSchemaTree(ref schemaElements);
 
             foreach (var dataField in Schema.GetDataFields())
             {
-                var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new Exception($"Field has no schema path: `{dataField.Name}`"));
+                var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new MalformedFieldException($"Field has no schema path: `{dataField.Name}`"));
                 for (var i = 1; i < dataField.Path.Length; i++)
                 {
                     field = field.GetChild(dataField.Path[i]);
@@ -51,7 +51,7 @@ namespace ParquetViewer.Engine
         private static ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements)
         {
             if (!schemaElements.MoveNext())
-                throw new Exception("Invalid parquet schema");
+                throw new ParquetException("Invalid parquet schema");
 
             var current = schemaElements.Current;
             var parquetSchemaElement = new ParquetSchemaElement(current);
@@ -64,7 +64,7 @@ namespace ParquetViewer.Engine
 
         private ParquetEngine(string fileOrFolderPath, List<ParquetReader> parquetFiles)
         {
-            _parquetFiles = parquetFiles ?? throw new InvalidDataException("No parquet readers found");
+            _parquetFiles = parquetFiles ?? throw new ParquetEngineException("No parquet readers found");
             OpenFileOrFolderPath = fileOrFolderPath;
         }
 

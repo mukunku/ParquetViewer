@@ -1,5 +1,4 @@
 ﻿using Parquet;
-using Parquet.Meta;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Collections;
@@ -123,10 +122,10 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new Exception($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
+            var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
             bool doesFieldBelongToAList = dataColumn.RepetitionLevels?.Any(l => l > 0) ?? false;
-            int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
+            int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
             if (doesFieldBelongToAList)
             {
                 dataColumn = null;
@@ -468,7 +467,7 @@ namespace ParquetViewer.Engine
             await ProcessRowGroup(structFieldTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
 
             var rowIndex = rowBeginIndex;
-            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new Exception($"Column `{field.Path}` is missing");
+            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
             var finalResultDataTable = structFieldTable.ToDataTable(cancellationToken);
             for (var i = 0; i < finalResultDataTable.Rows.Count; i++)
             {
@@ -533,23 +532,11 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    var clrType = schema.DataField?.ClrType ?? throw new Exception($"{(parent is not null ? parent + "/" : string.Empty)}/{field} has no data field");
+                    var clrType = schema.DataField?.ClrType ?? throw new MalformedFieldException($"{(parent is not null ? parent + "/" : string.Empty)}/{field} has no data field");
                     dataTable.AddColumn(field, clrType, parent);
                 }
             }
             return dataTable;
-        }
-
-        private class SimpleProgress : IProgress<int>
-        {
-            private int _progress = 0;
-            public Action<int>? ProgressChanged;
-
-            public void Report(int value)
-            {
-                _progress += value;
-                ProgressChanged?.Invoke(_progress);
-            }
         }
     }
 }

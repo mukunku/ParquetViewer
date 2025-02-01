@@ -35,19 +35,8 @@ namespace ParquetViewer.Engine
         public ParquetSchemaElement GetChildCI(string name) => 
             GetChildImpl(_children.Keys.FirstOrDefault((key) => key?.Equals(name, StringComparison.InvariantCultureIgnoreCase) == true) ?? name);
 
-        public ParquetSchemaElement GetChild(string? parent, string name)
-        {
-            if (parent is null)
-            {
-                return GetChildImpl(name);
-            }
-
-            var child = GetChildImpl(parent);
-            return child.GetChild(name);
-        }
-
         private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
-                ? result : throw new Exception($"Field schema path not found: `{Path}/{name}`");
+                ? result : throw new MalformedFieldException($"Field schema path not found: `{Path}/{name}`");
 
         public ParquetSchemaElement GetSingleOrByName(string name)
         {
