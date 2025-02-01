@@ -10,12 +10,12 @@ namespace ParquetViewer
         private const int LoadingPanelWidth = 200;
         private const int LoadingPanelHeight = 200;
 
-        private Form _form;
-        private Panel _panel;
-        private Button _cancelButton;
-        private long _loadingBarMax = 0;
+        private readonly Form _form;
+        private readonly Panel _panel;
+        private readonly Button _cancelButton;
+        private readonly long _loadingBarMax = 0;
+        private readonly CancellationTokenSource _cancellationToken = new();
         private long _progressSoFar = 0;
-        private CancellationTokenSource _cancellationToken = new();
         private int _progressRatio = 0;
 
         public CancellationToken CancellationToken => this._cancellationToken.Token;
@@ -25,8 +25,7 @@ namespace ParquetViewer
 
         public LoadingIcon(Form form, string message, long loadingBarMax = 0)
         {
-            if (form is null)
-                throw new ArgumentNullException(nameof(form));
+            ArgumentNullException.ThrowIfNull(form);
 
             this._form = form;
             this._panel = new Panel();

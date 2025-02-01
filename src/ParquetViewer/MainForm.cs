@@ -339,8 +339,8 @@ namespace ParquetViewer
 
                 this.MainDataSource = finalResult;
 
-                FileOpenEvent.FireAndForget(Directory.Exists(this.OpenFileOrFolderPath), this._openParquetEngine.NumberOfPartitions, this._openParquetEngine.RecordCount, this._openParquetEngine.ThriftMetadata.RowGroups.Count(),
-                    this._openParquetEngine.Fields.Count(), finalResult.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), this.CurrentOffset, this.CurrentMaxRowCount, finalResult.Columns.Count, stopwatch.ElapsedMilliseconds);
+                FileOpenEvent.FireAndForget(Directory.Exists(this.OpenFileOrFolderPath), this._openParquetEngine.NumberOfPartitions, this._openParquetEngine.RecordCount, this._openParquetEngine.ThriftMetadata.RowGroups.Count,
+                    this._openParquetEngine.Fields.Count, finalResult.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), this.CurrentOffset, this.CurrentMaxRowCount, finalResult.Columns.Count, stopwatch.ElapsedMilliseconds);
             }
             catch (AllFilesSkippedException ex)
             {
@@ -435,14 +435,16 @@ namespace ParquetViewer
                     var stopwatch = Stopwatch.StartNew();
                     var queryEvent = new ExecuteQueryEvent
                     {
-                        RecordCount = this.MainDataSource.Rows.Count,
+                        RecordCountTotal = this.MainDataSource.Rows.Count,
                         ColumnCount = this.MainDataSource.Columns.Count
                     };
 
                     try
                     {
+                        //TODO: Figure out a way to run the query async so it doesn't freeze the UI for long running queries.
                         this.MainDataSource.DefaultView.RowFilter = queryText;
                         queryEvent.IsValid = true;
+                        queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
                     }
                     catch (Exception ex)
                     {

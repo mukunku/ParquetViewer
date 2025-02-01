@@ -37,16 +37,6 @@ namespace ParquetViewer.Helpers
         public string? TablePrefix { get; set; }
         public bool CascadeDeletes { get; set; }
 
-        public string GetCreateScript(string databaseName)
-        {
-            if (databaseName == null || databaseName.Trim().Length == 0)
-            {
-                throw new ArgumentException(string.Format("The database name passed is {0}", databaseName == null ? "null" : "empty"), nameof(databaseName));
-            }
-
-            return string.Format("IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'{0}') BEGIN CREATE DATABASE {1};\n END\n", databaseName, MakeSafe(databaseName));
-        }
-
         public string GetSchemaScript(DataSet dataSet, bool markTablesAsLocalTemp)
         {
             if (dataSet == null)
