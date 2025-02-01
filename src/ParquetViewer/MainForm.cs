@@ -414,48 +414,51 @@ namespace ParquetViewer
         {
             try
             {
-                if (this.IsAnyFileOpen)
+                if (!this.IsAnyFileOpen)
+                    return;
+
+                if (this.MainDataSource is null)
+                    throw new ApplicationException("This should never happen");
+
+                string queryText = this.searchFilterTextBox.Text ?? string.Empty;
+                queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
+
+                //Treat list, map, and struct types as strings by casting them automatically
+                foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
+                        || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
+                    .Select(c => c.Name))
                 {
-                    if (this.MainDataSource is null)
-                        throw new ApplicationException("This should never happen");
+                    //This isn't perfect but it should handle most cases
+                    queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
+                }
 
-                    string queryText = this.searchFilterTextBox.Text ?? string.Empty;
-                    queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
+                if (this.MainDataSource.DefaultView.RowFilter == queryText)
+                    return; //No need to execute the same query again
 
-                    //Treat list, map, and struct types as strings by casting them automatically
-                    foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
-                            || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
-                        .Select(c => c.Name))
-                    {
-                        //This isn't perfect but it should handle most cases
-                        queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
-                    }
+                var stopwatch = Stopwatch.StartNew();
+                var queryEvent = new ExecuteQueryEvent
+                {
+                    RecordCountTotal = this.MainDataSource.Rows.Count,
+                    ColumnCount = this.MainDataSource.Columns.Count
+                };
 
-                    var stopwatch = Stopwatch.StartNew();
-                    var queryEvent = new ExecuteQueryEvent
-                    {
-                        RecordCountTotal = this.MainDataSource.Rows.Count,
-                        ColumnCount = this.MainDataSource.Columns.Count
-                    };
-
-                    try
-                    {
-                        //TODO: Figure out a way to run the query async so it doesn't freeze the UI for long running queries.
-                        this.MainDataSource.DefaultView.RowFilter = queryText;
-                        queryEvent.IsValid = true;
-                        queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
-                    }
-                    catch (Exception ex)
-                    {
-                        this.MainDataSource.DefaultView.RowFilter = null;
-                        throw new InvalidQueryException(ex);
-                    }
-                    finally
-                    {
-                        queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
-                        var _ = queryEvent.Record(); //Fire and forget
-                    }
+                try
+                {
+                    //TODO: Figure out a way to run the query async so it doesn't freeze the UI for long running queries.
+                    this.MainDataSource.DefaultView.RowFilter = queryText;
+                    queryEvent.IsValid = true;
+                    queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
+                }
+                catch (Exception ex)
+                {
+                    this.MainDataSource.DefaultView.RowFilter = null;
+                    throw new InvalidQueryException(ex);
+                }
+                finally
+                {
+                    queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                    var _ = queryEvent.Record(); //Fire and forget
                 }
             }
             catch (InvalidQueryException ex)
