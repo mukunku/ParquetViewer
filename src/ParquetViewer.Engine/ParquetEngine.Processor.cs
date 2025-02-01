@@ -513,15 +513,15 @@ namespace ParquetViewer.Engine
             foreach (var field in fields)
             {
                 var schema = parent.GetChild(field);
-                if (schema.SchemaElement.ConvertedType == ConvertedType.LIST)
+                if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.List)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
-                else if (schema.SchemaElement.ConvertedType == ConvertedType.MAP)
+                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Map)
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (schema.SchemaElement.NumChildren > 0) //Struct
+                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Struct) //Struct
                 {
                     dataTable.AddColumn(field, typeof(StructValue), parent);
                 }

@@ -437,5 +437,24 @@ namespace ParquetViewer.Tests
             Assert.IsType<ListValue>(dataTable.Rows[1][1]);
             Assert.Equal("[]", dataTable.Rows[1][1].ToString());
         }
+
+        [Fact]
+        public async Task PARQUET_MR_BREAKING_CHANGE_TEST1()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARQUET-MR_1.15.0.parquet", default);
+            Assert.Equal(5, parquetEngine.RecordCount);
+            Assert.Equal(7, parquetEngine.Fields.Count);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+
+            Assert.Equal(1, dataTable.Rows[0][0]);
+            Assert.Equal(5, dataTable.Rows[4][0]);
+
+            Assert.Equal("John Doe", dataTable.Rows[0][1]);
+            Assert.Equal("David Lee", dataTable.Rows[4][1]);
+
+            Assert.Equal(true, dataTable.Rows[0][4]);
+            Assert.Equal(true, dataTable.Rows[4][4]);
+        }
     }
 }
