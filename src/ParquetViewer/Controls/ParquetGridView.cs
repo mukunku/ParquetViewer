@@ -172,7 +172,7 @@ namespace ParquetViewer.Controls
                     copy.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
                         this.isCopyingToClipboard = true;
-                        Clipboard.SetDataObject(this.GetClipboardContent());
+                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
                         this.isCopyingToClipboard = false;
                     };
 
@@ -182,7 +182,7 @@ namespace ParquetViewer.Controls
                         this.isCopyingToClipboard = true;
                         this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-                        Clipboard.SetDataObject(this.GetClipboardContent());
+                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
                         this.RowHeadersVisible = true;
                         this.isCopyingToClipboard = false;

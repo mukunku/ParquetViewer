@@ -16,13 +16,13 @@ namespace ParquetViewer.Engine
 
         private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new ParquetEngineException("No parquet readers available");
 
-        public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList() ?? new();
+        public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList();
 
         public FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
 
-        public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata ?? new();
+        public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata;
 
-        public ParquetSchema Schema => DefaultReader.Schema ?? new();
+        public ParquetSchema Schema => DefaultReader.Schema;
 
         private ParquetSchemaElement? _parquetSchemaTree;
         public ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();

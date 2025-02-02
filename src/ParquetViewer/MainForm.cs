@@ -191,19 +191,14 @@ namespace ParquetViewer
                 return null;
             }
 
-            LoadingIcon? loadingIcon = null;
             if (this._openParquetEngine == null)
             {
-                loadingIcon = this.ShowLoadingIcon("Loading Fields");
-
                 try
                 {
-                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, loadingIcon.CancellationToken);
+                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, default);
                 }
                 catch (Exception ex)
                 {
-                    loadingIcon.Dispose();
-
                     if (this._openParquetEngine == null)
                     {
                         //cancel file open
@@ -245,50 +240,33 @@ namespace ParquetViewer
                 schema = this._openParquetEngine.Schema;
             }
             catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
+            catch (Exception ex)
+            {
+                throw new Parquet.ParquetException("Could not read parquet schema.", ex);
+            }
 
             var fields = schema?.Fields;
             if (fields?.Count > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
-                    loadingIcon?.Dispose();
-                    this.Cursor = Cursors.WaitCursor;
-
-                    try
-                    {
-                        return fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f.Name).ToList();
-                    }
-                    finally
-                    {
-                        this.Cursor = Cursors.Default;
-                    }
+                    return fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f.Name).ToList();
                 }
                 else
                 {
-                    await Task.Delay(125); //Give the UI thread some time to render the loading icon
-                    this.Cursor = Cursors.WaitCursor;
-                    try
+                    var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
+                    if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
                     {
-                        loadingIcon?.Dispose();
-                        var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
-                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
-                        {
-                            return fieldSelectionForm.NewSelectedFields;
-                        }
-                        else
-                        {
-                            return null;
-                        }
+                        return fieldSelectionForm.NewSelectedFields;
                     }
-                    finally
+                    else
                     {
-                        this.Cursor = Cursors.Default;
+                        return null;
                     }
                 }
             }
             else
             {
-                loadingIcon?.Dispose();
                 ShowError("The selected file/folder doesn't have any fields", "No fields found");
                 return null;
             }
