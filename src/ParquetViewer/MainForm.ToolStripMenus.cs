@@ -93,10 +93,10 @@ namespace ParquetViewer
 
                 Clipboard.SetText(sql);
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.SQLCreateTable);
-                MessageBox.Show(this, "Create table script copied to clipboard!", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, "Create table script copied to clipboard!", "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
-                MessageBox.Show(this, "Please select some fields first to get the SQL script", "Parquet Viewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Please select some fields first to get the SQL script", "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -125,7 +125,7 @@ namespace ParquetViewer
                 //Also clear out each column's Tag so auto sizing can pick it up again (see: FastAutoSizeColumns())
                 foreach (DataGridViewColumn column in this.mainGridView.Columns)
                 {
-                    column.Tag = null; //TODO: This logic is terrible. Need to find a cleaner solution
+                    column.Tag = null; 
                 }
             }
         }

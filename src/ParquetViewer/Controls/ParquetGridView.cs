@@ -484,12 +484,15 @@ namespace ParquetViewer.Controls
                 {
                     //All date time's will have the same string length so no need to go through actual values.
                     //We can just measure one and use that.
-                    string formattedDateTimeValue = DateTime.Now.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
+                    var dateTime = gridTable.AsEnumerable()
+                        .FirstOrDefault(row => row[i] != DBNull.Value)?
+                        .Field<DateTime>(i) ?? DateTime.UtcNow;
+                    string formattedDateTimeValue = dateTime.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
                     newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
                 }
                 else
                 {
-                    // Collect all the rows into a string array, making sure to exclude null values.
+                    // Collect all the rows into a string enumerable, making sure to exclude null values.
                     IEnumerable<string> colStringCollection;
                     if (gridTable.Columns[i].DataType == typeof(StructValue))
                     {
