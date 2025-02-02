@@ -411,8 +411,11 @@ namespace ParquetViewer
                     queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
                 }
 
-                if (this.MainDataSource.DefaultView.RowFilter == queryText)
-                    return; //No need to execute the same query again
+                if (string.IsNullOrWhiteSpace(queryText)
+                    || this.MainDataSource.DefaultView.RowFilter == queryText) //No need to execute the same query again
+                {
+                    return;
+                }
 
                 var stopwatch = Stopwatch.StartNew();
                 var queryEvent = new ExecuteQueryEvent
