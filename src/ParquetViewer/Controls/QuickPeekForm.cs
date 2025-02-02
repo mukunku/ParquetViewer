@@ -1,5 +1,8 @@
-﻿using System;
+﻿using ParquetViewer.Helpers;
+using System;
+using System.Data;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
@@ -27,18 +30,6 @@ namespace ParquetViewer.Controls
             }
         }
 
-        private object data = new();
-        public object Data
-        {
-            get => data;
-            set
-            {
-                this.data = value;
-                this.mainGridView.DataSource = value;
-                this.mainGridView.ClearSelection();
-            }
-        }
-
         public Guid UniqueTag { get; set; }
         public int SourceRowIndex { get; set; }
         public int SourceColumnIndex { get; set; }
@@ -50,31 +41,80 @@ namespace ParquetViewer.Controls
             InitializeComponent();
             this.originalTitle = this.Text;
             this.closeWindowButton.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
+            MaximumSize = new Size(Screen.FromControl(this).WorkingArea.Width, Screen.FromControl(this).WorkingArea.Height); //In case we have really large images
         }
 
-        public QuickPeekForm(string? titleSuffix, object data, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
+        public QuickPeekForm(string titleSuffix, DataTable data, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
         {
-            this.TitleSuffix = titleSuffix ?? string.Empty;
-            this.Data = data ?? throw new ArgumentNullException(nameof(data));
+            this.TitleSuffix = titleSuffix;
             this.UniqueTag = uniqueTag;
             this.SourceRowIndex = sourceRowIndex;
             this.SourceColumnIndex = sourceColumnIndex;
+
+            this.mainTableLayoutPanel.Controls.Remove(this.mainPictureBox);
+            this.mainTableLayoutPanel.Controls.Remove(this.saveImageToFileButton);
+            this.mainTableLayoutPanel.RowCount -= 1; //Remove the bottom row to get rid of the image save button
+            this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 2);
+            this.mainPictureBox = null;
+
+            this.mainGridView.DataSource = data ?? throw new ArgumentNullException(nameof(data));
+            this.mainGridView.ClearSelection();
+        }
+
+        public QuickPeekForm(string titleSuffix, Image image, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
+        {
+            this.TitleSuffix = titleSuffix;
+            this.UniqueTag = uniqueTag;
+            this.SourceRowIndex = sourceRowIndex;
+            this.SourceColumnIndex = sourceColumnIndex;
+
+            this.mainTableLayoutPanel.Controls.Remove(this.mainGridView);
+            this.mainGridView = null;
+
+            this.mainPictureBox.Image = image ?? throw new ArgumentNullException(nameof(image));
+            this.mainTableLayoutPanel.SetColumn(this.mainPictureBox, 0);
+            this.mainTableLayoutPanel.SetColumnSpan(this.mainPictureBox, 2);
         }
 
         private void QuickPeakForm_Load(object sender, EventArgs e)
         {
-            var width = 0;
             if (this.mainGridView is not null)
             {
                 //Make the form as wide as the number of columns
-                width = this.mainGridView.RowHeadersWidth + 26; // needed to add this magic number in my testing
+                var width = this.mainGridView.RowHeadersWidth + 26; // needed to add this magic number in my testing
                 foreach (DataGridViewColumn column in this.mainGridView.Columns)
                 {
                     width += column.Width;
                 }
+                this.Width = Math.Min(Math.Max(width, 280), 900); //900 pixel max seems reasonable, right?
             }
-            this.Width = Math.Min(Math.Max(width, 280), 900); //900 pixel max seems reasonable, right?
+            else if (this.mainPictureBox is not null)
+            {
+                this.Text += $" (Dimensions: {this.mainPictureBox.Image.PhysicalDimension.Width} x {this.mainPictureBox.Image.PhysicalDimension.Height})";
+                this.Text += $" (Type: {this.mainPictureBox.Image.RawFormat})";
+
+                this.Width = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Width / 1.8), this.mainPictureBox.Image.Width), 400);
+                this.Height = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Height / 1.8), this.mainPictureBox.Image.Height), 400);
+
+                this.Size = this.mainPictureBox.RenderedSize() + new Size(0, 80);
+
+                this.saveImageToFileButton.Text = $"Save as {this.mainPictureBox.Image.RawFormat}";
+            }
+            else
+            {
+                throw new ApplicationException("This should never happen");
+            }
+
             this.Location = new Point(Cursor.Position.X + 5, Cursor.Position.Y);
+
+            //Keep the form on the screen
+            var xOverflow = this.Left + this.Width - Screen.FromControl(this).WorkingArea.Width;
+            if (xOverflow > 0)
+                this.Left -= xOverflow;
+
+            var yOverflow = this.Top + this.Height - Screen.FromControl(this).WorkingArea.Height;
+            if (yOverflow > 0)
+                this.Top -= yOverflow;
         }
 
         private void TakeMeBackLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -91,6 +131,38 @@ namespace ParquetViewer.Controls
         private void CloseWindowButton_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void saveImageToFileButton_Click(object sender, EventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = $"{this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
+                Title = $"Save image as {this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()}"
+            };
+            saveFileDialog.ShowDialog();
+
+            if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
+            {
+                var bitmap = new Bitmap(this.mainPictureBox.Image);
+                bitmap.Save(saveFileDialog.FileName, this.mainPictureBox.Image.RawFormat);
+
+                MessageBox.Show($"Image saved to {saveFileDialog.FileName}", "Save complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private async void copyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                this.mainPictureBox.Cursor = Cursors.WaitCursor;
+                Clipboard.SetImage(this.mainPictureBox.Image);
+                await Task.Delay(100); //allow cursor to change
+            }
+            finally
+            {
+                this.mainPictureBox.Cursor = Cursors.Default;
+            }
         }
     }
 

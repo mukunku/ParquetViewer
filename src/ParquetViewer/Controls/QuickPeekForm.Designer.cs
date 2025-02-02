@@ -30,32 +30,42 @@ namespace ParquetViewer.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QuickPeekForm));
             mainTableLayoutPanel = new TableLayoutPanel();
             mainGridView = new ParquetGridView();
             takeMeBackLinkLabel = new LinkLabel();
             closeWindowButton = new Button();
+            saveImageToFileButton = new Button();
+            mainPictureBox = new PictureBox();
+            imageRightClickMenu = new ContextMenuStrip(components);
+            copyToClipboardToolStripMenuItem = new ToolStripMenuItem();
             mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)mainGridView).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)mainPictureBox).BeginInit();
+            imageRightClickMenu.SuspendLayout();
             SuspendLayout();
             // 
             // mainTableLayoutPanel
             // 
             mainTableLayoutPanel.ColumnCount = 2;
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 66.66666F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33333F));
+            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 66.6666641F));
+            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.3333359F));
             mainTableLayoutPanel.Controls.Add(mainGridView, 0, 1);
             mainTableLayoutPanel.Controls.Add(takeMeBackLinkLabel, 0, 0);
             mainTableLayoutPanel.Controls.Add(closeWindowButton, 1, 0);
+            mainTableLayoutPanel.Controls.Add(saveImageToFileButton, 0, 2);
+            mainTableLayoutPanel.Controls.Add(mainPictureBox, 1, 1);
             mainTableLayoutPanel.Dock = DockStyle.Fill;
             mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
             mainTableLayoutPanel.Margin = new Padding(4, 3, 4, 3);
             mainTableLayoutPanel.Name = "mainTableLayoutPanel";
-            mainTableLayoutPanel.RowCount = 2;
+            mainTableLayoutPanel.RowCount = 3;
             mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 23F));
             mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainTableLayoutPanel.Size = new System.Drawing.Size(324, 402);
+            mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            mainTableLayoutPanel.Size = new System.Drawing.Size(324, 275);
             mainTableLayoutPanel.TabIndex = 0;
             // 
             // mainGridView
@@ -63,25 +73,26 @@ namespace ParquetViewer.Controls
             mainGridView.AllowUserToAddRows = false;
             mainGridView.AllowUserToDeleteRows = false;
             mainGridView.AllowUserToOrderColumns = true;
+            mainGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
             dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
             mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            mainTableLayoutPanel.SetColumnSpan(mainGridView, 2);
-            mainGridView.Dock = DockStyle.Fill;
             mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Location = new System.Drawing.Point(4, 26);
             mainGridView.Margin = new Padding(4, 3, 4, 3);
             mainGridView.Name = "mainGridView";
             mainGridView.ReadOnly = true;
             mainGridView.RowHeadersWidth = 24;
-            mainGridView.Size = new System.Drawing.Size(316, 373);
+            mainGridView.ShowCellToolTips = false;
+            mainGridView.Size = new System.Drawing.Size(208, 214);
             mainGridView.TabIndex = 0;
             // 
             // takeMeBackLinkLabel
@@ -111,12 +122,48 @@ namespace ParquetViewer.Controls
             closeWindowButton.UseVisualStyleBackColor = true;
             closeWindowButton.Click += CloseWindowButton_Click;
             // 
+            // saveImageToFileButton
+            // 
+            saveImageToFileButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            mainTableLayoutPanel.SetColumnSpan(saveImageToFileButton, 2);
+            saveImageToFileButton.Location = new System.Drawing.Point(3, 246);
+            saveImageToFileButton.Name = "saveImageToFileButton";
+            saveImageToFileButton.Size = new System.Drawing.Size(318, 26);
+            saveImageToFileButton.TabIndex = 3;
+            saveImageToFileButton.Text = "Save as PNG";
+            saveImageToFileButton.UseVisualStyleBackColor = true;
+            saveImageToFileButton.Click += saveImageToFileButton_Click;
+            // 
+            // mainPictureBox
+            // 
+            mainPictureBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            mainPictureBox.ContextMenuStrip = imageRightClickMenu;
+            mainPictureBox.Location = new System.Drawing.Point(219, 26);
+            mainPictureBox.Name = "mainPictureBox";
+            mainPictureBox.Size = new System.Drawing.Size(102, 214);
+            mainPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            mainPictureBox.TabIndex = 4;
+            mainPictureBox.TabStop = false;
+            // 
+            // imageRightClickMenu
+            // 
+            imageRightClickMenu.Items.AddRange(new ToolStripItem[] { copyToClipboardToolStripMenuItem });
+            imageRightClickMenu.Name = "imageRightClickMenu";
+            imageRightClickMenu.Size = new System.Drawing.Size(170, 26);
+            // 
+            // copyToClipboardToolStripMenuItem
+            // 
+            copyToClipboardToolStripMenuItem.Name = "copyToClipboardToolStripMenuItem";
+            copyToClipboardToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            copyToClipboardToolStripMenuItem.Text = "Copy to clipboard";
+            copyToClipboardToolStripMenuItem.Click += copyToClipboardToolStripMenuItem_Click;
+            // 
             // QuickPeekForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             CancelButton = closeWindowButton;
-            ClientSize = new System.Drawing.Size(324, 402);
+            ClientSize = new System.Drawing.Size(324, 275);
             Controls.Add(mainTableLayoutPanel);
             DoubleBuffered = true;
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
@@ -128,6 +175,8 @@ namespace ParquetViewer.Controls
             mainTableLayoutPanel.ResumeLayout(false);
             mainTableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)mainGridView).EndInit();
+            ((System.ComponentModel.ISupportInitialize)mainPictureBox).EndInit();
+            imageRightClickMenu.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -137,5 +186,9 @@ namespace ParquetViewer.Controls
         private ParquetGridView mainGridView;
         private System.Windows.Forms.LinkLabel takeMeBackLinkLabel;
         private System.Windows.Forms.Button closeWindowButton;
+        private Button saveImageToFileButton;
+        private PictureBox mainPictureBox;
+        private ContextMenuStrip imageRightClickMenu;
+        private ToolStripMenuItem copyToClipboardToolStripMenuItem;
     }
 }
