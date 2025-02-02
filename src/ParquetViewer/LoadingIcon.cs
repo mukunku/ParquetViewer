@@ -29,6 +29,7 @@ namespace ParquetViewer
 
             this._form = form;
             this._panel = new Panel();
+            this._panel.BorderStyle = BorderStyle.FixedSingle;
             this._panel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
             this._panel.Location = this.GetFormCenter();
             this._loadingBarMax = loadingBarMax;
