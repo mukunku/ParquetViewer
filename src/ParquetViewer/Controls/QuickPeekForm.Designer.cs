@@ -126,11 +126,14 @@ namespace ParquetViewer.Controls
             // 
             saveImageToFileButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             mainTableLayoutPanel.SetColumnSpan(saveImageToFileButton, 2);
+            saveImageToFileButton.Image = Properties.Resources.save_icon;
+            saveImageToFileButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             saveImageToFileButton.Location = new System.Drawing.Point(3, 246);
             saveImageToFileButton.Name = "saveImageToFileButton";
             saveImageToFileButton.Size = new System.Drawing.Size(318, 26);
             saveImageToFileButton.TabIndex = 3;
             saveImageToFileButton.Text = "Save as PNG";
+            saveImageToFileButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             saveImageToFileButton.UseVisualStyleBackColor = true;
             saveImageToFileButton.Click += saveImageToFileButton_Click;
             // 
