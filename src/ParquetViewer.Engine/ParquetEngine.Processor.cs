@@ -520,7 +520,7 @@ namespace ParquetViewer.Engine
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Struct) //Struct
+                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Struct)
                 {
                     dataTable.AddColumn(field, typeof(StructValue), parent);
                 }
