@@ -121,7 +121,7 @@ namespace ParquetViewer.Controls
                     var tag = this.Columns[e.ColumnIndex].Tag as string;
                     if (tag is null || (!tag.Equals("NOT-IMAGE") && !tag.Equals("IMAGE")))
                     {
-                        tag = byteArrayValue.IsImage() ? "IMAGE" : "NOT-IMAGE";
+                        tag = byteArrayValue.ToImage(out _) ? "IMAGE" : "NOT-IMAGE";
                         this.Columns[e.ColumnIndex].Tag = tag;
                     }
 
@@ -172,7 +172,7 @@ namespace ParquetViewer.Controls
                     copy.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
                         this.isCopyingToClipboard = true;
-                        Clipboard.SetDataObject(this.GetClipboardContent());
+                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
                         this.isCopyingToClipboard = false;
                     };
 
@@ -182,7 +182,7 @@ namespace ParquetViewer.Controls
                         this.isCopyingToClipboard = true;
                         this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-                        Clipboard.SetDataObject(this.GetClipboardContent());
+                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
                         this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
                         this.RowHeadersVisible = true;
                         this.isCopyingToClipboard = false;
@@ -228,21 +228,22 @@ namespace ParquetViewer.Controls
 
             //Check if there's already a quick peek open for this cell
             if (clickedCell.Tag is Guid cellUniqueTag
-                && openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
-                && quickPeekForm.UniqueTag.Equals(cellUniqueTag))
+                && openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var existingQuickPeekForm)
+                && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
             {
                 //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
-                quickPeekForm.Focus();
+                existingQuickPeekForm.Focus();
                 return;
             }
 
             var dataType = QuickPeekEvent.DataTypeId.Unknown;
-            DataTable? dt = null;
+            QuickPeekForm? quickPeekForm = null;
+            var uniqueCellTag = Guid.NewGuid();
             if (clickedCell.Value is ListValue listValue)
             {
                 dataType = QuickPeekEvent.DataTypeId.List;
 
-                dt = new DataTable();
+                var dt = new DataTable();
                 dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type!));
 
                 foreach (var item in listValue)
@@ -251,12 +252,14 @@ namespace ParquetViewer.Controls
                     row[0] = item;
                     dt.Rows.Add(row);
                 }
+
+                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
             else if (clickedCell.Value is MapValue mapValue)
             {
                 dataType = QuickPeekEvent.DataTypeId.Map;
 
-                dt = new DataTable();
+                var dt = new DataTable();
                 dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
                 dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
 
@@ -267,48 +270,34 @@ namespace ParquetViewer.Controls
                     row[1] = value;
                     dt.Rows.Add(row);
                 }
+
+                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
             else if (clickedCell.Value is StructValue structValue)
             {
                 dataType = QuickPeekEvent.DataTypeId.Struct;
 
-                dt = structValue.Data.Table.Clone();
+                var dt = structValue.Data.Table.Clone();
                 var row = dt.NewRow();
                 row.ItemArray = structValue.Data.ItemArray;
                 dt.Rows.Add(row);
+
+                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
-            else if (clickedCell.Value is ByteArrayValue byteArray)
+            else if (clickedCell.Value is ByteArrayValue byteArray && byteArray.ToImage(out var image))
             {
-                Image? image = null;
-                try
-                {
-                    image = byteArray.ToImage();
-                }
-                catch { /* not an image */ }
-
-                if (image is not null)
-                {
-                    dataType = QuickPeekEvent.DataTypeId.Image;
-
-                    new ImagePreviewForm()
-                    {
-                        PreviewImage = image,
-                        Width = image.Width + 22,
-                        Height = image.Height + 77
-                    }.Show(this.Parent ?? this);
-
-                    QuickPeekEvent.FireAndForget(dataType);
-                }
+                dataType = QuickPeekEvent.DataTypeId.Image;
+                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, image!, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+            }
+            else
+            {
+                //Nothing to preview
+                return;
             }
 
-            if (dt is null)
-                return;
-
-            var uniqueCellTag = Guid.NewGuid();
             clickedCell.Tag = uniqueCellTag;
 
-            var quickPeakForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
-            quickPeakForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
+            quickPeekForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
             {
                 if (this.Rows.Count > tag.SourceRowIndex && this.Columns.Count > tag.SourceColumnIndex) //Can't be too safe
                 {
@@ -342,7 +331,7 @@ namespace ParquetViewer.Controls
                 }
             };
 
-            quickPeakForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
+            quickPeekForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
             {
                 if (openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
                     && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
@@ -352,8 +341,8 @@ namespace ParquetViewer.Controls
             };
 
             openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
-            openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeakForm);
-            quickPeakForm.Show(this.Parent ?? this);
+            openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeekForm);
+            quickPeekForm.Show(this.Parent ?? this);
             QuickPeekEvent.FireAndForget(dataType);
         }
 
@@ -495,12 +484,15 @@ namespace ParquetViewer.Controls
                 {
                     //All date time's will have the same string length so no need to go through actual values.
                     //We can just measure one and use that.
-                    string formattedDateTimeValue = DateTime.Now.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
+                    var dateTime = gridTable.AsEnumerable()
+                        .FirstOrDefault(row => row[i] != DBNull.Value)?
+                        .Field<DateTime>(i) ?? DateTime.UtcNow;
+                    string formattedDateTimeValue = dateTime.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
                     newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
                 }
                 else
                 {
-                    // Collect all the rows into a string array, making sure to exclude null values.
+                    // Collect all the rows into a string enumerable, making sure to exclude null values.
                     IEnumerable<string> colStringCollection;
                     if (gridTable.Columns[i].DataType == typeof(StructValue))
                     {

@@ -191,19 +191,14 @@ namespace ParquetViewer
                 return null;
             }
 
-            LoadingIcon? loadingIcon = null;
             if (this._openParquetEngine == null)
             {
-                loadingIcon = this.ShowLoadingIcon("Loading Fields");
-
                 try
                 {
-                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, loadingIcon.CancellationToken);
+                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, default);
                 }
                 catch (Exception ex)
                 {
-                    loadingIcon.Dispose();
-
                     if (this._openParquetEngine == null)
                     {
                         //cancel file open
@@ -245,50 +240,33 @@ namespace ParquetViewer
                 schema = this._openParquetEngine.Schema;
             }
             catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
+            catch (Exception ex)
+            {
+                throw new Parquet.ParquetException("Could not read parquet schema.", ex);
+            }
 
             var fields = schema?.Fields;
             if (fields?.Count > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
-                    loadingIcon?.Dispose();
-                    this.Cursor = Cursors.WaitCursor;
-
-                    try
-                    {
-                        return fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f.Name).ToList();
-                    }
-                    finally
-                    {
-                        this.Cursor = Cursors.Default;
-                    }
+                    return fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f.Name).ToList();
                 }
                 else
                 {
-                    await Task.Delay(125); //Give the UI thread some time to render the loading icon
-                    this.Cursor = Cursors.WaitCursor;
-                    try
+                    var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
+                    if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
                     {
-                        loadingIcon?.Dispose();
-                        var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
-                        if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
-                        {
-                            return fieldSelectionForm.NewSelectedFields;
-                        }
-                        else
-                        {
-                            return null;
-                        }
+                        return fieldSelectionForm.NewSelectedFields;
                     }
-                    finally
+                    else
                     {
-                        this.Cursor = Cursors.Default;
+                        return null;
                     }
                 }
             }
             else
             {
-                loadingIcon?.Dispose();
                 ShowError("The selected file/folder doesn't have any fields", "No fields found");
                 return null;
             }
@@ -339,8 +317,8 @@ namespace ParquetViewer
 
                 this.MainDataSource = finalResult;
 
-                FileOpenEvent.FireAndForget(Directory.Exists(this.OpenFileOrFolderPath), this._openParquetEngine.NumberOfPartitions, this._openParquetEngine.RecordCount, this._openParquetEngine.ThriftMetadata.RowGroups.Count(),
-                    this._openParquetEngine.Fields.Count(), finalResult.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), this.CurrentOffset, this.CurrentMaxRowCount, finalResult.Columns.Count, stopwatch.ElapsedMilliseconds);
+                FileOpenEvent.FireAndForget(Directory.Exists(this.OpenFileOrFolderPath), this._openParquetEngine.NumberOfPartitions, this._openParquetEngine.RecordCount, this._openParquetEngine.ThriftMetadata.RowGroups.Count,
+                    this._openParquetEngine.Fields.Count, finalResult.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), this.CurrentOffset, this.CurrentMaxRowCount, finalResult.Columns.Count, stopwatch.ElapsedMilliseconds);
             }
             catch (AllFilesSkippedException ex)
             {
@@ -414,46 +392,54 @@ namespace ParquetViewer
         {
             try
             {
-                if (this.IsAnyFileOpen)
+                if (!this.IsAnyFileOpen)
+                    return;
+
+                if (this.MainDataSource is null)
+                    throw new ApplicationException("This should never happen");
+
+                string queryText = this.searchFilterTextBox.Text ?? string.Empty;
+                queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
+
+                //Treat list, map, and struct types as strings by casting them automatically
+                foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
+                        || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
+                    .Select(c => c.Name))
                 {
-                    if (this.MainDataSource is null)
-                        throw new ApplicationException("This should never happen");
+                    //This isn't perfect but it should handle most cases
+                    queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
+                }
 
-                    string queryText = this.searchFilterTextBox.Text ?? string.Empty;
-                    queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(queryText)
+                    || this.MainDataSource.DefaultView.RowFilter == queryText) //No need to execute the same query again
+                {
+                    return;
+                }
 
-                    //Treat list, map, and struct types as strings by casting them automatically
-                    foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                        .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
-                            || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
-                        .Select(c => c.Name))
-                    {
-                        //This isn't perfect but it should handle most cases
-                        queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
-                    }
+                var stopwatch = Stopwatch.StartNew();
+                var queryEvent = new ExecuteQueryEvent
+                {
+                    RecordCountTotal = this.MainDataSource.Rows.Count,
+                    ColumnCount = this.MainDataSource.Columns.Count
+                };
 
-                    var stopwatch = Stopwatch.StartNew();
-                    var queryEvent = new ExecuteQueryEvent
-                    {
-                        RecordCount = this.MainDataSource.Rows.Count,
-                        ColumnCount = this.MainDataSource.Columns.Count
-                    };
-
-                    try
-                    {
-                        this.MainDataSource.DefaultView.RowFilter = queryText;
-                        queryEvent.IsValid = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        this.MainDataSource.DefaultView.RowFilter = null;
-                        throw new InvalidQueryException(ex);
-                    }
-                    finally
-                    {
-                        queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
-                        var _ = queryEvent.Record(); //Fire and forget
-                    }
+                try
+                {
+                    //TODO: Figure out a way to run the query async so it doesn't freeze the UI for long running queries.
+                    this.MainDataSource.DefaultView.RowFilter = queryText;
+                    queryEvent.IsValid = true;
+                    queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
+                }
+                catch (Exception ex)
+                {
+                    this.MainDataSource.DefaultView.RowFilter = null;
+                    throw new InvalidQueryException(ex);
+                }
+                finally
+                {
+                    queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                    var _ = queryEvent.Record(); //Fire and forget
                 }
             }
             catch (InvalidQueryException ex)

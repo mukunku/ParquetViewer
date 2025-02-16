@@ -32,7 +32,6 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CustomDateFormatInputForm));
             mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             livePreviewTextBox = new System.Windows.Forms.TextBox();
             label56 = new System.Windows.Forms.Label();
@@ -251,7 +250,7 @@ namespace ParquetViewer
             // 
             label34.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label34.AutoSize = true;
-            label34.Location = new System.Drawing.Point(318, 213);
+            label34.Location = new System.Drawing.Point(314, 213);
             label34.Name = "label34";
             label34.Size = new System.Drawing.Size(156, 30);
             label34.TabIndex = 30;
@@ -282,7 +281,7 @@ namespace ParquetViewer
             // 
             label28.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label28.AutoSize = true;
-            label28.Location = new System.Drawing.Point(318, 178);
+            label28.Location = new System.Drawing.Point(314, 178);
             label28.Name = "label28";
             label28.Size = new System.Drawing.Size(144, 30);
             label28.TabIndex = 24;
@@ -313,7 +312,7 @@ namespace ParquetViewer
             // 
             label22.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label22.AutoSize = true;
-            label22.Location = new System.Drawing.Point(318, 150);
+            label22.Location = new System.Drawing.Point(314, 150);
             label22.Name = "label22";
             label22.Size = new System.Drawing.Size(144, 15);
             label22.TabIndex = 18;
@@ -344,7 +343,7 @@ namespace ParquetViewer
             // 
             label16.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label16.AutoSize = true;
-            label16.Location = new System.Drawing.Point(318, 115);
+            label16.Location = new System.Drawing.Point(314, 115);
             label16.Name = "label16";
             label16.Size = new System.Drawing.Size(138, 15);
             label16.TabIndex = 12;
@@ -375,7 +374,7 @@ namespace ParquetViewer
             // 
             label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label10.AutoSize = true;
-            label10.Location = new System.Drawing.Point(318, 73);
+            label10.Location = new System.Drawing.Point(314, 73);
             label10.Name = "label10";
             label10.Size = new System.Drawing.Size(144, 30);
             label10.TabIndex = 6;
@@ -406,7 +405,7 @@ namespace ParquetViewer
             // 
             label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label4.AutoSize = true;
-            label4.Location = new System.Drawing.Point(318, 38);
+            label4.Location = new System.Drawing.Point(314, 38);
             label4.Name = "label4";
             label4.Size = new System.Drawing.Size(144, 30);
             label4.TabIndex = 0;
@@ -440,7 +439,7 @@ namespace ParquetViewer
             label40.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label40.AutoSize = true;
             label40.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
-            label40.Location = new System.Drawing.Point(318, 10);
+            label40.Location = new System.Drawing.Point(314, 10);
             label40.Name = "label40";
             label40.Size = new System.Drawing.Size(59, 15);
             label40.TabIndex = 0;
@@ -471,7 +470,7 @@ namespace ParquetViewer
             // 
             label7.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label7.AutoSize = true;
-            label7.Location = new System.Drawing.Point(318, 255);
+            label7.Location = new System.Drawing.Point(314, 255);
             label7.Name = "label7";
             label7.Size = new System.Drawing.Size(138, 15);
             label7.TabIndex = 3;
@@ -502,7 +501,7 @@ namespace ParquetViewer
             // 
             label13.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label13.AutoSize = true;
-            label13.Location = new System.Drawing.Point(318, 290);
+            label13.Location = new System.Drawing.Point(314, 290);
             label13.Name = "label13";
             label13.Size = new System.Drawing.Size(144, 15);
             label13.TabIndex = 9;
@@ -533,7 +532,7 @@ namespace ParquetViewer
             // 
             label19.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label19.AutoSize = true;
-            label19.Location = new System.Drawing.Point(318, 318);
+            label19.Location = new System.Drawing.Point(314, 318);
             label19.Name = "label19";
             label19.Size = new System.Drawing.Size(144, 30);
             label19.TabIndex = 15;
@@ -564,7 +563,7 @@ namespace ParquetViewer
             // 
             label25.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label25.AutoSize = true;
-            label25.Location = new System.Drawing.Point(318, 353);
+            label25.Location = new System.Drawing.Point(314, 353);
             label25.Name = "label25";
             label25.Size = new System.Drawing.Size(144, 30);
             label25.TabIndex = 21;
@@ -587,7 +586,7 @@ namespace ParquetViewer
             label30.AutoSize = true;
             label30.Location = new System.Drawing.Point(77, 388);
             label30.Name = "label30";
-            label30.Size = new System.Drawing.Size(232, 30);
+            label30.Size = new System.Drawing.Size(221, 30);
             label30.TabIndex = 26;
             label30.Text = "The hour, using a 12-hour clock from 01 to 12.";
             // 
@@ -595,7 +594,7 @@ namespace ParquetViewer
             // 
             label31.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label31.AutoSize = true;
-            label31.Location = new System.Drawing.Point(318, 388);
+            label31.Location = new System.Drawing.Point(314, 388);
             label31.Name = "label31";
             label31.Size = new System.Drawing.Size(144, 30);
             label31.TabIndex = 27;
@@ -618,7 +617,7 @@ namespace ParquetViewer
             label36.AutoSize = true;
             label36.Location = new System.Drawing.Point(77, 423);
             label36.Name = "label36";
-            label36.Size = new System.Drawing.Size(232, 30);
+            label36.Size = new System.Drawing.Size(221, 30);
             label36.TabIndex = 32;
             label36.Text = "The hour, using a 24-hour clock from 00 to 23.";
             // 
@@ -626,7 +625,7 @@ namespace ParquetViewer
             // 
             label37.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label37.AutoSize = true;
-            label37.Location = new System.Drawing.Point(318, 423);
+            label37.Location = new System.Drawing.Point(314, 423);
             label37.Name = "label37";
             label37.Size = new System.Drawing.Size(144, 30);
             label37.TabIndex = 33;
@@ -657,7 +656,7 @@ namespace ParquetViewer
             // 
             label49.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label49.AutoSize = true;
-            label49.Location = new System.Drawing.Point(318, 458);
+            label49.Location = new System.Drawing.Point(314, 458);
             label49.Name = "label49";
             label49.Size = new System.Drawing.Size(168, 30);
             label49.TabIndex = 39;
@@ -688,7 +687,7 @@ namespace ParquetViewer
             // 
             label55.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label55.AutoSize = true;
-            label55.Location = new System.Drawing.Point(318, 493);
+            label55.Location = new System.Drawing.Point(314, 493);
             label55.Name = "label55";
             label55.Size = new System.Drawing.Size(219, 30);
             label55.TabIndex = 45;
@@ -719,7 +718,7 @@ namespace ParquetViewer
             // 
             label46.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label46.AutoSize = true;
-            label46.Location = new System.Drawing.Point(318, 528);
+            label46.Location = new System.Drawing.Point(314, 528);
             label46.Name = "label46";
             label46.Size = new System.Drawing.Size(193, 30);
             label46.TabIndex = 36;
@@ -732,7 +731,7 @@ namespace ParquetViewer
             instructionsTableLayoutPanel.SetColumnSpan(dateFormatDocsLinkLabel, 3);
             dateFormatDocsLinkLabel.Image = Resources.external_link_icon;
             dateFormatDocsLinkLabel.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            dateFormatDocsLinkLabel.Location = new System.Drawing.Point(170, 565);
+            dateFormatDocsLinkLabel.Location = new System.Drawing.Point(165, 565);
             dateFormatDocsLinkLabel.Name = "dateFormatDocsLinkLabel";
             dateFormatDocsLinkLabel.Padding = new System.Windows.Forms.Padding(0, 0, 18, 0);
             dateFormatDocsLinkLabel.Size = new System.Drawing.Size(217, 15);
@@ -768,7 +767,7 @@ namespace ParquetViewer
             saveDateFormatButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             mainTableLayoutPanel.SetColumnSpan(saveDateFormatButton, 2);
             saveDateFormatButton.Enabled = false;
-            saveDateFormatButton.Image = (System.Drawing.Image)resources.GetObject("saveDateFormatButton.Image");
+            saveDateFormatButton.Image = Resources.save_icon;
             saveDateFormatButton.Location = new System.Drawing.Point(9, 69);
             saveDateFormatButton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 3);
             saveDateFormatButton.Name = "saveDateFormatButton";

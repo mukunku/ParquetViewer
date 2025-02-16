@@ -35,33 +35,24 @@ namespace ParquetViewer.Engine
         public ParquetSchemaElement GetChildCI(string name) => 
             GetChildImpl(_children.Keys.FirstOrDefault((key) => key?.Equals(name, StringComparison.InvariantCultureIgnoreCase) == true) ?? name);
 
-        public ParquetSchemaElement GetChild(string? parent, string name)
+        private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
+                ? result : throw new MalformedFieldException($"Field schema path not found: `{Path}/{name}`");
+
+        public ParquetSchemaElement GetSingleOrByName(string name)
         {
-            if (parent is null)
+            if (_children.Count == 0)
             {
-                return GetChildImpl(name);
+                throw new MalformedFieldException($"Field `{Path}` has no children. Expected '{name}'.");
             }
 
-            var child = GetChildImpl(parent);
-            return child.GetChild(name);
-        }
-
-        private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
-                ? result : throw new Exception($"Field schema path not found: `{Path}/{name}`");
-
-        public ParquetSchemaElement GetSingle(string name)
-        {
             if (_children.Count == 1)
             {
                 return _children.First().Value;
             }
-            else if (_children.Count == 0)
-            {
-                throw new Exception($"Field `{Path}` has no children. Expected '{name}'. The field is malformed.");
-            }
             else
             {
-                throw new Exception($"Field `{Path}` has more than one child. Expected only '{name}'. The field might be malformed.");
+                return _children.ContainsKey(name) 
+                    ? _children[name] : throw new MalformedFieldException($"Field `{Path}` has no child named '{name}'");
             }
         }
 

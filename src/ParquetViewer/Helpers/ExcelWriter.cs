@@ -4,7 +4,7 @@ using System.Text;
 namespace ParquetViewer.Helpers
 {
     /// <summary>
-    /// Produces Excel file without using Excel
+    /// Produces a .xls file without using Excel
     /// Source: https://www.codeproject.com/Articles/33850/Generate-Excel-files-without-using-Microsoft-Excel
     /// </summary>
     public class ExcelWriter
@@ -101,7 +101,7 @@ namespace ParquetViewer.Helpers
         }
 
         /// <summary>
-        /// Ends the writing operation, but do not close the stream
+        /// Ends the writing operation, but does not close the stream
         /// </summary>
         public void EndWrite()
         {

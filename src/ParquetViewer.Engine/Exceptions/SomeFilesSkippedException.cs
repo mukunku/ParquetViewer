@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ParquetViewer.Engine.Exceptions
+﻿namespace ParquetViewer.Engine.Exceptions
 {
     public class SomeFilesSkippedException : Exception
     {
