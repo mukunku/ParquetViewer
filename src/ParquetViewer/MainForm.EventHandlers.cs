@@ -62,7 +62,7 @@ namespace ParquetViewer
             try
             {
                 var files = e.Data?.GetData(DataFormats.FileDrop) as string[];
-                if (files != null && files.Length > 0)
+                if (files?.Length > 0)
                 {
                     MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.DragDrop);
                     await this.OpenNewFileOrFolder(files[0]);

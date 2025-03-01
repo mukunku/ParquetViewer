@@ -467,7 +467,7 @@ namespace ParquetViewer
             alwaysLoadAllRecordsToolStripMenuItem.Name = "alwaysLoadAllRecordsToolStripMenuItem";
             alwaysLoadAllRecordsToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             alwaysLoadAllRecordsToolStripMenuItem.Text = "Always Load All Records";
-            alwaysLoadAllRecordsToolStripMenuItem.ToolTipText = "When opening a new file, ParquetViewer will load all rows";
+            alwaysLoadAllRecordsToolStripMenuItem.ToolTipText = "When opening a new file ParquetViewer will load all records";
             alwaysLoadAllRecordsToolStripMenuItem.Click += alwaysLoadAllRecordsToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem

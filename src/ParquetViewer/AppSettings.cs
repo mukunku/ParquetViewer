@@ -16,6 +16,7 @@ namespace ParquetViewer
         private const string AlwaysLoadAllRecordsKey = "AlwaysLoadAllRecords";
         private const string OpenedFileCountKey = "OpenedFileCount";
         private const string CustomDateFormatKey = "CustomDateFormat";
+        private const string DarkModeKey = "DarkMode";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -54,9 +55,8 @@ namespace ParquetViewer
         {
             try
             {
-                using var registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey);
                 Guid newDeviceId = Guid.NewGuid();
-                registryKey.SetValue(AnalyticsDeviceIdKey, newDeviceId);
+                SetRegistryValue(AnalyticsDeviceIdKey, newDeviceId);
                 return newDeviceId;
             }
             catch
@@ -91,6 +91,12 @@ namespace ParquetViewer
                 _customDateFormat = value;
                 SetRegistryValue(CustomDateFormatKey, value ?? string.Empty);
             }
+        }
+
+        public static bool DarkMode
+        {
+            get => ReadRegistryValue(DarkModeKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+            set => SetRegistryValue(DarkModeKey, value.ToString());
         }
 
         private static bool ReadRegistryValue<T>(string key, out T? value)

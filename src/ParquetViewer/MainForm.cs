@@ -146,6 +146,7 @@ namespace ParquetViewer
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
             this.OpenFileOrFolderPath = null;
+            SetTheme();
 
             //Have to set this here because it gets deleted from the .Designer.cs file for some reason
             this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();

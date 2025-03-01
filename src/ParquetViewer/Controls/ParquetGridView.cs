@@ -19,6 +19,20 @@ namespace ParquetViewer.Controls
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
         private bool isCopyingToClipboard = false;
 
+        private Theme _gridTheme = Constants.LightModeTheme;
+        public Theme GridTheme
+        {
+            get => _gridTheme;
+            set
+            {
+                if (value != _gridTheme)
+                {
+                    _gridTheme = value;
+                    SetTheme();
+                }
+            }
+        }
+
         public ParquetGridView() : base()
         {
             DoubleBuffered = true; //Set DGV to be double buffered for smoother loading and scrolling
@@ -102,7 +116,7 @@ namespace ParquetViewer.Controls
                         & ~(DataGridViewPaintParts.ContentForeground));
 
                     var font = new Font(e.CellStyle!.Font, FontStyle.Italic);
-                    var color = SystemColors.ActiveCaptionText;
+                    var color = this.GridTheme.CellPlaceholderTextColor;
                     if (this.SelectedCells.Contains(this[e.ColumnIndex, e.RowIndex]))
                         color = Color.White;
 
@@ -114,7 +128,7 @@ namespace ParquetViewer.Controls
                 else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
                 {
                     e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
-                    e.CellStyle.ForeColor = Color.Blue;
+                    e.CellStyle.ForeColor = this.GridTheme.HyperlinkColor;
                 }
                 else if (e.Value is ByteArrayValue byteArrayValue)
                 {
@@ -128,7 +142,7 @@ namespace ParquetViewer.Controls
                     if (tag.Equals("IMAGE"))
                     {
                         e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
-                        e.CellStyle.ForeColor = Color.Blue;
+                        e.CellStyle.ForeColor = this.GridTheme.HyperlinkColor;
                     }
                 }
             }
@@ -505,7 +519,7 @@ namespace ParquetViewer.Controls
                         colStringCollection = gridTable.AsEnumerable()
                             .Where(row => row[i] != DBNull.Value)
                             .Select(row => row.Field<float>(i).ToDecimalString());
-                        
+
                         //Allow longer than preferred width if header is longer
                         maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                     }
@@ -565,6 +579,42 @@ namespace ParquetViewer.Controls
             }
 
             return false;
+        }
+
+        private void SetTheme()
+        {
+            if (this._gridTheme == Constants.LightModeTheme)
+            {
+                this.DefaultCellStyle = null;
+                this.AlternatingRowsDefaultCellStyle = null;
+                this.ColumnHeadersDefaultCellStyle = null;
+                this.RowHeadersDefaultCellStyle = null;
+                this.RowHeadersBorderStyle = Constants.LightModeTheme.RowHeaderBorderStyle;
+                this.BackgroundColor = Constants.LightModeTheme.GridBackgroundColor;
+                this.GridColor = Constants.LightModeTheme.GridColor;
+            }
+            else
+            {
+                this.DefaultCellStyle.BackColor = this._gridTheme.CellBackgroundColor;
+                this.DefaultCellStyle.ForeColor = this._gridTheme.TextColor;
+
+                this.AlternatingRowsDefaultCellStyle.BackColor = this._gridTheme.AlternateRowsCellBackgroundColor;
+                this.AlternatingRowsDefaultCellStyle.ForeColor = this._gridTheme.TextColor;
+
+                this.ColumnHeadersDefaultCellStyle.BackColor = this._gridTheme.ColumnHeaderColor;
+                this.ColumnHeadersDefaultCellStyle.ForeColor = this._gridTheme.TextColor;
+
+                this.RowHeadersDefaultCellStyle.BackColor = this._gridTheme.RowHeaderColor;
+                this.RowHeadersDefaultCellStyle.ForeColor = this._gridTheme.TextColor;
+                this.RowHeadersBorderStyle = this._gridTheme.RowHeaderBorderStyle;
+
+                this.BackgroundColor = this._gridTheme.GridBackgroundColor;
+                this.GridColor = this._gridTheme.GridColor;
+                
+            }
+
+            //This is the default font winforms uses. We need to set it explicitly here otherwise it doesn't work.
+            this.ColumnHeadersDefaultCellStyle!.Font = new Font("Segoe UI Semibold", this.Font.SizeInPoints, FontStyle.Bold);
         }
     }
 }

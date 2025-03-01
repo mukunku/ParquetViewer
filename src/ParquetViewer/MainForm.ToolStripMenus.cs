@@ -72,7 +72,7 @@ namespace ParquetViewer
         private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFileOrFolderPath = this.OpenFileOrFolderPath;
-            if (openFileOrFolderPath?.EndsWith("/") == true)
+            if (openFileOrFolderPath?.EndsWith('/') == true)
             {
                 //trim trailing slash '/'
                 openFileOrFolderPath = openFileOrFolderPath[..^1];
