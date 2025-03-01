@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Engine;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
@@ -78,14 +79,15 @@ namespace ParquetViewer.Controls
         public void UpdateDateFormats()
         {
             string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-            ListValue.DateDisplayFormat = dateFormat; //Need to tell the parquet engine how to render date values
-            MapValue.DateDisplayFormat = dateFormat;
-            StructValue.DateDisplayFormat = dateFormat;
+
             foreach (DataGridViewColumn column in this.Columns)
             {
                 if (column.ValueType == typeof(DateTime))
                     column.DefaultCellStyle.Format = dateFormat;
             }
+
+            //Need to tell the parquet engine how to render date values
+            ParquetEngineSettings.DateDisplayFormat = dateFormat;
         }
 
         public void AutoSizeColumns()

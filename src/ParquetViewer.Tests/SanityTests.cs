@@ -405,7 +405,7 @@ namespace ParquetViewer.Tests
         public async Task LIST_OF_STRUCTS_TEST()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS.parquet", default);
-            StructValue.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
+            ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
 

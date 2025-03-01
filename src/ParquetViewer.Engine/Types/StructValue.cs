@@ -10,8 +10,6 @@ namespace ParquetViewer.Engine.Types
 
         public DataRow Data { get; }
 
-        public static string? DateDisplayFormat { get; set; }
-
         public StructValue(string name, DataRow data)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -110,8 +108,8 @@ namespace ParquetViewer.Engine.Types
             else if (value is DateTime dt)
             {
                 //Write dates as string
-                if (DateDisplayFormat is not null)
-                    jsonWriter.WriteStringValue(dt.ToString(DateDisplayFormat));
+                if (ParquetEngineSettings.DateDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(dt.ToString(ParquetEngineSettings.DateDisplayFormat));
                 else
                     jsonWriter.WriteStringValue(dt.ToString());
             }
