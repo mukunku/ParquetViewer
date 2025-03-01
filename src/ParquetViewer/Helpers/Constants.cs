@@ -26,9 +26,9 @@ namespace ParquetViewer.Helpers
 
         public static Theme LightModeTheme => new Theme(
             Color.White,
-            Color.Black,
+            SystemColors.WindowText,
             Color.White,
-            Color.DarkGray,
+            SystemColors.ControlLight,
             Color.Gray,
             DataGridViewHeaderBorderStyle.Raised,
             Color.FromArgb(160, 160, 160),
