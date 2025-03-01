@@ -61,7 +61,7 @@ namespace ParquetViewer.Controls
 
         protected override void OnDataSourceChanged(EventArgs e)
         {
-            base.OnDataSourceChanged(e);
+            base.OnDataSourceChanged(e); //Fun fact: This runs OnColumnAdded() for all columns before continuing.
 
             UpdateDateFormats();
 
@@ -117,7 +117,7 @@ namespace ParquetViewer.Controls
 
                     var font = new Font(e.CellStyle!.Font, FontStyle.Italic);
                     var color = this.GridTheme.CellPlaceholderTextColor;
-                    if (this.SelectedCells.Contains(this[e.ColumnIndex, e.RowIndex]))
+                    if (e.State.HasFlag(DataGridViewElementStates.Selected))
                         color = Color.White;
 
                     TextRenderer.DrawText(e.Graphics!, "NULL", font, e.CellBounds, color,
