@@ -392,14 +392,31 @@ namespace ParquetViewer.Controls
                 e.Value = d.ToDecimalString();
                 e.FormattingApplied = true;
             }
-
+            
             if (this.isCopyingToClipboard)
             {
+                //Temporarily replace checkboxes with true/false for better copy/paste experience.
+                //Otherwise you end up with: Indeterminate, Cleared, or Selected
+                if (cellValueType == typeof(bool))
+                {
+                    if (e.Value == DBNull.Value)
+                    {
+                        e.Value = string.Empty;
+                        e.FormattingApplied = true;
+                    }
+                    else if (e.Value is bool @bool)
+                    {
+                        e.Value = @bool.ToString();
+                        e.FormattingApplied = true;
+                    }
+                }
+
                 //In order to get full cell values into the clipboard during a copy to
                 //clipboard operation we need to skip the truncation formatting below 
                 return;
             }
-            else if (e.FormattingApplied)
+            
+            if (e.FormattingApplied)
             {
                 //We already formatted the value above so exit early.
                 return;
