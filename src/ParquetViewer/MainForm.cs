@@ -29,8 +29,8 @@ namespace ParquetViewer
             get => this._openFileOrFolderPath;
             set
             {
-                this._openParquetEngine?.Dispose();
                 this._openFileOrFolderPath = value;
+                this._openParquetEngine?.Dispose();
                 this._openParquetEngine = null;
                 this.SelectedFields = null;
                 this.changeFieldsMenuStripButton.Enabled = false;
@@ -39,10 +39,11 @@ namespace ParquetViewer
                 this.metadataViewerToolStripMenuItem.Enabled = false;
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
-                this.MainDataSource?.Clear();
-                this.MainDataSource?.Columns.Clear();
+                this.MainDataSource?.Dispose();
+                this.MainDataSource = null;
                 this.loadAllRowsButton.Enabled = false;
                 this.searchFilterTextBox.PlaceholderText = "WHERE ";
+                this.mainGridView.ClearQuickPeekForms();
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {
