@@ -153,7 +153,7 @@ namespace ParquetViewer.Controls
         }
 
         protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
-        {            
+        {
             base.OnCellMouseMove(e);
             if (e.RowIndex == -1 && e.ColumnIndex > -1 //cursor is hovering over column headers.
                 && this.Cursor == Cursors.Default /*don't show hand if user is resizing columns for example*/)
@@ -370,6 +370,12 @@ namespace ParquetViewer.Controls
         {
             base.OnCellFormatting(e);
 
+            if (e.Value == DBNull.Value)
+            {
+                //Nothing to format
+                return;
+            }
+
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
             if (cellValueType == typeof(float) && e.Value is float f)
             {
@@ -411,15 +417,10 @@ namespace ParquetViewer.Controls
                 return;
             }
 
-            if (cellValueType == typeof(ByteArrayValue))
+            if (cellValueType == typeof(ByteArrayValue) && e.Value is ByteArrayValue byteArrayValue)
             {
-                string value = e.Value!.ToString()!; //We never put `null` in cells. Only `DBNull.Value` so it can't be null.
-                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
-                {
-                    e.Value = value[..(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2)]
-                        + " [...] " + value[(value.Length - (MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2))..];
-                    e.FormattingApplied = true;
-                }
+                e.Value = byteArrayValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+                e.FormattingApplied = true;
             }
             else if (cellValueType == typeof(string))
             {
@@ -430,14 +431,9 @@ namespace ParquetViewer.Controls
                     e.FormattingApplied = true;
                 }
             }
-            else if (cellValueType == typeof(StructValue) && e.Value != DBNull.Value)
+            else if (cellValueType == typeof(StructValue) && e.Value is StructValue structValue)
             {
-                string value = ((StructValue)e.Value!).ToStringTruncated();
-                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
-                {
-                    value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
-                }
-                e.Value = value;
+                e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
                 e.FormattingApplied = true;
             }
         }
@@ -521,9 +517,12 @@ namespace ParquetViewer.Controls
                     //We can just measure one and use that.
                     var dateTime = gridTable.AsEnumerable()
                         .FirstOrDefault(row => row[i] != DBNull.Value)?
-                        .Field<DateTime>(i) ?? DateTime.UtcNow;
-                    string formattedDateTimeValue = dateTime.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
-                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
+                        .Field<DateTime>(i);
+                    if (dateTime is not null)
+                    {
+                        string formattedDateTimeValue = dateTime.Value.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
+                        newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
+                    }
                 }
                 else
                 {
@@ -532,7 +531,7 @@ namespace ParquetViewer.Controls
                     if (gridTable.Columns[i].DataType == typeof(StructValue))
                     {
                         colStringCollection = gridTable.AsEnumerable()
-                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated())
+                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL))
                             .Where(value => value is not null)!;
                     }
                     else if (gridTable.Columns[i].DataType == typeof(float))

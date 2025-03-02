@@ -13,6 +13,23 @@
 
         public override string ToString() => BitConverter.ToString(this.Data);
 
+        public string ToStringTruncated(int maxLength)
+        {
+            var bytesNeededToGetLength = StringLengthToByteArrayCount(maxLength);
+            if (this.Data.Length < bytesNeededToGetLength)
+            {
+                return ToString();
+            }
+
+            //We're going to return a bit more than maxLength here but we can live with that
+            return BitConverter.ToString(this.Data, 0 , bytesNeededToGetLength / 2)
+                + "[...]" + BitConverter.ToString(this.Data, this.Data.Length - (bytesNeededToGetLength / 2));
+        }
+
+        //Calculates how many bytes are needed to generate a string of the given length.
+        private static int StringLengthToByteArrayCount(int stringLength)
+            => (stringLength + 1) / 3;
+
         public int CompareTo(ByteArrayValue? other)
         {
             if (other?.Data is null)

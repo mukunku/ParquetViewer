@@ -266,7 +266,7 @@ namespace ParquetViewer
             => Task.Run(() =>
                 {
                     using var fs = new FileStream(path, FileMode.OpenOrCreate);
-                    using var jsonWriter = new Utf8JsonWriter(fs);
+                    using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
 
                     jsonWriter.WriteStartArray();
                     foreach (DataRowView row in dataTable.DefaultView)

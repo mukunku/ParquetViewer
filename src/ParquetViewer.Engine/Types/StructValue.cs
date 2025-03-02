@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Numerics;
-using System.Text.Json;
 
 namespace ParquetViewer.Engine.Types
 {
@@ -16,16 +15,17 @@ namespace ParquetViewer.Engine.Types
             Data = data ?? throw new ArgumentNullException(nameof(data));
         }
 
-        public override string ToString() => ToJSON(false);
+        public override string ToString() => ToJSON();
 
-        public string ToStringTruncated() => ToJSON(true);
+        public string ToStringTruncated(int maxLength) => ToJSON(maxLength);
 
-        private string ToJSON(bool truncateForDisplay)
+        private string ToJSON(int? maxLength = null)
         {
             try
             {
+                bool isTruncated = false;
                 using var ms = new MemoryStream();
-                using (var jsonWriter = new Utf8JsonWriter(ms))
+                using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
                 {
                     jsonWriter.WriteStartObject();
                     for (var i = 0; i < this.Data.Table.Columns.Count; i++)
@@ -34,22 +34,34 @@ namespace ParquetViewer.Engine.Types
                         jsonWriter.WritePropertyName(columnName);
 
                         object value = this.Data[i];
-                        WriteValue(jsonWriter, value, truncateForDisplay);
+                        WriteValue(jsonWriter, value, maxLength is not null);
+
+                        if (maxLength > 0 && jsonWriter.ApproximateStringLengthSoFar > maxLength)
+                        {
+                            isTruncated = true;
+                            break;
+                        }
                     }
-                    jsonWriter.WriteEndObject();
+                    if (!isTruncated)
+                        jsonWriter.WriteEndObject();
                 }
 
                 ms.Position = 0;
                 using var reader = new StreamReader(ms);
-                return reader.ReadToEnd();
+                var json = reader.ReadToEnd();
+                if (isTruncated)
+                {
+                    json += "[...]";
+                }
+                return json;
             }
             catch (Exception ex)
             {
-                return $"Error while deserializing field: {Environment.NewLine}{Environment.NewLine}{ex}";
+                return $"Error while deserializing field '{Name}': {Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
 
-        public static void WriteValue(Utf8JsonWriter jsonWriter, object value, bool truncateForDisplay)
+        public static void WriteValue(Utf8JsonWriterWithRunningLength jsonWriter, object value, bool truncateForDisplay)
         {
             if (value is null)
             {
@@ -98,11 +110,8 @@ namespace ParquetViewer.Engine.Types
             }
             else if (value is ByteArrayValue byteArray)
             {
-                var byteArrayAsString = byteArray.ToString();
-                if (truncateForDisplay && byteArrayAsString.Length > 64) //arbitrary number to give us a larger string to work with
-                {
-                    byteArrayAsString = $"{byteArrayAsString[..12]}[...]{byteArrayAsString.Substring(byteArrayAsString.Length - 8, 8)}";
-                }
+                const int byteArrayMaxStringLength = 24; //arbitrary number that I think looks good
+                var byteArrayAsString = byteArray.ToStringTruncated(byteArrayMaxStringLength);
                 jsonWriter.WriteStringValue(byteArrayAsString);
             }
             else if (value is DateTime dt)
