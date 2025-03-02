@@ -153,9 +153,8 @@ namespace ParquetViewer.Controls
         }
 
         protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
-        {
+        {            
             base.OnCellMouseMove(e);
-
             if (e.RowIndex == -1 && e.ColumnIndex > -1 //cursor is hovering over column headers.
                 && this.Cursor == Cursors.Default /*don't show hand if user is resizing columns for example*/)
             {
@@ -193,21 +192,13 @@ namespace ParquetViewer.Controls
                     var copy = new ToolStripMenuItem("Copy");
                     copy.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
-                        this.isCopyingToClipboard = true;
-                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
-                        this.isCopyingToClipboard = false;
+                        this.CopySelectionToClipboard(false);
                     };
 
                     var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
                     copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
-                        this.isCopyingToClipboard = true;
-                        this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
-                        this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
-                        this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-                        this.RowHeadersVisible = true;
-                        this.isCopyingToClipboard = false;
+                        this.CopySelectionToClipboard(true);
                     };
 
                     var menu = new ContextMenuStrip();
@@ -369,15 +360,10 @@ namespace ParquetViewer.Controls
         {
             if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C))
             {
-                this.isCopyingToClipboard = true;
+                this.CopySelectionToClipboard(false);
+                e.Handled = true;
             }
             base.OnKeyDown(e);
-        }
-
-        protected override void OnKeyUp(KeyEventArgs e)
-        {
-            this.isCopyingToClipboard = false;
-            base.OnKeyUp(e);
         }
 
         protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
@@ -614,6 +600,23 @@ namespace ParquetViewer.Controls
             }
 
             return false;
+        }
+
+        private void CopySelectionToClipboard(bool withHeaders)
+        {
+            this.isCopyingToClipboard = true;
+            if (withHeaders)
+            {
+                this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
+                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+            }
+            Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
+            if (withHeaders)
+            {
+                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+                this.RowHeadersVisible = true;
+            }
+            this.isCopyingToClipboard = false;
         }
 
         /// <remarks>
