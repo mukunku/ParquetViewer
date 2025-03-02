@@ -370,12 +370,6 @@ namespace ParquetViewer.Controls
         {
             base.OnCellFormatting(e);
 
-            if (e.Value == DBNull.Value)
-            {
-                //Nothing to format
-                return;
-            }
-
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
             if (cellValueType == typeof(float) && e.Value is float f)
             {
