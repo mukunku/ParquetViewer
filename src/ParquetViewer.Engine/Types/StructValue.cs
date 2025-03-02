@@ -17,9 +17,9 @@ namespace ParquetViewer.Engine.Types
 
         public override string ToString() => ToJSON();
 
-        public string ToStringTruncated(int maxLength) => ToJSON(maxLength);
+        public string ToStringTruncated(int desiredLength) => ToJSON(desiredLength);
 
-        private string ToJSON(int? maxLength = null)
+        private string ToJSON(int? desiredLength = null)
         {
             try
             {
@@ -30,13 +30,15 @@ namespace ParquetViewer.Engine.Types
                     jsonWriter.WriteStartObject();
                     for (var i = 0; i < this.Data.Table.Columns.Count; i++)
                     {
-                        string columnName = this.Data.Table.Columns[i].ColumnName.Replace($"{this.Name}/", string.Empty); //Remove the parent field name from columns when rendering the data as json in the gridview cell.
+                        string columnName = this.Data.Table.Columns[i].ColumnName
+                            //Remove the parent field name from columns when rendering the data as json in the gridview cell.
+                            .Replace($"{this.Name}/", string.Empty); 
                         jsonWriter.WritePropertyName(columnName);
 
                         object value = this.Data[i];
-                        WriteValue(jsonWriter, value, maxLength is not null);
+                        WriteValue(jsonWriter, value, desiredLength is not null);
 
-                        if (maxLength > 0 && jsonWriter.ApproximateStringLengthSoFar > maxLength)
+                        if (desiredLength > 0 && jsonWriter.ApproximateStringLengthSoFar > desiredLength)
                         {
                             isTruncated = true;
                             break;

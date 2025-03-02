@@ -13,15 +13,15 @@
 
         public override string ToString() => BitConverter.ToString(this.Data);
 
-        public string ToStringTruncated(int maxLength)
+        public string ToStringTruncated(int desiredLength)
         {
-            var bytesNeededToGetLength = StringLengthToByteArrayCount(maxLength);
+            var bytesNeededToGetLength = StringLengthToByteArrayCount(desiredLength);
             if (this.Data.Length < bytesNeededToGetLength)
             {
                 return ToString();
             }
 
-            //We're going to return a bit more than maxLength here but we can live with that
+            //We're going to return a bit more than desiredLength here but we can live with that
             return BitConverter.ToString(this.Data, 0 , bytesNeededToGetLength / 2)
                 + "[...]" + BitConverter.ToString(this.Data, this.Data.Length - (bytesNeededToGetLength / 2));
         }
