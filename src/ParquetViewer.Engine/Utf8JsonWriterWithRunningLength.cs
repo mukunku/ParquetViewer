@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace ParquetViewer.Engine
 {
@@ -10,7 +11,12 @@ namespace ParquetViewer.Engine
 
         public Utf8JsonWriterWithRunningLength(Stream stream)
         {
-            _writer = new Utf8JsonWriter(stream);
+            _writer = new Utf8JsonWriter(stream, new JsonWriterOptions()
+            {
+                //Without 'UnsafeRelaxedJsonEscaping' JSON reserved chars get escaped using unicode instead of backslash (E.g. \u0022 instead of \")
+                //https://stackoverflow.com/questions/70849792/system-text-json-utf8jsonwriter-how-to-prevent-breaking-unicode-characters-int
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            });
             ApproximateStringLengthSoFar = 0;
         }
 
