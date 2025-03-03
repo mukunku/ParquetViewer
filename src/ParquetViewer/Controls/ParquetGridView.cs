@@ -507,7 +507,7 @@ namespace ParquetViewer.Controls
 
                 if (gridTable.Columns[i].DataType == typeof(DateTime))
                 {
-                    //All date time's will have the same string length so no need to go through actual values.
+                    //All date time's will have the same string length so no need to go through all values.
                     //We can just measure one and use that.
                     var dateTime = gridTable.AsEnumerable()
                         .FirstOrDefault(row => row[i] != DBNull.Value)?
