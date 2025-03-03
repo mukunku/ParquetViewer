@@ -39,7 +39,8 @@ namespace ParquetViewer
                 Name = "loadingmessagelabel",
                 Text = message,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Top
+                Dock = DockStyle.Top,
+                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Regular)
             });
 
             var pictureBox = new PictureBox()
