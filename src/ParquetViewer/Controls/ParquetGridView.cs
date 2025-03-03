@@ -31,6 +31,8 @@ namespace ParquetViewer.Controls
             }
         }
 
+        public Image? CopyToClipboardIcon { get; set; } = null;
+
         private readonly HashSet<int> clickableColumnIndexes = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
         private bool isCopyingToClipboard = false;
@@ -189,7 +191,7 @@ namespace ParquetViewer.Controls
 
                 if (rowIndex >= 0 && columnIndex >= 0)
                 {
-                    var copy = new ToolStripMenuItem("Copy");
+                    var copy = new ToolStripMenuItem("Copy", this.CopyToClipboardIcon);
                     copy.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
                         this.CopySelectionToClipboard(false);

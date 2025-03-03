@@ -76,7 +76,7 @@ namespace ParquetViewer.Controls
             this.mainTableLayoutPanel.SetColumnSpan(this.mainPictureBox, 2);
         }
 
-        private void QuickPeakForm_Load(object sender, EventArgs e)
+        private void QuickPeekForm_Load(object sender, EventArgs e)
         {
             if (this.mainGridView is not null)
             {

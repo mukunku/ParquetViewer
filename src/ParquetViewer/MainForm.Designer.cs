@@ -54,7 +54,6 @@ namespace ParquetViewer
             openToolStripMenuItem = new ToolStripMenuItem();
             openFolderToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator = new ToolStripSeparator();
-            saveToolStripMenuItem = new ToolStripMenuItem();
             saveAsToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
             exitToolStripMenuItem = new ToolStripMenuItem();
@@ -259,6 +258,7 @@ namespace ParquetViewer
             mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
+            mainGridView.CopyToClipboardIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyToClipboardIcon");
             mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Location = new System.Drawing.Point(4, 38);
             mainGridView.Margin = new Padding(4, 3, 4, 3);
@@ -310,7 +310,7 @@ namespace ParquetViewer
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, openToolStripMenuItem, openFolderToolStripMenuItem, toolStripSeparator, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, openToolStripMenuItem, openFolderToolStripMenuItem, toolStripSeparator, saveAsToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             fileToolStripMenuItem.Text = "&File";
@@ -337,7 +337,6 @@ namespace ParquetViewer
             // 
             // openFolderToolStripMenuItem
             // 
-            openFolderToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("openFolderToolStripMenuItem.Image");
             openFolderToolStripMenuItem.Name = "openFolderToolStripMenuItem";
             openFolderToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.O;
             openFolderToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
@@ -349,17 +348,6 @@ namespace ParquetViewer
             // 
             toolStripSeparator.Name = "toolStripSeparator";
             toolStripSeparator.Size = new System.Drawing.Size(223, 6);
-            // 
-            // saveToolStripMenuItem
-            // 
-            saveToolStripMenuItem.Enabled = false;
-            saveToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("saveToolStripMenuItem.Image");
-            saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
-            saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            saveToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.S;
-            saveToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            saveToolStripMenuItem.Text = "&Save";
-            saveToolStripMenuItem.Visible = false;
             // 
             // saveAsToolStripMenuItem
             // 
@@ -412,7 +400,7 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
@@ -421,7 +409,7 @@ namespace ParquetViewer
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO8601DateTimeFormat;
@@ -430,7 +418,7 @@ namespace ParquetViewer
             // customDateFormatToolStripMenuItem
             // 
             customDateFormatToolStripMenuItem.Name = "customDateFormatToolStripMenuItem";
-            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             customDateFormatToolStripMenuItem.Tag = "6";
             customDateFormatToolStripMenuItem.Text = "Custom...";
             customDateFormatToolStripMenuItem.ToolTipText = "Configure a custom date format";
@@ -475,7 +463,7 @@ namespace ParquetViewer
             // 
             toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { getSQLCreateTableScriptToolStripMenuItem, metadataViewerToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            toolsToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
+            toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             toolsToolStripMenuItem.Text = "Tools";
             // 
             // getSQLCreateTableScriptToolStripMenuItem
@@ -483,9 +471,10 @@ namespace ParquetViewer
             getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
             getSQLCreateTableScriptToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("getSQLCreateTableScriptToolStripMenuItem.Image");
             getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
-            getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
             getSQLCreateTableScriptToolStripMenuItem.ToolTipText = "The schema will match the fields you've loaded";
+            getSQLCreateTableScriptToolStripMenuItem.MouseEnter += GetSQLCreateTableScriptToolStripMenuItem_MouseEnter;
             getSQLCreateTableScriptToolStripMenuItem.Click += GetSQLCreateTableScriptToolStripMenuItem_Click;
             // 
             // metadataViewerToolStripMenuItem
@@ -493,9 +482,10 @@ namespace ParquetViewer
             metadataViewerToolStripMenuItem.Enabled = false;
             metadataViewerToolStripMenuItem.Name = "metadataViewerToolStripMenuItem";
             metadataViewerToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.M;
-            metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             metadataViewerToolStripMenuItem.Click += MetadataViewerToolStripMenuItem_Click;
+            metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
             // 
             // helpToolStripMenuItem
             // 
@@ -647,7 +637,6 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
-        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;

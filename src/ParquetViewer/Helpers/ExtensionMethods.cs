@@ -190,5 +190,17 @@ namespace ParquetViewer.Helpers
             }
             return formattedValue;
         }
+
+        //Source: https://stackoverflow.com/a/7574615/1458738
+        public static string Left(this string value, int maxLength, string? truncateSuffix = null)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            maxLength = Math.Abs(maxLength);
+
+            return (value.Length <= maxLength
+                   ? value
+                   : (value.Substring(0, maxLength) + truncateSuffix)
+                   );
+        }
     }
 }

@@ -121,6 +121,7 @@
             KeyUp += MetadataViewer_KeyUp;
             tableLayoutPanel.ResumeLayout(false);
             tabControl.ResumeLayout(false);
+            Icon = Properties.Resources.text_file_icon;
             ResumeLayout(false);
         }
 

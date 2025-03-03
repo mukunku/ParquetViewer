@@ -1,9 +1,11 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
+using ParquetViewer.Helpers;
 using ParquetViewer.Properties;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;

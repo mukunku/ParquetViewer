@@ -42,6 +42,7 @@ namespace ParquetViewer
                 this.loadAllRowsButton.Enabled = false;
                 this.searchFilterTextBox.PlaceholderText = "WHERE ";
                 this.mainGridView.ClearQuickPeekForms();
+                this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {
