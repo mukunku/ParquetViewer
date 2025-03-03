@@ -7,7 +7,7 @@ namespace ParquetViewer.Engine
     {
         public int ApproximateStringLengthSoFar { get; private set; }
 
-        private Utf8JsonWriter _writer;
+        private readonly Utf8JsonWriter _writer;
 
         public Utf8JsonWriterWithRunningLength(Stream stream)
         {

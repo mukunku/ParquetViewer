@@ -453,6 +453,13 @@ namespace ParquetViewer.Controls
             base.OnSorted(e);
         }
 
+        protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
+        {
+            this.Cursor = Cursors.WaitCursor;
+            base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event
+            this.Cursor = Cursors.Default;
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)

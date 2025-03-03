@@ -216,7 +216,7 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
 
                 try
                 {
-                    //TODO: Figure out a way to run the query async so it doesn't freeze the UI for long running queries.
+                    this.Cursor = Cursors.WaitCursor;
                     this.MainDataSource.DefaultView.RowFilter = queryText;
                     queryEvent.IsValid = true;
                     queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
@@ -228,6 +228,7 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
                 }
                 finally
                 {
+                    this.Cursor = Cursors.Default;
                     queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
                     var _ = queryEvent.Record(); //Fire and forget
                 }
