@@ -1,7 +1,5 @@
 using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
-using ParquetViewer.Engine.Types;
-using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -386,79 +384,6 @@ namespace ParquetViewer
                 this.SelectedFields = fieldList; //triggers a file load
                 AppSettings.OpenedFileCount++;
                 Program.AskUserForFileExtensionAssociation();
-            }
-        }
-
-        private void runQueryButton_Click(object sender, EventArgs? e)
-        {
-            try
-            {
-                if (!this.IsAnyFileOpen)
-                    return;
-
-                if (this.MainDataSource is null)
-                    throw new ApplicationException("This should never happen");
-
-                string queryText = this.searchFilterTextBox.Text ?? string.Empty;
-                queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
-
-                //Treat list, map, and struct types as strings by casting them automatically
-                foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
-                        || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
-                    .Select(c => c.Name))
-                {
-                    //This isn't perfect but it should handle most cases
-                    queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
-                }
-
-                if (string.IsNullOrWhiteSpace(queryText)
-                    || this.MainDataSource.DefaultView.RowFilter == queryText) //No need to execute the same query again
-                {
-                    return;
-                }
-
-                var stopwatch = Stopwatch.StartNew();
-                var queryEvent = new ExecuteQueryEvent
-                {
-                    RecordCountTotal = this.MainDataSource.Rows.Count,
-                    ColumnCount = this.MainDataSource.Columns.Count
-                };
-
-                try
-                {
-                    //TODO: Figure out a way to run the query async so it doesn't freeze the UI for long running queries.
-                    this.MainDataSource.DefaultView.RowFilter = queryText;
-                    queryEvent.IsValid = true;
-                    queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
-                }
-                catch (Exception ex)
-                {
-                    this.MainDataSource.DefaultView.RowFilter = null;
-                    throw new InvalidQueryException(ex);
-                }
-                finally
-                {
-                    queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
-                    var _ = queryEvent.Record(); //Fire and forget
-                }
-            }
-            catch (InvalidQueryException ex)
-            {
-                MessageBox.Show(ex.Message + Environment.NewLine + Environment.NewLine + ex.InnerException?.Message,
-                    "Invalid Query", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        private void clearFilterButton_Click(object sender, EventArgs? e)
-        {
-            if (this.MainDataSource is not null)
-            {
-                this.MainDataSource.DefaultView.RowFilter = null;
             }
         }
 

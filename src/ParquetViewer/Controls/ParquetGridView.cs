@@ -455,13 +455,17 @@ namespace ParquetViewer.Controls
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            this.isLeftClickButtonDown = true;
+            if (e.Button == MouseButtons.Left)
+                this.isLeftClickButtonDown = true;
+
             base.OnMouseDown(e);
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            this.isLeftClickButtonDown = false;
+            if (e.Button == MouseButtons.Left)
+                this.isLeftClickButtonDown = false;
+
             base.OnMouseUp(e);
         }
 
@@ -472,6 +476,7 @@ namespace ParquetViewer.Controls
                 try
                 {
                     form.Value.Close();
+                    form.Value.Dispose();
                 }
                 catch { /*Swallow*/ }
             }

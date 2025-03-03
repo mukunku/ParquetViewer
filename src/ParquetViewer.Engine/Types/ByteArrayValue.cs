@@ -15,7 +15,7 @@
 
         public string ToStringTruncated(int desiredLength)
         {
-            var bytesNeededToGetLength = StringLengthToByteArrayCount(desiredLength);
+            var bytesNeededToGetLength = StringLengthToByteCount(desiredLength);
             if (this.Data.Length < bytesNeededToGetLength)
             {
                 return ToString();
@@ -27,8 +27,8 @@
         }
 
         //Calculates how many bytes are needed to generate a string of the given length.
-        private static int StringLengthToByteArrayCount(int stringLength)
-            => (stringLength + 1) / 3;
+        private static int StringLengthToByteCount(int stringLength)
+            => (stringLength + 1) / 3; //One byte = 3 chars. E.g. AA- (-1 for the last byte which won't have a dash)
 
         public int CompareTo(ByteArrayValue? other)
         {
