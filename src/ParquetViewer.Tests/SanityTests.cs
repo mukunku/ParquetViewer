@@ -301,6 +301,7 @@ namespace ParquetViewer.Tests
             ""systemMemory"": {(int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/)},
             ""processorCount"": {Environment.ProcessorCount},
             ""isDefaultParquetViewer"": {AboutBox.IsDefaultViewerForParquetFiles.ToString().ToLower()},
+            ""darkMode"": {AppSettings.DarkMode.ToString().ToLower()},
             ""selfContainedExecutable"": {(isSelfContainedExecutable ? "true" : "false")}
         }},
         ""event_properties"": {{
