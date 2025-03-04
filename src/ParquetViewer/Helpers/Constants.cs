@@ -53,7 +53,7 @@ namespace ParquetViewer.Helpers
     public record Theme(
             Color CellBackgroundColor,
             Color TextColor,
-            Color AlternateRowsCellBackgroundColor,
+            Color AlternateRowsCellBackgroundColor, //Not currently used
             Color ColumnHeaderColor,
             Color RowHeaderColor,
             DataGridViewHeaderBorderStyle RowHeaderBorderStyle,

@@ -73,6 +73,7 @@ namespace ParquetViewer
             helpToolStripMenuItem = new ToolStripMenuItem();
             userGuideToolStripMenuItem = new ToolStripMenuItem();
             shareAnonymousUsageDataToolStripMenuItem = new ToolStripMenuItem();
+            darkModeToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             showingRecordCountStatusBarLabel = new ToolStripStatusLabel();
             actualShownRecordCountLabel = new ToolStripStatusLabel();
@@ -474,8 +475,8 @@ namespace ParquetViewer
             getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
             getSQLCreateTableScriptToolStripMenuItem.ToolTipText = "The schema will match the fields you've loaded";
-            getSQLCreateTableScriptToolStripMenuItem.MouseEnter += GetSQLCreateTableScriptToolStripMenuItem_MouseEnter;
             getSQLCreateTableScriptToolStripMenuItem.Click += GetSQLCreateTableScriptToolStripMenuItem_Click;
+            getSQLCreateTableScriptToolStripMenuItem.MouseEnter += GetSQLCreateTableScriptToolStripMenuItem_MouseEnter;
             // 
             // metadataViewerToolStripMenuItem
             // 
@@ -485,7 +486,6 @@ namespace ParquetViewer
             metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             metadataViewerToolStripMenuItem.Click += MetadataViewerToolStripMenuItem_Click;
-            metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
             // 
             // helpToolStripMenuItem
             // 
@@ -498,22 +498,31 @@ namespace ParquetViewer
             // 
             userGuideToolStripMenuItem.Image = Properties.Resources.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            userGuideToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             userGuideToolStripMenuItem.Text = "User Guide";
             userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
             // 
             // shareAnonymousUsageDataToolStripMenuItem
             // 
+            shareAnonymousUsageDataToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { darkModeToolStripMenuItem });
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
-            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
             shareAnonymousUsageDataToolStripMenuItem.ToolTipText = "See About page for link to privacy policy";
             shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
+            shareAnonymousUsageDataToolStripMenuItem.CheckedChanged += shareAnonymousUsageDataToolStripMenuItem_CheckedChanged;
+            // 
+            // darkModeToolStripMenuItem
+            // 
+            darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
+            darkModeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            darkModeToolStripMenuItem.Text = "Dark Mode (Beta)";
+            darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             aboutToolStripMenuItem.Text = "&About...";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
@@ -675,6 +684,7 @@ namespace ParquetViewer
         private System.Windows.Forms.Button loadAllRowsButton;
         private ToolTip loadAllRowsButtonTooltip;
         private ToolStripMenuItem customDateFormatToolStripMenuItem;
+        private ToolStripMenuItem darkModeToolStripMenuItem;
     }
 }
 

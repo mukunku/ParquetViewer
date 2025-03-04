@@ -644,10 +644,9 @@ namespace ParquetViewer.Controls
 
         private void SetTheme()
         {
-            if (this._gridTheme == Constants.LightModeTheme)
+            if (this.GridTheme == Constants.LightModeTheme)
             {
                 this.DefaultCellStyle = null;
-                this.AlternatingRowsDefaultCellStyle = null;
                 this.RowHeadersDefaultCellStyle = null;
                 this.RowHeadersBorderStyle = Constants.LightModeTheme.RowHeaderBorderStyle;
                 this.BackgroundColor = Constants.LightModeTheme.GridBackgroundColor;
@@ -655,30 +654,27 @@ namespace ParquetViewer.Controls
             }
             else
             {
-                this.DefaultCellStyle.BackColor = this._gridTheme.CellBackgroundColor;
-                this.DefaultCellStyle.ForeColor = this._gridTheme.TextColor;
+                this.DefaultCellStyle.BackColor = this.GridTheme.CellBackgroundColor;
+                this.DefaultCellStyle.ForeColor = this.GridTheme.TextColor;
 
-                this.AlternatingRowsDefaultCellStyle.BackColor = this._gridTheme.AlternateRowsCellBackgroundColor;
-                this.AlternatingRowsDefaultCellStyle.ForeColor = this._gridTheme.TextColor;
+                this.ColumnHeadersDefaultCellStyle.BackColor = this.GridTheme.ColumnHeaderColor;
+                this.ColumnHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
 
-                this.ColumnHeadersDefaultCellStyle.BackColor = this._gridTheme.ColumnHeaderColor;
-                this.ColumnHeadersDefaultCellStyle.ForeColor = this._gridTheme.TextColor;
+                this.RowHeadersDefaultCellStyle.BackColor = this.GridTheme.RowHeaderColor;
+                this.RowHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+                this.RowHeadersBorderStyle = this.GridTheme.RowHeaderBorderStyle;
 
-                this.RowHeadersDefaultCellStyle.BackColor = this._gridTheme.RowHeaderColor;
-                this.RowHeadersDefaultCellStyle.ForeColor = this._gridTheme.TextColor;
-                this.RowHeadersBorderStyle = this._gridTheme.RowHeaderBorderStyle;
-
-                this.BackgroundColor = this._gridTheme.GridBackgroundColor;
-                this.GridColor = this._gridTheme.GridColor;
+                this.BackgroundColor = this.GridTheme.GridBackgroundColor;
+                this.GridColor = this.GridTheme.GridColor;
 
             }
 
             this.ColumnHeadersDefaultCellStyle = new()
             {
                 Alignment = DataGridViewContentAlignment.MiddleLeft,
-                BackColor = this._gridTheme.ColumnHeaderColor,
+                BackColor = this.GridTheme.ColumnHeaderColor,
                 Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = this._gridTheme.TextColor,
+                ForeColor = this.GridTheme.TextColor,
                 SelectionBackColor = SystemColors.Highlight,
                 SelectionForeColor = SystemColors.HighlightText,
                 WrapMode = DataGridViewTriState.True

@@ -146,6 +146,7 @@ namespace ParquetViewer
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
             this.OpenFileOrFolderPath = null;
+            this.mainGridView.GridTheme = User.PreferredTheme;
 
             //Have to set this here because it gets deleted from the .Designer.cs file for some reason
             this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
@@ -178,6 +179,8 @@ namespace ParquetViewer
             }
 
             this.alwaysLoadAllRecordsToolStripMenuItem.Checked = AppSettings.AlwaysLoadAllRecords;
+            this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
+            this.RefreshExperimentalFeatureToolStrips();
 
             //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
             Program.GetUserConsentToGatherAnalytics();

@@ -196,6 +196,28 @@ namespace ParquetViewer
             AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
         }
 
+        private void shareAnonymousUsageDataToolStripMenuItem_CheckedChanged(object sender, System.EventArgs e)
+        {
+            RefreshExperimentalFeatureToolStrips();
+        }
+
+        private void RefreshExperimentalFeatureToolStrips()
+        {
+            foreach (ToolStripDropDownItem dropdownItem in this.shareAnonymousUsageDataToolStripMenuItem.DropDownItems)
+            {
+                if (dropdownItem is ToolStripMenuItem toolstrip && toolstrip.Checked)
+                {
+                    //If someone has an experimental feature enabled, don't hide the checkbox so they can disable it if they want.
+                    dropdownItem.Visible = true; 
+                    continue;
+                }
+
+                //Expose experimental features to folks willing to share usage stats.
+                //Also better this way if we end up killing the beta feature.
+                dropdownItem.Visible = this.shareAnonymousUsageDataToolStripMenuItem.Checked;
+            }
+        }
+
         private void GetSQLCreateTableScriptToolStripMenuItem_MouseEnter(object sender, System.EventArgs e)
         {
             _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText ??= this.getSQLCreateTableScriptToolStripMenuItem.ToolTipText;
@@ -225,6 +247,14 @@ namespace ParquetViewer
         {
             if (this._getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText is not null)
                 this.getSQLCreateTableScriptToolStripMenuItem.ToolTipText = this._getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText;
+        }
+
+        private void darkModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.darkModeToolStripMenuItem.Checked = !this.darkModeToolStripMenuItem.Checked;
+            AppSettings.DarkMode = this.darkModeToolStripMenuItem.Checked;
+            this.mainGridView.GridTheme = User.PreferredTheme;
+            RefreshExperimentalFeatureToolStrips();
         }
     }
 }
