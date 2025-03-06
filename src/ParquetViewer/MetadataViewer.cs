@@ -140,7 +140,7 @@ namespace ParquetViewer
                 var selection = MessageBox.Show("Failed to copy metadata to your clipboard. Save to a file instead?", "Copy error", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (selection == DialogResult.Yes)
                 {
-                    var saveFileDialog = new SaveFileDialog();
+                    using var saveFileDialog = new SaveFileDialog();
                     saveFileDialog.Filter = "JSON file|*.json";
                     saveFileDialog.Title = "Save raw metadata";
                     saveFileDialog.ShowDialog();

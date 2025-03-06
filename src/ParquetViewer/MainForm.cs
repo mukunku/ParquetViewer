@@ -152,7 +152,6 @@ namespace ParquetViewer
             //Have to set these here because it gets deleted from the .Designer.cs file for some reason
             this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
             this.iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO8601DateTimeFormat;
-
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -260,7 +259,7 @@ namespace ParquetViewer
                 }
                 else
                 {
-                    var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
+                    using var fieldSelectionForm = new FieldsToLoadForm(fields, this.MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
                     if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
                     {
                         return fieldSelectionForm.NewSelectedFields;

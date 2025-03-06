@@ -1,5 +1,7 @@
 ﻿using ParquetViewer.Helpers;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -7,6 +9,9 @@ namespace ParquetViewer.Controls
 {
     public abstract class FormBase : Form
     {
+        private static List<FormBase> _openForms = new();
+        public static IEnumerable<FormBase> OpenForms => _openForms.Where(form => form?.IsDisposed == false);
+
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
@@ -51,9 +56,19 @@ namespace ParquetViewer.Controls
             return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
         }
 
-        protected override void OnLoad(EventArgs e)
+        protected FormBase()
         {
-            SetTheme(AppSettings.GetTheme());
+            this.Load += (object? _, EventArgs _) =>
+            {
+                _openForms.Add(this);
+                SetTheme(AppSettings.GetTheme());
+            };
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            _openForms.Remove(this);
         }
     }
 }

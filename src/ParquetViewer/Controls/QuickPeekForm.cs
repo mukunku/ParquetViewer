@@ -135,11 +135,12 @@ namespace ParquetViewer.Controls
 
         private void saveImageToFileButton_Click(object sender, EventArgs e)
         {
-            var saveFileDialog = new SaveFileDialog
+            using var saveFileDialog = new SaveFileDialog
             {
                 Filter = $"{this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
                 Title = $"Save image as {this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()}"
             };
+
             saveFileDialog.ShowDialog();
 
             if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))

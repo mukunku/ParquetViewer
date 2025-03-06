@@ -141,7 +141,8 @@ namespace ParquetViewer
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.AboutBox);
-            (new AboutBox()).ShowDialog(this);
+            using var aboutForm = new AboutBox();
+            aboutForm.ShowDialog(this);
         }
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
@@ -175,7 +176,7 @@ namespace ParquetViewer
                     }
 #pragma warning restore CS0612 // Type or member is obsolete
 
-                    var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
+                    using var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
                     if (customDateFormatInputForm.ShowDialog(this) == DialogResult.OK)
                     {
                         AppSettings.DateTimeDisplayFormat = DateFormat.Custom;

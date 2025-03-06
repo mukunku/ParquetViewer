@@ -2,7 +2,6 @@
 using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
-using System.Windows.Forms;
 
 namespace ParquetViewer
 {
@@ -50,7 +49,7 @@ namespace ParquetViewer
             set => SetRegistryValue(ConsentLastAskedOnVersionKey, value ?? string.Empty);
         }
 
-        public static Guid AnalyticsDeviceId 
+        public static Guid AnalyticsDeviceId
             => ReadRegistryValue(AnalyticsDeviceIdKey, out string? temp) && Guid.TryParse(temp, out var value) ? value : SetAnalyticsDeviceId();
 
         private static Guid SetAnalyticsDeviceId()
@@ -77,7 +76,7 @@ namespace ParquetViewer
         public static int OpenedFileCount
         {
             get => _openedFileCount ??= ReadRegistryValue(OpenedFileCountKey, out int value) ? value : 0;
-            set 
+            set
             {
                 _openedFileCount = value;
                 SetRegistryValue(OpenedFileCountKey, value);
@@ -101,12 +100,9 @@ namespace ParquetViewer
             set
             {
                 SetRegistryValue(DarkModeKey, value.ToString());
-                foreach (var form in Application.OpenForms)
+                foreach (var form in FormBase.OpenForms)
                 {
-                    if (form is FormBase formBase)
-                    {
-                        formBase.SetTheme(GetTheme());
-                    }
+                    form.SetTheme(GetTheme());
                 }
             }
         }
