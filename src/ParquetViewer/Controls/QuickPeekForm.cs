@@ -42,7 +42,12 @@ namespace ParquetViewer.Controls
             this.originalTitle = this.Text;
             this.closeWindowButton.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
             MaximumSize = new Size(Screen.FromControl(this).WorkingArea.Width, Screen.FromControl(this).WorkingArea.Height); //In case we have really large images
-            this.mainGridView.GridTheme = User.PreferredTheme;
+        }
+
+        public void SetTheme()
+        {
+            if (this.mainGridView is not null)
+                this.mainGridView.GridTheme = User.PreferredTheme;
         }
 
         public QuickPeekForm(string titleSuffix, DataTable data, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
@@ -60,6 +65,7 @@ namespace ParquetViewer.Controls
 
             this.mainGridView.DataSource = data ?? throw new ArgumentNullException(nameof(data));
             this.mainGridView.ClearSelection();
+            SetTheme();
         }
 
         public QuickPeekForm(string titleSuffix, Image image, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()

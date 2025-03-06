@@ -648,19 +648,20 @@ namespace ParquetViewer.Controls
 
         private void SetTheme()
         {
-                this.DefaultCellStyle.BackColor = this.GridTheme.CellBackgroundColor;
-                this.DefaultCellStyle.ForeColor = this.GridTheme.TextColor;
-                this.DefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
+            this.DefaultCellStyle.BackColor = this.GridTheme.CellBackgroundColor;
+            this.DefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+            this.DefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
 
-                this.ColumnHeadersDefaultCellStyle.BackColor = this.GridTheme.ColumnHeaderColor;
-                this.ColumnHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+            this.ColumnHeadersDefaultCellStyle.BackColor = this.GridTheme.ColumnHeaderColor;
+            this.ColumnHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
 
-                this.RowHeadersDefaultCellStyle.BackColor = this.GridTheme.RowHeaderColor;
-                this.RowHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
-                this.RowHeadersBorderStyle = this.GridTheme.RowHeaderBorderStyle;
+            this.RowHeadersDefaultCellStyle.BackColor = this.GridTheme.RowHeaderColor;
+            this.RowHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+            this.RowHeadersDefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
+            this.RowHeadersBorderStyle = this.GridTheme.RowHeaderBorderStyle;
 
-                this.BackgroundColor = this.GridTheme.GridBackgroundColor;
-                this.GridColor = this.GridTheme.GridColor;
+            this.BackgroundColor = this.GridTheme.GridBackgroundColor;
+            this.GridColor = this.GridTheme.GridColor;
 
             this.ColumnHeadersDefaultCellStyle = new()
             {
@@ -674,6 +675,12 @@ namespace ParquetViewer.Controls
             };
 
             SetColumnCellStyles();
+
+            //Need to notify quick peek forms
+            foreach (var form in this.openQuickPeekForms.Values)
+            {
+                form.SetTheme();
+            }
         }
     }
 }
