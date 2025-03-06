@@ -252,8 +252,7 @@ namespace ParquetViewer
         private void darkModeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.darkModeToolStripMenuItem.Checked = !this.darkModeToolStripMenuItem.Checked;
-            AppSettings.DarkMode = this.darkModeToolStripMenuItem.Checked;
-            this.mainGridView.GridTheme = User.PreferredTheme;
+            AppSettings.DarkMode = this.darkModeToolStripMenuItem.Checked; // Will trigger SetTheme()
             RefreshExperimentalFeatureToolStrips();
         }
     }

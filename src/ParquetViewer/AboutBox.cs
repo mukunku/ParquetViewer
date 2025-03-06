@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using ParquetViewer.Analytics;
+using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
@@ -11,7 +12,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    public partial class AboutBox : Form
+    public partial class AboutBox : FormBase
     {
         public const string PERFORM_FILE_ASSOCIATION = "PERFORM_FILE_ASSOCIATION";
 

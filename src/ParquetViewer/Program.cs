@@ -58,6 +58,7 @@ namespace ParquetViewer
                 mainForm = new MainForm();
 
             RouteUnhandledExceptions();
+            AppSettings.DarkMode = AppSettings.DarkMode; // Trigger Theming
 
             Application.Run(mainForm);
             return 0;

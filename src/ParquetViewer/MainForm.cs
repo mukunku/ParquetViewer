@@ -1,10 +1,12 @@
 using ParquetViewer.Analytics;
+using ParquetViewer.Controls;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    public partial class MainForm : Form
+    public partial class MainForm : FormBase
     {
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
@@ -146,10 +148,11 @@ namespace ParquetViewer
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
             this.OpenFileOrFolderPath = null;
-            this.mainGridView.GridTheme = User.PreferredTheme;
 
-            //Have to set this here because it gets deleted from the .Designer.cs file for some reason
+            //Have to set these here because it gets deleted from the .Designer.cs file for some reason
             this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
+            this.iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO8601DateTimeFormat;
+
         }
 
         public MainForm(string fileToOpenPath) : this()
@@ -472,6 +475,13 @@ namespace ParquetViewer
                 if (placeholder.Length < 40)
                     this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = '{sampleSimpleValue}'";
             }
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            base.SetTheme(theme);
+            this.mainGridView.GridTheme = theme;
+            this.BackColor = SystemColors.ControlDarkDark;
         }
     }
 }

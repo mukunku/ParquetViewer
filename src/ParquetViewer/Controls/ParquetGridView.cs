@@ -675,12 +675,6 @@ namespace ParquetViewer.Controls
             };
 
             SetColumnCellStyles();
-
-            //Need to notify quick peek forms
-            foreach (var form in this.openQuickPeekForms.Values)
-            {
-                form.SetTheme();
-            }
         }
     }
 }

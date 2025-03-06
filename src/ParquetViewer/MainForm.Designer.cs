@@ -413,7 +413,7 @@ namespace ParquetViewer
             iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
-            iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO8601DateTimeFormat;
+            iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
             iSO8601ToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // customDateFormatToolStripMenuItem
@@ -498,7 +498,7 @@ namespace ParquetViewer
             // 
             userGuideToolStripMenuItem.Image = Properties.Resources.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            userGuideToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            userGuideToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             userGuideToolStripMenuItem.Text = "User Guide";
             userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
             // 
@@ -506,23 +506,23 @@ namespace ParquetViewer
             // 
             shareAnonymousUsageDataToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { darkModeToolStripMenuItem });
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
-            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
             shareAnonymousUsageDataToolStripMenuItem.ToolTipText = "See About page for link to privacy policy";
-            shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
             shareAnonymousUsageDataToolStripMenuItem.CheckedChanged += shareAnonymousUsageDataToolStripMenuItem_CheckedChanged;
+            shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
             // 
             // darkModeToolStripMenuItem
             // 
             darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
-            darkModeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            darkModeToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             darkModeToolStripMenuItem.Text = "Dark Mode (Beta)";
             darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            aboutToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             aboutToolStripMenuItem.Text = "&About...";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 

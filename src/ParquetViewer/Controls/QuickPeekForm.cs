@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
-    public partial class QuickPeekForm : Form
+    public partial class QuickPeekForm : FormBase
     {
         private readonly string originalTitle = string.Empty;
 
@@ -44,12 +44,6 @@ namespace ParquetViewer.Controls
             MaximumSize = new Size(Screen.FromControl(this).WorkingArea.Width, Screen.FromControl(this).WorkingArea.Height); //In case we have really large images
         }
 
-        public void SetTheme()
-        {
-            if (this.mainGridView is not null)
-                this.mainGridView.GridTheme = User.PreferredTheme;
-        }
-
         public QuickPeekForm(string titleSuffix, DataTable data, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
         {
             this.TitleSuffix = titleSuffix;
@@ -65,7 +59,6 @@ namespace ParquetViewer.Controls
 
             this.mainGridView.DataSource = data ?? throw new ArgumentNullException(nameof(data));
             this.mainGridView.ClearSelection();
-            SetTheme();
         }
 
         public QuickPeekForm(string titleSuffix, Image image, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
@@ -170,6 +163,13 @@ namespace ParquetViewer.Controls
             {
                 this.mainPictureBox.Cursor = Cursors.Default;
             }
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            base.SetTheme(theme);
+            if (this.mainGridView is not null)
+                this.mainGridView.GridTheme = theme;
         }
     }
 

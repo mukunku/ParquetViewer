@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Helpers;
+﻿using ParquetViewer.Controls;
+using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,7 +9,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    public partial class MetadataViewer : Form
+    public partial class MetadataViewer : FormBase
     {
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";

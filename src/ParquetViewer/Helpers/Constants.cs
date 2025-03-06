@@ -48,8 +48,6 @@ namespace ParquetViewer.Helpers
 
         public static char NumberDecimalSeparator = 
             Thread.CurrentThread.CurrentUICulture.NumberFormat.NumberDecimalSeparator.ToCharArray()[0];
-
-        public static Theme PreferredTheme => AppSettings.DarkMode ? Constants.DarkModeTheme : Constants.LightModeTheme;
     }
 
     public record Theme(

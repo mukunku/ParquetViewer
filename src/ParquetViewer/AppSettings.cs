@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
+using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
+using System.Windows.Forms;
 
 namespace ParquetViewer
 {
@@ -96,8 +98,20 @@ namespace ParquetViewer
         public static bool DarkMode
         {
             get => ReadRegistryValue(DarkModeKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
-            set => SetRegistryValue(DarkModeKey, value.ToString());
+            set
+            {
+                SetRegistryValue(DarkModeKey, value.ToString());
+                foreach (var form in Application.OpenForms)
+                {
+                    if (form is FormBase formBase)
+                    {
+                        formBase.SetTheme(GetTheme());
+                    }
+                }
+            }
         }
+
+        public static Theme GetTheme() => DarkMode ? Constants.DarkModeTheme : Constants.LightModeTheme;
 
         private static bool ReadRegistryValue<T>(string key, out T? value)
         {

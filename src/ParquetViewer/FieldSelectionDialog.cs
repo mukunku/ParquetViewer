@@ -1,4 +1,5 @@
 ﻿using Parquet.Schema;
+using ParquetViewer.Controls;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,7 +8,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    public partial class FieldsToLoadForm : Form
+    public partial class FieldsToLoadForm : FormBase
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
         private const string UnsupportedFieldText = "(Unsupported)";
