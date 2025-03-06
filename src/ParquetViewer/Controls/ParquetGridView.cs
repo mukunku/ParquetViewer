@@ -57,12 +57,19 @@ namespace ParquetViewer.Controls
 
         protected override void OnDataSourceChanged(EventArgs e)
         {
-            this.hyperlinkCellStyleCache = null;
             this.clickableColumnIndexes.Clear();
             base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
 
             UpdateDateFormats();
 
+            SetColumnCellStyles();
+
+            AutoSizeColumns();
+        }
+
+        private void SetColumnCellStyles()
+        {
+            this.hyperlinkCellStyleCache = null;
             foreach (DataGridViewColumn column in this.Columns)
             {
                 //Handle NULLs for bool types
@@ -94,8 +101,6 @@ namespace ParquetViewer.Controls
                     }
                 }
             }
-
-            AutoSizeColumns();
         }
 
         public void UpdateDateFormats()
@@ -635,7 +640,6 @@ namespace ParquetViewer.Controls
             this.clickableColumnIndexes.Add(column.Index);
             this.hyperlinkCellStyleCache ??= new DataGridViewCellStyle(column.DefaultCellStyle)
             {
-                //e.Column.DefaultCellStyle is null so using InheritedStyle instead :shrug:
                 Font = new(column.DefaultCellStyle.Font ?? column.InheritedStyle.Font, FontStyle.Underline),
                 ForeColor = this.GridTheme.HyperlinkColor
             };
@@ -644,18 +648,9 @@ namespace ParquetViewer.Controls
 
         private void SetTheme()
         {
-            if (this.GridTheme == Constants.LightModeTheme)
-            {
-                this.DefaultCellStyle = null;
-                this.RowHeadersDefaultCellStyle = null;
-                this.RowHeadersBorderStyle = Constants.LightModeTheme.RowHeaderBorderStyle;
-                this.BackgroundColor = Constants.LightModeTheme.GridBackgroundColor;
-                this.GridColor = Constants.LightModeTheme.GridColor;
-            }
-            else
-            {
                 this.DefaultCellStyle.BackColor = this.GridTheme.CellBackgroundColor;
                 this.DefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+                this.DefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
 
                 this.ColumnHeadersDefaultCellStyle.BackColor = this.GridTheme.ColumnHeaderColor;
                 this.ColumnHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
@@ -667,8 +662,6 @@ namespace ParquetViewer.Controls
                 this.BackgroundColor = this.GridTheme.GridBackgroundColor;
                 this.GridColor = this.GridTheme.GridColor;
 
-            }
-
             this.ColumnHeadersDefaultCellStyle = new()
             {
                 Alignment = DataGridViewContentAlignment.MiddleLeft,
@@ -679,6 +672,8 @@ namespace ParquetViewer.Controls
                 SelectionForeColor = SystemColors.HighlightText,
                 WrapMode = DataGridViewTriState.True
             };
+
+            SetColumnCellStyles();
         }
     }
 }

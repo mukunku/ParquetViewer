@@ -21,20 +21,22 @@ namespace ParquetViewer.Helpers
             Color.FromArgb(33, 33, 33),
             Color.FromArgb(61, 68, 77),
             Color.FromArgb(68, 147, 248),
-            Color.FromArgb(145, 152, 161)
+            Color.FromArgb(145, 152, 161),
+            Color.FromArgb(64, 129, 201)
             );
 
         public static Theme LightModeTheme => new Theme(
-            Color.White,
+            SystemColors.Window,
             SystemColors.WindowText,
-            Color.White,
+            SystemColors.Window,
             SystemColors.ControlLight,
-            Color.Gray,
+            SystemColors.Control,
             DataGridViewHeaderBorderStyle.Raised,
-            Color.FromArgb(160, 160, 160),
-            Color.FromArgb(100, 100, 100),
+            SystemColors.ControlDark,
+            SystemColors.WindowFrame,
             Color.Blue,
-            SystemColors.ActiveCaptionText
+            SystemColors.ActiveCaptionText,
+            SystemColors.Highlight
             );
     }
 
@@ -60,7 +62,8 @@ namespace ParquetViewer.Helpers
             Color GridBackgroundColor,
             Color GridColor,
             Color HyperlinkColor,
-            Color CellPlaceholderTextColor
+            Color CellPlaceholderTextColor,
+            Color SelectionBackColor
             );
 
     public enum ParquetEngine
