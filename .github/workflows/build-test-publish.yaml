@@ -44,7 +44,7 @@ jobs:
   publish:
     if: github.repository == 'mukunku/ParquetViewer'
     runs-on: windows-latest
-    needs: test
+    #needs: test
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
       PR_NUMBER: ${{ github.event.number }}
@@ -76,7 +76,7 @@ jobs:
           $pattern = '\[assembly: AssemblyVersion\("\d+(\.\d+){3}"\)\]'
           $match = Select-String -InputObject $content -Pattern $pattern
           $versionMatch = $match.Matches[0].Value
-          release_version=$versionMatch >> $GITHUB_OUTPUT
+          "release_version=$versionMatch" >> $GITHUB_OUTPUT
 
       - name: Restore dependencies
         run: dotnet restore src/ParquetViewer.sln
