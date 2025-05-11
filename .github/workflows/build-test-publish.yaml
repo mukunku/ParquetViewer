@@ -1,0 +1,119 @@
+name: .NET Test
+
+on:
+# push:
+#  branches:
+#   - main
+ pull_request:
+
+permissions:
+  checks: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          .github
+          src
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4.0.1
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore src/ParquetViewer.sln
+
+    - name: Build
+      run: dotnet build src/ParquetViewer.sln --configuration Debug --no-restore
+
+    - name: Test
+      run: dotnet test src/ParquetViewer.sln --no-build --logger trx
+
+    - name: Test Report
+      uses: bibipkins/dotnet-test-reporter@v1.4.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        comment-title: 'Unit Test Results'
+        results-path: ./src/ParquetViewer.Tests/TestResults/*.trx
+  publish:
+    if: github.repository == 'mukunku/ParquetViewer'
+    runs-on: windows-latest
+    needs: test
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      PR_NUMBER: ${{ github.event.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            src
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4.0.1
+        with:
+          dotnet-version: '8.0.x'
+
+      # Inject Amplitude API Key
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'src/ParquetViewer/Analytics/AmplitudeEvent.cs'
+          search-text: 'private const string AMPLITUDE_API_KEY = "";'
+          replacement-text: 'private const string AMPLITUDE_API_KEY = "${{ secrets.AMPLITUDE_API_KEY }}";'
+
+      # Extract version number
+      - name: Get Release version
+        id: release-version
+        run: |
+          $content = Get-Content -Path "src/ParquetViewer/Properties/AssemblyInfo.cs" -Raw
+          $pattern = '\[assembly: AssemblyVersion\("\d+(\.\d+){3}"\)\]'
+          $match = Select-String -InputObject $content -Pattern $pattern
+          $versionMatch = $match.Matches[0].Value
+          release_version=$versionMatch >> $GITHUB_OUTPUT
+
+      - name: Restore dependencies
+        run: dotnet restore src/ParquetViewer.sln
+
+      - name: Build & Publish Regular Release
+        run: dotnet publish src/ParquetViewer.csproj -c Release  -f net8.0-windows --no-restore --nologo -o publish -r win-x64 --self-contained false
+      
+      - name: Build & Publish SelfContained Release
+        run: dotnet publish src/ParquetViewer.csproj -c Release_SelfContained  -f net8.0-windows --no-restore --nologo -o publish_selfcontained -r win-x64 --self-contained true
+
+      - name: Generate _checksums.txt
+        run: |
+          Move-Item -Path "publish/ParquetViewer.exe" -Destination "ParquetViewer.exe"
+          Move-Item -Path "publish_selfcontained/ParquetViewer.exe" -Destination "ParquetViewer_SelfContained.exe"
+          $fileHash = (Get-FileHash ParquetViewer.exe -Algorithm SHA256)
+          $fileHashSelfContained = (Get-FileHash ParquetViewer_SelfContained.exe -Algorithm SHA256)
+          $fileSize = (Get-Item -Path "ParquetViewer.exe").Length
+          $fileSizeSelfContained = (Get-Item -Path "ParquetViewer_SelfContained.exe").Length
+          "v${{ steps.release-version.outputs.release_version }}" >> "_checksums.txt"
+          "" >> "_checksums.txt"
+          "Name: ParquetViewer.exe" >> "_checksums.txt"
+          "Size: $fileSize bytes ($([math]::floor($fileSize/1KB)) KiB)" >> "_checksums.txt"
+          "SHA256: $($fileHash.Hash)" >> "_checksums.txt"
+          "" >> "_checksums.txt"
+          "Name: ParquetViewer_SelfContained.exe" >> "_checksums.txt"
+          "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1KB)) KiB)" >> "_checksums.txt"
+          "SHA256: $($fileHashSelfContained.Hash)" >> "_checksums.txt"
+          "" >> "_checksums.txt"
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "ParquetViewer.exe,ParquetViewer_SelfContained.exe,_checksums.txt"
+          body: "PR: (#${{ env.PR_NUMBER }})https://github.com/mukunku/ParquetViewer/pull/${{ env.PR_NUMBER }}"
+          allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          prerelease: true
+          replacesArtifacts: true
+          updateOnlyUnreleased: true
+          tag: v${{ steps.release-version.outputs.release_version }}
