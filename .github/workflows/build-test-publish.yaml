@@ -9,6 +9,7 @@ on:
 permissions:
   checks: write
   pull-requests: write
+  contents: write
 
 jobs:
   test:
@@ -107,7 +108,7 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "ParquetViewer.exe,ParquetViewer_SelfContained.exe,_checksums.txt"
-          body: "PR: (#${{ env.PR_NUMBER }})https://github.com/mukunku/ParquetViewer/pull/${{ env.PR_NUMBER }}"
+          body: "PR: (#${{ env.PR_NUMBER }})[https://github.com/mukunku/ParquetViewer/pull/${{ env.PR_NUMBER }}]"
           allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
