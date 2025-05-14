@@ -14,6 +14,8 @@ permissions:
 jobs:
   test:
     runs-on: windows-latest
+    outputs:
+      skip-publish: ${{ steps.check-tag.outputs.exists }}
     continue-on-error: true
     steps:
     - uses: actions/checkout@v4
@@ -42,13 +44,47 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-title: 'Unit Test Results'
         results-path: ./src/ParquetViewer.Tests/TestResults/*.trx
-  publish:
-    if: github.repository == 'mukunku/ParquetViewer'
+  
+  checkPublish:
     runs-on: windows-latest
-    #needs: test
+    needs: test
+    if: github.repository == 'mukunku/ParquetViewer' 
+    outputs:
+      release_version: ${{ steps.release-version.outputs.release_version }}
+      should_publish: ${{ steps.should-publish.outputs.should_publish }}
+    steps:
+      # Extract version number
+      - name: Get Release version
+        id: release-version
+        run: |
+          $content = Get-Content -Path "src/ParquetViewer/Properties/AssemblyInfo.cs" -Raw
+          $pattern = '\[assembly: AssemblyVersion\("(\d+(\.\d+){3})"\)\]'
+          $match = Select-String -InputObject $content -Pattern $pattern
+          $versionMatch = $match.Matches[0].Groups[1].Value
+          "release_version=$versionMatch" >> $env:GITHUB_OUTPUT
+          Write-Host "Checking version $versionMatch"
+
+      - name: Is there a finalized release already
+        uses: mukunku/release-exists-action@v1.0.0
+        id: check-release
+        with: 
+          tag: 'v${{ steps.release-version.outputs.release_version }}'
+      
+      - id: should-publish
+        run: | 
+          "should_publish=" + (
+          '${{ steps.check-release.outputs.exists }}' -eq 'true' -and
+          '${{ steps.check-release.outputs.draft }}' -eq 'false' -and 
+          '${{ steps.check-release.outputs.prerelease }}' -eq 'false').ToString() >> $env:GITHUB_OUTPUT
+
+  publish:
+    runs-on: windows-latest
+    needs: checkPublish
+    if: needs.checkPublish.outputs.should_publish == 'true'
     env:
       BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
       PR_NUMBER: ${{ github.event.number }}
+      VERSION_NUMBER: ${{ needs.checkPublish.outputs.release_version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,16 +105,7 @@ jobs:
           search-text: 'private const string AMPLITUDE_API_KEY = "";'
           replacement-text: 'private const string AMPLITUDE_API_KEY = "${{ secrets.AMPLITUDE_API_KEY }}";'
 
-      # Extract version number
-      - name: Get Release version
-        id: release-version
-        run: |
-          $content = Get-Content -Path "src/ParquetViewer/Properties/AssemblyInfo.cs" -Raw
-          $pattern = '\[assembly: AssemblyVersion\("(\d+(\.\d+){3})"\)\]'
-          $match = Select-String -InputObject $content -Pattern $pattern
-          $versionMatch = $match.Matches[0].Groups[1].Value
-          "release_version=$versionMatch" >> $GITHUB_OUTPUT
-          Write-Host "Publishing version $versionMatch"
+
 
       - name: Build & Publish Regular Release
         run: dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release  -f net8.0-windows --nologo -o publish -r win-x64 --self-contained false
@@ -94,7 +121,7 @@ jobs:
           $fileHashSelfContained = (Get-FileHash ParquetViewer_SelfContained.exe -Algorithm SHA256)
           $fileSize = (Get-Item -Path "ParquetViewer.exe").Length
           $fileSizeSelfContained = (Get-Item -Path "ParquetViewer_SelfContained.exe").Length
-          "v${{ steps.release-version.outputs.release_version }}" >> "_checksums.txt"
+          "v${{ env.VERSION_NUMBER }}" >> "_checksums.txt"
           "" >> "_checksums.txt"
           "Name: ParquetViewer.exe" >> "_checksums.txt"
           "Size: $fileSize bytes ($([math]::floor($fileSize/1KB)) KiB)" >> "_checksums.txt"
@@ -108,11 +135,11 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "ParquetViewer.exe,ParquetViewer_SelfContained.exe,_checksums.txt"
-          body: "PR: (#${{ env.PR_NUMBER }})[https://github.com/mukunku/ParquetViewer/pull/${{ env.PR_NUMBER }}]"
+          body: "PR: #${{ env.PR_NUMBER }}"
           allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           prerelease: true
           replacesArtifacts: true
           updateOnlyUnreleased: true
-          tag: v${{ steps.release-version.outputs.release_version }}
+          tag: v${{ env.VERSION_NUMBER }}
