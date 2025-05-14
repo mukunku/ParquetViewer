@@ -21,11 +21,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
-    <IsPublishable>True</IsPublishable>
+    <IsPublishable>False</IsPublishable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
+    <Optimize>True</Optimize>
     <IsPublishable>True</IsPublishable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_SelfContained|AnyCPU'">
@@ -33,6 +34,7 @@
     <LangVersion>default</LangVersion>
     <Optimize>True</Optimize>
     <IsPublishable>True</IsPublishable>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="Controls\DelayedOnChangedTextBox.cs">
