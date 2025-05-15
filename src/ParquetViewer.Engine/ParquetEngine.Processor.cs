@@ -156,14 +156,14 @@ namespace ParquetViewer.Engine
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                     }
-                    else if (fieldType == byteArrayValueType)
+                    else if (fieldType == byteArrayValueType && value is byte[] byteArrayValue)
                     {
                         bool isGenericFixed = field.SchemaElement.Type == Parquet.Meta.Type.FIXED_LEN_BYTE_ARRAY;
                         int fixedLength = isGenericFixed ? field.SchemaElement.TypeLength ?? 0 : 0;
 
                         dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(
                             field.Path,
-                            (byte[])value,
+                            byteArrayValue,
                             isGenericFixed,
                             fixedLength
                         );
@@ -541,7 +541,15 @@ namespace ParquetViewer.Engine
                 else if (schema.SchemaElement.Type == Parquet.Meta.Type.FIXED_LEN_BYTE_ARRAY)
                 {
                     // Handle GenericFixed type (FIXED_LEN_BYTE_ARRAY)
-                    dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
+                    // Check if this is a Guid type
+                    if (schema.DataField?.ClrType == typeof(Guid))
+                    {
+                        dataTable.AddColumn(field, typeof(Guid), parent);
+                    }
+                    else
+                    {
+                        dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
+                    }
                 }
                 else
                 {

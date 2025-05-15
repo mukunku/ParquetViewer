@@ -16,7 +16,7 @@ namespace ParquetViewer.Engine.Types
             Hex,        // Default hexadecimal format
             IPv6,       // IPv6 address format (16 bytes)
             IPv4,       // IPv4 address format (4 bytes)
-            UUID,       // UUID/GUID format (16 bytes)
+            Guid,       // Guid format (16 bytes)
             Integer,    // Integer representation (2, 4, or 8 bytes)
             Float,      // Floating point representation (4 or 8 bytes)
             Base64,     // Base64 encoded string (any length)
@@ -43,11 +43,11 @@ namespace ParquetViewer.Engine.Types
                     // Handle fixed-length binary data based on length
                     if (Data.Length == 16)
                     {
-                        // 16-byte data: Try IPv6 or UUID
+                        // 16-byte data: Try IPv6 or Guid
                         if (IsLikelyIPv6())
                             return ToIPv6String();
-                        else if (IsLikelyUUID())
-                            return ToUUIDString();
+                        else if (IsLikelyGuid())
+                            return ToGuidString();
                     }
                     else if (Data.Length == 4)
                     {
@@ -94,7 +94,7 @@ namespace ParquetViewer.Engine.Types
                 {
                     DisplayFormat.IPv6 => ToIPv6String(),
                     DisplayFormat.IPv4 => Data.Length == 4 ? new IPAddress(Data).ToString() : ToHexString(),
-                    DisplayFormat.UUID => ToUUIDString(),
+                    DisplayFormat.Guid => ToGuidString(),
                     DisplayFormat.Base64 => ToBase64String(),
                     DisplayFormat.ASCII => ToASCIIString(),
                     DisplayFormat.Size => $"{Data.Length} bytes",
@@ -185,9 +185,9 @@ namespace ParquetViewer.Engine.Types
         }
 
         /// <summary>
-        /// Attempts to determine if the data is likely a UUID/GUID
+        /// Attempts to determine if the data is likely a Guid.
         /// </summary>
-        public bool IsLikelyUUID()
+        public bool IsLikelyGuid()
         {
             if (Data.Length != 16)
                 return false;
@@ -223,9 +223,9 @@ namespace ParquetViewer.Engine.Types
         }
 
         /// <summary>
-        /// Converts the 16-byte binary data to a UUID/GUID string
+        /// Converts the 16-byte binary data to a Guid string.
         /// </summary>
-        public string ToUUIDString()
+        public string ToGuidString()
         {
             if (Data.Length != 16)
                 return ToHexString();
@@ -294,7 +294,7 @@ namespace ParquetViewer.Engine.Types
             {
                 // 16-byte formats
                 result.Add(DisplayFormat.IPv6, ToIPv6String());
-                result.Add(DisplayFormat.UUID, ToUUIDString());
+                result.Add(DisplayFormat.Guid, ToGuidString());
             }
             else if (Data.Length == 4)
             {
