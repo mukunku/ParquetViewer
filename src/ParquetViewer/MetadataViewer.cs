@@ -168,5 +168,17 @@ namespace ParquetViewer
             else
                 this.copyRawThriftMetadataButton.Visible = false;
         }
+
+        public override void SetTheme(Theme theme)
+        {
+            if (DesignMode)
+            {
+                return;
+            }
+
+            base.SetTheme(theme);
+            this.closeButton.ForeColor = Color.Black;
+            this.copyRawThriftMetadataButton.ForeColor = Color.Black;
+        }
     }
 }

@@ -88,10 +88,15 @@ namespace ParquetViewer
 
         public override void SetTheme(Theme theme)
         {
+            if (DesignMode)
+            {
+                return;
+            }
+
             base.SetTheme(theme);
             this.saveDateFormatButton.ForeColor = Color.Black;
             this.dateFormatDocsLinkLabel.LinkColor = theme.HyperlinkColor;
-            this.dateFormatDocsLinkLabel.ActiveLinkColor = theme.TextColor;
+            this.dateFormatDocsLinkLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
         }
     }
 }

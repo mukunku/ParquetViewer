@@ -14,7 +14,7 @@ namespace ParquetViewer.Controls
     internal class ParquetGridView : DataGridView
     {
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
-        //But lets use something smaller to increase rendering performance.
+        //But let's use something smaller to increase rendering performance.
         private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
 
         private Theme _gridTheme = Theme.LightModeTheme;

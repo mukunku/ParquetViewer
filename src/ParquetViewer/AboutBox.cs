@@ -370,6 +370,11 @@ namespace ParquetViewer
 
         public override void SetTheme(Theme theme)
         {
+            if (DesignMode)
+            {
+                return;
+            }
+
             base.SetTheme(theme);
             this.okButton.BackColor = Color.White;
             this.okButton.ForeColor = Color.Black;

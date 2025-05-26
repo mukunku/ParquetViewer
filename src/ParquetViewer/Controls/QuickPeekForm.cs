@@ -168,6 +168,11 @@ namespace ParquetViewer.Controls
 
         public override void SetTheme(Theme theme)
         {
+            if (DesignMode)
+            {
+                return;
+            }
+
             base.SetTheme(theme);
             if (this.mainGridView is not null)
                 this.mainGridView.GridTheme = theme;
