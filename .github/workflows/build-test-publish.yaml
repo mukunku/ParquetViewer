@@ -124,6 +124,11 @@ jobs:
             ParquetViewer.exe
             ParquetViewer_SelfContained.exe
 
+      - name: Remove unsigned exe's for safety
+        run: |
+          Remove-Item -Path "ParquetViewer.exe"
+          Remove-Item -Path "ParquetViewer_SelfContained.exe"
+
       # Documentation: https://about.signpath.io/documentation/trusted-build-systems/github
       - name: Submit signing request to SignPath.io
         uses: signpath/github-action-submit-signing-request@v1.1
@@ -155,7 +160,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "ParquetViewer.exe,ParquetViewer_SelfContained.exe,_checksums.txt"
+          artifacts: "signed-package/ParquetViewer.exe,signed-package/ParquetViewer_SelfContained.exe,_checksums.txt"
           body: "PR: #${{ env.PR_NUMBER }}"
           allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
           omitBodyDuringUpdate: true
