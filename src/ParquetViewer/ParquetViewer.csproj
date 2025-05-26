@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
     <Optimize>False</Optimize>
-    <IsPublishable>false</IsPublishable>
+    <IsPublishable>False</IsPublishable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>full</DebugType>
