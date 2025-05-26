@@ -41,7 +41,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-title: 'Unit Test Results'
         results-path: ./src/ParquetViewer.Tests/TestResults/*.trx
-  
+
   checkPublish:
     runs-on: windows-latest
     needs: test
@@ -70,7 +70,7 @@ jobs:
         id: check-release
         with: 
           tag: 'v${{ steps.release-version.outputs.release_version }}'
-      
+
       - id: should-publish
         run: | 
           "should_publish=" + (
@@ -97,8 +97,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Inject Amplitude API Key
-      - name: Replace single file
+      - name: Inject Amplitude API Key
         uses: richardrigutins/replace-in-files@v2
         with:
           files: 'src/ParquetViewer/Analytics/AmplitudeEvent.cs'
@@ -107,25 +106,22 @@ jobs:
 
       - name: Build & Publish Regular Release
         run: dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release  -f net8.0-windows --nologo -o publish -r win-x64 --self-contained false
-      
+
       - name: Build & Publish SelfContained Release
         run: dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release_SelfContained  -f net8.0-windows --nologo -o publish_selfcontained -r win-x64 --self-contained true
 
-      - name: Package releases into zip
+      - name: Prepare executables for upload
         run: |
-          Rename-Item -Path "publish_selfcontained/ParquetViewer.exe" -NewName "ParquetViewer_SelfContained.exe"
-          $compress = @{
-            LiteralPath= "publish/ParquetViewer.exe", "publish_selfcontained/ParquetViewer_SelfContained.exe"
-            CompressionLevel = "Fastest"
-            DestinationPath = "package.zip"
-          }
-          Compress-Archive @compress
+          Move-Item -Path "publish/ParquetViewer.exe" -Destination "./ParquetViewer.exe"
+          Move-Item -Path "publish_selfcontained/ParquetViewer.exe" -Destination "./ParquetViewer_SelfContained.exe"
 
       - name: Upload unsigned artifact for signing
         id: upload-unsigned-artifact
         uses: actions/upload-artifact@v4
         with:
-          path: package.zip
+          path: |
+            ParquetViewer.exe
+            ParquetViewer_SelfContained.exe
 
       # Documentation: https://about.signpath.io/documentation/trusted-build-systems/github
       - name: Submit signing request to SignPath.io
@@ -138,7 +134,7 @@ jobs:
           github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
           wait-for-completion: true
           output-artifact-directory: '/signed-package'
-      
+
       - name: Print signed packages
         run: |
           ls /signed-package
