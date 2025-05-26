@@ -137,7 +137,7 @@ jobs:
 
       - name: Print signed packages
         run: |
-          ls /signed-package
+          ls signed-package
 
       # - name: Generate _checksums.txt
       #   run: |
