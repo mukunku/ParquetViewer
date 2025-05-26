@@ -22,11 +22,11 @@ namespace ParquetViewer.Engine.Types
             Keys = keys;
             Values = values;
 
-            var mismatchedType = keys.Cast<object?>().Where(key => key != DBNull.Value && key != null).FirstOrDefault(key => key!.GetType() != keyType);
+            var mismatchedType = keys.Cast<object?>().Where(key => key != DBNull.Value).FirstOrDefault(key => key!.GetType() != keyType);
             if (mismatchedType != null)
                 throw new ArgumentException($"The key's type {mismatchedType} doesn't match the passed key-type {keyType}");
 
-            mismatchedType = values.Cast<object?>().Where(value => value != DBNull.Value && value != null).FirstOrDefault(value => value!.GetType() != valueType);
+            mismatchedType = values.Cast<object?>().Where(value => value != DBNull.Value).FirstOrDefault(value => value!.GetType() != valueType);
             if (mismatchedType != null)
                 throw new ArgumentException($"The value's type {mismatchedType} doesn't match the passed value-type {valueType}");
 

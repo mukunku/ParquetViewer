@@ -344,7 +344,11 @@ namespace ParquetViewer.Engine
             var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
             var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
 
-            var dataEnumerable = Helpers.PairEnumerables(keyDataColumn.Data.Cast<object?>(), valueDataColumn.Data.Cast<object?>(), DBNull.Value);
+            var dataEnumerable = Helpers.PairEnumerables(
+                keyDataColumn.Data.Cast<object?>().Select(key => key ?? DBNull.Value), 
+                valueDataColumn.Data.Cast<object?>().Select(value => value ?? DBNull.Value),
+                DBNull.Value);
+
             //Some parquet writers don't write null entries into the data array for empty and null maps.
             //This throws off our logic below so lets find all empty/null maps and add a null entry into 
             //the data array to align it with the repetition levels.
@@ -478,7 +482,18 @@ namespace ParquetViewer.Engine
                     dataTable.NewRow();
                 }
 
-                dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, finalResultDataTable.Rows[i]);
+                //Not sure how to detect if a Struct is NULL vs. all its fields being NULL.
+                //For now lets consider that if all fields are NULL, the row is supposed to be NULL.
+                bool isNull = !finalResultDataTable.Rows[i].ItemArray.Any(item => item != DBNull.Value);
+
+                if (isNull)
+                {
+                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
+                }
+                else
+                {
+                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, finalResultDataTable.Rows[i]);
+                }
                 rowIndex++;
             }
         }
