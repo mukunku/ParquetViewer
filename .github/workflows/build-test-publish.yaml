@@ -37,6 +37,7 @@ jobs:
 
     - name: Test Report
       uses: bibipkins/dotnet-test-reporter@v1.4.1
+      if: github.repository == 'mukunku/ParquetViewer'
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-title: 'Unit Test Results'
@@ -135,37 +136,31 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: '/signed-package'
 
-      - name: Print signed packages
+      - name: Generate _checksums.txt
         run: |
-          ls signed-package
+          $fileHash = (Get-FileHash "signed-package/ParquetViewer.exe" -Algorithm SHA256)
+          $fileHashSelfContained = (Get-FileHash "signed-package/ParquetViewer_SelfContained.exe" -Algorithm SHA256)
+          $fileSize = (Get-Item -Path "signed-package/ParquetViewer.exe").Length
+          $fileSizeSelfContained = (Get-Item -Path "signed-package/ParquetViewer_SelfContained.exe").Length
+          "v${{ env.VERSION_NUMBER }}" >> "_checksums.txt"
+          "" >> "_checksums.txt"
+          "Name: ParquetViewer.exe" >> "_checksums.txt"
+          "Size: $fileSize bytes ($([math]::floor($fileSize/1KB)) KiB)" >> "_checksums.txt"
+          "SHA256: $($fileHash.Hash)" >> "_checksums.txt"
+          "" >> "_checksums.txt"
+          "Name: ParquetViewer_SelfContained.exe" >> "_checksums.txt"
+          "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1KB)) KiB)" >> "_checksums.txt"
+          "SHA256: $($fileHashSelfContained.Hash)" >> "_checksums.txt"
+          "" >> "_checksums.txt"
 
-      # - name: Generate _checksums.txt
-      #   run: |
-      #     Move-Item -Path "publish/ParquetViewer.exe" -Destination "ParquetViewer.exe"
-      #     Move-Item -Path "publish_selfcontained/ParquetViewer.exe" -Destination "ParquetViewer_SelfContained.exe"
-      #     $fileHash = (Get-FileHash ParquetViewer.exe -Algorithm SHA256)
-      #     $fileHashSelfContained = (Get-FileHash ParquetViewer_SelfContained.exe -Algorithm SHA256)
-      #     $fileSize = (Get-Item -Path "ParquetViewer.exe").Length
-      #     $fileSizeSelfContained = (Get-Item -Path "ParquetViewer_SelfContained.exe").Length
-      #     "v${{ env.VERSION_NUMBER }}" >> "_checksums.txt"
-      #     "" >> "_checksums.txt"
-      #     "Name: ParquetViewer.exe" >> "_checksums.txt"
-      #     "Size: $fileSize bytes ($([math]::floor($fileSize/1KB)) KiB)" >> "_checksums.txt"
-      #     "SHA256: $($fileHash.Hash)" >> "_checksums.txt"
-      #     "" >> "_checksums.txt"
-      #     "Name: ParquetViewer_SelfContained.exe" >> "_checksums.txt"
-      #     "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1KB)) KiB)" >> "_checksums.txt"
-      #     "SHA256: $($fileHashSelfContained.Hash)" >> "_checksums.txt"
-      #     "" >> "_checksums.txt"
-
-      # - uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: "ParquetViewer.exe,ParquetViewer_SelfContained.exe,_checksums.txt"
-      #     body: "PR: #${{ env.PR_NUMBER }}"
-      #     allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
-      #     omitBodyDuringUpdate: true
-      #     omitNameDuringUpdate: true
-      #     prerelease: true
-      #     replacesArtifacts: true
-      #     updateOnlyUnreleased: true
-      #     tag: v${{ env.VERSION_NUMBER }}
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "ParquetViewer.exe,ParquetViewer_SelfContained.exe,_checksums.txt"
+          body: "PR: #${{ env.PR_NUMBER }}"
+          allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          prerelease: true
+          replacesArtifacts: true
+          updateOnlyUnreleased: true
+          tag: v${{ env.VERSION_NUMBER }}
