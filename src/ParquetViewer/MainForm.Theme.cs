@@ -24,7 +24,7 @@ namespace ParquetViewer
                 var shouldUseDefaultSeparatorPaintEvent = !theme.HasToolStripRendererProvider;
                 if (item is ThemableToolStripSeperator separator)
                 {
-                    separator.BackColor = shouldUseDefaultSeparatorPaintEvent ? Color.Transparent /*disables paint event*/ : theme.FormBackgroundColor;
+                    separator.BackColor = shouldUseDefaultSeparatorPaintEvent ? Color.Transparent /*disable custom paint event*/ : theme.FormBackgroundColor;
                 }
 
                 item.BackColor = theme.FormBackgroundColor;
