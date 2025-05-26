@@ -15,7 +15,7 @@ namespace ParquetViewer.Helpers
     {
         private const string DefaultDateTimeFormat = "g";
         public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
-        
+
         [Obsolete]
         private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
         [Obsolete]
@@ -181,7 +181,7 @@ namespace ParquetViewer.Helpers
         private static string ToDecimalStringImpl(object value)
         {
             var formattedValue = value?.ToString() ?? string.Empty;
-            
+
             var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
             if (isUsingScientificNotation)
             {
@@ -201,6 +201,37 @@ namespace ParquetViewer.Helpers
                    ? value
                    : (value.Substring(0, maxLength) + truncateSuffix)
                    );
+        }
+
+        public static IEnumerable<ToolStripItem> Children(this MenuStrip menuStrip)
+        {
+            foreach (ToolStripItem toolStrip in menuStrip.Items)
+            {
+                yield return toolStrip;
+
+                if (toolStrip is ToolStripMenuItem childStrip)
+                {
+                    foreach (var child in childStrip.Children())
+                    {
+                        yield return child;
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<ToolStripItem> Children(this ToolStripItem toolStrip)
+        {
+            if (toolStrip is ToolStripMenuItem menuItem)
+            {
+                foreach (ToolStripItem childStrip in menuItem.DropDownItems)
+                {
+                    yield return childStrip;
+                    foreach (ToolStripItem cc in childStrip.Children())
+                    {
+                        yield return cc;
+                    }
+                }
+            }
         }
     }
 }

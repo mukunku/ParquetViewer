@@ -5,6 +5,7 @@ using ParquetViewer.Helpers;
 using ParquetViewer.Properties;
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -93,8 +94,8 @@ namespace ParquetViewer
     WHERE field_name IS NULL
     WHERE field_name IS NOT NULL
 DATETIME:   
-    WHERE field_name >= #2000/12/31#
-    WHERE field_name = #12/31/2000#
+    WHERE field_name >= #2000-12-31#
+    WHERE field_name = #2000-01-13 01:00:00#
 NUMERIC:
     WHERE field_name <= 123.4
     WHERE (field1 * field2) / 100 > 0.1
@@ -150,6 +151,9 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
         {
             if (sender is Button loadAllRecordsButton)
             {
+                loadAllRecordsButton.FlatAppearance.MouseOverBackColor = Color.Transparent;
+                loadAllRecordsButton.FlatAppearance.MouseDownBackColor = Color.Transparent;
+
                 if (loadAllRecordsButton.Enabled)
                 {
                     loadAllRecordsButton.Image = Resources.next_blue;

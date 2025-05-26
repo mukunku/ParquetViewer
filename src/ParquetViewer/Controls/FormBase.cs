@@ -7,23 +7,28 @@ using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
-    public abstract class FormBase : Form
+    public class FormBase : Form
     {
         private static List<FormBase> _openForms = new();
         public static IEnumerable<FormBase> OpenForms => _openForms.Where(form => form?.IsDisposed == false);
 
-        [DllImport("dwmapi.dll")]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
-
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-
-        public void UseDarkModeTitleBar() => UseImmersiveDarkMode(this.Handle, true);
-        public void UseLightModeTitleBar() => UseImmersiveDarkMode(this.Handle, false);
+        protected FormBase()
+        {
+            this.Load += (object? _, EventArgs _) =>
+            {
+                _openForms.Add(this);
+                SetTheme(AppSettings.GetTheme());
+            };
+        }
 
         public virtual void SetTheme(Theme theme)
         {
-            if (theme == Constants.LightModeTheme)
+            if (DesignMode)
+            {
+                return;
+            }
+
+            if (theme == Theme.LightModeTheme)
             {
                 this.UseLightModeTitleBar();
             }
@@ -31,7 +36,19 @@ namespace ParquetViewer.Controls
             {
                 this.UseDarkModeTitleBar();
             }
+
+            this.BackColor = theme.FormBackgroundColor;
+            this.ForeColor = theme.TextColor;
         }
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+        private void UseDarkModeTitleBar() => UseImmersiveDarkMode(this.Handle, true);
+        private void UseLightModeTitleBar() => UseImmersiveDarkMode(this.Handle, false);
 
         // Source: https://stackoverflow.com/a/62811758/1458738
         private static bool UseImmersiveDarkMode(IntPtr handle, bool enabled)
@@ -54,15 +71,6 @@ namespace ParquetViewer.Controls
         private static bool IsWindows10OrGreater(int build = -1)
         {
             return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
-        }
-
-        protected FormBase()
-        {
-            this.Load += (object? _, EventArgs _) =>
-            {
-                _openForms.Add(this);
-                SetTheme(AppSettings.GetTheme());
-            };
         }
 
         protected override void Dispose(bool disposing)

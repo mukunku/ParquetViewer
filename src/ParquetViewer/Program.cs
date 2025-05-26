@@ -46,6 +46,7 @@ namespace ParquetViewer
             }
             catch (Exception) { /*Swallow Exception*/ }
 
+            //Enable HighDpi mode
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 

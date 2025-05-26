@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Drawing;
 using System.Security.Principal;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers
 {
@@ -10,34 +8,6 @@ namespace ParquetViewer.Helpers
     {
         public const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
         public const string DateFormatDocsURL = "https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings";
-
-        public static Theme DarkModeTheme => new Theme(
-            Color.FromArgb(13, 17, 23),
-            Color.FromArgb(240, 246, 252),
-            Color.FromArgb(21, 27, 35),
-            Color.FromArgb(30, 34, 38),
-            Color.FromArgb(30, 34, 38),
-            DataGridViewHeaderBorderStyle.Single,
-            Color.FromArgb(33, 33, 33),
-            Color.FromArgb(61, 68, 77),
-            Color.FromArgb(68, 147, 248),
-            Color.FromArgb(145, 152, 161),
-            Color.FromArgb(64, 129, 201)
-            );
-
-        public static Theme LightModeTheme => new Theme(
-            SystemColors.Window,
-            SystemColors.WindowText,
-            SystemColors.Window,
-            SystemColors.ControlLight,
-            SystemColors.Control,
-            DataGridViewHeaderBorderStyle.Raised,
-            SystemColors.ControlDark,
-            SystemColors.WindowFrame,
-            Color.Blue,
-            SystemColors.ActiveCaptionText,
-            SystemColors.Highlight
-            );
     }
 
     public static class User
@@ -49,20 +19,6 @@ namespace ParquetViewer.Helpers
         public static char NumberDecimalSeparator = 
             Thread.CurrentThread.CurrentUICulture.NumberFormat.NumberDecimalSeparator.ToCharArray()[0];
     }
-
-    public record Theme(
-            Color CellBackgroundColor,
-            Color TextColor,
-            Color AlternateRowsCellBackgroundColor, //Not currently used
-            Color ColumnHeaderColor,
-            Color RowHeaderColor,
-            DataGridViewHeaderBorderStyle RowHeaderBorderStyle,
-            Color GridBackgroundColor,
-            Color GridColor,
-            Color HyperlinkColor,
-            Color CellPlaceholderTextColor,
-            Color SelectionBackColor
-            );
 
     public enum ParquetEngine
     {

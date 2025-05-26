@@ -53,9 +53,9 @@ namespace ParquetViewer
             newToolStripMenuItem = new ToolStripMenuItem();
             openToolStripMenuItem = new ToolStripMenuItem();
             openFolderToolStripMenuItem = new ToolStripMenuItem();
-            toolStripSeparator = new ToolStripSeparator();
+            toolStripSeparator = new ThemableToolStripSeperator();
             saveAsToolStripMenuItem = new ToolStripMenuItem();
-            toolStripSeparator1 = new ToolStripSeparator();
+            toolStripSeparator1 = new ThemableToolStripSeperator();
             exitToolStripMenuItem = new ToolStripMenuItem();
             editToolStripMenuItem = new ToolStripMenuItem();
             changeFieldsMenuStripButton = new ToolStripMenuItem();
@@ -102,9 +102,9 @@ namespace ParquetViewer
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 117F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 93F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 55F));
+            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 58F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 55F));
+            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 58F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
             mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
             mainTableLayoutPanel.Controls.Add(recordsToLabel, 8, 0);
@@ -156,7 +156,7 @@ namespace ParquetViewer
             // showRecordsFromLabel
             // 
             showRecordsFromLabel.Anchor = AnchorStyles.Right;
-            showRecordsFromLabel.Location = new System.Drawing.Point(680, 0);
+            showRecordsFromLabel.Location = new System.Drawing.Point(677, 0);
             showRecordsFromLabel.Margin = new Padding(0, 0, 4, 0);
             showRecordsFromLabel.Name = "showRecordsFromLabel";
             showRecordsFromLabel.Size = new System.Drawing.Size(45, 35);
@@ -168,7 +168,7 @@ namespace ParquetViewer
             // 
             offsetTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             offsetTextBox.DelayedTextChangedTimeout = 1000;
-            offsetTextBox.Location = new System.Drawing.Point(733, 6);
+            offsetTextBox.Location = new System.Drawing.Point(730, 6);
             offsetTextBox.Margin = new Padding(4, 3, 4, 3);
             offsetTextBox.Name = "offsetTextBox";
             offsetTextBox.Size = new System.Drawing.Size(62, 23);
@@ -185,7 +185,7 @@ namespace ParquetViewer
             runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
             runQueryButton.Image = Properties.Resources.exclamation_icon;
             runQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            runQueryButton.Location = new System.Drawing.Point(468, 3);
+            runQueryButton.Location = new System.Drawing.Point(462, 3);
             runQueryButton.Margin = new Padding(4, 3, 4, 3);
             runQueryButton.Name = "runQueryButton";
             runQueryButton.Size = new System.Drawing.Size(109, 29);
@@ -220,7 +220,7 @@ namespace ParquetViewer
             searchFilterTextBox.Margin = new Padding(4, 3, 4, 3);
             searchFilterTextBox.Name = "searchFilterTextBox";
             searchFilterTextBox.PlaceholderText = "WHERE ";
-            searchFilterTextBox.Size = new System.Drawing.Size(351, 23);
+            searchFilterTextBox.Size = new System.Drawing.Size(345, 23);
             searchFilterTextBox.TabIndex = 1;
             searchFilterTextBox.Enter += searchFilterTextBox_Enter;
             searchFilterTextBox.KeyPress += searchFilterTextBox_KeyPress;
@@ -232,7 +232,7 @@ namespace ParquetViewer
             clearFilterButton.FlatStyle = FlatStyle.Popup;
             clearFilterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F);
             clearFilterButton.ForeColor = System.Drawing.Color.Black;
-            clearFilterButton.Location = new System.Drawing.Point(585, 3);
+            clearFilterButton.Location = new System.Drawing.Point(579, 3);
             clearFilterButton.Margin = new Padding(4, 3, 4, 3);
             clearFilterButton.Name = "clearFilterButton";
             clearFilterButton.Size = new System.Drawing.Size(85, 29);
@@ -610,6 +610,7 @@ namespace ParquetViewer
             Controls.Add(mainStatusStrip);
             Controls.Add(mainTableLayoutPanel);
             Controls.Add(mainMenuStrip);
+            ForeColor = System.Drawing.Color.FromArgb(240, 246, 252);
             Icon = Properties.Resources.parquet_icon_32x32;
             KeyPreview = true;
             MainMenuStrip = mainMenuStrip;
@@ -645,9 +646,9 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
+        private ThemableToolStripSeperator toolStripSeparator;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private ThemableToolStripSeperator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem changeFieldsMenuStripButton;

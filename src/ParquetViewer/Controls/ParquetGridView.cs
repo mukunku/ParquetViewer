@@ -17,7 +17,7 @@ namespace ParquetViewer.Controls
         //But lets use something smaller to increase rendering performance.
         private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
 
-        private Theme _gridTheme = Constants.LightModeTheme;
+        private Theme _gridTheme = Theme.LightModeTheme;
         public Theme GridTheme
         {
             get => _gridTheme;
@@ -463,8 +463,14 @@ namespace ParquetViewer.Controls
         protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;
-            base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event
-            this.Cursor = Cursors.Default;
+            try
+            {
+                base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -622,7 +628,7 @@ namespace ParquetViewer.Controls
                 this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
                 this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
             }
-            Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
+            Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
             if (withHeaders)
             {
                 this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;

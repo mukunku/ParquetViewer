@@ -171,6 +171,10 @@ namespace ParquetViewer.Controls
             base.SetTheme(theme);
             if (this.mainGridView is not null)
                 this.mainGridView.GridTheme = theme;
+
+            this.saveImageToFileButton.ForeColor = Color.Black;
+            this.takeMeBackLinkLabel.LinkColor = theme.HyperlinkColor;
+            this.takeMeBackLinkLabel.ActiveLinkColor = theme.TextColor;
         }
     }
 

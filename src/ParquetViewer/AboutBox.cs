@@ -4,6 +4,7 @@ using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -365,6 +366,13 @@ namespace ParquetViewer
             this.isLoading = true;
             this.associateFileExtensionCheckBox.Checked = @checked;
             this.isLoading = false;
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            base.SetTheme(theme);
+            this.okButton.BackColor = Color.White;
+            this.okButton.ForeColor = Color.Black;
         }
     }
 }

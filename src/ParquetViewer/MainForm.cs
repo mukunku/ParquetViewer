@@ -475,12 +475,5 @@ namespace ParquetViewer
                     this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = '{sampleSimpleValue}'";
             }
         }
-
-        public override void SetTheme(Theme theme)
-        {
-            base.SetTheme(theme);
-            this.mainGridView.GridTheme = theme;
-            this.BackColor = SystemColors.ControlDarkDark;
-        }
     }
 }

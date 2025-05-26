@@ -100,14 +100,15 @@ namespace ParquetViewer
             set
             {
                 SetRegistryValue(DarkModeKey, value.ToString());
+                var theme = GetTheme();
                 foreach (var form in FormBase.OpenForms)
                 {
-                    form.SetTheme(GetTheme());
+                    form.SetTheme(theme);
                 }
             }
         }
 
-        public static Theme GetTheme() => DarkMode ? Constants.DarkModeTheme : Constants.LightModeTheme;
+        public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;
 
         private static bool ReadRegistryValue<T>(string key, out T? value)
         {
