@@ -29,4 +29,6 @@ Checkout the [ParquetViewer Analytics Dashboard](https://app.amplitude.com/analy
 The latest version of this project was written in C# using Microsoft Visual Studio Community 2022 v17.13.1 and .NET 8
 
 # Acknowledgements
-This utility would not be possible without: https://github.com/aloneguid/parquet-dotnet
+* This utility would not be possible without: https://github.com/aloneguid/parquet-dotnet
+* Special thanks to [SignPath.io](https://about.signpath.io/) for sponsoring this project. See our [Code signing policy](https://github.com/mukunku/ParquetViewer/wiki/Code-signing-policy) for details.
+
