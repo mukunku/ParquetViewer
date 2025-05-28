@@ -169,3 +169,4 @@ jobs:
           replacesArtifacts: true
           updateOnlyUnreleased: true
           tag: v${{ env.VERSION_NUMBER }}
+          commit: ${{ github.sha }}
