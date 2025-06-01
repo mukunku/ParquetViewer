@@ -154,7 +154,7 @@ jobs:
           "SHA256: $($fileHash.Hash)" >> "_checksums.txt"
           "" >> "_checksums.txt"
           "Name: ParquetViewer_SelfContained.exe" >> "_checksums.txt"
-          "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1KB)) KiB)" >> "_checksums.txt"
+          "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1MB)) MiB)" >> "_checksums.txt"
           "SHA256: $($fileHashSelfContained.Hash)" >> "_checksums.txt"
           "" >> "_checksums.txt"
 
