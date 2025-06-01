@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 
@@ -16,6 +17,7 @@ namespace ParquetViewer
         private const string AlwaysLoadAllRecordsKey = "AlwaysLoadAllRecords";
         private const string OpenedFileCountKey = "OpenedFileCount";
         private const string CustomDateFormatKey = "CustomDateFormat";
+        private const string DarkModeKey = "DarkMode";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -47,16 +49,15 @@ namespace ParquetViewer
             set => SetRegistryValue(ConsentLastAskedOnVersionKey, value ?? string.Empty);
         }
 
-        public static Guid AnalyticsDeviceId 
+        public static Guid AnalyticsDeviceId
             => ReadRegistryValue(AnalyticsDeviceIdKey, out string? temp) && Guid.TryParse(temp, out var value) ? value : SetAnalyticsDeviceId();
 
         private static Guid SetAnalyticsDeviceId()
         {
             try
             {
-                using var registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey);
                 Guid newDeviceId = Guid.NewGuid();
-                registryKey.SetValue(AnalyticsDeviceIdKey, newDeviceId);
+                SetRegistryValue(AnalyticsDeviceIdKey, newDeviceId);
                 return newDeviceId;
             }
             catch
@@ -75,7 +76,7 @@ namespace ParquetViewer
         public static int OpenedFileCount
         {
             get => _openedFileCount ??= ReadRegistryValue(OpenedFileCountKey, out int value) ? value : 0;
-            set 
+            set
             {
                 _openedFileCount = value;
                 SetRegistryValue(OpenedFileCountKey, value);
@@ -92,6 +93,22 @@ namespace ParquetViewer
                 SetRegistryValue(CustomDateFormatKey, value ?? string.Empty);
             }
         }
+
+        public static bool DarkMode
+        {
+            get => ReadRegistryValue(DarkModeKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+            set
+            {
+                SetRegistryValue(DarkModeKey, value.ToString());
+                var theme = GetTheme();
+                foreach (var form in FormBase.OpenForms)
+                {
+                    form.SetTheme(theme);
+                }
+            }
+        }
+
+        public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;
 
         private static bool ReadRegistryValue<T>(string key, out T? value)
         {

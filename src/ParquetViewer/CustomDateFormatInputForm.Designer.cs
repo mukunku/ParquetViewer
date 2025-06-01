@@ -242,7 +242,7 @@ namespace ParquetViewer
             label33.AutoSize = true;
             label33.Location = new System.Drawing.Point(77, 220);
             label33.Name = "label33";
-            label33.Size = new System.Drawing.Size(176, 15);
+            label33.Size = new System.Drawing.Size(177, 15);
             label33.TabIndex = 29;
             label33.Text = "The year as a four-digit number.";
             // 
@@ -252,7 +252,7 @@ namespace ParquetViewer
             label34.AutoSize = true;
             label34.Location = new System.Drawing.Point(314, 213);
             label34.Name = "label34";
-            label34.Size = new System.Drawing.Size(156, 30);
+            label34.Size = new System.Drawing.Size(157, 30);
             label34.TabIndex = 30;
             label34.Text = "1900-01-01T00:00:00 -> 1900\r\n2009-06-15T13:45:30 -> 2009";
             // 
@@ -273,7 +273,7 @@ namespace ParquetViewer
             label27.AutoSize = true;
             label27.Location = new System.Drawing.Point(77, 185);
             label27.Name = "label27";
-            label27.Size = new System.Drawing.Size(130, 15);
+            label27.Size = new System.Drawing.Size(131, 15);
             label27.TabIndex = 23;
             label27.Text = "The year, from 00 to 99.";
             // 
@@ -283,7 +283,7 @@ namespace ParquetViewer
             label28.AutoSize = true;
             label28.Location = new System.Drawing.Point(314, 178);
             label28.Name = "label28";
-            label28.Size = new System.Drawing.Size(144, 30);
+            label28.Size = new System.Drawing.Size(145, 30);
             label28.TabIndex = 24;
             label28.Text = "1900-01-01T00:00:00 -> 00\r\n2019-06-15T13:45:30 -> 19";
             // 
@@ -304,7 +304,7 @@ namespace ParquetViewer
             label21.AutoSize = true;
             label21.Location = new System.Drawing.Point(77, 150);
             label21.Name = "label21";
-            label21.Size = new System.Drawing.Size(144, 15);
+            label21.Size = new System.Drawing.Size(145, 15);
             label21.TabIndex = 17;
             label21.Text = "The month, from 01 to 12.";
             // 
@@ -314,7 +314,7 @@ namespace ParquetViewer
             label22.AutoSize = true;
             label22.Location = new System.Drawing.Point(314, 150);
             label22.Name = "label22";
-            label22.Size = new System.Drawing.Size(144, 15);
+            label22.Size = new System.Drawing.Size(145, 15);
             label22.TabIndex = 18;
             label22.Text = "2009-06-15T13:45:30 -> 06";
             // 
@@ -335,7 +335,7 @@ namespace ParquetViewer
             label15.AutoSize = true;
             label15.Location = new System.Drawing.Point(77, 115);
             label15.Name = "label15";
-            label15.Size = new System.Drawing.Size(138, 15);
+            label15.Size = new System.Drawing.Size(139, 15);
             label15.TabIndex = 11;
             label15.Text = "The month, from 1 to 12.";
             // 
@@ -345,7 +345,7 @@ namespace ParquetViewer
             label16.AutoSize = true;
             label16.Location = new System.Drawing.Point(314, 115);
             label16.Name = "label16";
-            label16.Size = new System.Drawing.Size(138, 15);
+            label16.Size = new System.Drawing.Size(139, 15);
             label16.TabIndex = 12;
             label16.Text = "2009-06-15T13:45:30 -> 6";
             // 
@@ -366,7 +366,7 @@ namespace ParquetViewer
             label9.AutoSize = true;
             label9.Location = new System.Drawing.Point(77, 80);
             label9.Name = "label9";
-            label9.Size = new System.Drawing.Size(200, 15);
+            label9.Size = new System.Drawing.Size(201, 15);
             label9.TabIndex = 5;
             label9.Text = "The day of the month, from 01 to 31.";
             // 
@@ -376,7 +376,7 @@ namespace ParquetViewer
             label10.AutoSize = true;
             label10.Location = new System.Drawing.Point(314, 73);
             label10.Name = "label10";
-            label10.Size = new System.Drawing.Size(144, 30);
+            label10.Size = new System.Drawing.Size(145, 30);
             label10.TabIndex = 6;
             label10.Text = "2009-06-01T13:45:30 -> 01\r\n2009-06-15T13:45:30 -> 15";
             // 
@@ -397,7 +397,7 @@ namespace ParquetViewer
             label3.AutoSize = true;
             label3.Location = new System.Drawing.Point(77, 45);
             label3.Name = "label3";
-            label3.Size = new System.Drawing.Size(194, 15);
+            label3.Size = new System.Drawing.Size(195, 15);
             label3.TabIndex = 0;
             label3.Text = "The day of the month, from 1 to 31.";
             // 
@@ -407,7 +407,7 @@ namespace ParquetViewer
             label4.AutoSize = true;
             label4.Location = new System.Drawing.Point(314, 38);
             label4.Name = "label4";
-            label4.Size = new System.Drawing.Size(144, 30);
+            label4.Size = new System.Drawing.Size(145, 30);
             label4.TabIndex = 0;
             label4.Text = "2009-06-01T13:45:30 -> 1\r\n2009-06-15T13:45:30 -> 15";
             // 
@@ -462,7 +462,7 @@ namespace ParquetViewer
             label6.AutoSize = true;
             label6.Location = new System.Drawing.Point(77, 255);
             label6.Name = "label6";
-            label6.Size = new System.Drawing.Size(140, 15);
+            label6.Size = new System.Drawing.Size(141, 15);
             label6.TabIndex = 2;
             label6.Text = "The second, from 0 to 59.";
             // 
@@ -472,7 +472,7 @@ namespace ParquetViewer
             label7.AutoSize = true;
             label7.Location = new System.Drawing.Point(314, 255);
             label7.Name = "label7";
-            label7.Size = new System.Drawing.Size(138, 15);
+            label7.Size = new System.Drawing.Size(139, 15);
             label7.TabIndex = 3;
             label7.Text = "2009-06-15T13:45:09 -> 9";
             // 
@@ -493,7 +493,7 @@ namespace ParquetViewer
             label12.AutoSize = true;
             label12.Location = new System.Drawing.Point(77, 290);
             label12.Name = "label12";
-            label12.Size = new System.Drawing.Size(146, 15);
+            label12.Size = new System.Drawing.Size(147, 15);
             label12.TabIndex = 8;
             label12.Text = "The second, from 00 to 59.";
             // 
@@ -503,7 +503,7 @@ namespace ParquetViewer
             label13.AutoSize = true;
             label13.Location = new System.Drawing.Point(314, 290);
             label13.Name = "label13";
-            label13.Size = new System.Drawing.Size(144, 15);
+            label13.Size = new System.Drawing.Size(145, 15);
             label13.TabIndex = 9;
             label13.Text = "2009-06-15T13:45:09 -> 09";
             // 
@@ -524,7 +524,7 @@ namespace ParquetViewer
             label18.AutoSize = true;
             label18.Location = new System.Drawing.Point(77, 325);
             label18.Name = "label18";
-            label18.Size = new System.Drawing.Size(140, 15);
+            label18.Size = new System.Drawing.Size(141, 15);
             label18.TabIndex = 14;
             label18.Text = "The minute, from 0 to 59.";
             // 
@@ -534,7 +534,7 @@ namespace ParquetViewer
             label19.AutoSize = true;
             label19.Location = new System.Drawing.Point(314, 318);
             label19.Name = "label19";
-            label19.Size = new System.Drawing.Size(144, 30);
+            label19.Size = new System.Drawing.Size(145, 30);
             label19.TabIndex = 15;
             label19.Text = "2009-06-15T01:09:30 -> 9\r\n2009-06-15T13:29:30 -> 29";
             // 
@@ -555,7 +555,7 @@ namespace ParquetViewer
             label24.AutoSize = true;
             label24.Location = new System.Drawing.Point(77, 360);
             label24.Name = "label24";
-            label24.Size = new System.Drawing.Size(146, 15);
+            label24.Size = new System.Drawing.Size(147, 15);
             label24.TabIndex = 20;
             label24.Text = "The minute, from 00 to 59.";
             // 
@@ -565,7 +565,7 @@ namespace ParquetViewer
             label25.AutoSize = true;
             label25.Location = new System.Drawing.Point(314, 353);
             label25.Name = "label25";
-            label25.Size = new System.Drawing.Size(144, 30);
+            label25.Size = new System.Drawing.Size(145, 30);
             label25.TabIndex = 21;
             label25.Text = "2009-06-15T01:09:30 -> 09\r\n2009-06-15T01:45:30 -> 45";
             // 
@@ -586,7 +586,7 @@ namespace ParquetViewer
             label30.AutoSize = true;
             label30.Location = new System.Drawing.Point(77, 388);
             label30.Name = "label30";
-            label30.Size = new System.Drawing.Size(221, 30);
+            label30.Size = new System.Drawing.Size(222, 30);
             label30.TabIndex = 26;
             label30.Text = "The hour, using a 12-hour clock from 01 to 12.";
             // 
@@ -596,7 +596,7 @@ namespace ParquetViewer
             label31.AutoSize = true;
             label31.Location = new System.Drawing.Point(314, 388);
             label31.Name = "label31";
-            label31.Size = new System.Drawing.Size(144, 30);
+            label31.Size = new System.Drawing.Size(145, 30);
             label31.TabIndex = 27;
             label31.Text = "2009-06-15T01:45:30 -> 01\r\n2009-06-15T13:45:30 -> 01";
             // 
@@ -617,7 +617,7 @@ namespace ParquetViewer
             label36.AutoSize = true;
             label36.Location = new System.Drawing.Point(77, 423);
             label36.Name = "label36";
-            label36.Size = new System.Drawing.Size(221, 30);
+            label36.Size = new System.Drawing.Size(222, 30);
             label36.TabIndex = 32;
             label36.Text = "The hour, using a 24-hour clock from 00 to 23.";
             // 
@@ -627,7 +627,7 @@ namespace ParquetViewer
             label37.AutoSize = true;
             label37.Location = new System.Drawing.Point(314, 423);
             label37.Name = "label37";
-            label37.Size = new System.Drawing.Size(144, 30);
+            label37.Size = new System.Drawing.Size(145, 30);
             label37.TabIndex = 33;
             label37.Text = "2009-06-15T01:45:30 -> 01\r\n2009-06-15T13:45:30 -> 13";
             // 
@@ -648,7 +648,7 @@ namespace ParquetViewer
             label48.AutoSize = true;
             label48.Location = new System.Drawing.Point(77, 465);
             label48.Name = "label48";
-            label48.Size = new System.Drawing.Size(227, 15);
+            label48.Size = new System.Drawing.Size(228, 15);
             label48.TabIndex = 38;
             label48.Text = "The milliseconds in a date and time value.";
             // 
@@ -679,7 +679,7 @@ namespace ParquetViewer
             label54.AutoSize = true;
             label54.Location = new System.Drawing.Point(77, 493);
             label54.Name = "label54";
-            label54.Size = new System.Drawing.Size(217, 30);
+            label54.Size = new System.Drawing.Size(218, 30);
             label54.TabIndex = 44;
             label54.Text = "The ten millionths of a second in a date and time.";
             // 
@@ -689,7 +689,7 @@ namespace ParquetViewer
             label55.AutoSize = true;
             label55.Location = new System.Drawing.Point(314, 493);
             label55.Name = "label55";
-            label55.Size = new System.Drawing.Size(219, 30);
+            label55.Size = new System.Drawing.Size(220, 30);
             label55.TabIndex = 45;
             label55.Text = "2009-06-15T13:45:30.6175425 -> 6175425\r\n2009-06-15T13:45:30.0001150 -> 0001150";
             // 
@@ -710,7 +710,7 @@ namespace ParquetViewer
             label45.AutoSize = true;
             label45.Location = new System.Drawing.Point(77, 535);
             label45.Name = "label45";
-            label45.Size = new System.Drawing.Size(133, 15);
+            label45.Size = new System.Drawing.Size(134, 15);
             label45.TabIndex = 35;
             label45.Text = "The AM/PM designator.";
             // 
@@ -720,7 +720,7 @@ namespace ParquetViewer
             label46.AutoSize = true;
             label46.Location = new System.Drawing.Point(314, 528);
             label46.Name = "label46";
-            label46.Size = new System.Drawing.Size(193, 30);
+            label46.Size = new System.Drawing.Size(194, 30);
             label46.TabIndex = 36;
             label46.Text = "2009-06-15T13:45:30 -> PM (en-US)\r\n2009-06-15T13:45:30 -> 午後 (ja-JP)";
             // 

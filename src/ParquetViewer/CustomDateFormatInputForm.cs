@@ -1,11 +1,13 @@
-﻿using ParquetViewer.Helpers;
+﻿using ParquetViewer.Controls;
+using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    public partial class CustomDateFormatInputForm : Form
+    public partial class CustomDateFormatInputForm : FormBase
     {
         public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
 
@@ -82,6 +84,19 @@ namespace ParquetViewer
             {
                 MessageBox.Show("Invalid date format. Please refer to the documentation for valid date format specifiers.", "Invalid Date Format", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            if (DesignMode)
+            {
+                return;
+            }
+
+            base.SetTheme(theme);
+            this.saveDateFormatButton.ForeColor = Color.Black;
+            this.dateFormatDocsLinkLabel.LinkColor = theme.HyperlinkColor;
+            this.dateFormatDocsLinkLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
         }
     }
 }

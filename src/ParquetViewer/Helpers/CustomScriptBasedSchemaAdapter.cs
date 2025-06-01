@@ -80,7 +80,7 @@ namespace ParquetViewer.Helpers
             return stringBuilder.ToString();
         }
 
-        protected static string GetTypeFor(DataColumn column)
+        public static string GetTypeFor(DataColumn column)
         {
             var item = TypeMap[column.DataType] as string;
             if (item == null)

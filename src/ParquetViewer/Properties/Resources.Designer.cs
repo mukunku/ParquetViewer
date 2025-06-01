@@ -10,8 +10,8 @@
 
 namespace ParquetViewer.Properties {
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -69,7 +69,21 @@ namespace ParquetViewer.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon copy_clipboard_icon
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("copy_clipboard_icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
