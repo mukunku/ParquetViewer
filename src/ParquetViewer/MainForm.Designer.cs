@@ -271,7 +271,6 @@ namespace ParquetViewer
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 7;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
-            mainGridView.DataError += MainGridView_DataError;
             // 
             // loadAllRowsButton
             // 

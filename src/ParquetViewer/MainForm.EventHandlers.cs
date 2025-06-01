@@ -119,12 +119,6 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
             //This is just here in case I want to add debug info
         }
 
-        private void MainGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
-        {
-            //Ignore errors and hope for the best.
-            e.Cancel = true;
-        }
-
         private void searchFilterTextBox_Enter(object sender, EventArgs e)
         {
             if (sender is TextBox searchBox)

@@ -682,5 +682,16 @@ namespace ParquetViewer.Controls
 
             SetColumnCellStyles();
         }
+
+        protected override void OnDataError(bool displayErrorDialogIfNoHandler, DataGridViewDataErrorEventArgs e)
+        {
+            if (this.ReadOnly)
+            {
+                //Since we don't allow editing just ignore errors and hope for the best.
+                return;
+            }
+
+            base.OnDataError(displayErrorDialogIfNoHandler, e);
+        }
     }
 }
