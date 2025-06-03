@@ -4,7 +4,6 @@ about: Create a report to help us improve
 title: "[BUG] "
 labels: bug
 assignees: ''
-
 ---
 
 **Parquet Viewer Version**
@@ -14,7 +13,7 @@ What version of Parquet Viewer are you experiencing the issue with?
 Apache Spark, Hive, Java, C#, pyarrow, etc.
 
 **Sample File**
-Upload a sample file so the issue can be debugged!
+Upload a sample file so the issue can be debugged! You can zip your parquet file to upload it directly to GitHub.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
