@@ -42,5 +42,5 @@ jobs:
           omitNameDuringUpdate: true
           prerelease: false
           replacesArtifacts: false
-          updateOnlyUnreleased: true
+          updateOnlyUnreleased: false # can't switch from prerelease to GA without setting this to false
           tag: v${{ steps.release-version.outputs.release_version }}
