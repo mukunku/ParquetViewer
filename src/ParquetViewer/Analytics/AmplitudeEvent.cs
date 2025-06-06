@@ -38,6 +38,7 @@ namespace ParquetViewer.Analytics
             SystemMemory = _systemRAM,
             Environment.ProcessorCount,
             IsDefaultParquetViewer = AboutBox.IsDefaultViewerForParquetFiles,
+            AppSettings.DarkMode,
 #if RELEASE_SELFCONTAINED
             SelfContainedExecutable = true,
 #else

@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
-    public partial class QuickPeekForm : Form
+    public partial class QuickPeekForm : FormBase
     {
         private readonly string originalTitle = string.Empty;
 
@@ -76,7 +76,7 @@ namespace ParquetViewer.Controls
             this.mainTableLayoutPanel.SetColumnSpan(this.mainPictureBox, 2);
         }
 
-        private void QuickPeakForm_Load(object sender, EventArgs e)
+        private void QuickPeekForm_Load(object sender, EventArgs e)
         {
             if (this.mainGridView is not null)
             {
@@ -135,11 +135,12 @@ namespace ParquetViewer.Controls
 
         private void saveImageToFileButton_Click(object sender, EventArgs e)
         {
-            var saveFileDialog = new SaveFileDialog
+            using var saveFileDialog = new SaveFileDialog
             {
                 Filter = $"{this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
                 Title = $"Save image as {this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()}"
             };
+
             saveFileDialog.ShowDialog();
 
             if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
@@ -163,6 +164,22 @@ namespace ParquetViewer.Controls
             {
                 this.mainPictureBox.Cursor = Cursors.Default;
             }
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            if (DesignMode)
+            {
+                return;
+            }
+
+            base.SetTheme(theme);
+            if (this.mainGridView is not null)
+                this.mainGridView.GridTheme = theme;
+
+            this.saveImageToFileButton.ForeColor = Color.Black;
+            this.takeMeBackLinkLabel.LinkColor = theme.HyperlinkColor;
+            this.takeMeBackLinkLabel.ActiveLinkColor = theme.TextColor;
         }
     }
 

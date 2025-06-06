@@ -46,6 +46,7 @@ namespace ParquetViewer
             }
             catch (Exception) { /*Swallow Exception*/ }
 
+            //Enable HighDpi mode
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -58,6 +59,7 @@ namespace ParquetViewer
                 mainForm = new MainForm();
 
             RouteUnhandledExceptions();
+            AppSettings.DarkMode = AppSettings.DarkMode; // Trigger Theming
 
             Application.Run(mainForm);
             return 0;

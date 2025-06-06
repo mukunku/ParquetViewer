@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Helpers;
+﻿using ParquetViewer.Controls;
+using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,7 +9,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    public partial class MetadataViewer : Form
+    public partial class MetadataViewer : FormBase
     {
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
@@ -139,7 +140,7 @@ namespace ParquetViewer
                 var selection = MessageBox.Show("Failed to copy metadata to your clipboard. Save to a file instead?", "Copy error", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (selection == DialogResult.Yes)
                 {
-                    var saveFileDialog = new SaveFileDialog();
+                    using var saveFileDialog = new SaveFileDialog();
                     saveFileDialog.Filter = "JSON file|*.json";
                     saveFileDialog.Title = "Save raw metadata";
                     saveFileDialog.ShowDialog();
@@ -166,6 +167,18 @@ namespace ParquetViewer
                 this.copyRawThriftMetadataButton.Visible = true;
             else
                 this.copyRawThriftMetadataButton.Visible = false;
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            if (DesignMode)
+            {
+                return;
+            }
+
+            base.SetTheme(theme);
+            this.closeButton.ForeColor = Color.Black;
+            this.copyRawThriftMetadataButton.ForeColor = Color.Black;
         }
     }
 }

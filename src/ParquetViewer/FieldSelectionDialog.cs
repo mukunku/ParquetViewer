@@ -1,4 +1,6 @@
 ﻿using Parquet.Schema;
+using ParquetViewer.Controls;
+using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,7 +9,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer
 {
-    public partial class FieldsToLoadForm : Form
+    public partial class FieldsToLoadForm : FormBase
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
         private const string UnsupportedFieldText = "(Unsupported)";
@@ -335,6 +337,18 @@ namespace ParquetViewer
         {
             this.showSelectedFieldsRadioButton.Text = string.Format(_selectedFieldsOnlyLabelTemplate, this.PreSelectedFields?.Count
                 ?? this.AvailableFields.Count);
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            if (DesignMode)
+            {
+                return;
+            }
+
+            base.SetTheme(theme);
+            this.doneButton.ForeColor = Color.Black;
+            this.clearfilterColumnsButton.ForeColor = Color.Black;
         }
     }
 }

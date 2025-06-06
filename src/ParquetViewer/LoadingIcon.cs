@@ -39,7 +39,8 @@ namespace ParquetViewer
                 Name = "loadingmessagelabel",
                 Text = message,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Top
+                Dock = DockStyle.Top,
+                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Regular)
             });
 
             var pictureBox = new PictureBox()
@@ -55,7 +56,9 @@ namespace ParquetViewer
                 Name = "cancelloadingbutton",
                 Text = "Cancel",
                 Dock = DockStyle.Bottom,
-                Enabled = this._cancellationToken.Token.CanBeCanceled
+                Enabled = this._cancellationToken.Token.CanBeCanceled,
+                BackColor = Color.White,
+                ForeColor = Color.Black
             };
             this._cancelButton.Click += (object? buttonSender, EventArgs buttonClickEventArgs) =>
             {

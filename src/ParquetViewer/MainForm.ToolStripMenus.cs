@@ -4,7 +4,7 @@ using System;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -12,6 +12,8 @@ namespace ParquetViewer
     public partial class MainForm
     {
         private const string DEFAULT_TABLE_NAME = "MY_TABLE";
+
+        private string? _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText;
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -72,7 +74,7 @@ namespace ParquetViewer
         private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var openFileOrFolderPath = this.OpenFileOrFolderPath;
-            if (openFileOrFolderPath?.EndsWith("/") == true)
+            if (openFileOrFolderPath?.EndsWith('/') == true)
             {
                 //trim trailing slash '/'
                 openFileOrFolderPath = openFileOrFolderPath[..^1];
@@ -125,7 +127,7 @@ namespace ParquetViewer
                 //Also clear out each column's Tag so auto sizing can pick it up again (see: FastAutoSizeColumns())
                 foreach (DataGridViewColumn column in this.mainGridView.Columns)
                 {
-                    column.Tag = null; 
+                    column.Tag = null;
                 }
             }
         }
@@ -139,7 +141,8 @@ namespace ParquetViewer
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.AboutBox);
-            (new AboutBox()).ShowDialog(this);
+            using var aboutForm = new AboutBox();
+            aboutForm.ShowDialog(this);
         }
 
         private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
@@ -173,7 +176,7 @@ namespace ParquetViewer
                     }
 #pragma warning restore CS0612 // Type or member is obsolete
 
-                    var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
+                    using var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
                     if (customDateFormatInputForm.ShowDialog(this) == DialogResult.OK)
                     {
                         AppSettings.DateTimeDisplayFormat = DateFormat.Custom;
@@ -192,6 +195,66 @@ namespace ParquetViewer
             this.shareAnonymousUsageDataToolStripMenuItem.Checked = !this.shareAnonymousUsageDataToolStripMenuItem.Checked;
             AppSettings.AnalyticsDataGatheringConsent = this.shareAnonymousUsageDataToolStripMenuItem.Checked;
             AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
+        }
+
+        private void shareAnonymousUsageDataToolStripMenuItem_CheckedChanged(object sender, System.EventArgs e)
+        {
+            RefreshExperimentalFeatureToolStrips();
+        }
+
+        private void RefreshExperimentalFeatureToolStrips()
+        {
+            foreach (ToolStripDropDownItem dropdownItem in this.shareAnonymousUsageDataToolStripMenuItem.DropDownItems)
+            {
+                if (dropdownItem is ToolStripMenuItem toolstrip && toolstrip.Checked)
+                {
+                    //If someone has an experimental feature enabled, don't hide the checkbox so they can disable it if they want.
+                    dropdownItem.Visible = true; 
+                    continue;
+                }
+
+                //Expose experimental features to folks willing to share usage stats.
+                //Also better this way if we end up killing the beta feature.
+                dropdownItem.Visible = this.shareAnonymousUsageDataToolStripMenuItem.Checked;
+            }
+        }
+
+        private void GetSQLCreateTableScriptToolStripMenuItem_MouseEnter(object sender, System.EventArgs e)
+        {
+            _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText ??= this.getSQLCreateTableScriptToolStripMenuItem.ToolTipText;
+            var firstColumn = this.MainDataSource?.Columns.AsEnumerable().FirstOrDefault();
+            if (firstColumn is null || this.OpenFileOrFolderPath is null)
+            {
+                ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
+                return;
+            }
+
+            //Adjust the tooltip dynamically to be fancy
+            try
+            {
+                string tableName = Path.GetFileNameWithoutExtension(this.OpenFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
+                string sqlTypeDefinition = CustomScriptBasedSchemaAdapter.GetTypeFor(firstColumn);
+
+                var truncateSuffix = this.MainDataSource?.Columns.Count > 1 ? ",..." : ")";
+                this.getSQLCreateTableScriptToolStripMenuItem.ToolTipText = $"CREATE TABLE [{tableName.Left(40, "...")}] ([{firstColumn}] {sqlTypeDefinition}{truncateSuffix}";
+            }
+            catch
+            {
+                ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
+            }
+        }
+
+        private void ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText()
+        {
+            if (this._getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText is not null)
+                this.getSQLCreateTableScriptToolStripMenuItem.ToolTipText = this._getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText;
+        }
+
+        private void darkModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.darkModeToolStripMenuItem.Checked = !this.darkModeToolStripMenuItem.Checked;
+            AppSettings.DarkMode = this.darkModeToolStripMenuItem.Checked; // Will trigger SetTheme()
+            RefreshExperimentalFeatureToolStrips();
         }
     }
 }

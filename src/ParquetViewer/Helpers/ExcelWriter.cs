@@ -39,7 +39,7 @@ namespace ParquetViewer.Helpers
         {
             ushort[] clData = { 0x0204, 0, 0, 0, 0, 0 };
             int iLen = value.Length;
-            byte[] plainText = Encoding.ASCII.GetBytes(value);
+            byte[] plainText = Encoding.UTF8.GetBytes(value);
             clData[1] = (ushort)(8 + iLen);
             clData[2] = (ushort)row;
             clData[3] = (ushort)col;
