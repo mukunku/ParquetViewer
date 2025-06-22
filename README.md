@@ -30,5 +30,5 @@ The latest version of this project was written in C# using Microsoft Visual Stud
 
 # Acknowledgements
 * This utility would not be possible without: https://github.com/aloneguid/parquet-dotnet
-* Special thanks to [SignPath.io](https://about.signpath.io/) for sponsoring this project. See our [Code signing policy](https://github.com/mukunku/ParquetViewer/wiki/Code-signing-policy) for details.
+* Special thanks to the [SignPath Foundation](https://signpath.org/) for sponsoring this project. See our [Code signing policy](https://github.com/mukunku/ParquetViewer/wiki/Code-signing-policy) for details.
 
