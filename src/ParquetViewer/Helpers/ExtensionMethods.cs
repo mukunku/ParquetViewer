@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
 
@@ -99,11 +100,19 @@ namespace ParquetViewer.Helpers
             return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
         }
 
-        public static IEnumerable<System.Data.DataColumn> AsEnumerable(this DataColumnCollection columns)
+        public static IEnumerable<DataColumn> AsEnumerable(this DataColumnCollection columns)
         {
-            foreach (System.Data.DataColumn column in columns)
+            foreach (DataColumn column in columns)
             {
                 yield return column;
+            }
+        }
+
+        public static IEnumerable<DataGridViewCell> AsEnumerable(this DataGridViewSelectedCellCollection cells)
+        {
+            foreach (DataGridViewCell cell in cells)
+            {
+                yield return cell;
             }
         }
 
@@ -118,7 +127,7 @@ namespace ParquetViewer.Helpers
         /// Returns true if the type is a number type.
         /// </summary>
         public static bool IsNumber(this Type type) =>
-            Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
+            System.Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
         public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
         {
@@ -137,14 +146,14 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
+        public static System.Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
         {
             ArgumentNullException.ThrowIfNull(dataTable);
 
             if (!dataTable.Columns.Contains(columnName))
                 throw new ArgumentException($"Column '{columnName}' does not exist in the datatable");
 
-            var values = Array.CreateInstance(type, dataTable.Rows.Count);
+            var values = System.Array.CreateInstance(type, dataTable.Rows.Count);
             for (var i = 0; i < dataTable.Rows.Count; i++)
             {
                 var value = dataTable.Rows[i][columnName];
@@ -232,6 +241,14 @@ namespace ParquetViewer.Helpers
                     }
                 }
             }
+        }
+
+        public static IEnumerable<T> AppendIf<T>(this IEnumerable<T> enumerable, bool append, T value)
+        {
+            if (append)
+                return enumerable.Append(value);
+            else
+                return enumerable;
         }
     }
 }

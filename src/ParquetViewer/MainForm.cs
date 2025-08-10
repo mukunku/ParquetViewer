@@ -455,25 +455,9 @@ namespace ParquetViewer
             if (sampleSimpleValue == DBNull.Value)
                 return;
 
-            var dataType = simpleColumn.DataType;
-            if (dataType == typeof(DateTime))
-            {
-                //Use a standard date format since we allow users to set custom date formats now
-                //and we need the suggested query to be syntactically correct
-                const string queryDateFormat = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
-                this.searchFilterTextBox.PlaceholderText =
-                    $"WHERE {simpleColumn.ColumnName} = #{((DateTime)sampleSimpleValue).ToString(queryDateFormat)}#";
-            }
-            else if (dataType.IsNumber())
-            {
-                this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = {sampleSimpleValue}";
-            }
-            else
-            {
-                string placeholder = sampleSimpleValue.ToString()!;
-                if (placeholder.Length < 40)
-                    this.searchFilterTextBox.PlaceholderText = $"WHERE {simpleColumn.ColumnName} = '{sampleSimpleValue}'";
-            }
+            string placeholder = ParquetGridView.GenerateFilterQuery(simpleColumn.ColumnName, simpleColumn.DataType, sampleSimpleValue);
+            if (placeholder.Length < 100) //Only set the placeholder query if it's reasonably short
+                this.searchFilterTextBox.PlaceholderText = placeholder;
         }
     }
 }

@@ -246,9 +246,19 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
 
         private void clearFilterButton_Click(object sender, EventArgs? e)
         {
-            if (this.MainDataSource is not null)
+            if (this.MainDataSource?.DefaultView.RowFilter is not null)
             {
                 this.MainDataSource.DefaultView.RowFilter = null;
+            }
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                //Hide context menu on minimize to avoid a glitch where
+                //the context menu won't go away until you click on it.
+                this.mainGridView.CloseContextMenu();
             }
         }
     }

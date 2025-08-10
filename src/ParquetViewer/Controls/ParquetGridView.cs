@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
@@ -32,12 +34,16 @@ namespace ParquetViewer.Controls
         }
 
         public Image? CopyToClipboardIcon { get; set; } = null;
+        public Image? CopyAsWhereIcon { get; set; } = null;
+        public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
 
         private readonly HashSet<int> clickableColumnIndexes = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
         private bool isCopyingToClipboard = false;
         private DataGridViewCellStyle? hyperlinkCellStyleCache;
         private bool isLeftClickButtonDown = false;
+        private ContextMenuStrip? _contextMenu = null;
+        private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
 
         public ParquetGridView() : base()
         {
@@ -61,9 +67,7 @@ namespace ParquetViewer.Controls
             base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
 
             UpdateDateFormats();
-
             SetColumnCellStyles();
-
             AutoSizeColumns();
         }
 
@@ -196,26 +200,48 @@ namespace ParquetViewer.Controls
 
                 if (rowIndex >= 0 && columnIndex >= 0)
                 {
-                    var copy = new ToolStripMenuItem("Copy", this.CopyToClipboardIcon);
-                    copy.Click += (object? clickSender, EventArgs clickArgs) =>
+                    if (_contextMenu is null)
                     {
-                        this.CopySelectionToClipboard(false);
-                    };
+                        var copy = new ToolStripMenuItem("Copy", this.CopyToClipboardIcon);
+                        copy.Click += (object? clickSender, EventArgs clickArgs) =>
+                        {
+                            this.CopySelectionToClipboard(false);
+                        };
 
-                    var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
-                    copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
-                    {
-                        this.CopySelectionToClipboard(true);
-                    };
+                        var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
+                        copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
+                        {
+                            this.CopySelectionToClipboard(true);
+                        };
 
-                    var menu = new ContextMenuStrip();
-                    menu.Items.Add(copy);
-                    menu.Items.Add(copyWithHeaders);
-                    menu.Show(this, new Point(e.X, e.Y));
+                        var copyAsWhere = new ToolStripMenuItem("Copy as WHERE...", this.CopyAsWhereIcon);
+                        copyAsWhere.Click += (object? clickSender, EventArgs clickArgs) =>
+                        {
+                            this.CopySelectionToClipboardAsWhereCondition();
+                        };
+
+                        _contextMenu = new ContextMenuStrip();
+                        _contextMenu.Items.Add(copy);
+                        _contextMenu.Items.Add(copyWithHeaders);
+
+                        if (this.ShowCopyAsWhereContextMenuItem)
+                        {
+                            _contextMenu.Items.Add(copyAsWhere);
+                        }
+                    }
+
+                    _contextMenu.Show(this, new Point(e.X, e.Y));
                 }
             }
 
             base.OnMouseClick(e);
+        }
+
+        public void CloseContextMenu()
+        {
+            //HACK: For some reason calling Close() isn't working so we're forcing it via .Dispose()
+            this._contextMenu?.Dispose();
+            this._contextMenu = null;
         }
 
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
@@ -692,6 +718,138 @@ namespace ParquetViewer.Controls
             }
 
             base.OnDataError(displayErrorDialogIfNoHandler, e);
+        }
+
+        private void CopySelectionToClipboardAsWhereCondition()
+        {
+            var columnsAndValuesToFilterBy = new List<(string ColumnName, Type ValueType, object[] Values)>();
+            foreach (var selectedCellsByColumn in
+                this.SelectedCells.AsEnumerable()
+                .GroupBy(cell => cell.ColumnIndex)
+                .OrderBy(column => column.Key))
+            {
+                DataTable? dataTable = this.DataSource as DataTable;
+                var cellValues = new object[selectedCellsByColumn.Count()];
+                var cellIndex = 0;
+                foreach (var cell in selectedCellsByColumn)
+                {
+                    object value;
+                    if (dataTable is not null) //Get the raw value if we can
+                    {
+                        value = dataTable.Rows[cell.RowIndex][cell.ColumnIndex];
+                    }
+                    else //Otherwise, use the formatted value
+                    {
+                        value = this[cell.ColumnIndex, cell.RowIndex].Value;
+                    }
+
+                    cellValues[cellIndex++] = value;
+                }
+
+                var columnIndex = selectedCellsByColumn.Key;
+                var column = this.Columns[columnIndex];
+                columnsAndValuesToFilterBy.Add((column.Name, column.ValueType, cellValues));
+            }
+
+            var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy);
+            if (filterQuery.Length < new TextBox().MaxLength) //This length check doesn't make the most sense but I wanted to put some kind of cap on this.
+            {
+                Clipboard.SetDataObject(filterQuery, true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+            }
+            else
+            {
+                MessageBox.Show("The selected data is too large. Please select less cells.",
+                    "Copy to clipboard failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public static string GenerateFilterQuery(string columnName, Type valueType, object value)
+            => GenerateFilterQuery(new() { (columnName, valueType, [value]) });
+
+        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy)
+        {
+            var queryBuilder = new StringBuilder("WHERE ");
+            if (columnsAndValuesToFilterBy is null || columnsAndValuesToFilterBy.Count == 0)
+            {
+                return queryBuilder.ToString();
+            }
+
+            for (var columnIndex = 0; columnIndex < columnsAndValuesToFilterBy.Count; columnIndex++)
+            {
+                var (columnName, valueType, values) = columnsAndValuesToFilterBy[columnIndex];
+
+                ArgumentException.ThrowIfNullOrWhiteSpace(columnName);
+                ArgumentNullException.ThrowIfNull(values);
+
+                //Wrap column name in brackets if it contains spaces or punctuation (if it isn't wrapped already)
+                var isAlreadyWrapped = columnName.StartsWith("[") && columnName.EndsWith("]");
+                if (!isAlreadyWrapped && !_validColumnNameRegex.IsMatch(columnName))
+                {
+                    columnName = $"[{columnName}]";
+                }
+
+                var hasNulls = values.Any(value => value is null || value == DBNull.Value);
+                values = values
+                    .Where(value => value is not null && value != DBNull.Value)
+                    .Distinct() //Distinct() doesn't work if there are any DBNull's in the collection
+                    .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
+                    .Order()
+                    .ToArray();
+
+                for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
+                {
+                    var value = values[valueIndex];
+                    if (valueIndex == 0)
+                    {
+                        if (columnIndex > 0)
+                        {
+                            queryBuilder.Append(" AND ");
+                        }
+
+                        queryBuilder.Append(columnName);
+                        if (values.Length == 1)
+                        {
+                            if (value == DBNull.Value)
+                            {
+                                queryBuilder.Append(" IS NULL");
+                                break;
+                            }
+
+                            queryBuilder.Append(" = ");
+                        }
+                        else
+                        {
+                            queryBuilder.Append(" IN (");
+                        }
+                    }
+                    else
+                    {
+                        queryBuilder.Append(",");
+                    }
+
+                    if (valueType == typeof(DateTime))
+                    {
+                        //Use a standard date format so the query is always syntactically correct
+                        queryBuilder.Append($"#{((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF")}#");
+                    }
+                    else if (valueType.IsNumber())
+                    {
+                        queryBuilder.Append(value);
+                    }
+                    else
+                    {
+                        queryBuilder.Append($"'{value}'");
+                    }
+
+                    //Close the `IN (` parenthesis if required
+                    if (valueIndex == values.Length - 1 && values.Length > 1)
+                    {
+                        queryBuilder.Append(")");
+                    }
+                }
+            }
+
+            return queryBuilder.ToString();
         }
     }
 }
