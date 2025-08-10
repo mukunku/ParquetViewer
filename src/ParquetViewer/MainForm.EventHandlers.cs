@@ -103,10 +103,13 @@ STRING:
     WHERE field_name LIKE '%value%' 
     WHERE field_name = 'equals value'
     WHERE field_name <> 'not equals'
+IN CHECK:
+    WHERE field_name IN (value1, value2)
+    WHERE field_name NOT IN (value3, value4)
 MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #2000/12/31# AND field_1 < #2001/12/31#) OR field_2 <> 100
+    WHERE (field_1 = 0 AND field_2 <> 'value') OR field_3 IS NULL
 
-Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax Examples");
+Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Examples");
         }
 
         private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
