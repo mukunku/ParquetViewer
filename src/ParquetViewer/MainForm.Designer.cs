@@ -616,7 +616,7 @@ namespace ParquetViewer
             KeyPreview = true;
             MainMenuStrip = mainMenuStrip;
             Margin = new Padding(4, 3, 4, 3);
-            MinimumSize = new System.Drawing.Size(791, 398);
+            MinimumSize = new System.Drawing.Size(791, 200);
             Name = "MainForm";
             Text = "New Parquet File";
             Load += MainForm_Load;
