@@ -250,6 +250,10 @@ namespace ParquetViewer.Controls
             //The value of this field is not important as we do not use the FILL mode for column sizing.
             e.Column.FillWeight = 0.01f;
 
+            //Checkbox columns aren't sortable by default for some reason.
+            //https://stackoverflow.com/q/14979848/1458738
+            e.Column.SortMode = DataGridViewColumnSortMode.Automatic;
+
             base.OnColumnAdded(e);
         }
 
