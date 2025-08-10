@@ -126,8 +126,8 @@ namespace ParquetViewer.Engine.Types
             }
             else
             {
-                //Everything else just try to write it raw
-                jsonWriter.WriteRawValue(value.ToString()!);
+                //Everything else just try to write it as string
+                jsonWriter.WriteStringValue(value.ToString()!);
             }
         }
 
