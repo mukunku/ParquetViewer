@@ -457,7 +457,7 @@ namespace ParquetViewer
 
             string placeholder = ParquetGridView.GenerateFilterQuery(simpleColumn.ColumnName, simpleColumn.DataType, sampleSimpleValue);
             if (placeholder.Length < 100) //Only set the placeholder query if it's reasonably short
-                this.searchFilterTextBox.PlaceholderText = placeholder;
+                this.searchFilterTextBox.PlaceholderText = $"WHERE {placeholder}";
         }
     }
 }

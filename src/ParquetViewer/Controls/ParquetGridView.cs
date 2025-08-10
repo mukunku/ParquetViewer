@@ -768,7 +768,7 @@ namespace ParquetViewer.Controls
 
         public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy)
         {
-            var queryBuilder = new StringBuilder("WHERE ");
+            var queryBuilder = new StringBuilder();
             if (columnsAndValuesToFilterBy is null || columnsAndValuesToFilterBy.Count == 0)
             {
                 return queryBuilder.ToString();
