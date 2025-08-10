@@ -124,7 +124,7 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
-            bool doesFieldBelongToAList = dataColumn.RepetitionLevels?.Any(l => l > 0) ?? false;
+            bool doesFieldBelongToAList = field.Parents.Any(field => field.FieldType() == ParquetSchemaElement.FieldTypeId.List);
             int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
             if (doesFieldBelongToAList)
             {

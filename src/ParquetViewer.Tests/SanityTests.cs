@@ -9,6 +9,12 @@ namespace ParquetViewer.Tests
 {
     public class SanityTests
     {
+        public SanityTests()
+        {
+            //Set a consistent date format for all tests
+            ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
+        }
+
         [Fact]
         public async Task DECIMALS_AND_BOOLS_TEST()
         {
@@ -217,7 +223,7 @@ namespace ParquetViewer.Tests
             Assert.Equal("else2", row.Skip(1).FirstOrDefault().Value);
             Assert.Equal("[(id,something2),(value,else2)]", row.ToString());
         }
-        
+
         [Fact]
         public async Task MAP_TYPE_TEST2()
         {
@@ -401,10 +407,9 @@ namespace ParquetViewer.Tests
         }
 
         [Fact]
-        public async Task LIST_OF_STRUCTS_TEST()
+        public async Task LIST_OF_STRUCTS_TEST1()
         {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS.parquet", default);
-            ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS1.parquet", default);
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
 
@@ -417,6 +422,19 @@ namespace ParquetViewer.Tests
             Assert.Equal("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":10},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":20}]", dataTable.Rows[0][1].ToString());
             Assert.IsType<ListValue>(dataTable.Rows[1][1]);
             Assert.Equal("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":30},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":40}]", dataTable.Rows[1][1].ToString());
+        }
+
+        [Fact]
+        public async Task LIST_OF_STRUCTS_TEST2()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS2.parquet", default);
+            Assert.Equal(1, parquetEngine.RecordCount);
+            Assert.Equal(29, parquetEngine.Fields.Count);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+
+            Assert.IsType<ListValue>(dataTable.Rows[0][28]);
+            Assert.Equal("[{\"purposeId\":\"HF85PyyGFprJXJvh5Pk9tg\",\"status\":\"Granted\",\"externalId\":\"General\",\"date\":\"2025-06-05 14:30:33\"}]", dataTable.Rows[0][28].ToString());
         }
 
         [Fact]

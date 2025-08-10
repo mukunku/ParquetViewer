@@ -9,13 +9,33 @@ namespace ParquetViewer.Engine
         public string Path => SchemaElement.Name;
         public SchemaElement SchemaElement { get; set; }
         public DataField? DataField { get; set; }
+        public ParquetSchemaElement? Parent { get; private set; }
 
         private readonly Dictionary<string, ParquetSchemaElement> _children = new();
         public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
 
+        public IEnumerable<ParquetSchemaElement> Parents
+        {
+            get
+            {
+                var current = this.Parent;
+                while (current is not null)
+                {
+                    //Don't return the root node
+                    var isRoot = current.Parent is null;
+                    if (isRoot)
+                        break;
+
+                    yield return current;
+                    current = current.Parent;
+                }
+            }
+        }
+
         public void AddChild(ParquetSchemaElement child)
         {
             _children.Add(child.Path, child);
+            child.Parent = this;
         }
 
         public ParquetSchemaElement(SchemaElement schemaElement)
