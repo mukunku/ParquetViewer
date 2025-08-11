@@ -45,6 +45,7 @@ namespace ParquetViewer.Controls
         private ContextMenuStrip? _contextMenu = null;
         private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
         private readonly Dictionary<int, ByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
+        private readonly Dictionary<int, FloatDisplayFormat> _floatColumnsWithFormatOverrides = new();
 
         public ParquetGridView() : base()
         {
@@ -411,13 +412,25 @@ namespace ParquetViewer.Controls
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
             if (cellValueType == typeof(float) && e.Value is float f)
             {
-                e.Value = f.ToDecimalString();
-                e.FormattingApplied = true;
+                if (!this._floatColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var userSelectedDisplayFormat))
+                    userSelectedDisplayFormat = default;
+
+                if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
+                {
+                    e.Value = f.ToDecimalString();
+                    e.FormattingApplied = true;
+                }
             }
             else if (cellValueType == typeof(double) && e.Value is double d)
             {
-                e.Value = d.ToDecimalString();
-                e.FormattingApplied = true;
+                if (!this._floatColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var userSelectedDisplayFormat))
+                    userSelectedDisplayFormat = default;
+
+                if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
+                {
+                    e.Value = d.ToDecimalString();
+                    e.FormattingApplied = true;
+                }
             }
 
             if (this.isCopyingToClipboard)
@@ -895,13 +908,9 @@ namespace ParquetViewer.Controls
                     toolstripMenuItem.Click += (object? _, EventArgs _) =>
                     {
                         if (_byteArrayColumnsWithFormatOverrides.ContainsKey(columnIndex))
-                        {
                             _byteArrayColumnsWithFormatOverrides[columnIndex] = supportedFormat;
-                        }
                         else
-                        {
                             _byteArrayColumnsWithFormatOverrides.Add(columnIndex, supportedFormat);
-                        }
 
                         if (supportedFormat == default && this.Columns[columnIndex].HeaderText.EndsWith(" *"))
                         {
@@ -923,6 +932,52 @@ namespace ParquetViewer.Controls
 
                     toolstripMenuItem.Checked = displayFormat == supportedFormat;
                 }
+                columnHeaderContextMenu.Show(Cursor.Position);
+            }
+            else if (this.Columns[columnIndex].ValueType == typeof(float) || this.Columns[columnIndex].ValueType == typeof(double))
+            {
+                var columnHeaderContextMenu = new ContextMenuStrip();
+
+                if (!_floatColumnsWithFormatOverrides.TryGetValue(columnIndex, out var displayFormat))
+                    displayFormat = default;
+
+                var scientificNotationMenuItem = new ToolStripMenuItem("Scientific")
+                { Checked = displayFormat == FloatDisplayFormat.Scientific };
+                scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
+                {
+                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnIndex))
+                        _floatColumnsWithFormatOverrides[columnIndex] = FloatDisplayFormat.Scientific;
+                    else
+                        _floatColumnsWithFormatOverrides.Add(columnIndex, FloatDisplayFormat.Scientific);
+
+                    if (this.Columns[columnIndex].HeaderText.EndsWith(" *"))
+                    {
+                        //Remove indicator
+                        this.Columns[columnIndex].HeaderText
+                            = this.Columns[columnIndex].HeaderText[..(this.Columns[columnIndex].HeaderText.Length - 2)];
+                    }
+                    this.Refresh(); //Force a re-draw to render updated format
+                };
+                columnHeaderContextMenu.Items.Add(scientificNotationMenuItem);
+
+                var decimalNotationMenuItem = new ToolStripMenuItem("Decimal")
+                { Checked = displayFormat == FloatDisplayFormat.Decimal };
+                decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
+                {
+                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnIndex))
+                        _floatColumnsWithFormatOverrides[columnIndex] = FloatDisplayFormat.Decimal;
+                    else
+                        _floatColumnsWithFormatOverrides.Add(columnIndex, FloatDisplayFormat.Decimal);
+
+                    if (!this.Columns[columnIndex].HeaderText.EndsWith(" *"))
+                    {
+                        //Show indicator next to column name to signify it's formatted
+                        this.Columns[columnIndex].HeaderText += " *";
+                    }
+                    this.Refresh(); //Force a re-draw to render updated format
+                };
+                columnHeaderContextMenu.Items.Add(decimalNotationMenuItem);
+
                 columnHeaderContextMenu.Show(Cursor.Position);
             }
         }
@@ -1041,6 +1096,12 @@ namespace ParquetViewer.Controls
             {
                 return byteArrayValue.ToStringTruncated(desiredLength);
             }
+        }
+
+        private enum FloatDisplayFormat
+        {
+            Scientific = 0,
+            Decimal
         }
     }
 }

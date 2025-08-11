@@ -36,6 +36,8 @@ namespace ParquetViewer
             return loadingIcon;
         }
 
+        // TODO: Switch exports to use the formatted cell value in the gridview instead so formatted numbers and
+        // binary data can be exported as the user sees them (Will need to set isCopyingToClipboard as true somehow)
         private async void ExportResults(FileType defaultFileType)
         {
             string? filePath = null;
