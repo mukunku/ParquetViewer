@@ -116,13 +116,13 @@ namespace ParquetViewer.Analytics
         private const string EVENT_TYPE = "exception.thrown";
 
         [JsonIgnore]
-        public System.Exception? Exception { get; set; }
+        public System.Exception Exception { get; }
 
-        public string? Message
+        public string Message
         {
             get
             {
-                var message = Exception?.Message;
+                var message = Exception.Message;
 
                 if (string.IsNullOrWhiteSpace(message))
                     return message;
@@ -133,18 +133,19 @@ namespace ParquetViewer.Analytics
             }
         }
 
-        public string? StackTrace => Exception?.StackTrace?.ToString();
-        public string? InnerException => Exception?.InnerException?.ToString();
+        public string? StackTrace => Exception.StackTrace?.ToString();
+        public string? InnerException => Exception.InnerException?.ToString();
+        public string Type => Exception.GetType().Name;
 
-        public ExceptionEvent(AmplitudeConfiguration? amplitudeConfiguration = null)
+        public ExceptionEvent(Exception ex, AmplitudeConfiguration? amplitudeConfiguration = null)
             : base(EVENT_TYPE, amplitudeConfiguration)
         {
-
+            this.Exception = ex ?? throw new ArgumentNullException(nameof(ex));
         }
 
         public static void FireAndForget(System.Exception ex)
         {
-            var _ = new ExceptionEvent { Exception = ex }.Record();
+            var _ = new ExceptionEvent(ex).Record();
         }
     }
 

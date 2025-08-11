@@ -339,8 +339,7 @@ namespace ParquetViewer.Tests
         public async Task AMPLITUDE_EXCEPTION_SENSITIVE_TEXT_MASKING_TEST()
         {
             var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
-            var testEvent = new ExceptionEvent(testAmplitudeEvent.CloneAmplitudeConfiguration());
-            testEvent.Exception = new Exception("Exception with `sensitive` data");
+            var testEvent = new ExceptionEvent(new Exception("Exception with `sensitive` data"), testAmplitudeEvent.CloneAmplitudeConfiguration());
 
             //mock the http response
             _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
