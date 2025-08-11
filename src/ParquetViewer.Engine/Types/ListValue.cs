@@ -7,7 +7,6 @@ namespace ParquetViewer.Engine.Types
     {
         public IList Data { get; }
         public Type? Type { get; private set; }
-        public static string? DateDisplayFormat { get; set; }
 
         public ListValue(Array data)
         {
@@ -44,8 +43,8 @@ namespace ParquetViewer.Engine.Types
                     if (!isFirst)
                         sb.Append(',');
 
-                    if (data is DateTime dt && DateDisplayFormat is not null)
-                        sb.Append(dt.ToString(DateDisplayFormat));
+                    if (data is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
+                        sb.Append(dt.ToString(ParquetEngineSettings.DateDisplayFormat));
                     else
                         sb.Append(data?.ToString() ?? string.Empty);
 

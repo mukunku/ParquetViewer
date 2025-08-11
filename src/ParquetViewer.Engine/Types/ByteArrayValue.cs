@@ -364,6 +364,23 @@ namespace ParquetViewer.Engine.Types
             return result;
         }
 
+        public string ToStringTruncated(int desiredLength)
+        {
+            var bytesNeededToGetLength = StringLengthToByteCount(desiredLength);
+            if (this.Data.Length < bytesNeededToGetLength)
+            {
+                return ToString();
+            }
+
+            //We're going to return a bit more than desiredLength here but we can live with that
+            return BitConverter.ToString(this.Data, 0 , bytesNeededToGetLength / 2)
+                + "[...]" + BitConverter.ToString(this.Data, this.Data.Length - (bytesNeededToGetLength / 2));
+        }
+
+        //Calculates how many bytes are needed to generate a string of the given length.
+        private static int StringLengthToByteCount(int stringLength)
+            => (stringLength + 1) / 3; //One byte = 3 chars. E.g. AA- (-1 for the last byte which won't have a dash)
+
         public int CompareTo(ByteArrayValue? other)
         {
             if (other?.Data is null)

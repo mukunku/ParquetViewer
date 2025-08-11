@@ -264,12 +264,10 @@ namespace ParquetViewer.Tests
             Assert.Equal("{\"path\":null,\"partitionValues\":null,\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":null}", ((StructValue)dataTable.Rows[0][1]).ToString());
             Assert.IsType<StructValue>(dataTable.Rows[0][2]);
             Assert.Equal("{\"path\":null,\"deletionTimestamp\":null,\"dataChange\":false}", ((StructValue)dataTable.Rows[0][2]).ToString());
-            Assert.IsType<StructValue>(dataTable.Rows[0][3]);
-            Assert.Equal("{\"id\":null,\"name\":null,\"description\":null,\"format\":{\"provider\":null,\"options\":null},\"schemaString\":null,\"partitionColumns\":null,\"configuration\":null,\"createdTime\":null}", ((StructValue)dataTable.Rows[0][3]).ToString());
+            Assert.Equal(DBNull.Value, dataTable.Rows[0][3]);
             Assert.IsType<StructValue>(dataTable.Rows[0][4]);
             Assert.Equal("{\"minReaderVersion\":1,\"minWriterVersion\":2}", ((StructValue)dataTable.Rows[0][4]).ToString());
-            Assert.IsType<StructValue>(dataTable.Rows[0][5]);
-            Assert.Equal("{\"version\":null,\"timestamp\":null,\"userId\":null,\"userName\":null,\"operation\":null,\"operationParameters\":null,\"job\":{\"jobId\":null,\"jobName\":null,\"runId\":null,\"jobOwnerId\":null,\"triggerType\":null},\"notebook\":{\"notebookId\":null},\"clusterId\":null,\"readVersion\":null,\"isolationLevel\":null,\"isBlindAppend\":null}", ((StructValue)dataTable.Rows[0][5]).ToString());
+            Assert.Equal(DBNull.Value, dataTable.Rows[0][5]);
             Assert.IsType<DBNull>(dataTable.Rows[9][4]);
             Assert.Equal(DBNull.Value, dataTable.Rows[9][4]);
             Assert.Equal("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":null,\"lastUpdated\":1564524299648}", ((StructValue)dataTable.Rows[2][0]).ToString());
@@ -301,6 +299,7 @@ namespace ParquetViewer.Tests
             ""systemMemory"": {(int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/)},
             ""processorCount"": {Environment.ProcessorCount},
             ""isDefaultParquetViewer"": {AboutBox.IsDefaultViewerForParquetFiles.ToString().ToLower()},
+            ""darkMode"": {AppSettings.DarkMode.ToString().ToLower()},
             ""selfContainedExecutable"": {(isSelfContainedExecutable ? "true" : "false")}
         }},
         ""event_properties"": {{
@@ -405,7 +404,7 @@ namespace ParquetViewer.Tests
         public async Task LIST_OF_STRUCTS_TEST()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS.parquet", default);
-            StructValue.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
+            ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
             Assert.Equal(2, parquetEngine.RecordCount);
             Assert.Equal(2, parquetEngine.Fields.Count);
 

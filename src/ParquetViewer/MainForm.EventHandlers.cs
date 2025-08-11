@@ -1,6 +1,13 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Engine.Types;
+using ParquetViewer.Exceptions;
+using ParquetViewer.Helpers;
 using ParquetViewer.Properties;
 using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -62,7 +69,7 @@ namespace ParquetViewer
             try
             {
                 var files = e.Data?.GetData(DataFormats.FileDrop) as string[];
-                if (files != null && files.Length > 0)
+                if (files?.Length > 0)
                 {
                     MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.DragDrop);
                     await this.OpenNewFileOrFolder(files[0]);
@@ -87,8 +94,8 @@ namespace ParquetViewer
     WHERE field_name IS NULL
     WHERE field_name IS NOT NULL
 DATETIME:   
-    WHERE field_name >= #2000/12/31#
-    WHERE field_name = #12/31/2000#
+    WHERE field_name >= #2000-12-31#
+    WHERE field_name = #2000-01-13 01:00:00#
 NUMERIC:
     WHERE field_name <= 123.4
     WHERE (field1 * field2) / 100 > 0.1
@@ -110,12 +117,6 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
         private void showingStatusBarLabel_Click(object sender, EventArgs e)
         {
             //This is just here in case I want to add debug info
-        }
-
-        private void MainGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
-        {
-            //Ignore errors and hope for the best.
-            e.Cancel = true;
         }
 
         private void searchFilterTextBox_Enter(object sender, EventArgs e)
@@ -144,6 +145,9 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
         {
             if (sender is Button loadAllRecordsButton)
             {
+                loadAllRecordsButton.FlatAppearance.MouseOverBackColor = Color.Transparent;
+                loadAllRecordsButton.FlatAppearance.MouseDownBackColor = Color.Transparent;
+
                 if (loadAllRecordsButton.Enabled)
                 {
                     loadAllRecordsButton.Image = Resources.next_blue;
@@ -171,6 +175,80 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
             if (e.Control && e.KeyCode == Keys.E && this.loadAllRowsButton.Enabled)
             {
                 this.loadAllRowsButton_Click(null, null);
+            }
+        }
+
+        private void runQueryButton_Click(object sender, EventArgs? e)
+        {
+            try
+            {
+                if (!this.IsAnyFileOpen)
+                    return;
+
+                if (this.MainDataSource is null)
+                    throw new ApplicationException("This should never happen");
+
+                string queryText = this.searchFilterTextBox.Text ?? string.Empty;
+                queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
+
+                //Treat list, map, and struct types as strings by casting them automatically
+                foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
+                        || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
+                    .Select(c => c.Name))
+                {
+                    //This isn't perfect but it should handle most cases
+                    queryText = queryText.Replace(complexField, $"CONVERT({complexField}, System.String)", StringComparison.InvariantCultureIgnoreCase);
+                }
+
+                if (string.IsNullOrWhiteSpace(queryText)
+                    || this.MainDataSource.DefaultView.RowFilter == queryText) //No need to execute the same query again
+                {
+                    return;
+                }
+
+                var stopwatch = Stopwatch.StartNew();
+                var queryEvent = new ExecuteQueryEvent
+                {
+                    RecordCountTotal = this.MainDataSource.Rows.Count,
+                    ColumnCount = this.MainDataSource.Columns.Count
+                };
+
+                try
+                {
+                    this.Cursor = Cursors.WaitCursor;
+                    this.MainDataSource.DefaultView.RowFilter = queryText;
+                    queryEvent.IsValid = true;
+                    queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
+                }
+                catch (Exception ex)
+                {
+                    this.MainDataSource.DefaultView.RowFilter = null;
+                    throw new InvalidQueryException(ex);
+                }
+                finally
+                {
+                    this.Cursor = Cursors.Default;
+                    queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                    var _ = queryEvent.Record(); //Fire and forget
+                }
+            }
+            catch (InvalidQueryException ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine + Environment.NewLine + ex.InnerException?.Message,
+                    "Invalid Query", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private void clearFilterButton_Click(object sender, EventArgs? e)
+        {
+            if (this.MainDataSource is not null)
+            {
+                this.MainDataSource.DefaultView.RowFilter = null;
             }
         }
     }

@@ -37,11 +37,12 @@ jobs:
 
     - name: Test Report
       uses: bibipkins/dotnet-test-reporter@v1.4.1
+      if: github.repository == 'mukunku/ParquetViewer'
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-title: 'Unit Test Results'
         results-path: ./src/ParquetViewer.Tests/TestResults/*.trx
-  
+
   checkPublish:
     runs-on: windows-latest
     needs: test
@@ -70,7 +71,7 @@ jobs:
         id: check-release
         with: 
           tag: 'v${{ steps.release-version.outputs.release_version }}'
-      
+
       - id: should-publish
         run: | 
           "should_publish=" + (
@@ -97,8 +98,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Inject Amplitude API Key
-      - name: Replace single file
+      - name: Inject Amplitude API Key
         uses: richardrigutins/replace-in-files@v2
         with:
           files: 'src/ParquetViewer/Analytics/AmplitudeEvent.cs'
@@ -107,18 +107,46 @@ jobs:
 
       - name: Build & Publish Regular Release
         run: dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release  -f net8.0-windows --nologo -o publish -r win-x64 --self-contained false
-      
+
       - name: Build & Publish SelfContained Release
         run: dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release_SelfContained  -f net8.0-windows --nologo -o publish_selfcontained -r win-x64 --self-contained true
 
+      - name: Prepare executables for upload
+        run: |
+          Move-Item -Path "publish/ParquetViewer.exe" -Destination "./ParquetViewer.exe"
+          Move-Item -Path "publish_selfcontained/ParquetViewer.exe" -Destination "./ParquetViewer_SelfContained.exe"
+
+      - name: Upload unsigned artifact for signing
+        id: upload-unsigned-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: |
+            ParquetViewer.exe
+            ParquetViewer_SelfContained.exe
+
+      - name: Remove unsigned exe's for safety
+        run: |
+          Remove-Item -Path "ParquetViewer.exe"
+          Remove-Item -Path "ParquetViewer_SelfContained.exe"
+
+      # Documentation: https://about.signpath.io/documentation/trusted-build-systems/github
+      - name: Submit signing request to SignPath.io
+        uses: signpath/github-action-submit-signing-request@v1.1
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: '5ceccea7-c3e7-4165-8c2e-adab8679db20'
+          project-slug: 'ParquetViewer'
+          signing-policy-slug: 'release-signing'
+          github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
+          wait-for-completion: true
+          output-artifact-directory: '/signed-package'
+
       - name: Generate _checksums.txt
         run: |
-          Move-Item -Path "publish/ParquetViewer.exe" -Destination "ParquetViewer.exe"
-          Move-Item -Path "publish_selfcontained/ParquetViewer.exe" -Destination "ParquetViewer_SelfContained.exe"
-          $fileHash = (Get-FileHash ParquetViewer.exe -Algorithm SHA256)
-          $fileHashSelfContained = (Get-FileHash ParquetViewer_SelfContained.exe -Algorithm SHA256)
-          $fileSize = (Get-Item -Path "ParquetViewer.exe").Length
-          $fileSizeSelfContained = (Get-Item -Path "ParquetViewer_SelfContained.exe").Length
+          $fileHash = (Get-FileHash "signed-package/ParquetViewer.exe" -Algorithm SHA256)
+          $fileHashSelfContained = (Get-FileHash "signed-package/ParquetViewer_SelfContained.exe" -Algorithm SHA256)
+          $fileSize = (Get-Item -Path "signed-package/ParquetViewer.exe").Length
+          $fileSizeSelfContained = (Get-Item -Path "signed-package/ParquetViewer_SelfContained.exe").Length
           "v${{ env.VERSION_NUMBER }}" >> "_checksums.txt"
           "" >> "_checksums.txt"
           "Name: ParquetViewer.exe" >> "_checksums.txt"
@@ -126,13 +154,13 @@ jobs:
           "SHA256: $($fileHash.Hash)" >> "_checksums.txt"
           "" >> "_checksums.txt"
           "Name: ParquetViewer_SelfContained.exe" >> "_checksums.txt"
-          "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1KB)) KiB)" >> "_checksums.txt"
+          "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1MB)) MiB)" >> "_checksums.txt"
           "SHA256: $($fileHashSelfContained.Hash)" >> "_checksums.txt"
           "" >> "_checksums.txt"
 
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "ParquetViewer.exe,ParquetViewer_SelfContained.exe,_checksums.txt"
+          artifacts: "signed-package/ParquetViewer.exe,signed-package/ParquetViewer_SelfContained.exe,_checksums.txt"
           body: "PR: #${{ env.PR_NUMBER }}"
           allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
           omitBodyDuringUpdate: true
@@ -141,3 +169,4 @@ jobs:
           replacesArtifacts: true
           updateOnlyUnreleased: true
           tag: v${{ env.VERSION_NUMBER }}
+          commit: ${{ github.sha }}

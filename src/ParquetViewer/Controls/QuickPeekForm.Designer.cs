@@ -94,6 +94,7 @@ namespace ParquetViewer.Controls
             mainGridView.ShowCellToolTips = false;
             mainGridView.Size = new System.Drawing.Size(208, 214);
             mainGridView.TabIndex = 0;
+            mainGridView.CopyToClipboardIcon = Properties.Resources.copy_clipboard_icon.ToBitmap();
             // 
             // takeMeBackLinkLabel
             // 
@@ -160,6 +161,7 @@ namespace ParquetViewer.Controls
             copyToClipboardToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             copyToClipboardToolStripMenuItem.Text = "Copy to clipboard";
             copyToClipboardToolStripMenuItem.Click += copyToClipboardToolStripMenuItem_Click;
+            copyToClipboardToolStripMenuItem.Image = Properties.Resources.copy_clipboard_icon.ToBitmap();
             // 
             // QuickPeekForm
             // 
@@ -174,7 +176,7 @@ namespace ParquetViewer.Controls
             Name = "QuickPeekForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Quick Peek";
-            Load += QuickPeakForm_Load;
+            Load += QuickPeekForm_Load;
             mainTableLayoutPanel.ResumeLayout(false);
             mainTableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)mainGridView).EndInit();

@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Engine;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
@@ -13,11 +14,30 @@ namespace ParquetViewer.Controls
     internal class ParquetGridView : DataGridView
     {
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
-        //But lets use something smaller to increase rendering performance.
+        //But let's use something smaller to increase rendering performance.
         private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
 
+        private Theme _gridTheme = Theme.LightModeTheme;
+        public Theme GridTheme
+        {
+            get => _gridTheme;
+            set
+            {
+                if (value != _gridTheme)
+                {
+                    _gridTheme = value;
+                    SetTheme();
+                }
+            }
+        }
+
+        public Image? CopyToClipboardIcon { get; set; } = null;
+
+        private readonly HashSet<int> clickableColumnIndexes = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
         private bool isCopyingToClipboard = false;
+        private DataGridViewCellStyle? hyperlinkCellStyleCache;
+        private bool isLeftClickButtonDown = false;
 
         public ParquetGridView() : base()
         {
@@ -26,16 +46,6 @@ namespace ParquetViewer.Controls
             AllowUserToDeleteRows = false;
             AllowUserToOrderColumns = true;
             ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            ColumnHeadersDefaultCellStyle = new()
-            {
-                Alignment = DataGridViewContentAlignment.MiddleLeft,
-                BackColor = SystemColors.ControlLight,
-                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = SystemColors.WindowText,
-                SelectionBackColor = SystemColors.Highlight,
-                SelectionForeColor = SystemColors.HighlightText,
-                WrapMode = DataGridViewTriState.True
-            };
             ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             EnableHeadersVisualStyles = false;
             ReadOnly = true;
@@ -47,31 +57,64 @@ namespace ParquetViewer.Controls
 
         protected override void OnDataSourceChanged(EventArgs e)
         {
-            base.OnDataSourceChanged(e);
+            this.clickableColumnIndexes.Clear();
+            base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
 
             UpdateDateFormats();
 
+            SetColumnCellStyles();
+
+            AutoSizeColumns();
+        }
+
+        private void SetColumnCellStyles()
+        {
+            this.hyperlinkCellStyleCache = null;
             foreach (DataGridViewColumn column in this.Columns)
             {
                 //Handle NULLs for bool types
                 if (column is DataGridViewCheckBoxColumn checkboxColumn)
+                {
                     checkboxColumn.ThreeState = true;
+                }
+                else if (column.ValueType == typeof(ListValue)
+                    || column.ValueType == typeof(MapValue)
+                    || column.ValueType == typeof(StructValue))
+                {
+                    column.DefaultCellStyle = GetHyperlinkCellStyle(column);
+                }
+                else if (column.ValueType == typeof(ByteArrayValue))
+                {
+                    //Check if this column contains images
+                    for (var i = 0; i < this.Rows.Count; i++)
+                    {
+                        var cellValue = this[column.Index, i].Value;
+                        if (cellValue != DBNull.Value)
+                        {
+                            var isImage = ((ByteArrayValue)cellValue).ToImage(out _);
+                            if (isImage)
+                            {
+                                column.DefaultCellStyle = GetHyperlinkCellStyle(column);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
-
-            AutoSizeColumns();
         }
 
         public void UpdateDateFormats()
         {
             string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-            ListValue.DateDisplayFormat = dateFormat; //Need to tell the parquet engine how to render date values
-            MapValue.DateDisplayFormat = dateFormat;
-            StructValue.DateDisplayFormat = dateFormat;
+
             foreach (DataGridViewColumn column in this.Columns)
             {
                 if (column.ValueType == typeof(DateTime))
                     column.DefaultCellStyle.Format = dateFormat;
             }
+
+            //Need to tell the parquet engine how to render date values
+            ParquetEngineSettings.DateDisplayFormat = dateFormat;
         }
 
         public void AutoSizeColumns()
@@ -102,8 +145,8 @@ namespace ParquetViewer.Controls
                         & ~(DataGridViewPaintParts.ContentForeground));
 
                     var font = new Font(e.CellStyle!.Font, FontStyle.Italic);
-                    var color = SystemColors.ActiveCaptionText;
-                    if (this.SelectedCells.Contains(this[e.ColumnIndex, e.RowIndex]))
+                    var color = this.GridTheme.CellPlaceholderTextColor;
+                    if (e.State.HasFlag(DataGridViewElementStates.Selected))
                         color = Color.White;
 
                     TextRenderer.DrawText(e.Graphics!, "NULL", font, e.CellBounds, color,
@@ -177,9 +220,17 @@ namespace ParquetViewer.Controls
         protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
         {
             base.OnCellMouseMove(e);
-
-            if (e.ColumnIndex < 0 || e.RowIndex < 0)
+            if (e.RowIndex == -1 && e.ColumnIndex > -1 //cursor is hovering over column headers.
+                && this.Cursor == Cursors.Default /*don't show hand if user is resizing columns for example*/)
+            {
+                //Since columns are sortable, show hand cursor on column headers
+                this.Cursor = Cursors.Hand;
                 return;
+            }
+            else if (e.ColumnIndex < 0 || e.RowIndex < 0)
+            {
+                return;
+            }
 
             var valueType = this.Columns[e.ColumnIndex].ValueType;
             var isClickableByteArrayType = valueType == typeof(ByteArrayValue) && this.Columns[e.ColumnIndex].Tag is string tag && (tag.Equals("IMAGE") || tag.Equals("BINARY-DATA"));
@@ -187,14 +238,12 @@ namespace ParquetViewer.Controls
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
+                {
                     this.Cursor = Cursors.Hand;
-                else
-                    this.Cursor = Cursors.Default;
+                    return;
+                }
             }
-            else
-            {
-                this.Cursor = Cursors.Default;
-            }
+            this.Cursor = Cursors.Default;
         }
 
         protected override void OnMouseClick(MouseEventArgs e)
@@ -206,24 +255,16 @@ namespace ParquetViewer.Controls
 
                 if (rowIndex >= 0 && columnIndex >= 0)
                 {
-                    var copy = new ToolStripMenuItem("Copy");
+                    var copy = new ToolStripMenuItem("Copy", this.CopyToClipboardIcon);
                     copy.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
-                        this.isCopyingToClipboard = true;
-                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
-                        this.isCopyingToClipboard = false;
+                        this.CopySelectionToClipboard(false);
                     };
 
                     var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
                     copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
-                        this.isCopyingToClipboard = true;
-                        this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
-                        this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-                        Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without these extra params, this call can cause a UI thread deadlock somehow...
-                        this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-                        this.RowHeadersVisible = true;
-                        this.isCopyingToClipboard = false;
+                        this.CopySelectionToClipboard(true);
                     };
 
                     var menu = new ContextMenuStrip();
@@ -238,12 +279,9 @@ namespace ParquetViewer.Controls
 
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
         {
-            if (e.Column is DataGridViewColumn column)
-            {
-                //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
-                //The value of this field is not important as we do not use the FILL mode for column sizing.
-                column.FillWeight = 0.01f;
-            }
+            //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
+            //The value of this field is not important as we do not use the FILL mode for column sizing.
+            e.Column.FillWeight = 0.01f;
 
             base.OnColumnAdded(e);
         }
@@ -435,15 +473,10 @@ namespace ParquetViewer.Controls
         {
             if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C))
             {
-                this.isCopyingToClipboard = true;
+                this.CopySelectionToClipboard(false);
+                e.Handled = true;
             }
             base.OnKeyDown(e);
-        }
-
-        protected override void OnKeyUp(KeyEventArgs e)
-        {
-            this.isCopyingToClipboard = false;
-            base.OnKeyUp(e);
         }
 
         protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
@@ -464,25 +497,37 @@ namespace ParquetViewer.Controls
 
             if (this.isCopyingToClipboard)
             {
+                //Temporarily replace checkboxes with true/false for better copy/paste experience.
+                //Otherwise you end up with: Indeterminate, Cleared, or Selected
+                if (cellValueType == typeof(bool))
+                {
+                    if (e.Value == DBNull.Value)
+                    {
+                        e.Value = string.Empty;
+                        e.FormattingApplied = true;
+                    }
+                    else if (e.Value is bool @bool)
+                    {
+                        e.Value = @bool.ToString();
+                        e.FormattingApplied = true;
+                    }
+                }
+
                 //In order to get full cell values into the clipboard during a copy to
                 //clipboard operation we need to skip the truncation formatting below
                 return;
             }
-            else if (e.FormattingApplied)
+
+            if (e.FormattingApplied)
             {
                 //We already formatted the value above so exit early.
                 return;
             }
 
-            if (cellValueType == typeof(ByteArrayValue))
+            if (cellValueType == typeof(ByteArrayValue) && e.Value is ByteArrayValue byteArrayValue)
             {
-                string value = e.Value!.ToString()!; //We never put `null` in cells. Only `DBNull.Value` so it can't be null.
-                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
-                {
-                    e.Value = value[..(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2)]
-                        + " [...] " + value[(value.Length - (MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL / 2))..];
-                    e.FormattingApplied = true;
-                }
+                e.Value = byteArrayValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+                e.FormattingApplied = true;
             }
             else if (cellValueType == typeof(string))
             {
@@ -493,14 +538,10 @@ namespace ParquetViewer.Controls
                     e.FormattingApplied = true;
                 }
             }
-            else if (cellValueType == typeof(StructValue))
+            else if (cellValueType == typeof(StructValue) && e.Value is StructValue structValue)
             {
-                string value = e.Value!.ToString()!;
-                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
-                {
-                    e.Value = ((StructValue)e.Value).ToStringTruncated();
-                    e.FormattingApplied = true;
-                }
+                e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+                e.FormattingApplied = true;
             }
         }
 
@@ -525,6 +566,35 @@ namespace ParquetViewer.Controls
             base.OnSorted(e);
         }
 
+        protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
+        {
+            this.Cursor = Cursors.WaitCursor;
+            try
+            {
+                base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+                this.isLeftClickButtonDown = true;
+
+            base.OnMouseDown(e);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+                this.isLeftClickButtonDown = false;
+
+            base.OnMouseUp(e);
+        }
+
         public void ClearQuickPeekForms()
         {
             foreach (var form in this.openQuickPeekForms)
@@ -532,6 +602,7 @@ namespace ParquetViewer.Controls
                 try
                 {
                     form.Value.Close();
+                    form.Value.Dispose();
                 }
                 catch { /*Swallow*/ }
             }
@@ -567,13 +638,16 @@ namespace ParquetViewer.Controls
 
                 if (gridTable.Columns[i].DataType == typeof(DateTime))
                 {
-                    //All date time's will have the same string length so no need to go through actual values.
+                    //All date time's will have the same string length so no need to go through all values.
                     //We can just measure one and use that.
                     var dateTime = gridTable.AsEnumerable()
                         .FirstOrDefault(row => row[i] != DBNull.Value)?
-                        .Field<DateTime>(i) ?? DateTime.UtcNow;
-                    string formattedDateTimeValue = dateTime.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
-                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
+                        .Field<DateTime>(i);
+                    if (dateTime is not null)
+                    {
+                        string formattedDateTimeValue = dateTime.Value.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
+                        newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
+                    }
                 }
                 else
                 {
@@ -582,7 +656,7 @@ namespace ParquetViewer.Controls
                     if (gridTable.Columns[i].DataType == typeof(StructValue))
                     {
                         colStringCollection = gridTable.AsEnumerable()
-                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated())
+                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL))
                             .Where(value => value is not null)!;
                     }
                     else if (gridTable.Columns[i].DataType == typeof(float))
@@ -650,6 +724,80 @@ namespace ParquetViewer.Controls
             }
 
             return false;
+        }
+
+        private void CopySelectionToClipboard(bool withHeaders)
+        {
+            this.isCopyingToClipboard = true;
+            if (withHeaders)
+            {
+                this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
+                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+            }
+            Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+            if (withHeaders)
+            {
+                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+                this.RowHeadersVisible = true;
+            }
+            this.isCopyingToClipboard = false;
+        }
+
+        /// <remarks>
+        /// Microsoft recommends using a shared cell style for best performance:
+        /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control?view=netframeworkdesktop-4.8#using-cell-styles-efficiently
+        /// </remarks>
+        private DataGridViewCellStyle GetHyperlinkCellStyle(DataGridViewColumn column)
+        {
+            this.clickableColumnIndexes.Add(column.Index);
+            this.hyperlinkCellStyleCache ??= new DataGridViewCellStyle(column.DefaultCellStyle)
+            {
+                Font = new(column.DefaultCellStyle.Font ?? column.InheritedStyle.Font, FontStyle.Underline),
+                ForeColor = this.GridTheme.HyperlinkColor
+            };
+            return this.hyperlinkCellStyleCache;
+        }
+
+        private void SetTheme()
+        {
+            this.DefaultCellStyle.BackColor = this.GridTheme.CellBackgroundColor;
+            this.DefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+            this.DefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
+
+            this.ColumnHeadersDefaultCellStyle.BackColor = this.GridTheme.ColumnHeaderColor;
+            this.ColumnHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+
+            this.RowHeadersDefaultCellStyle.BackColor = this.GridTheme.RowHeaderColor;
+            this.RowHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+            this.RowHeadersDefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
+            this.RowHeadersBorderStyle = this.GridTheme.RowHeaderBorderStyle;
+
+            this.BackgroundColor = this.GridTheme.GridBackgroundColor;
+            this.GridColor = this.GridTheme.GridColor;
+
+            this.ColumnHeadersDefaultCellStyle = new()
+            {
+                Alignment = DataGridViewContentAlignment.MiddleLeft,
+                BackColor = this.GridTheme.ColumnHeaderColor,
+                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = this.GridTheme.TextColor,
+                SelectionBackColor = SystemColors.Highlight,
+                SelectionForeColor = SystemColors.HighlightText,
+                WrapMode = DataGridViewTriState.True
+            };
+
+            SetColumnCellStyles();
+        }
+
+        protected override void OnDataError(bool displayErrorDialogIfNoHandler, DataGridViewDataErrorEventArgs e)
+        {
+            if (this.ReadOnly)
+            {
+                //Since we don't allow editing just ignore errors and hope for the best.
+                return;
+            }
+
+            base.OnDataError(displayErrorDialogIfNoHandler, e);
         }
     }
 }

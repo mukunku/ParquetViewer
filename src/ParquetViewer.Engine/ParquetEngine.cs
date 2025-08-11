@@ -7,12 +7,12 @@ namespace ParquetViewer.Engine
 {
     public partial class ParquetEngine : IDisposable
     {
-        private readonly List<ParquetReader> _parquetFiles;
+        private readonly ParquetReader[] _parquetFiles;
         private long? _recordCount;
 
         public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Metadata?.NumRows ?? 0);
 
-        public int NumberOfPartitions => _parquetFiles.Count;
+        public int NumberOfPartitions => _parquetFiles.Length;
 
         private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new ParquetEngineException("No parquet readers available");
 
@@ -28,6 +28,12 @@ namespace ParquetViewer.Engine
         public ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
 
         public string OpenFileOrFolderPath { get; }
+
+        private ParquetEngine(string fileOrFolderPath, params ParquetReader[] parquetFiles)
+        {
+            _parquetFiles = parquetFiles ?? throw new ArgumentNullException(nameof(parquetFiles), "No parquet readers provided");
+            OpenFileOrFolderPath = fileOrFolderPath;
+        }
 
         private ParquetSchemaElement BuildParquetSchemaTree()
         {
@@ -62,12 +68,6 @@ namespace ParquetViewer.Engine
             return parquetSchemaElement;
         }
 
-        private ParquetEngine(string fileOrFolderPath, List<ParquetReader> parquetFiles)
-        {
-            _parquetFiles = parquetFiles ?? throw new ParquetEngineException("No parquet readers found");
-            OpenFileOrFolderPath = fileOrFolderPath;
-        }
-
         public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath, CancellationToken cancellationToken)
         {
             if (File.Exists(fileOrFolderPath)) //Handles null
@@ -94,7 +94,7 @@ namespace ParquetViewer.Engine
             try
             {
                 var parquetReader = await ParquetReader.CreateAsync(parquetFilePath, null, cancellationToken);
-                return new ParquetEngine(parquetFilePath, new List<ParquetReader> { parquetReader });
+                return new ParquetEngine(parquetFilePath, parquetReader);
             }
             catch (Exception ex)
             {
@@ -161,7 +161,7 @@ namespace ParquetViewer.Engine
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            return new ParquetEngine(folderPath, fileGroups.Values.First());
+            return new ParquetEngine(folderPath, fileGroups.Values.First().ToArray());
         }
 
         private IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)

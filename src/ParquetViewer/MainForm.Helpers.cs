@@ -1,6 +1,7 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
+using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -225,7 +225,7 @@ namespace ParquetViewer
                         for (int j = 0; j < dataTable.Columns.Count; j++)
                         {
                             var value = dataTable.DefaultView[i][j];
-                            if (value is null || value == DBNull.Value)
+                            if (value == DBNull.Value)
                             {
                                 excelWriter.WriteCell(i + 1, j); //empty cell
                             }
@@ -243,7 +243,17 @@ namespace ParquetViewer
                             }
                             else
                             {
-                                excelWriter.WriteCell(i + 1, j, value?.ToString() ?? string.Empty);
+                                var stringValue = value.ToString();
+
+                                //BUG: for some reason strings longer than 255 characters appear empty.
+                                //Don't know how to fix it so throwing for now...
+                                const int maxSupportedCellLength = 255;
+                                if (stringValue!.Length > maxSupportedCellLength)
+                                {
+                                    throw new XlsCellLengthException("Maximum 255 characters per cell are supported. Please try another file format.");
+                                }
+
+                                excelWriter.WriteCell(i + 1, j, stringValue);
                             }
                             progress.Report(1);
                         }
@@ -266,7 +276,7 @@ namespace ParquetViewer
             => Task.Run(() =>
                 {
                     using var fs = new FileStream(path, FileMode.OpenOrCreate);
-                    using var jsonWriter = new Utf8JsonWriter(fs);
+                    using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
 
                     jsonWriter.WriteStartArray();
                     foreach (DataRowView row in dataTable.DefaultView)

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Text;
 
 namespace ParquetViewer.Engine.Types
@@ -11,7 +9,6 @@ namespace ParquetViewer.Engine.Types
         public Type KeyType { get; }
         public ArrayList Values { get; }
         public Type ValueType { get; }
-        public static string? DateDisplayFormat { get; set; }
 
         public MapValue(ArrayList keys, Type keyType, ArrayList values, Type valueType)
         {
@@ -25,11 +22,11 @@ namespace ParquetViewer.Engine.Types
             Keys = keys;
             Values = values;
 
-            var mismatchedType = keys.Cast<object?>().Where(key => key != DBNull.Value && key != null).FirstOrDefault(key => key!.GetType() != keyType);
+            var mismatchedType = keys.Cast<object?>().Where(key => key != DBNull.Value).FirstOrDefault(key => key!.GetType() != keyType);
             if (mismatchedType != null)
                 throw new ArgumentException($"The key's type {mismatchedType} doesn't match the passed key-type {keyType}");
 
-            mismatchedType = values.Cast<object?>().Where(value => value != DBNull.Value && value != null).FirstOrDefault(value => value!.GetType() != valueType);
+            mismatchedType = values.Cast<object?>().Where(value => value != DBNull.Value).FirstOrDefault(value => value!.GetType() != valueType);
             if (mismatchedType != null)
                 throw new ArgumentException($"The value's type {mismatchedType} doesn't match the passed value-type {valueType}");
 
@@ -60,14 +57,14 @@ namespace ParquetViewer.Engine.Types
             static string FormatString((object Key, object Value) map)
             {
                 string key;
-                if (map.Key is DateTime dt && DateDisplayFormat is not null)
-                    key = dt.ToString(DateDisplayFormat);
+                if (map.Key is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
+                    key = dt.ToString(ParquetEngineSettings.DateDisplayFormat);
                 else
                     key = map.Key?.ToString() ?? string.Empty;
 
                 string value;
-                if (map.Value is DateTime dt2 && DateDisplayFormat is not null)
-                    value = dt2.ToString(DateDisplayFormat);
+                if (map.Value is DateTime dt2 && ParquetEngineSettings.DateDisplayFormat is not null)
+                    value = dt2.ToString(ParquetEngineSettings.DateDisplayFormat);
                 else
                     value = map.Value?.ToString() ?? string.Empty;
 

@@ -12,6 +12,7 @@ Some key features:
 * View parquet file metadata
 * Run simple sql queries on parquet data
 * Open single or partitioned files
+* Generate SQL schema from parquet files
 
 # Download
 Releases can be found here: https://github.com/mukunku/ParquetViewer/releases
@@ -25,8 +26,5 @@ Checkout the [ParquetViewer Analytics Dashboard](https://app.amplitude.com/analy
 
 [^1]: Full privacy policy here: https://github.com/mukunku/ParquetViewer/wiki/Privacy-Policy
 
-# Technical Details
-The latest version of this project was written in C# using Microsoft Visual Studio Community 2022 v17.12.3 and .NET 8
-
-# Acknowledgements
-This utility would not be possible without: https://github.com/aloneguid/parquet-dotnet
+# Sponsors
+Free code signing provided by <a href="https://about.signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>
