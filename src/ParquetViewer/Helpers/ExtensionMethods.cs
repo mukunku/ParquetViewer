@@ -159,25 +159,42 @@ namespace ParquetViewer.Helpers
                 ? sourceType
                 : typeof(Nullable<>).MakeGenericType(sourceType);
 
-        /// <summary>
-        /// Converts a float to a string without using the scientific notation
-        /// </summary>
-        public static string ToDecimalString(this float floatValue) => ToDecimalStringImpl(floatValue);
+        private const float DECIMAL_MIN_FLOAT = (float)decimal.MinValue;
+        private const float DECIMAL_MAX_FLOAT = (float)decimal.MaxValue;
+        private const double DECIMAL_MIN_DOUBLE = (double)decimal.MinValue;
+        private const double DECIMAL_MAX_DOUBLE = (double)decimal.MaxValue;
 
         /// <summary>
-        /// Converts a double to a string without using the scientific notation
+        /// Converts a float to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this double doubleValue) => ToDecimalStringImpl(doubleValue);
+        public static string ToDecimalString(this float floatValue) 
+            => ToDecimalStringImpl(floatValue, floatValue >= DECIMAL_MIN_FLOAT && floatValue <= DECIMAL_MAX_FLOAT);
 
-        private static string ToDecimalStringImpl(object value)
+        /// <summary>
+        /// Converts a double to a string without using the scientific notation, if possible
+        /// </summary>
+        public static string ToDecimalString(this double doubleValue) 
+            => ToDecimalStringImpl(doubleValue, doubleValue >= DECIMAL_MIN_DOUBLE && doubleValue <= DECIMAL_MAX_DOUBLE);
+
+        private static string ToDecimalStringImpl(object value, bool isInRange)
         {
             var formattedValue = value?.ToString() ?? string.Empty;
+
+            if (!isInRange)
+                return formattedValue;
 
             var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
             if (isUsingScientificNotation)
             {
-                //Convert the float/double to a decimal which is formatted much nicer as string
-                formattedValue = Convert.ToDecimal(value).ToString();
+                try
+                {
+                    //Convert the float/double to a decimal which is formatted much nicer as string
+                    formattedValue = Convert.ToDecimal(value).ToString();
+                }
+                catch 
+                {
+                    //Fallback to the scientific notation.
+                }
             }
             return formattedValue;
         }
