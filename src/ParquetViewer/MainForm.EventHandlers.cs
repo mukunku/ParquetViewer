@@ -124,7 +124,7 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
         {
             if (sender is TextBox searchBox)
             {
-                if (!searchBox.Text.StartsWith("WHERE", StringComparison.InvariantCultureIgnoreCase))
+                if (string.IsNullOrWhiteSpace(searchBox.Text))
                 {
                     searchBox.Text = "WHERE ";
                 }

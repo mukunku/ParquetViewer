@@ -437,9 +437,6 @@ namespace ParquetViewer.Controls
                         e.FormattingApplied = true;
                     }
                 }
-
-                
-                return;
             }
 
             if (cellValueType == typeof(ByteArrayValue) && e.Value is ByteArrayValue byteArrayValue)
@@ -457,8 +454,8 @@ namespace ParquetViewer.Controls
 
             //In order to get full cell values into the clipboard during a copy to
             //clipboard operation we need to skip the truncation formatting below 
-            var skipTruncation = this.isCopyingToClipboard 
-                || e.FormattingApplied; //Exit early if we already formatted the value above
+            var skipTruncation = this.isCopyingToClipboard
+                || e.FormattingApplied; //Also exit early if we already formatted the value above
 
             if (skipTruncation)
             {
@@ -750,32 +747,16 @@ namespace ParquetViewer.Controls
                 .OrderBy(column => column.Key))
             {
                 DataTable? dataTable = this.DataSource as DataTable;
-                var cellValues = new object[selectedCellsByColumn.Count()];
-                var cellIndex = 0;
-                foreach (var cell in selectedCellsByColumn)
-                {
-                    object value;
-                    if (dataTable is not null) //Get the raw value if we can
-                    {
-                        value = dataTable.Rows[cell.RowIndex][cell.ColumnIndex];
-                    }
-                    else //Otherwise, use the formatted value
-                    {
-                        value = this[cell.ColumnIndex, cell.RowIndex].Value;
-                    }
-
-                    cellValues[cellIndex++] = value;
-                }
-
+                var cellValues = selectedCellsByColumn.Select(cell => this[cell.ColumnIndex, cell.RowIndex].Value);
                 var columnIndex = selectedCellsByColumn.Key;
                 var column = this.Columns[columnIndex];
-                columnsAndValuesToFilterBy.Add((column.Name, column.ValueType, cellValues));
+                columnsAndValuesToFilterBy.Add((column.Name, column.ValueType, cellValues.ToArray()));
             }
 
             var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy);
             if (filterQuery.Length < new TextBox().MaxLength) //This length check doesn't make the most sense but I wanted to put some kind of cap on this.
             {
-                Clipboard.SetDataObject(filterQuery, true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+                Clipboard.SetText(filterQuery, TextDataFormat.Text);
             }
             else
             {
@@ -855,7 +836,12 @@ namespace ParquetViewer.Controls
                     }
                     else if (valueType.IsNumber())
                     {
-                        queryBuilder.Append(value);
+                        var stringValue = value.ToString();
+                        if ((valueType == typeof(float) || valueType == typeof(double))
+                            && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
+                            stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
+
+                        queryBuilder.Append(stringValue);
                     }
                     else
                     {
