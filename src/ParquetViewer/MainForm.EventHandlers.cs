@@ -1,11 +1,8 @@
 ﻿using ParquetViewer.Analytics;
-using ParquetViewer.Controls;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
-using ParquetViewer.Helpers;
 using ParquetViewer.Properties;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -18,8 +15,6 @@ namespace ParquetViewer
     {
         [GeneratedRegex("^WHERE ")]
         private static partial Regex QueryUselessPartRegex();
-
-        private Dictionary<int, ByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
 
         private void offsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -266,93 +261,6 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
                 //the context menu won't go away until you click on it.
                 this.mainGridView.CloseContextMenu();
             }
-        }
-
-        private void MainGridView_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
-        {
-            //If this is a byte array column, show available formatting options
-            if (e.Button == MouseButtons.Right && this.mainGridView.Columns[e.ColumnIndex].ValueType == typeof(ByteArrayValue))
-            {
-                const int RECORDS_TO_INTERSECT_COUNT = 8;
-
-                //Find a few different non-null values and find the common display formats that all of them support.
-                //This will reduce the chance the user sees #ERR in the cells from bad formatting conversions.
-                int intersectCounter = RECORDS_TO_INTERSECT_COUNT;
-                IEnumerable<ByteArrayValue.DisplayFormat> possibleDisplayFormats = Enum.GetValues<ByteArrayValue.DisplayFormat>();
-                for (var i = 0; i < this.mainGridView.RowCount; i++)
-                {
-                    if (this.mainGridView[e.ColumnIndex, i].Value is not ByteArrayValue byteArrayValue)
-                        continue;
-
-                    possibleDisplayFormats = possibleDisplayFormats.Intersect(byteArrayValue.PossibleDisplayFormats);
-                    intersectCounter--;
-
-                    if (intersectCounter <= 0)
-                        break;
-                }
-
-                if (intersectCounter == RECORDS_TO_INTERSECT_COUNT)
-                {
-                    //Most likely that all values are null. Just show the default option
-                    possibleDisplayFormats = [default];
-                }
-
-                var columnHeaderContextMenu = new ContextMenuStrip();
-                foreach (var supportedFormat in possibleDisplayFormats)
-                {
-                    var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
-                    toolstripMenuItem.Click += (object? _, EventArgs _) =>
-                    {
-                        if (_byteArrayColumnsWithFormatOverrides.ContainsKey(e.ColumnIndex))
-                        {
-                            _byteArrayColumnsWithFormatOverrides[e.ColumnIndex] = supportedFormat;
-                        }
-                        else
-                        {
-                            _byteArrayColumnsWithFormatOverrides.Add(e.ColumnIndex, supportedFormat);
-                        }
-
-                        if (supportedFormat == default && this.mainGridView.Columns[e.ColumnIndex].HeaderText.EndsWith(" *"))
-                        {
-                            //Remove indicator
-                            this.mainGridView.Columns[e.ColumnIndex].HeaderText 
-                                = this.mainGridView.Columns[e.ColumnIndex].HeaderText[..(this.mainGridView.Columns[e.ColumnIndex].HeaderText.Length - 2)];
-                        }
-                        else if (!this.mainGridView.Columns[e.ColumnIndex].HeaderText.EndsWith(" *"))
-                        {
-                            //Show indicator next to column name to signify it's formatted
-                            this.mainGridView.Columns[e.ColumnIndex].HeaderText += " *"; 
-                        }
-                        this.mainGridView.Refresh(); //Force a re-draw to render updated format
-                    };
-                    columnHeaderContextMenu.Items.Add(toolstripMenuItem);
-
-                    if (!_byteArrayColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var displayFormat))
-                        displayFormat = default;
-
-                    toolstripMenuItem.Checked = displayFormat == supportedFormat;
-                }
-                columnHeaderContextMenu.Show(Cursor.Position);
-            }
-        }
-
-        private void MainGridView_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.ColumnIndex < 0 || e.RowIndex < 0)
-                return;
-
-            if (!this._byteArrayColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var userSelectedDisplayFormat))
-                return;
-
-            if (userSelectedDisplayFormat == default)
-                return;
-
-            if (this.mainGridView[e.ColumnIndex, e.RowIndex].Value is not ByteArrayValue byteArrayValue)
-                return;
-
-            //Formatting the byte array value based on the user's selection
-            e.Value = byteArrayValue.FormatString(userSelectedDisplayFormat, ParquetGridView.MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
-            e.FormattingApplied = true;
         }
     }
 }

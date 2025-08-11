@@ -44,6 +44,7 @@ namespace ParquetViewer.Controls
         private bool isLeftClickButtonDown = false;
         private ContextMenuStrip? _contextMenu = null;
         private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
+        private readonly Dictionary<int, ByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
 
         public ParquetGridView() : base()
         {
@@ -437,23 +438,34 @@ namespace ParquetViewer.Controls
                     }
                 }
 
-                //In order to get full cell values into the clipboard during a copy to
-                //clipboard operation we need to skip the truncation formatting below 
-                return;
-            }
-
-            if (e.FormattingApplied)
-            {
-                //We already formatted the value above so exit early.
+                
                 return;
             }
 
             if (cellValueType == typeof(ByteArrayValue) && e.Value is ByteArrayValue byteArrayValue)
             {
-                e.Value = byteArrayValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+                //Don't truncate the binary data if this is a copy to clipboard operation
+                int charLimit = this.isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
+
+                //Figure out which format to show the binary data in
+                if (!this._byteArrayColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var userSelectedDisplayFormat))
+                    userSelectedDisplayFormat = default;
+
+                e.Value = FormatByteArrayString(byteArrayValue, userSelectedDisplayFormat, charLimit);
                 e.FormattingApplied = true;
             }
-            else if (cellValueType == typeof(string))
+
+            //In order to get full cell values into the clipboard during a copy to
+            //clipboard operation we need to skip the truncation formatting below 
+            var skipTruncation = this.isCopyingToClipboard 
+                || e.FormattingApplied; //Exit early if we already formatted the value above
+
+            if (skipTruncation)
+            {
+                return;
+            }
+
+            if (cellValueType == typeof(string))
             {
                 string value = e.Value!.ToString()!;
                 if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
@@ -495,7 +507,12 @@ namespace ParquetViewer.Controls
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event
+                base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event if it's a left-click
+
+                if (e.Button == MouseButtons.Right)
+                {
+                    ShowDisplayFormatOptions(e.ColumnIndex);
+                }
             }
             finally
             {
@@ -854,6 +871,190 @@ namespace ParquetViewer.Controls
             }
 
             return queryBuilder.ToString();
+        }
+
+        private void ShowDisplayFormatOptions(int columnIndex)
+        {
+            //If this is a byte array column, show available formatting options
+            if (this.Columns[columnIndex].ValueType == typeof(ByteArrayValue))
+            {
+                const int RECORDS_TO_INTERSECT_COUNT = 8;
+
+                //Find a few different non-null values and find the common display formats that all of them support.
+                //This will reduce the chance the user sees #ERR in the cells from bad formatting conversions.
+                int intersectCounter = RECORDS_TO_INTERSECT_COUNT;
+                IEnumerable<ByteArrayValue.DisplayFormat> possibleDisplayFormats = Enum.GetValues<ByteArrayValue.DisplayFormat>();
+                for (var i = 0; i < this.RowCount; i++)
+                {
+                    if (this[columnIndex, i].Value is not ByteArrayValue byteArrayValue)
+                        continue;
+
+                    possibleDisplayFormats = possibleDisplayFormats.Intersect(byteArrayValue.PossibleDisplayFormats);
+                    intersectCounter--;
+
+                    if (intersectCounter <= 0)
+                        break;
+                }
+
+                if (intersectCounter == RECORDS_TO_INTERSECT_COUNT)
+                {
+                    //Most likely that all values are null. Just show the default option
+                    possibleDisplayFormats = [default];
+                }
+
+                var columnHeaderContextMenu = new ContextMenuStrip();
+                foreach (var supportedFormat in possibleDisplayFormats)
+                {
+                    var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
+                    toolstripMenuItem.Click += (object? _, EventArgs _) =>
+                    {
+                        if (_byteArrayColumnsWithFormatOverrides.ContainsKey(columnIndex))
+                        {
+                            _byteArrayColumnsWithFormatOverrides[columnIndex] = supportedFormat;
+                        }
+                        else
+                        {
+                            _byteArrayColumnsWithFormatOverrides.Add(columnIndex, supportedFormat);
+                        }
+
+                        if (supportedFormat == default && this.Columns[columnIndex].HeaderText.EndsWith(" *"))
+                        {
+                            //Remove indicator
+                            this.Columns[columnIndex].HeaderText
+                                = this.Columns[columnIndex].HeaderText[..(this.Columns[columnIndex].HeaderText.Length - 2)];
+                        }
+                        else if (!this.Columns[columnIndex].HeaderText.EndsWith(" *"))
+                        {
+                            //Show indicator next to column name to signify it's formatted
+                            this.Columns[columnIndex].HeaderText += " *";
+                        }
+                        this.Refresh(); //Force a re-draw to render updated format
+                    };
+                    columnHeaderContextMenu.Items.Add(toolstripMenuItem);
+
+                    if (!_byteArrayColumnsWithFormatOverrides.TryGetValue(columnIndex, out var displayFormat))
+                        displayFormat = default;
+
+                    toolstripMenuItem.Checked = displayFormat == supportedFormat;
+                }
+                columnHeaderContextMenu.Show(Cursor.Position);
+            }
+        }
+
+        /// <summary>
+        /// Gets the string representation of the binary data in the desired format
+        /// </summary>
+        /// <param name="desiredFormat">How to interpret the binary data</param>
+        /// <param name="desiredLength">An optional maximum string length target to try and achieve (NOT GUARANTEED)</param>
+        /// <returns>String representation of the binary data in the desired format if possible.
+        /// If conversion fails, <see cref="FORMATTING_ERROR_TEXT"/> is returned instead</returns>
+        /// <remarks>Utilize <see cref="ByteArrayValue.PossibleDisplayFormats"/> to avoid calling incompatible conversions</remarks>
+        private static string FormatByteArrayString(ByteArrayValue byteArrayValue, ByteArrayValue.DisplayFormat desiredFormat, int desiredLength = int.MaxValue)
+        {
+            const string FORMATTING_ERROR_TEXT = "#ERR";
+            ArgumentNullException.ThrowIfNull(byteArrayValue);
+            ArgumentOutOfRangeException.ThrowIfLessThan(desiredLength, 1);
+
+            if (desiredFormat == ByteArrayValue.DisplayFormat.IPv4)
+            {
+                if (byteArrayValue.ToIPv4(out var ipAddress))
+                {
+                    return ipAddress.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.IPv6)
+            {
+                if (byteArrayValue.ToIPv6(out var ipAddress))
+                {
+                    return ipAddress.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Guid)
+            {
+                if (byteArrayValue.ToGuid(out var @guid))
+                {
+                    return @guid.Value.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Short)
+            {
+                if (byteArrayValue.ToShort(out var @short))
+                {
+                    return @short.Value.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Integer)
+            {
+                if (byteArrayValue.ToInteger(out var @int))
+                {
+                    return @int.Value.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Long)
+            {
+                if (byteArrayValue.ToLong(out var @long))
+                {
+                    return @long.Value.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Float)
+            {
+                if (byteArrayValue.ToFloat(out var @float))
+                {
+                    return @float.Value.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Double)
+            {
+                if (byteArrayValue.ToDouble(out var @double))
+                {
+                    return @double.Value.ToString();
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.ASCII)
+            {
+                if (byteArrayValue.ToASCII(out var ascii))
+                {
+                    if (ascii.Length <= desiredLength)
+                        return ascii;
+
+                    return ascii[..desiredLength] + "[...]";
+                }
+
+                return FORMATTING_ERROR_TEXT;
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Base64)
+            {
+                byteArrayValue.ToBase64(out var base64);
+                if (base64.Length <= desiredLength)
+                    return base64;
+
+                return base64[..desiredLength] + "[...]";
+            }
+            else if (desiredFormat == ByteArrayValue.DisplayFormat.Size)
+            {
+                return byteArrayValue.Data.Length.ToString() + (byteArrayValue.Data.Length == 1 ? " byte" : " bytes");
+            }
+            else
+            {
+                return byteArrayValue.ToStringTruncated(desiredLength);
+            }
         }
     }
 }

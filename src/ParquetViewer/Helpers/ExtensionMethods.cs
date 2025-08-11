@@ -232,5 +232,23 @@ namespace ParquetViewer.Helpers
             else
                 return enumerable;
         }
+
+        /// <remarks>Can't put this into ByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
+        public static bool ToImage(this ByteArrayValue byteArrayValue, out Image? image)
+        {
+            ArgumentNullException.ThrowIfNull(byteArrayValue);
+
+            try
+            {
+                using var ms = new MemoryStream(byteArrayValue.Data);
+                image = Image.FromStream(ms);
+                return true;
+            }
+            catch
+            {
+                image = null;
+                return false;
+            }
+        }
     }
 }
