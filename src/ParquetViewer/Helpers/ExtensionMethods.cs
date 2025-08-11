@@ -73,24 +73,6 @@ namespace ParquetViewer.Helpers
 
         public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
 
-        //Can't put this into ByteArrayValue as it doesn't reference System.Drawing.
-        public static bool ToImage(this ByteArrayValue byteArrayValue, out Image? image)
-        {
-            ArgumentNullException.ThrowIfNull(byteArrayValue);
-
-            try
-            {
-                using var ms = new MemoryStream(byteArrayValue.Data);
-                image = Image.FromStream(ms);
-                return true;
-            }
-            catch
-            {
-                image = null;
-                return false;
-            }
-        }
-
         public static Size RenderedSize(this PictureBox pictureBox)
         {
             var wfactor = (double)pictureBox.Image.Width / pictureBox.ClientSize.Width;

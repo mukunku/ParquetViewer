@@ -272,6 +272,8 @@ namespace ParquetViewer
             mainGridView.ShowCopyAsWhereContextMenuItem = true;
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 7;
+            mainGridView.CellFormatting += MainGridView_CellFormatting;
+            mainGridView.ColumnHeaderMouseClick += MainGridView_ColumnHeaderMouseClick;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
             // 
             // loadAllRowsButton

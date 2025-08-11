@@ -17,7 +17,7 @@ namespace ParquetViewer.Controls
     {
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
         //But let's use something smaller to increase rendering performance.
-        private const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
+        public const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
 
         private Theme _gridTheme = Theme.LightModeTheme;
         public Theme GridTheme
@@ -794,7 +794,7 @@ namespace ParquetViewer.Controls
 
                 var hasNulls = values.Any(value => value is null || value == DBNull.Value);
                 values = values
-                    .Where(value => value is not null && value != DBNull.Value)
+                    .Where(value => value != DBNull.Value)
                     .Distinct() //Distinct() doesn't work if there are any DBNull's in the collection
                     .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
                     .Order()
