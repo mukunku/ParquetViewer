@@ -32,7 +32,7 @@ namespace ParquetViewer.Engine.Types
                     {
                         string columnName = this.Data.Table.Columns[i].ColumnName
                             //Remove the parent field name from columns when rendering the data as json in the gridview cell.
-                            .Replace($"{this.Name}/", string.Empty); 
+                            .Replace($"{this.Name}/", string.Empty);
                         jsonWriter.WritePropertyName(columnName);
 
                         object value = this.Data[i];
@@ -126,8 +126,8 @@ namespace ParquetViewer.Engine.Types
             }
             else
             {
-                //Everything else just try to write it raw
-                jsonWriter.WriteRawValue(value.ToString()!);
+                //Everything else just try to write it as string
+                jsonWriter.WriteStringValue(value.ToString()!);
             }
         }
 

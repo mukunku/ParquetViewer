@@ -1,12 +1,10 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
-using ParquetViewer.Helpers;
 using ParquetViewer.Properties;
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -103,10 +101,13 @@ STRING:
     WHERE field_name LIKE '%value%' 
     WHERE field_name = 'equals value'
     WHERE field_name <> 'not equals'
+IN CHECK:
+    WHERE field_name IN (value1, value2)
+    WHERE field_name NOT IN (value3, value4)
 MULTIPLE CONDITIONS: 
-    WHERE (field_1 > #2000/12/31# AND field_1 < #2001/12/31#) OR field_2 <> 100
+    WHERE (field_1 = 0 AND field_2 <> 'value') OR field_3 IS NULL
 
-Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax Examples");
+Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Examples");
         }
 
         private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
@@ -123,7 +124,7 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
         {
             if (sender is TextBox searchBox)
             {
-                if (!searchBox.Text.StartsWith("WHERE", StringComparison.InvariantCultureIgnoreCase))
+                if (string.IsNullOrWhiteSpace(searchBox.Text))
                 {
                     searchBox.Text = "WHERE ";
                 }
@@ -246,9 +247,19 @@ Checkout 'Help → User Guide' for more information.", "Filtering Query Syntax E
 
         private void clearFilterButton_Click(object sender, EventArgs? e)
         {
-            if (this.MainDataSource is not null)
+            if (this.MainDataSource?.DefaultView.RowFilter is not null)
             {
                 this.MainDataSource.DefaultView.RowFilter = null;
+            }
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                //Hide context menu on minimize to avoid a glitch where
+                //the context menu won't go away until you click on it.
+                this.mainGridView.CloseContextMenu();
             }
         }
     }
