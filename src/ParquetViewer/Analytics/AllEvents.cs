@@ -168,8 +168,7 @@ namespace ParquetViewer.Analytics
             List,
             Map,
             Struct,
-            Image,
-            Binary
+            Image
         }
 
         public static void FireAndForget(DataTypeId dataType)

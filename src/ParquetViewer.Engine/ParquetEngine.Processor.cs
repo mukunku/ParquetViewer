@@ -156,17 +156,9 @@ namespace ParquetViewer.Engine
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                     }
-                    else if (fieldType == byteArrayValueType && value is byte[] byteArrayValue)
+                    else if (fieldType == byteArrayValueType)
                     {
-                        bool isGenericFixed = field.SchemaElement.Type == Parquet.Meta.Type.FIXED_LEN_BYTE_ARRAY;
-                        int fixedLength = isGenericFixed ? field.SchemaElement.TypeLength ?? 0 : 0;
-
-                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(
-                            field.Path,
-                            byteArrayValue,
-                            isGenericFixed,
-                            fixedLength
-                        );
+                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
                     }
                     else
                     {
@@ -191,7 +183,7 @@ namespace ParquetViewer.Engine
 
                 var dataEnumerable = dataColumn.Data.Cast<object?>().Select(d => d ?? DBNull.Value);
                 //Some parquet writers don't write null entries into the data array for empty and null lists.
-                //This throws off our logic below so lets find all empty/null lists and add a null entry into
+                //This throws off our logic below so lets find all empty/null lists and add a null entry into 
                 //the data array to align it with the repetition levels.
                 int levelCount = dataColumn.RepetitionLevels?.Length ?? 0;
                 if (levelCount > dataColumn.Data.Length)
@@ -358,7 +350,7 @@ namespace ParquetViewer.Engine
                 DBNull.Value);
 
             //Some parquet writers don't write null entries into the data array for empty and null maps.
-            //This throws off our logic below so lets find all empty/null maps and add a null entry into
+            //This throws off our logic below so lets find all empty/null maps and add a null entry into 
             //the data array to align it with the repetition levels.
             int levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
             int dataCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
@@ -513,7 +505,7 @@ namespace ParquetViewer.Engine
             {
                 if (fieldCount > 0)
                 {
-                    //To report progress accurately we'll need to divide the progress total
+                    //To report progress accurately we'll need to divide the progress total  
                     //by the field count to convert it to row count in the main data table.
                     var increment = progressSoFar % fieldCount;
                     if (increment == 0)
@@ -552,19 +544,6 @@ namespace ParquetViewer.Engine
                     && schema.SchemaElement.ConvertedType is null)
                 {
                     dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
-                }
-                else if (schema.SchemaElement.Type == Parquet.Meta.Type.FIXED_LEN_BYTE_ARRAY)
-                {
-                    // Handle GenericFixed type (FIXED_LEN_BYTE_ARRAY)
-                    // Check if this is a Guid type
-                    if (schema.DataField?.ClrType == typeof(Guid))
-                    {
-                        dataTable.AddColumn(field, typeof(Guid), parent);
-                    }
-                    else
-                    {
-                        dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
-                    }
                 }
                 else
                 {

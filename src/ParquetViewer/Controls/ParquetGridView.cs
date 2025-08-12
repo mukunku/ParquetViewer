@@ -154,64 +154,6 @@ namespace ParquetViewer.Controls
 
                     e.Handled = true;
                 }
-                else if (e.Value is ListValue || e.Value is MapValue || e.Value is StructValue)
-                {
-                    e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
-                    e.CellStyle.ForeColor = Color.Blue;
-                }
-                else if (e.Value is ByteArrayValue byteArrayValue)
-                {
-                    var tag = this.Columns[e.ColumnIndex].Tag as string;
-                    if (tag is null || (!tag.Equals("NOT-IMAGE") && !tag.Equals("IMAGE") && !tag.Equals("BINARY-DATA")))
-                    {
-                        if (byteArrayValue.ToImage(out _))
-                        {
-                            tag = "IMAGE";
-                        }
-                        else if (byteArrayValue.Data.Length > 0) // Any binary data with content
-                        {
-                            tag = "BINARY-DATA";
-                        }
-                        else
-                        {
-                            tag = "NOT-IMAGE";
-                        }
-                        this.Columns[e.ColumnIndex].Tag = tag;
-                    }
-
-                    if (tag.Equals("IMAGE"))
-                    {
-                        e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
-                        e.CellStyle.ForeColor = Color.Blue;
-                    }
-                    else if (tag.Equals("BINARY-DATA"))
-                    {
-                        // Use a different style for binary data to make it stand out
-                        e.CellStyle!.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
-
-                        // Use different colors based on binary data length for visual cues
-                        if (byteArrayValue.Data.Length == 16)
-                        {
-                            // 16-byte data (likely UUID or IPv6)
-                            e.CellStyle.ForeColor = Color.DarkGreen;
-                        }
-                        else if (byteArrayValue.Data.Length == 4)
-                        {
-                            // 4-byte data (likely IPv4 or Int32)
-                            e.CellStyle.ForeColor = Color.DarkBlue;
-                        }
-                        else if (byteArrayValue.Data.Length <= 8)
-                        {
-                            // Small binary data
-                            e.CellStyle.ForeColor = Color.DarkCyan;
-                        }
-                        else
-                        {
-                            // Larger binary data
-                            e.CellStyle.ForeColor = Color.DarkMagenta;
-                        }
-                    }
-                }
             }
 
             base.OnCellPainting(e); //Handle any additional event handlers
@@ -232,9 +174,8 @@ namespace ParquetViewer.Controls
                 return;
             }
 
-            var valueType = this.Columns[e.ColumnIndex].ValueType;
-            var isClickableByteArrayType = valueType == typeof(ByteArrayValue) && this.Columns[e.ColumnIndex].Tag is string tag && (tag.Equals("IMAGE") || tag.Equals("BINARY-DATA"));
-            if (valueType == typeof(ListValue) || valueType == typeof(MapValue) || valueType == typeof(StructValue) || isClickableByteArrayType)
+            var isUserSelectingCells = this.isLeftClickButtonDown; //Don't show the hand cursor if the user is selecting cells
+            if (!isUserSelectingCells && this.clickableColumnIndexes.Contains(e.ColumnIndex))
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
@@ -360,57 +301,10 @@ namespace ParquetViewer.Controls
 
                 quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
-            else if (clickedCell.Value is ByteArrayValue byteArray)
+            else if (clickedCell.Value is ByteArrayValue byteArray && byteArray.ToImage(out var image))
             {
-                if (byteArray.ToImage(out var image))
-                {
-                    dataType = QuickPeekEvent.DataTypeId.Image;
-                    quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, image!, uniqueCellTag, e.RowIndex, e.ColumnIndex);
-                }
-                else if (byteArray.Data.Length > 0) // Any binary data with content
-                {
-                    // Create a DataTable to display all possible representations of the binary data
-                    var dt = new DataTable();
-                    dt.Columns.Add(new DataColumn("Format", typeof(string)));
-                    dt.Columns.Add(new DataColumn("Value", typeof(string)));
-
-                    // Get all possible representations
-                    var representations = byteArray.GetAllRepresentations();
-
-                    // Add each representation to the DataTable
-                    foreach (var representation in representations)
-                    {
-                        var row = dt.NewRow();
-                        row["Format"] = representation.Key.ToString();
-                        row["Value"] = representation.Value;
-                        dt.Rows.Add(row);
-                    }
-
-                    // Add raw bytes view for detailed inspection
-                    if (byteArray.Data.Length <= 64) // Only for reasonably sized data
-                    {
-                        var bytesRow = dt.NewRow();
-                        bytesRow["Format"] = "Raw Bytes";
-
-                        var bytesBuilder = new System.Text.StringBuilder();
-                        for (int i = 0; i < byteArray.Data.Length; i++)
-                        {
-                            bytesBuilder.AppendFormat("{0:X2} ", byteArray.Data[i]);
-                            if ((i + 1) % 16 == 0 && i < byteArray.Data.Length - 1)
-                                bytesBuilder.AppendLine();
-                        }
-                        bytesRow["Value"] = bytesBuilder.ToString();
-                        dt.Rows.Add(bytesRow);
-                    }
-
-                    dataType = QuickPeekEvent.DataTypeId.Binary;
-                    quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
-                }
-                else
-                {
-                    //Nothing to preview
-                    return;
-                }
+                dataType = QuickPeekEvent.DataTypeId.Image;
+                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, image!, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
             else
             {
@@ -514,7 +408,7 @@ namespace ParquetViewer.Controls
                 }
 
                 //In order to get full cell values into the clipboard during a copy to
-                //clipboard operation we need to skip the truncation formatting below
+                //clipboard operation we need to skip the truncation formatting below 
                 return;
             }
 
