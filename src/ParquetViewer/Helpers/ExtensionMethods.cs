@@ -167,21 +167,26 @@ namespace ParquetViewer.Helpers
         /// <summary>
         /// Converts a float to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this float floatValue) 
-            => ToDecimalStringImpl(floatValue, floatValue >= DECIMAL_MIN_FLOAT && floatValue <= DECIMAL_MAX_FLOAT);
+        public static string ToDecimalString(this float floatValue, string? valueOverrideIfFormattingFails = null)
+            => ToDecimalStringImpl(floatValue, floatValue >= DECIMAL_MIN_FLOAT && floatValue <= DECIMAL_MAX_FLOAT, valueOverrideIfFormattingFails);
 
         /// <summary>
         /// Converts a double to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this double doubleValue) 
-            => ToDecimalStringImpl(doubleValue, doubleValue >= DECIMAL_MIN_DOUBLE && doubleValue <= DECIMAL_MAX_DOUBLE);
+        public static string ToDecimalString(this double doubleValue, string? valueOverrideIfFormattingFails = null)
+            => ToDecimalStringImpl(doubleValue, doubleValue >= DECIMAL_MIN_DOUBLE && doubleValue <= DECIMAL_MAX_DOUBLE, valueOverrideIfFormattingFails);
 
-        private static string ToDecimalStringImpl(object value, bool isInRange)
+        private static string ToDecimalStringImpl(object value, bool isInRange, string? valueOverrideIfFormattingFails)
         {
             var formattedValue = value?.ToString() ?? string.Empty;
 
             if (!isInRange)
-                return formattedValue;
+            {
+                if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
+                    return valueOverrideIfFormattingFails;
+                else
+                    return formattedValue;
+            }
 
             var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
             if (isUsingScientificNotation)
@@ -191,9 +196,12 @@ namespace ParquetViewer.Helpers
                     //Convert the float/double to a decimal which is formatted much nicer as string
                     formattedValue = Convert.ToDecimal(value).ToString();
                 }
-                catch 
+                catch
                 {
-                    //Fallback to the scientific notation.
+                    if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
+                    {
+                        formattedValue = valueOverrideIfFormattingFails;
+                    }
                 }
             }
             return formattedValue;

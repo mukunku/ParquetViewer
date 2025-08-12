@@ -18,6 +18,7 @@ namespace ParquetViewer.Controls
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
         //But let's use something smaller to increase rendering performance.
         public const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
+        const string FORMATTING_ERROR_TEXT = "#ERR";
 
         private Theme _gridTheme = Theme.LightModeTheme;
         public Theme GridTheme
@@ -439,7 +440,7 @@ namespace ParquetViewer.Controls
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
                 {
-                    e.Value = f.ToDecimalString();
+                    e.Value = f.ToDecimalString(FORMATTING_ERROR_TEXT);
                     e.FormattingApplied = true;
                 }
             }
@@ -451,7 +452,7 @@ namespace ParquetViewer.Controls
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
                 {
-                    e.Value = d.ToDecimalString();
+                    e.Value = d.ToDecimalString(FORMATTING_ERROR_TEXT);
                     e.FormattingApplied = true;
                 }
             }
@@ -590,6 +591,7 @@ namespace ParquetViewer.Controls
 
         /// <summary>
         /// Provides very fast and basic column sizing for large data sets.
+        /// TODO: Switch to using grid cell formatted values instead of datatable values so we don't need to format the strings before we measure them
         /// </summary>
         private void FastAutoSizeColumns()
         {
@@ -1002,7 +1004,6 @@ namespace ParquetViewer.Controls
         /// <remarks>Utilize <see cref="ByteArrayValue.PossibleDisplayFormats"/> to avoid calling incompatible conversions</remarks>
         private static string FormatByteArrayString(ByteArrayValue byteArrayValue, ByteArrayValue.DisplayFormat desiredFormat, int desiredLength = int.MaxValue)
         {
-            const string FORMATTING_ERROR_TEXT = "#ERR";
             ArgumentNullException.ThrowIfNull(byteArrayValue);
             ArgumentOutOfRangeException.ThrowIfLessThan(desiredLength, 1);
 
