@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -136,6 +138,23 @@ namespace ParquetViewer.Analytics
         public string? StackTrace => Exception.StackTrace?.ToString();
         public string? InnerException => Exception.InnerException?.ToString();
         public string Type => Exception.GetType().Name;
+
+        [JsonExtensionData]
+        public IDictionary<string, object> AdditionalData
+        {
+            get
+            {
+                var dictionary = new Dictionary<string, object>();
+                foreach(DictionaryEntry keyValuePair in this.Exception.Data)
+                {
+                    if (keyValuePair.Key is string key && keyValuePair.Value is not null)
+                    {
+                        dictionary.Add(key, keyValuePair.Value);
+                    }
+                }
+                return dictionary;
+            }
+        }
 
         public ExceptionEvent(Exception ex, AmplitudeConfiguration? amplitudeConfiguration = null)
             : base(EVENT_TYPE, amplitudeConfiguration)

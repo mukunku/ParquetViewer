@@ -3,6 +3,7 @@ using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using RichardSzalay.MockHttp;
 using System.Globalization;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Tests
@@ -354,6 +355,34 @@ namespace ParquetViewer.Tests
 
             bool wasSuccess = await testEvent.Record();
             Assert.True(wasSuccess, "Sensitive data wasn't stripped out correctly");
+        }
+
+        [Fact]
+        public async Task AMPLITUDE_EXCEPTION_ADDITIONAL_DATA_IS_SERIALIZED_TEST()
+        {
+            var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+
+            var testException = new Exception("Exception with additional data");
+            testException.Data["key1"] = "value1";
+            testException.Data["key2"] = "value2";
+            var testEvent = new ExceptionEvent(testException, testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+            //mock the http response
+            _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+            {
+                string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+                var requestJson = JsonNode.Parse(requestJsonBody);
+                if (requestJson?["events"]?[0]?["event_properties"]?["key1"]?.GetValue<string>() == "value1"
+                    && requestJson?["events"]?[0]?["event_properties"]?["key2"]?.GetValue<string>() == "value2"
+                    && requestJson?["events"]?[0]?["event_properties"]?["message"]?.GetValue<string>() == "Exception with additional data")
+                    return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+                else
+                    return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+            });
+
+            bool wasSuccess = await testEvent.Record();
+            Assert.True(wasSuccess, "Additional exception data wasn't added to the amplitude event as expected");
         }
 
         [Fact]
