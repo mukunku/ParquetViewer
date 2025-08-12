@@ -46,13 +46,36 @@ namespace ParquetViewer.Engine
             this.SchemaElement = schemaElement;
         }
 
-        public ParquetSchemaElement GetChild(string name) => GetChildImpl(name);
+        public ParquetSchemaElement GetChild(string name)
+        {
+            try
+            {
+                return GetChildImpl(name);
+            }
+            catch (MalformedFieldException mfe)
+            {
+                try
+                {
+                    GetChildCI(name);
+                    mfe.Data["has_ci_match"] = true;
+                }
+                catch
+                {
+                    mfe.Data["has_ci_match"] = false;
+                }
+                throw;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
         /// <summary>
         /// Case insensitive version of <see cref="GetChild(string)"/>
         /// Only exists to deal with non-standard Parquet implementations
         /// </summary>
-        public ParquetSchemaElement GetChildCI(string name) => 
+        public ParquetSchemaElement GetChildCI(string name) =>
             GetChildImpl(_children.Keys.FirstOrDefault((key) => key?.Equals(name, StringComparison.InvariantCultureIgnoreCase) == true) ?? name);
 
         private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
@@ -71,7 +94,7 @@ namespace ParquetViewer.Engine
             }
             else
             {
-                return _children.ContainsKey(name) 
+                return _children.ContainsKey(name)
                     ? _children[name] : throw new MalformedFieldException($"Field `{Path}` has no child named '{name}'");
             }
         }
