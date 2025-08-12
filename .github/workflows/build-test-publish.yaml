@@ -2,6 +2,11 @@ name: Test and Publish
 
 on:
  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
 
 permissions:
   checks: write
@@ -46,7 +51,7 @@ jobs:
   checkPublish:
     runs-on: windows-latest
     needs: test
-    if: github.repository == 'mukunku/ParquetViewer' 
+    if: github.repository == 'mukunku/ParquetViewer' && github.event.pull_request.draft == false
     outputs:
       release_version: ${{ steps.release-version.outputs.release_version }}
       should_publish: ${{ steps.should-publish.outputs.should_publish }}
