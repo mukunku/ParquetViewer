@@ -110,7 +110,9 @@ namespace ParquetViewer.Engine.Types
                 //Hopefully lists also generate valid JSON on .ToString()
                 jsonWriter.WriteRawValue(list.ToString());
             }
-            else if (value is ByteArrayValue byteArray)
+            else if (value is ByteArrayValue byteArray /*&& truncateForDisplay //should use the entire byte array if 
+                                                        * we're not truncating for display? Seems kind of unreasonable 
+                                                        * for users to rely on binary data within a Struct value preview.*/)
             {
                 const int byteArrayMaxStringLength = 24; //arbitrary number that I think looks good
                 var byteArrayAsString = byteArray.ToStringTruncated(byteArrayMaxStringLength);
