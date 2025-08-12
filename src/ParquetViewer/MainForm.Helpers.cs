@@ -36,8 +36,9 @@ namespace ParquetViewer
             return loadingIcon;
         }
 
-        // TODO: Switch exports to use the formatted cell value in the gridview instead so formatted numbers and
-        // binary data can be exported as the user sees them (Will need to set isCopyingToClipboard as true somehow)
+        //TODO: Should we export floats and binary data with custom formatting if activated?
+        //E.g. float -> Decimal format, Binary -> Size format, etc.
+        //We can't use the gridview formattedValue directly as we're changing the type sometimes.
         private async void ExportResults(FileType defaultFileType)
         {
             string? filePath = null;
