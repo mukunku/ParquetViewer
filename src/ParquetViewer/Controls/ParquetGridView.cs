@@ -44,8 +44,11 @@ namespace ParquetViewer.Controls
         private bool isLeftClickButtonDown = false;
         private ContextMenuStrip? _contextMenu = null;
         private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
-        private readonly Dictionary<int, ByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
-        private readonly Dictionary<int, FloatDisplayFormat> _floatColumnsWithFormatOverrides = new();
+
+        //We track format overrides by name+type so if the user adds/removes fields we can still continue formatting them the same.
+        //There's a chance the user will load a different file containing columns with the same name+type but it wouldn't be so bad if we formatted those as well.
+        private readonly Dictionary<(string ColumnName, Type ValueType), ByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
+        private readonly Dictionary<(string ColumnName, Type ValueType), FloatDisplayFormat> floatColumnsWithFormatOverrides = new();
 
         public ParquetGridView() : base()
         {
@@ -142,7 +145,25 @@ namespace ParquetViewer.Controls
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
+            {
+                //Draw a star '*' next to column headers that are using a non-default display format
+                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
+                if ((this.byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var dateFormat) && dateFormat != default)
+                    || (this.floatColumnsWithFormatOverrides.TryGetValue(key, out var floatFormat) && floatFormat != default))
+                {
+                    e.PaintBackground(e.CellBounds, true);
+                    e.PaintContent(e.CellBounds);
+
+                    WidenColumnForIndicator(this.Columns[e.ColumnIndex], e.Graphics!, e.CellStyle!.Font, false);
+                    var length = MeasureStringWidth(e.Graphics!, e.CellStyle.Font, e.FormattedValue?.ToString() ?? string.Empty, false);
+                    var drawPoint = new Point(e.CellBounds.Left + length - 2, e.CellBounds.Y + 4);
+                    TextRenderer.DrawText(e.Graphics!, "*", e.CellStyle!.Font, drawPoint, e.CellStyle.ForeColor, TextFormatFlags.PreserveGraphicsClipping);
+
+                    e.Handled = true;
+                }
+            }
+            else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 //Draw NULLs
                 if (e.Value == DBNull.Value || e.Value == null)
@@ -412,7 +433,8 @@ namespace ParquetViewer.Controls
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
             if (cellValueType == typeof(float) && e.Value is float f)
             {
-                if (!this._floatColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var userSelectedDisplayFormat))
+                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
+                if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
@@ -423,7 +445,8 @@ namespace ParquetViewer.Controls
             }
             else if (cellValueType == typeof(double) && e.Value is double d)
             {
-                if (!this._floatColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var userSelectedDisplayFormat))
+                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
+                if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
@@ -458,7 +481,8 @@ namespace ParquetViewer.Controls
                 int charLimit = this.isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
 
                 //Figure out which format to show the binary data in
-                if (!this._byteArrayColumnsWithFormatOverrides.TryGetValue(e.ColumnIndex, out var userSelectedDisplayFormat))
+                var key = (this.Columns[e.ColumnIndex].Name, cellValueType);
+                if (!this.byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 e.Value = FormatByteArrayString(byteArrayValue, userSelectedDisplayFormat, charLimit);
@@ -493,23 +517,28 @@ namespace ParquetViewer.Controls
 
         protected override void OnSorted(EventArgs e)
         {
-            if (!(this.SortedColumn.Tag is string tag && tag.Equals("WIDENED")))
+            using var graphics = this.CreateGraphics();
+            WidenColumnForIndicator(this.SortedColumn, graphics, this.Font, true);
+            base.OnSorted(e);
+        }
+
+        private static void WidenColumnForIndicator(DataGridViewColumn column, Graphics graphics, Font font, bool includeWhitespaceBuffer)
+        {
+            if (!(column.Tag is string tag && tag.Equals("WIDENED")))
             {
-                using var gfx = this.CreateGraphics();
-                var headerLength = MeasureStringWidth(gfx, this.SortedColumn.Name, true);
-                var columnWidth = this.SortedColumn.Width;
+                var headerLength = MeasureStringWidth(graphics, font, column.Name, includeWhitespaceBuffer);
+                var columnWidth = column.Width;
 
                 //Widen the column a bit so the sorting arrow can be shown.
                 var whitespaceWidth = columnWidth - headerLength;
                 if (whitespaceWidth >= 0 && whitespaceWidth < 21)
                 {
-                    this.SortedColumn.Width += 21 - whitespaceWidth;
+                    column.Width += 21 - whitespaceWidth;
                 }
 
                 //Don't widen the same column twice (this shouldn't be needed but I don't trust the logic above)
-                this.SortedColumn.Tag = "WIDENED";
+                column.Tag = "WIDENED";
             }
-            base.OnSorted(e);
         }
 
         protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
@@ -585,7 +614,7 @@ namespace ParquetViewer.Controls
 
                 //Fit header by default. If header is short, make sure NULLs will fit at least
                 string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
-                var newColumnSize = MeasureStringWidth(gfx, columnNameOrNull, true);
+                var newColumnSize = MeasureStringWidth(gfx, this.Font, columnNameOrNull, true);
 
                 if (gridTable.Columns[i].DataType == typeof(DateTime))
                 {
@@ -597,7 +626,7 @@ namespace ParquetViewer.Controls
                     if (dateTime is not null)
                     {
                         string formattedDateTimeValue = dateTime.Value.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
-                        newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, formattedDateTimeValue, false));
+                        newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, formattedDateTimeValue, false));
                     }
                 }
                 else
@@ -638,19 +667,19 @@ namespace ParquetViewer.Controls
                     // Get the longest string in the array.
                     string longestColString = colStringCollection
                         .OrderByDescending((x) => x.Length).FirstOrDefault() ?? string.Empty;
-                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, longestColString, true));
+                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
                 }
 
                 this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
             }
         }
 
-        private int MeasureStringWidth(Graphics gfx, string input, bool appendWhitespaceBuffer)
+        private static int MeasureStringWidth(Graphics gfx, Font font, string input, bool appendWhitespaceBuffer)
         {
             const string WHITESPACE_BUFFER = "#";
             try
             {
-                var width = (int)gfx.MeasureString(input + (appendWhitespaceBuffer ? WHITESPACE_BUFFER : string.Empty), this.Font).Width;
+                var width = (int)gfx.MeasureString(input + (appendWhitespaceBuffer ? WHITESPACE_BUFFER : string.Empty), font).Width;
 
                 if (width <= 0) //happens with really long strings sometimes
                     return int.MaxValue;
@@ -904,30 +933,21 @@ namespace ParquetViewer.Controls
                 var columnHeaderContextMenu = new ContextMenuStrip();
                 foreach (var supportedFormat in possibleDisplayFormats)
                 {
+                    var key = (this.Columns[columnIndex].Name, this.Columns[columnIndex].ValueType);
+
                     var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
                     toolstripMenuItem.Click += (object? _, EventArgs _) =>
                     {
-                        if (_byteArrayColumnsWithFormatOverrides.ContainsKey(columnIndex))
-                            _byteArrayColumnsWithFormatOverrides[columnIndex] = supportedFormat;
+                        if (byteArrayColumnsWithFormatOverrides.ContainsKey(key))
+                            byteArrayColumnsWithFormatOverrides[key] = supportedFormat;
                         else
-                            _byteArrayColumnsWithFormatOverrides.Add(columnIndex, supportedFormat);
+                            byteArrayColumnsWithFormatOverrides.Add(key, supportedFormat);
 
-                        if (supportedFormat == default && this.Columns[columnIndex].HeaderText.EndsWith(" *"))
-                        {
-                            //Remove indicator
-                            this.Columns[columnIndex].HeaderText
-                                = this.Columns[columnIndex].HeaderText[..(this.Columns[columnIndex].HeaderText.Length - 2)];
-                        }
-                        else if (!this.Columns[columnIndex].HeaderText.EndsWith(" *"))
-                        {
-                            //Show indicator next to column name to signify it's formatted
-                            this.Columns[columnIndex].HeaderText += " *";
-                        }
                         this.Refresh(); //Force a re-draw to render updated format
                     };
                     columnHeaderContextMenu.Items.Add(toolstripMenuItem);
 
-                    if (!_byteArrayColumnsWithFormatOverrides.TryGetValue(columnIndex, out var displayFormat))
+                    if (!byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var displayFormat))
                         displayFormat = default;
 
                     toolstripMenuItem.Checked = displayFormat == supportedFormat;
@@ -938,24 +958,19 @@ namespace ParquetViewer.Controls
             {
                 var columnHeaderContextMenu = new ContextMenuStrip();
 
-                if (!_floatColumnsWithFormatOverrides.TryGetValue(columnIndex, out var displayFormat))
+                var key = (this.Columns[columnIndex].Name, this.Columns[columnIndex].ValueType);
+                if (!floatColumnsWithFormatOverrides.TryGetValue(key, out var displayFormat))
                     displayFormat = default;
 
                 var scientificNotationMenuItem = new ToolStripMenuItem("Scientific")
                 { Checked = displayFormat == FloatDisplayFormat.Scientific };
                 scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
-                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnIndex))
-                        _floatColumnsWithFormatOverrides[columnIndex] = FloatDisplayFormat.Scientific;
+                    if (floatColumnsWithFormatOverrides.ContainsKey(key))
+                        floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Scientific;
                     else
-                        _floatColumnsWithFormatOverrides.Add(columnIndex, FloatDisplayFormat.Scientific);
+                        floatColumnsWithFormatOverrides.Add(key, FloatDisplayFormat.Scientific);
 
-                    if (this.Columns[columnIndex].HeaderText.EndsWith(" *"))
-                    {
-                        //Remove indicator
-                        this.Columns[columnIndex].HeaderText
-                            = this.Columns[columnIndex].HeaderText[..(this.Columns[columnIndex].HeaderText.Length - 2)];
-                    }
                     this.Refresh(); //Force a re-draw to render updated format
                 };
                 columnHeaderContextMenu.Items.Add(scientificNotationMenuItem);
@@ -964,16 +979,11 @@ namespace ParquetViewer.Controls
                 { Checked = displayFormat == FloatDisplayFormat.Decimal };
                 decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
-                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnIndex))
-                        _floatColumnsWithFormatOverrides[columnIndex] = FloatDisplayFormat.Decimal;
+                    if (floatColumnsWithFormatOverrides.ContainsKey(key))
+                        floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Decimal;
                     else
-                        _floatColumnsWithFormatOverrides.Add(columnIndex, FloatDisplayFormat.Decimal);
+                        floatColumnsWithFormatOverrides.Add(key, FloatDisplayFormat.Decimal);
 
-                    if (!this.Columns[columnIndex].HeaderText.EndsWith(" *"))
-                    {
-                        //Show indicator next to column name to signify it's formatted
-                        this.Columns[columnIndex].HeaderText += " *";
-                    }
                     this.Refresh(); //Force a re-draw to render updated format
                 };
                 columnHeaderContextMenu.Items.Add(decimalNotationMenuItem);
