@@ -146,26 +146,9 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: '/signed-package'
 
-      - name: Generate _checksums.txt
-        run: |
-          $fileHash = (Get-FileHash "signed-package/ParquetViewer.exe" -Algorithm SHA256)
-          $fileHashSelfContained = (Get-FileHash "signed-package/ParquetViewer_SelfContained.exe" -Algorithm SHA256)
-          $fileSize = (Get-Item -Path "signed-package/ParquetViewer.exe").Length
-          $fileSizeSelfContained = (Get-Item -Path "signed-package/ParquetViewer_SelfContained.exe").Length
-          "v${{ env.VERSION_NUMBER }}" >> "_checksums.txt"
-          "" >> "_checksums.txt"
-          "Name: ParquetViewer.exe" >> "_checksums.txt"
-          "Size: $fileSize bytes ($([math]::floor($fileSize/1KB)) KiB)" >> "_checksums.txt"
-          "SHA256: $($fileHash.Hash)" >> "_checksums.txt"
-          "" >> "_checksums.txt"
-          "Name: ParquetViewer_SelfContained.exe" >> "_checksums.txt"
-          "Size: $fileSizeSelfContained bytes ($([math]::floor($fileSizeSelfContained/1MB)) MiB)" >> "_checksums.txt"
-          "SHA256: $($fileHashSelfContained.Hash)" >> "_checksums.txt"
-          "" >> "_checksums.txt"
-
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "signed-package/ParquetViewer.exe,signed-package/ParquetViewer_SelfContained.exe,_checksums.txt"
+          artifacts: "signed-package/ParquetViewer.exe,signed-package/ParquetViewer_SelfContained.exe"
           body: "PR: #${{ env.PR_NUMBER }}"
           allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
           omitBodyDuringUpdate: true
