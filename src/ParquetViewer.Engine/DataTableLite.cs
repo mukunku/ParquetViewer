@@ -95,11 +95,11 @@ namespace ParquetViewer.Engine
                     {
                         //Try figure out where the mismatch is
                         var columnIndex = 0;
-                        foreach(var column in this._columns.Values)
+                        foreach (var column in this._columns.Values)
                         {
                             if (_rows[i][columnIndex] != DBNull.Value && column.Type != _rows[i][columnIndex].GetType())
                             {
-                                throw new TypeMismatchException($"Value type '{_rows[i][columnIndex].GetType()}' doesn't match column type {column.Type}" ,ex);
+                                throw new TypeMismatchException($"Value type '{_rows[i][columnIndex]?.GetType()}' doesn't match column type {column.Type}", ex);
                             }
                             columnIndex++;
                         }

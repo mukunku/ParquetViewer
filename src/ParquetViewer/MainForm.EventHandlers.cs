@@ -183,11 +183,8 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
         {
             try
             {
-                if (!this.IsAnyFileOpen)
+                if (!this.IsAnyFileOpen || this.MainDataSource is null)
                     return;
-
-                if (this.MainDataSource is null)
-                    throw new ApplicationException("This should never happen");
 
                 string queryText = this.searchFilterTextBox.Text ?? string.Empty;
                 queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
