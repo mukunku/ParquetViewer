@@ -32,7 +32,7 @@ namespace ParquetViewer.Engine.Types
                     {
                         string columnName = this.Data.Table.Columns[i].ColumnName
                             //Remove the parent field name from columns when rendering the data as json in the gridview cell.
-                            .Replace($"{this.Name}/", string.Empty); 
+                            .Replace($"{this.Name}/", string.Empty);
                         jsonWriter.WritePropertyName(columnName);
 
                         object value = this.Data[i];
@@ -110,7 +110,9 @@ namespace ParquetViewer.Engine.Types
                 //Hopefully lists also generate valid JSON on .ToString()
                 jsonWriter.WriteRawValue(list.ToString());
             }
-            else if (value is ByteArrayValue byteArray)
+            else if (value is ByteArrayValue byteArray /*&& truncateForDisplay //should use the entire byte array if 
+                                                        * we're not truncating for display? Seems kind of unreasonable 
+                                                        * for users to rely on binary data within a Struct value preview.*/)
             {
                 const int byteArrayMaxStringLength = 24; //arbitrary number that I think looks good
                 var byteArrayAsString = byteArray.ToStringTruncated(byteArrayMaxStringLength);
@@ -126,8 +128,8 @@ namespace ParquetViewer.Engine.Types
             }
             else
             {
-                //Everything else just try to write it raw
-                jsonWriter.WriteRawValue(value.ToString()!);
+                //Everything else just try to write it as string
+                jsonWriter.WriteStringValue(value.ToString()!);
             }
         }
 
