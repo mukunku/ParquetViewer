@@ -99,7 +99,7 @@ namespace ParquetViewer.Engine
                         {
                             if (_rows[i][columnIndex] != DBNull.Value && column.Type != _rows[i][columnIndex].GetType())
                             {
-                                throw new TypeMismatchException($"Value type '{_rows[i][columnIndex]?.GetType()}' doesn't match column type {column.Type}", ex);
+                                throw new TypeMismatchException($"Value type '{_rows[i][columnIndex]?.GetType()}' doesn't match column type {column.Type} for field `{column.Name}`");
                             }
                             columnIndex++;
                         }

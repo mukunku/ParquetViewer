@@ -79,6 +79,7 @@ namespace ParquetViewer
                 AppDomain.CurrentDomain.UnhandledException += new((sender, e) => ExceptionHandler((Exception)e.ExceptionObject));
 
                 // Add the event handler for handling UI thread exceptions to the event.
+                // Warning: Winforms only surfaces the inner-most exception to this handler.
                 Application.ThreadException += new((sender, e) => ExceptionHandler(e.Exception));
             }
         }
