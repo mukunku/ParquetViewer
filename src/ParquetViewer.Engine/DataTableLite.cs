@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using ParquetViewer.Engine.Exceptions;
+using System.Data;
 
 namespace ParquetViewer.Engine
 {
@@ -83,8 +84,31 @@ namespace ParquetViewer.Engine
             {
                 token.ThrowIfCancellationRequested();
 
-                //supposedly this is the fastest way to load data into a datatable https://stackoverflow.com/a/17123914/1458738
-                dataTable.LoadDataRow(_rows[i]!, false);
+                try
+                {
+                    //supposedly this is the fastest way to load data into a datatable https://stackoverflow.com/a/17123914/1458738
+                    dataTable.LoadDataRow(_rows[i]!, false);
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("Type of value has a mismatch with column type"))
+                    {
+                        //Try figure out where the mismatch is
+                        var columnIndex = 0;
+                        foreach (var column in this._columns.Values)
+                        {
+                            if (_rows[i][columnIndex] != DBNull.Value && column.Type != _rows[i][columnIndex].GetType())
+                            {
+                                throw new TypeMismatchException($"Value type '{_rows[i][columnIndex]?.GetType()}' doesn't match column type {column.Type} for field `{column.Name}`");
+                            }
+                            columnIndex++;
+                        }
+
+                        throw new TypeMismatchException(null, ex);
+                    }
+
+                    throw;
+                }
 
                 progress?.Report(_columns.Count);
             }

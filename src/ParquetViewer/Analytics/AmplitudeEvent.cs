@@ -79,8 +79,12 @@ namespace ParquetViewer.Analytics
                     }
                 };
 
-                var result = await new HttpClient(this._amplitudeConfiguration.HttpMessageHandlerProvider.Invoke())
+                //TODO: Not caching HttpClient is bad practice but changing it to singleton with thread safety has proven difficult
+                //as it broke tests in my first attempt. (Also not sure if thread safety is required)
+                //https://stackoverflow.com/a/48778707/1458738
+                using var result = await new HttpClient(this._amplitudeConfiguration.HttpMessageHandlerProvider.Invoke())
                     .PostAsync("https://api2.amplitude.com/2/httpapi", JsonContent.Create(request));
+
                 return result.IsSuccessStatusCode;
             }
             catch { /* Analytics is best effort. If it fails, it fails */ }

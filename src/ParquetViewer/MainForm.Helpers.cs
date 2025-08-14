@@ -36,6 +36,9 @@ namespace ParquetViewer
             return loadingIcon;
         }
 
+        //TODO: Should we export floats and binary data with custom formatting if activated?
+        //E.g. float -> Decimal format, Binary -> Size format, etc.
+        //We can't use the gridview formattedValue directly as we're changing the type sometimes.
         private async void ExportResults(FileType defaultFileType)
         {
             string? filePath = null;

@@ -3,8 +3,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Apache.Arrow" Version="20.0.0" />
-    <PackageVersion Include="Parquet.Net" Version="5.1.1" />
+    <PackageVersion Include="Apache.Arrow" Version="21.0.0" />
+    <PackageVersion Include="Parquet.Net" Version="5.2.0" />
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
     <PackageVersion Include="RichardSzalay.MockHttp" Version="7.0.0" />
