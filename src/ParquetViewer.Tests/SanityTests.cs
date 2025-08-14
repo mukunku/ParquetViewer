@@ -501,5 +501,23 @@ namespace ParquetViewer.Tests
             Assert.Equal(true, dataTable.Rows[0][4]);
             Assert.Equal(true, dataTable.Rows[4][4]);
         }
+
+        [Fact]
+        public async Task DECIMALS_WITH_NO_SCALE_TEST()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_WITH_NO_SCALE_TEST.parquet", default);
+            Assert.Equal(10589, parquetEngine.RecordCount);
+            Assert.Equal(8, parquetEngine.Fields.Count);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+
+            Assert.Equal(0.7072m, dataTable.Rows[0][5]);
+            Assert.Equal(0m, dataTable.Rows[0][6]);
+            Assert.Equal(0m, dataTable.Rows[0][7]);
+
+            Assert.Equal(0.74527m, dataTable.Rows[100][5]);
+            Assert.Equal(0m, dataTable.Rows[100][6]);
+            Assert.Equal(0m, dataTable.Rows[100][7]);
+        }
     }
 }
