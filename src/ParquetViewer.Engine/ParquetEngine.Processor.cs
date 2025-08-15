@@ -81,23 +81,15 @@ namespace ParquetViewer.Engine
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var field = column.ParentSchema.GetChild(column.Name);
-                switch (field.FieldType())
+                switch (field.FieldType)
                 {
                     case ParquetSchemaElement.FieldTypeId.Primitive:
                         await ReadPrimitiveField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.List:
-                        var listField = field.GetSingleOrByName("list");
-                        ParquetSchemaElement itemField;
-                        try
-                        {
-                            itemField = listField.GetSingleOrByName("item");
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Invalid List type.", ex);
-                        }
+                        var listField = field.GetListField();
+                        var itemField = listField.GetListItemField();
                         var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
                         await ReadListField(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
@@ -124,9 +116,8 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
-            bool doesFieldBelongToAList = field.Parents.Any(field => field.FieldType() == ParquetSchemaElement.FieldTypeId.List);
             int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
-            if (doesFieldBelongToAList)
+            if (field.BelongsToListField || field.BelongsToListOfStructsField)
             {
                 dataColumn = null;
                 await ReadListField(dataTable, groupReader, rowBeginIndex, field, fieldIndex, skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
@@ -177,7 +168,7 @@ namespace ParquetViewer.Engine
             var lastMilestone = "Start";
             try
             {
-                if (itemField.FieldType() == ParquetSchemaElement.FieldTypeId.Primitive)
+                if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
                 {
                     int rowIndex = rowBeginIndex;
 
@@ -233,7 +224,7 @@ namespace ParquetViewer.Engine
                         index++;
 
                         bool IsEndOfRow(int index) => (index + 1) == dataColumn.RepetitionLevels!.Length
-                            || dataColumn.RepetitionLevels[index + 1] == 0; //0 means new list
+                            || dataColumn.RepetitionLevels[index + 1] == (itemField.NumberOfListParents - 1); //means new list
 
                         //Skip rows
                         if (skipRecords > skippedRecords)
@@ -243,7 +234,6 @@ namespace ParquetViewer.Engine
 
                             continue;
                         }
-
 
                         rowValue ??= new ArrayList();
                         if (IsEndOfRow(index))
@@ -278,7 +268,7 @@ namespace ParquetViewer.Engine
                         }
                     }
                 }
-                else if (itemField.FieldType() == ParquetSchemaElement.FieldTypeId.Struct)
+                else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
                 {
                     //Read struct data as a new datatable
                     DataTableLite structFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
@@ -336,7 +326,7 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    throw new NotSupportedException($"Lists of {itemField.FieldType()}s are not currently supported");
+                    throw new NotSupportedException($"Lists of {itemField.FieldType}s are not currently supported");
                 }
             }
             catch (Exception ex)
@@ -349,9 +339,9 @@ namespace ParquetViewer.Engine
         private static async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var keyValueField = field.GetSingleOrByName("key_value");
-            var keyField = keyValueField.GetChildCI("key");
-            var valueField = keyValueField.GetChildCI("value");
+            var keyValueField = field.GetMapKeyValueField();
+            var keyField = keyValueField.GetMapKeyField();
+            var valueField = keyValueField.GetMapValueField();
 
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested map types are not supported");
@@ -545,15 +535,15 @@ namespace ParquetViewer.Engine
             foreach (var field in fields)
             {
                 var schema = parent.GetChild(field);
-                if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.List)
+                if (schema.FieldType == ParquetSchemaElement.FieldTypeId.List)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
-                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Map)
+                else if (schema.FieldType == ParquetSchemaElement.FieldTypeId.Map)
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Struct)
+                else if (schema.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
                 {
                     dataTable.AddColumn(field, typeof(StructValue), parent);
                 }
