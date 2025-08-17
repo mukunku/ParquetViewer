@@ -65,7 +65,7 @@ jobs:
         id: release-version
         run: |
           $content = Get-Content -Path "src/ParquetViewer/Properties/AssemblyInfo.cs" -Raw
-          $pattern = '\[assembly: AssemblyVersion\("(\d+(\.\d+){2}\.\d+)"\)\]'
+          $pattern = '\[assembly: AssemblyVersion\("\d+(\.\d+){2}\.\d+"\)\]'
           $match = Select-String -InputObject $content -Pattern $pattern
           $versionMatch = $match.Matches[0].Groups[1].Value
           "release_version=$versionMatch" >> $env:GITHUB_OUTPUT
