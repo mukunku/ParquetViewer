@@ -940,6 +940,8 @@ namespace ParquetViewer.Controls
                     var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
                     toolstripMenuItem.Click += (object? _, EventArgs _) =>
                     {
+                        ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
+
                         if (byteArrayColumnsWithFormatOverrides.ContainsKey(key))
                             byteArrayColumnsWithFormatOverrides[key] = supportedFormat;
                         else
@@ -968,6 +970,8 @@ namespace ParquetViewer.Controls
                 { Checked = displayFormat == FloatDisplayFormat.Scientific };
                 scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
+                    ColumnFormattedEvent.FireAndForget(scientificNotationMenuItem.Text);
+
                     if (floatColumnsWithFormatOverrides.ContainsKey(key))
                         floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Scientific;
                     else
@@ -981,6 +985,8 @@ namespace ParquetViewer.Controls
                 { Checked = displayFormat == FloatDisplayFormat.Decimal };
                 decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
+                    ColumnFormattedEvent.FireAndForget(decimalNotationMenuItem.Text);
+
                     if (floatColumnsWithFormatOverrides.ContainsKey(key))
                         floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Decimal;
                     else
