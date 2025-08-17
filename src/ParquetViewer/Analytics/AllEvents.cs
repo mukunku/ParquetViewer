@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -116,13 +118,13 @@ namespace ParquetViewer.Analytics
         private const string EVENT_TYPE = "exception.thrown";
 
         [JsonIgnore]
-        public System.Exception? Exception { get; set; }
+        public System.Exception Exception { get; }
 
-        public string? Message
+        public string Message
         {
             get
             {
-                var message = Exception?.Message;
+                var message = Exception.Message;
 
                 if (string.IsNullOrWhiteSpace(message))
                     return message;
@@ -133,18 +135,36 @@ namespace ParquetViewer.Analytics
             }
         }
 
-        public string? StackTrace => Exception?.StackTrace?.ToString();
-        public string? InnerException => Exception?.InnerException?.ToString();
+        public string? StackTrace => Exception.StackTrace?.ToString();
+        public string? InnerException => Exception.InnerException?.ToString();
+        public string Type => Exception.GetType().Name;
 
-        public ExceptionEvent(AmplitudeConfiguration? amplitudeConfiguration = null)
+        [JsonExtensionData]
+        public IDictionary<string, object> AdditionalData
+        {
+            get
+            {
+                var dictionary = new Dictionary<string, object>();
+                foreach(DictionaryEntry keyValuePair in this.Exception.Data)
+                {
+                    if (keyValuePair.Key is string key && keyValuePair.Value is not null)
+                    {
+                        dictionary.Add(key, keyValuePair.Value);
+                    }
+                }
+                return dictionary;
+            }
+        }
+
+        public ExceptionEvent(Exception ex, AmplitudeConfiguration? amplitudeConfiguration = null)
             : base(EVENT_TYPE, amplitudeConfiguration)
         {
-
+            this.Exception = ex ?? throw new ArgumentNullException(nameof(ex));
         }
 
         public static void FireAndForget(System.Exception ex)
         {
-            var _ = new ExceptionEvent { Exception = ex }.Record();
+            var _ = new ExceptionEvent(ex).Record();
         }
     }
 
@@ -190,6 +210,23 @@ namespace ParquetViewer.Analytics
         public ExecuteQueryEvent() : base(EVENT_TYPE)
         {
 
+        }
+    }
+
+    public class ColumnFormattedEvent : AmplitudeEvent
+    {
+        private const string EVENT_TYPE = "column.format";
+
+        public string FormatName { get; }
+
+        public ColumnFormattedEvent(string? formatName = null) : base(EVENT_TYPE)
+        {
+            FormatName = formatName ?? string.Empty;
+        }
+
+        public static void FireAndForget(string? formatName)
+        {
+            var _ = new ColumnFormattedEvent(formatName).Record();
         }
     }
 }
