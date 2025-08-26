@@ -281,6 +281,7 @@ namespace ParquetViewer
         {
             var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
             LoadingIcon? loadingIcon = null;
+            var wasSuccessful = false;
             try
             {
                 if (!this.IsAnyFileOpen)
@@ -321,9 +322,7 @@ namespace ParquetViewer
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                 this.MainDataSource = finalResult;
-
-                FileOpenEvent.FireAndForget(Directory.Exists(this.OpenFileOrFolderPath), this._openParquetEngine.NumberOfPartitions, this._openParquetEngine.RecordCount, this._openParquetEngine.ThriftMetadata.RowGroups.Count,
-                    this._openParquetEngine.Fields.Count, finalResult.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), this.CurrentOffset, this.CurrentMaxRowCount, finalResult.Columns.Count, stopwatch.ElapsedMilliseconds);
+                wasSuccessful = true;
             }
             catch (AllFilesSkippedException ex)
             {
@@ -340,6 +339,10 @@ namespace ParquetViewer
             catch (MultipleSchemasFoundException ex)
             {
                 HandleMultipleSchemasFoundException(ex);
+            }
+            catch (MalformedFieldException ex)
+            {
+                HandleMalformedFieldException(ex);
             }
             catch (Exception ex)
             {
@@ -359,6 +362,24 @@ namespace ParquetViewer
                 $"    Render time: {renderTime:mm\\:ss\\.ff}" + Environment.NewLine;
 
                 loadingIcon?.Dispose();
+
+                if (wasSuccessful)
+                {
+                    FileOpenEvent.FireAndForget(
+                        Directory.Exists(this.OpenFileOrFolderPath), 
+                        this._openParquetEngine!.NumberOfPartitions, 
+                        this._openParquetEngine.RecordCount,
+                        this._openParquetEngine.ThriftMetadata.RowGroups.Count,
+                        this._openParquetEngine.Fields.Count, 
+                        this.MainDataSource!.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), 
+                        this.CurrentOffset, 
+                        this.CurrentMaxRowCount, 
+                        this.MainDataSource!.Columns.Count, 
+                        (long)totalTime.TotalMilliseconds,
+                        (long)loadTime.TotalMilliseconds,
+                        (long)indexTime.TotalMilliseconds,
+                        (long)renderTime.TotalMilliseconds);
+                }
             }
         }
 

@@ -403,6 +403,11 @@ namespace ParquetViewer
             ShowError(sb.ToString());
         }
 
+        private static void HandleMalformedFieldException(MalformedFieldException ex)
+        {
+            ShowError(ex.Message);
+        }
+
         private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }
