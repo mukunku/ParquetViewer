@@ -40,7 +40,7 @@ namespace ParquetViewer
             this.labelCopyright.Text = AssemblyCopyright;
             this.labelCompanyName.Text = AssemblyCompany;
             this.textBoxDescription.Text = AssemblyDescription;
-            this.publicKeyLabel.Text = $"Public Key Token: {AssemblyPublicKey}";
+            this.newVersionLabel.Text = string.Empty;
 
             if (!AmplitudeEvent.HasApiKey)
             {
@@ -68,13 +68,7 @@ namespace ParquetViewer
             }
         }
 
-        public static string AssemblyVersion
-        {
-            get
-            {
-                return Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
-            }
-        }
+        public string AssemblyVersion => Env.AssemblyVersion.ToString();
 
         public string AssemblyDescription
         {
@@ -311,7 +305,7 @@ namespace ParquetViewer
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 
-        private void AboutBox_Load(object sender, EventArgs e)
+        private async void AboutBox_Load(object sender, EventArgs e)
         {
             try
             {
@@ -320,6 +314,35 @@ namespace ParquetViewer
             catch
             {
                 this.associateFileExtensionCheckBox.Enabled = false;
+            }
+
+            try
+            {
+                var latestRelease = await Env.FetchLatestRelease();
+                if (latestRelease.Version > Env.AssemblyVersion)
+                {
+                    this.newVersionLabel.Text = $"New version {latestRelease.Version.ToString()} available for update!";
+                    this.newVersionLabel.Tag = latestRelease.Url?.ToString();
+                    //TODO: Set image for linklabel? like alarm icon or exclamation
+                }
+                else if (latestRelease.Version == Env.AssemblyVersion)
+                {
+                    this.newVersionLabel.Text = $"Your version is up-to-date 👍";
+                    this.newVersionLabel.Tag = null;
+                    this.newVersionLabel.LinkBehavior = LinkBehavior.NeverUnderline;
+                    this.newVersionLabel.ForeColor = this.labelCompanyName.ForeColor;
+                }
+                else
+                {
+                    this.newVersionLabel.Text = string.Empty;
+                    this.newVersionLabel.Tag = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ExceptionEvent.FireAndForget(ex);
+                this.newVersionLabel.Text = string.Empty;
+                this.newVersionLabel.Tag = null;
             }
         }
 

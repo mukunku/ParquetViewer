@@ -325,7 +325,7 @@ namespace ParquetViewer
 "ParquetViewer", @"
 {
     ""CreatedWith"": ""ParquetViewer"",
-    ""Version"": """ + AboutBox.AssemblyVersion + @""",
+    ""Version"": """ + Env.AssemblyVersion.ToString() + @""",
     ""Website"": ""https://github.com/mukunku/ParquetViewer"",
     ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + @"""
 }"

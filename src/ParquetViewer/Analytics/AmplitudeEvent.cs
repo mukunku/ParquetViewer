@@ -74,7 +74,7 @@ namespace ParquetViewer.Analytics
                         language = CultureInfo.CurrentUICulture.Name,
                         os_name = Environment.OSVersion.Platform.ToString(),
                         os_version = Environment.OSVersion.VersionString,
-                        app_version = AboutBox.AssemblyVersion
+                        app_version = Env.AssemblyVersion.ToString()
                         }
                     }
                 };

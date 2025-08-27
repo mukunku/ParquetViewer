@@ -2,6 +2,7 @@
 using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ParquetViewer
 {
@@ -43,10 +44,10 @@ namespace ParquetViewer
             set => SetRegistryValue(AutoSizeColumnsModeKey, (int)value);
         }
 
-        public static string? ConsentLastAskedOnVersion
+        public static SemanticVersion? ConsentLastAskedOnVersion
         {
-            get => ReadRegistryValue(ConsentLastAskedOnVersionKey, out string? value) ? value : null;
-            set => SetRegistryValue(ConsentLastAskedOnVersionKey, value ?? string.Empty);
+            get => ReadRegistryValue(ConsentLastAskedOnVersionKey, out string? value) ? SemanticVersion.TryParse(value, out var semanticVersion) ? semanticVersion : null : null;
+            set => SetRegistryValue(ConsentLastAskedOnVersionKey, value?.ToString() ?? string.Empty);
         }
 
         public static Guid AnalyticsDeviceId
@@ -110,7 +111,7 @@ namespace ParquetViewer
 
         public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;
 
-        private static bool ReadRegistryValue<T>(string key, out T? value)
+        private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)
         {
             try
             {

@@ -316,7 +316,7 @@ namespace ParquetViewer.Tests
         ""language"": ""{CultureInfo.CurrentUICulture.Name}"",
         ""os_name"": ""{Environment.OSVersion.Platform}"",
         ""os_version"": ""{Environment.OSVersion.VersionString}"",
-        ""app_version"": ""{AboutBox.AssemblyVersion}""
+        ""app_version"": ""{Helpers.Env.AssemblyVersion.ToString()}""
     }}]
 }}";
 

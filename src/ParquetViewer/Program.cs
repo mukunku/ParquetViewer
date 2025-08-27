@@ -99,26 +99,25 @@ namespace ParquetViewer
         ///     analytics back-to-back. But chances of that happening are slim so maybe we don't need to worry about it?
         /// </remarks>
         public static void GetUserConsentToGatherAnalytics()
-        {            
-            if (AppSettings.AnalyticsDataGatheringConsent)
+        {   
+            if (AppSettings.ConsentLastAskedOnVersion is null || AppSettings.ConsentLastAskedOnVersion < Env.AssemblyVersion)
             {
-                //Keep user's consent asked version up to date with the current assembly version
-                if (AssemblyVersionToInt(AppSettings.ConsentLastAskedOnVersion) < AssemblyVersionToInt(AboutBox.AssemblyVersion))
+                if (AppSettings.AnalyticsDataGatheringConsent)
                 {
-                    AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
+                    //Keep user's consent asked version up to date with the current assembly version
+                    AppSettings.ConsentLastAskedOnVersion = Env.AssemblyVersion;
+                    return;
                 }
-            }
-            else if (AssemblyVersionToInt(AppSettings.ConsentLastAskedOnVersion) < AssemblyVersionToInt(AboutBox.AssemblyVersion))
-            {
+
                 bool isFirstLaunch = AppSettings.ConsentLastAskedOnVersion is null;
                 if (isFirstLaunch)
                 {
                     //Don't ask for consent on the first launch. Record the day of the month instead so we can ask tomorrow. 
-                    AppSettings.ConsentLastAskedOnVersion = DateTime.Now.Day.ToString();
+                    AppSettings.ConsentLastAskedOnVersion = new SemanticVersion(0, 0, 0, DateTime.Now.Day);
                 }
-                else if (AppSettings.ConsentLastAskedOnVersion != DateTime.Now.Day.ToString())
+                else if (AppSettings.ConsentLastAskedOnVersion != new SemanticVersion(0, 0, 0, DateTime.Now.Day))
                 {
-                    AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
+                    AppSettings.ConsentLastAskedOnVersion = Env.AssemblyVersion;
                     if (MessageBox.Show($"Would you like to share anonymous usage data to help make ParquetViewer better?" +
                         $"{Environment.NewLine}{Environment.NewLine}You can always change this setting later from the Help menu.", 
                         "Share Anonymous Usage Data?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
@@ -126,19 +125,6 @@ namespace ParquetViewer
                         //We got consent! Start gathering some data..
                         AppSettings.AnalyticsDataGatheringConsent = true;
                     }
-                }
-            }
-
-            static int AssemblyVersionToInt(string? version)
-            {
-                try
-                {
-                    return int.Parse(version?.Replace(".", string.Empty) ?? "0");
-                }
-                catch (Exception ex)
-                {
-                    ExceptionEvent.FireAndForget(new UnsupportedAssemblyVersionException(ex));
-                    return 0;
                 }
             }
         }

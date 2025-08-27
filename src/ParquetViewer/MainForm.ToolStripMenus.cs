@@ -194,7 +194,7 @@ namespace ParquetViewer
         {
             this.shareAnonymousUsageDataToolStripMenuItem.Checked = !this.shareAnonymousUsageDataToolStripMenuItem.Checked;
             AppSettings.AnalyticsDataGatheringConsent = this.shareAnonymousUsageDataToolStripMenuItem.Checked;
-            AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
+            AppSettings.ConsentLastAskedOnVersion = Env.AssemblyVersion;
         }
 
         private void shareAnonymousUsageDataToolStripMenuItem_CheckedChanged(object sender, System.EventArgs e)

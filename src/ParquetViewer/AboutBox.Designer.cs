@@ -31,7 +31,7 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             tableLayoutPanel = new TableLayoutPanel();
-            publicKeyLabel = new Label();
+            newVersionLabel = new LinkLabel();
             logoPictureBox = new PictureBox();
             labelProductName = new Label();
             labelVersion = new Label();
@@ -50,7 +50,7 @@ namespace ParquetViewer
             tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33F));
             tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45F));
             tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 22F));
-            tableLayoutPanel.Controls.Add(publicKeyLabel, 1, 4);
+            tableLayoutPanel.Controls.Add(newVersionLabel, 1, 4);
             tableLayoutPanel.Controls.Add(logoPictureBox, 0, 0);
             tableLayoutPanel.Controls.Add(labelProductName, 1, 0);
             tableLayoutPanel.Controls.Add(labelVersion, 1, 1);
@@ -74,18 +74,19 @@ namespace ParquetViewer
             tableLayoutPanel.Size = new Size(487, 307);
             tableLayoutPanel.TabIndex = 0;
             // 
-            // publicKeyLabel
+            // newVersionLabel
             // 
-            tableLayoutPanel.SetColumnSpan(publicKeyLabel, 2);
-            publicKeyLabel.Dock = DockStyle.Fill;
-            publicKeyLabel.Location = new Point(167, 108);
-            publicKeyLabel.Margin = new Padding(7, 0, 4, 0);
-            publicKeyLabel.MaximumSize = new Size(0, 20);
-            publicKeyLabel.Name = "publicKeyLabel";
-            publicKeyLabel.Size = new Size(316, 20);
-            publicKeyLabel.TabIndex = 25;
-            publicKeyLabel.Text = "Public Key";
-            publicKeyLabel.TextAlign = ContentAlignment.MiddleLeft;
+            tableLayoutPanel.SetColumnSpan(newVersionLabel, 2);
+            newVersionLabel.Dock = DockStyle.Fill;
+            newVersionLabel.Location = new Point(167, 108);
+            newVersionLabel.Margin = new Padding(7, 0, 4, 0);
+            newVersionLabel.MaximumSize = new Size(0, 20);
+            newVersionLabel.Name = "newVersionLabel";
+            newVersionLabel.Size = new Size(316, 20);
+            newVersionLabel.TabIndex = 25;
+            newVersionLabel.TabStop = true;
+            newVersionLabel.Text = "New Version Available!";
+            newVersionLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // logoPictureBox
             // 
@@ -225,6 +226,6 @@ namespace ParquetViewer
         private System.Windows.Forms.TextBox textBoxDescription;
         private System.Windows.Forms.Button okButton;
         private System.Windows.Forms.CheckBox associateFileExtensionCheckBox;
-        private System.Windows.Forms.Label publicKeyLabel;
+        private System.Windows.Forms.LinkLabel newVersionLabel;
     }
 }
