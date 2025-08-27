@@ -31,62 +31,49 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             tableLayoutPanel = new TableLayoutPanel();
-            newVersionLabel = new LinkLabel();
             logoPictureBox = new PictureBox();
             labelProductName = new Label();
-            labelVersion = new Label();
             labelCopyright = new Label();
             labelCompanyName = new Label();
             textBoxDescription = new TextBox();
             okButton = new Button();
             associateFileExtensionCheckBox = new CheckBox();
+            flowLayoutPanel2 = new FlowLayoutPanel();
+            labelVersion = new Label();
+            newVersionLabel = new LinkLabel();
             tableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)logoPictureBox).BeginInit();
+            flowLayoutPanel2.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel
             // 
             tableLayoutPanel.ColumnCount = 3;
             tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33F));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45F));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 22F));
-            tableLayoutPanel.Controls.Add(newVersionLabel, 1, 4);
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 27F));
             tableLayoutPanel.Controls.Add(logoPictureBox, 0, 0);
             tableLayoutPanel.Controls.Add(labelProductName, 1, 0);
-            tableLayoutPanel.Controls.Add(labelVersion, 1, 1);
             tableLayoutPanel.Controls.Add(labelCopyright, 1, 2);
             tableLayoutPanel.Controls.Add(labelCompanyName, 1, 3);
-            tableLayoutPanel.Controls.Add(textBoxDescription, 1, 5);
-            tableLayoutPanel.Controls.Add(okButton, 2, 6);
-            tableLayoutPanel.Controls.Add(associateFileExtensionCheckBox, 1, 6);
+            tableLayoutPanel.Controls.Add(textBoxDescription, 1, 4);
+            tableLayoutPanel.Controls.Add(okButton, 2, 5);
+            tableLayoutPanel.Controls.Add(associateFileExtensionCheckBox, 1, 5);
+            tableLayoutPanel.Controls.Add(flowLayoutPanel2, 1, 1);
             tableLayoutPanel.Dock = DockStyle.Fill;
             tableLayoutPanel.Location = new Point(10, 10);
             tableLayoutPanel.Margin = new Padding(4, 3, 4, 3);
             tableLayoutPanel.Name = "tableLayoutPanel";
-            tableLayoutPanel.RowCount = 7;
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.090909F));
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.090909F));
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.090909F));
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.090909F));
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.090909F));
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 45.4545441F));
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.090909F));
+            tableLayoutPanel.RowCount = 6;
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.049773F));
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.049773F));
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.049773F));
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.049773F));
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 54.751133F));
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 9.049773F));
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             tableLayoutPanel.Size = new Size(487, 307);
             tableLayoutPanel.TabIndex = 0;
-            // 
-            // newVersionLabel
-            // 
-            tableLayoutPanel.SetColumnSpan(newVersionLabel, 2);
-            newVersionLabel.Dock = DockStyle.Fill;
-            newVersionLabel.Location = new Point(167, 108);
-            newVersionLabel.Margin = new Padding(7, 0, 4, 0);
-            newVersionLabel.MaximumSize = new Size(0, 20);
-            newVersionLabel.Name = "newVersionLabel";
-            newVersionLabel.Size = new Size(316, 20);
-            newVersionLabel.TabIndex = 25;
-            newVersionLabel.TabStop = true;
-            newVersionLabel.Text = "New Version Available!";
-            newVersionLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // logoPictureBox
             // 
@@ -95,7 +82,7 @@ namespace ParquetViewer
             logoPictureBox.Location = new Point(4, 3);
             logoPictureBox.Margin = new Padding(4, 3, 4, 3);
             logoPictureBox.Name = "logoPictureBox";
-            tableLayoutPanel.SetRowSpan(logoPictureBox, 7);
+            tableLayoutPanel.SetRowSpan(logoPictureBox, 6);
             logoPictureBox.Size = new Size(152, 301);
             logoPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
             logoPictureBox.TabIndex = 12;
@@ -113,19 +100,6 @@ namespace ParquetViewer
             labelProductName.TabIndex = 19;
             labelProductName.Text = "Product Name";
             labelProductName.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // labelVersion
-            // 
-            tableLayoutPanel.SetColumnSpan(labelVersion, 2);
-            labelVersion.Dock = DockStyle.Fill;
-            labelVersion.Location = new Point(167, 27);
-            labelVersion.Margin = new Padding(7, 0, 4, 0);
-            labelVersion.MaximumSize = new Size(0, 20);
-            labelVersion.Name = "labelVersion";
-            labelVersion.Size = new Size(316, 20);
-            labelVersion.TabIndex = 0;
-            labelVersion.Text = "Version";
-            labelVersion.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // labelCopyright
             // 
@@ -157,13 +131,13 @@ namespace ParquetViewer
             // 
             tableLayoutPanel.SetColumnSpan(textBoxDescription, 2);
             textBoxDescription.Dock = DockStyle.Fill;
-            textBoxDescription.Location = new Point(167, 138);
+            textBoxDescription.Location = new Point(167, 111);
             textBoxDescription.Margin = new Padding(7, 3, 4, 3);
             textBoxDescription.Multiline = true;
             textBoxDescription.Name = "textBoxDescription";
             textBoxDescription.ReadOnly = true;
             textBoxDescription.ScrollBars = ScrollBars.Both;
-            textBoxDescription.Size = new Size(316, 133);
+            textBoxDescription.Size = new Size(316, 162);
             textBoxDescription.TabIndex = 23;
             textBoxDescription.TabStop = false;
             // 
@@ -171,23 +145,63 @@ namespace ParquetViewer
             // 
             okButton.Anchor = AnchorStyles.Right;
             okButton.DialogResult = DialogResult.Cancel;
-            okButton.Location = new Point(395, 277);
+            okButton.Location = new Point(395, 279);
             okButton.Margin = new Padding(4, 3, 4, 3);
             okButton.Name = "okButton";
-            okButton.Size = new Size(88, 27);
+            okButton.Size = new Size(88, 24);
             okButton.TabIndex = 24;
             okButton.Text = "&OK";
             // 
             // associateFileExtensionCheckBox
             // 
             associateFileExtensionCheckBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            associateFileExtensionCheckBox.Location = new Point(164, 277);
+            associateFileExtensionCheckBox.Location = new Point(164, 279);
             associateFileExtensionCheckBox.Margin = new Padding(4, 3, 4, 3);
             associateFileExtensionCheckBox.Name = "associateFileExtensionCheckBox";
-            associateFileExtensionCheckBox.Size = new Size(211, 27);
+            associateFileExtensionCheckBox.Size = new Size(186, 24);
             associateFileExtensionCheckBox.TabIndex = 24;
             associateFileExtensionCheckBox.Text = "Associate with .parquet files";
             associateFileExtensionCheckBox.CheckedChanged += associateFileExtensionCheckBox_CheckedChanged;
+            // 
+            // flowLayoutPanel2
+            // 
+            tableLayoutPanel.SetColumnSpan(flowLayoutPanel2, 2);
+            flowLayoutPanel2.Controls.Add(labelVersion);
+            flowLayoutPanel2.Controls.Add(newVersionLabel);
+            flowLayoutPanel2.Location = new Point(163, 30);
+            flowLayoutPanel2.Name = "flowLayoutPanel2";
+            flowLayoutPanel2.Size = new Size(320, 19);
+            flowLayoutPanel2.TabIndex = 27;
+            // 
+            // labelVersion
+            // 
+            labelVersion.AutoSize = true;
+            labelVersion.Location = new Point(4, 0);
+            labelVersion.Margin = new Padding(4, 0, 4, 0);
+            labelVersion.MaximumSize = new Size(0, 20);
+            labelVersion.Name = "labelVersion";
+            labelVersion.Padding = new Padding(0, 0, 0, 1);
+            labelVersion.Size = new Size(45, 16);
+            labelVersion.TabIndex = 0;
+            labelVersion.Text = "Version";
+            labelVersion.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // newVersionLabel
+            // 
+            newVersionLabel.AutoSize = true;
+            newVersionLabel.Image = Properties.Resources.external_link_icon;
+            newVersionLabel.ImageAlign = ContentAlignment.MiddleRight;
+            newVersionLabel.Location = new Point(57, 0);
+            newVersionLabel.Margin = new Padding(4, 0, 4, 0);
+            newVersionLabel.MaximumSize = new Size(0, 20);
+            newVersionLabel.Name = "newVersionLabel";
+            newVersionLabel.Padding = new Padding(0, 0, 18, 1);
+            newVersionLabel.Size = new Size(103, 16);
+            newVersionLabel.TabIndex = 25;
+            newVersionLabel.TabStop = true;
+            newVersionLabel.Text = "(Latest: 0.0.0.0)";
+            newVersionLabel.TextAlign = ContentAlignment.MiddleRight;
+            newVersionLabel.LinkClicked += newVersionLabel_LinkClicked;
             // 
             // AboutBox
             // 
@@ -212,6 +226,8 @@ namespace ParquetViewer
             tableLayoutPanel.ResumeLayout(false);
             tableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)logoPictureBox).EndInit();
+            flowLayoutPanel2.ResumeLayout(false);
+            flowLayoutPanel2.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -227,5 +243,6 @@ namespace ParquetViewer
         private System.Windows.Forms.Button okButton;
         private System.Windows.Forms.CheckBox associateFileExtensionCheckBox;
         private System.Windows.Forms.LinkLabel newVersionLabel;
+        private FlowLayoutPanel flowLayoutPanel2;
     }
 }

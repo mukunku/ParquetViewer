@@ -41,6 +41,7 @@ namespace ParquetViewer
             this.labelCompanyName.Text = AssemblyCompany;
             this.textBoxDescription.Text = AssemblyDescription;
             this.newVersionLabel.Text = string.Empty;
+            this.newVersionLabel.Image = null;
 
             if (!AmplitudeEvent.HasApiKey)
             {
@@ -321,16 +322,14 @@ namespace ParquetViewer
                 var latestRelease = await Env.FetchLatestRelease();
                 if (latestRelease.Version > Env.AssemblyVersion)
                 {
-                    this.newVersionLabel.Text = $"New version {latestRelease.Version.ToString()} available for update!";
-                    this.newVersionLabel.Tag = latestRelease.Url?.ToString();
-                    //TODO: Set image for linklabel? like alarm icon or exclamation
+                    this.newVersionLabel.Text = $"(Latest: {latestRelease.Version.ToString()})";
+                    this.newVersionLabel.Tag = latestRelease.Url;
+                    this.newVersionLabel.Image = Properties.Resources.external_link_icon;
                 }
                 else if (latestRelease.Version == Env.AssemblyVersion)
                 {
-                    this.newVersionLabel.Text = $"Your version is up-to-date 👍";
-                    this.newVersionLabel.Tag = null;
-                    this.newVersionLabel.LinkBehavior = LinkBehavior.NeverUnderline;
-                    this.newVersionLabel.ForeColor = this.labelCompanyName.ForeColor;
+                    this.newVersionLabel.Text = $"(Latest: {latestRelease.Version.ToString()})";
+                    this.newVersionLabel.Enabled = false;
                 }
                 else
                 {
@@ -401,6 +400,12 @@ namespace ParquetViewer
             base.SetTheme(theme);
             this.okButton.BackColor = Color.White;
             this.okButton.ForeColor = Color.Black;
+        }
+
+        private void newVersionLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (this.newVersionLabel.Tag is Uri url)
+                Process.Start(new ProcessStartInfo(url.ToString()) { UseShellExecute = true });
         }
     }
 }
