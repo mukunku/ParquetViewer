@@ -405,7 +405,8 @@ namespace ParquetViewer
 
         private static void HandleMalformedFieldException(MalformedFieldException ex)
         {
-            ShowError(ex.Message);
+            ShowError($"{ex.Message}{Environment.NewLine}{Environment.NewLine}" +
+                $"If you think the file is valid please consider opening an issue in the GitHub repo. See: Help → About");
         }
 
         private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
