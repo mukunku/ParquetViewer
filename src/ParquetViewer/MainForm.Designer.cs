@@ -259,6 +259,7 @@ namespace ParquetViewer
             mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
+            mainGridView.CopyAsWhereIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyAsWhereIcon");
             mainGridView.CopyToClipboardIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyToClipboardIcon");
             mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Location = new System.Drawing.Point(4, 38);
@@ -268,6 +269,7 @@ namespace ParquetViewer
             mainGridView.RowHeadersWidth = 24;
             mainTableLayoutPanel.SetRowSpan(mainGridView, 2);
             mainGridView.ShowCellToolTips = false;
+            mainGridView.ShowCopyAsWhereContextMenuItem = true;
             mainGridView.Size = new System.Drawing.Size(936, 356);
             mainGridView.TabIndex = 7;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
@@ -614,13 +616,14 @@ namespace ParquetViewer
             KeyPreview = true;
             MainMenuStrip = mainMenuStrip;
             Margin = new Padding(4, 3, 4, 3);
-            MinimumSize = new System.Drawing.Size(791, 398);
+            MinimumSize = new System.Drawing.Size(791, 200);
             Name = "MainForm";
             Text = "New Parquet File";
             Load += MainForm_Load;
             DragDrop += MainForm_DragDrop;
             DragEnter += MainForm_DragEnter;
             KeyDown += MainForm_KeyDown;
+            Resize += MainForm_Resize;
             mainTableLayoutPanel.ResumeLayout(false);
             mainTableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)mainGridView).EndInit();

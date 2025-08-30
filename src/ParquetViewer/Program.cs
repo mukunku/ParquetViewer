@@ -79,6 +79,7 @@ namespace ParquetViewer
                 AppDomain.CurrentDomain.UnhandledException += new((sender, e) => ExceptionHandler((Exception)e.ExceptionObject));
 
                 // Add the event handler for handling UI thread exceptions to the event.
+                // Warning: Winforms only surfaces the inner-most exception to this handler.
                 Application.ThreadException += new((sender, e) => ExceptionHandler(e.Exception));
             }
         }
@@ -92,8 +93,13 @@ namespace ParquetViewer
         /// <summary>
         /// We only ask for consent if the user launched the app at least twice, 1 day apart.
         /// </summary>
+        /// <remarks>
+        /// TODO: Should we postpone asking analytics consent if this is also if we're also asking for .parquet file association?
+        ///     It would be annoying if we ask to become the user's default parquet viewer then also ask if we can gather
+        ///     analytics back-to-back. But chances of that happening are slim so maybe we don't need to worry about it?
+        /// </remarks>
         public static void GetUserConsentToGatherAnalytics()
-        {
+        {            
             if (AppSettings.AnalyticsDataGatheringConsent)
             {
                 //Keep user's consent asked version up to date with the current assembly version

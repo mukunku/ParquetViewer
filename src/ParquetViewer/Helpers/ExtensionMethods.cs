@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
 
@@ -72,24 +73,6 @@ namespace ParquetViewer.Helpers
 
         public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
 
-        //Can't put this into ByteArrayValue as it doesn't reference System.Drawing.
-        public static bool ToImage(this ByteArrayValue byteArrayValue, out Image? image)
-        {
-            ArgumentNullException.ThrowIfNull(byteArrayValue);
-
-            try
-            {
-                using var ms = new MemoryStream(byteArrayValue.Data);
-                image = Image.FromStream(ms);
-                return true;
-            }
-            catch
-            {
-                image = null;
-                return false;
-            }
-        }
-
         public static Size RenderedSize(this PictureBox pictureBox)
         {
             var wfactor = (double)pictureBox.Image.Width / pictureBox.ClientSize.Width;
@@ -99,11 +82,19 @@ namespace ParquetViewer.Helpers
             return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
         }
 
-        public static IEnumerable<System.Data.DataColumn> AsEnumerable(this DataColumnCollection columns)
+        public static IEnumerable<DataColumn> AsEnumerable(this DataColumnCollection columns)
         {
-            foreach (System.Data.DataColumn column in columns)
+            foreach (DataColumn column in columns)
             {
                 yield return column;
+            }
+        }
+
+        public static IEnumerable<DataGridViewCell> AsEnumerable(this DataGridViewSelectedCellCollection cells)
+        {
+            foreach (DataGridViewCell cell in cells)
+            {
+                yield return cell;
             }
         }
 
@@ -118,7 +109,7 @@ namespace ParquetViewer.Helpers
         /// Returns true if the type is a number type.
         /// </summary>
         public static bool IsNumber(this Type type) =>
-            Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
+            System.Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
         public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
         {
@@ -137,14 +128,14 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
+        public static System.Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
         {
             ArgumentNullException.ThrowIfNull(dataTable);
 
             if (!dataTable.Columns.Contains(columnName))
                 throw new ArgumentException($"Column '{columnName}' does not exist in the datatable");
 
-            var values = Array.CreateInstance(type, dataTable.Rows.Count);
+            var values = System.Array.CreateInstance(type, dataTable.Rows.Count);
             for (var i = 0; i < dataTable.Rows.Count; i++)
             {
                 var value = dataTable.Rows[i][columnName];
@@ -168,25 +159,50 @@ namespace ParquetViewer.Helpers
                 ? sourceType
                 : typeof(Nullable<>).MakeGenericType(sourceType);
 
-        /// <summary>
-        /// Converts a float to a string without using the scientific notation
-        /// </summary>
-        public static string ToDecimalString(this float floatValue) => ToDecimalStringImpl(floatValue);
+        private const float DECIMAL_MIN_FLOAT = (float)decimal.MinValue;
+        private const float DECIMAL_MAX_FLOAT = (float)decimal.MaxValue;
+        private const double DECIMAL_MIN_DOUBLE = (double)decimal.MinValue;
+        private const double DECIMAL_MAX_DOUBLE = (double)decimal.MaxValue;
 
         /// <summary>
-        /// Converts a double to a string without using the scientific notation
+        /// Converts a float to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this double doubleValue) => ToDecimalStringImpl(doubleValue);
+        public static string ToDecimalString(this float floatValue, string? valueOverrideIfFormattingFails = null)
+            => ToDecimalStringImpl(floatValue, floatValue >= DECIMAL_MIN_FLOAT && floatValue <= DECIMAL_MAX_FLOAT, valueOverrideIfFormattingFails);
 
-        private static string ToDecimalStringImpl(object value)
+        /// <summary>
+        /// Converts a double to a string without using the scientific notation, if possible
+        /// </summary>
+        public static string ToDecimalString(this double doubleValue, string? valueOverrideIfFormattingFails = null)
+            => ToDecimalStringImpl(doubleValue, doubleValue >= DECIMAL_MIN_DOUBLE && doubleValue <= DECIMAL_MAX_DOUBLE, valueOverrideIfFormattingFails);
+
+        private static string ToDecimalStringImpl(object value, bool isInRange, string? valueOverrideIfFormattingFails)
         {
             var formattedValue = value?.ToString() ?? string.Empty;
+
+            if (!isInRange)
+            {
+                if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
+                    return valueOverrideIfFormattingFails;
+                else
+                    return formattedValue;
+            }
 
             var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
             if (isUsingScientificNotation)
             {
-                //Convert the float/double to a decimal which is formatted much nicer as string
-                formattedValue = Convert.ToDecimal(value).ToString();
+                try
+                {
+                    //Convert the float/double to a decimal which is formatted much nicer as string
+                    formattedValue = Convert.ToDecimal(value).ToString();
+                }
+                catch
+                {
+                    if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
+                    {
+                        formattedValue = valueOverrideIfFormattingFails;
+                    }
+                }
             }
             return formattedValue;
         }
@@ -231,6 +247,32 @@ namespace ParquetViewer.Helpers
                         yield return cc;
                     }
                 }
+            }
+        }
+
+        public static IEnumerable<T> AppendIf<T>(this IEnumerable<T> enumerable, bool append, T value)
+        {
+            if (append)
+                return enumerable.Append(value);
+            else
+                return enumerable;
+        }
+
+        /// <remarks>Can't put this into ByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
+        public static bool ToImage(this ByteArrayValue byteArrayValue, out Image? image)
+        {
+            ArgumentNullException.ThrowIfNull(byteArrayValue);
+
+            try
+            {
+                using var ms = new MemoryStream(byteArrayValue.Data);
+                image = Image.FromStream(ms);
+                return true;
+            }
+            catch
+            {
+                image = null;
+                return false;
             }
         }
     }
