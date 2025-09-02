@@ -159,52 +159,31 @@ namespace ParquetViewer.Helpers
                 ? sourceType
                 : typeof(Nullable<>).MakeGenericType(sourceType);
 
-        private const float DECIMAL_MIN_FLOAT = (float)decimal.MinValue;
-        private const float DECIMAL_MAX_FLOAT = (float)decimal.MaxValue;
-        private const double DECIMAL_MIN_DOUBLE = (double)decimal.MinValue;
-        private const double DECIMAL_MAX_DOUBLE = (double)decimal.MaxValue;
-
         /// <summary>
         /// Converts a float to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this float floatValue, string? valueOverrideIfFormattingFails = null)
-            => ToDecimalStringImpl(floatValue, floatValue >= DECIMAL_MIN_FLOAT && floatValue <= DECIMAL_MAX_FLOAT, valueOverrideIfFormattingFails);
+        /// <returns><paramref name="floatValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
+        public static string? ToDecimalString(this float floatValue)
+            => floatValue >= (float)decimal.MinValue && floatValue <= (float)decimal.MaxValue ? ToDecimalStringImpl(floatValue) : null;
 
         /// <summary>
         /// Converts a double to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this double doubleValue, string? valueOverrideIfFormattingFails = null)
-            => ToDecimalStringImpl(doubleValue, doubleValue >= DECIMAL_MIN_DOUBLE && doubleValue <= DECIMAL_MAX_DOUBLE, valueOverrideIfFormattingFails);
+        /// <returns><paramref name="doubleValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
+        public static string? ToDecimalString(this double doubleValue)
+            => doubleValue >= (double)decimal.MinValue && doubleValue <= (double)decimal.MaxValue ? ToDecimalStringImpl(doubleValue) : null;
 
-        private static string ToDecimalStringImpl(object value, bool isInRange, string? valueOverrideIfFormattingFails)
+        private static string? ToDecimalStringImpl(object value)
         {
-            var formattedValue = value?.ToString() ?? string.Empty;
 
-            if (!isInRange)
+            try
             {
-                if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
-                    return valueOverrideIfFormattingFails;
-                else
-                    return formattedValue;
+                return Convert.ToDecimal(value).ToString();
             }
-
-            var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
-            if (isUsingScientificNotation)
+            catch
             {
-                try
-                {
-                    //Convert the float/double to a decimal which is formatted much nicer as string
-                    formattedValue = Convert.ToDecimal(value).ToString();
-                }
-                catch
-                {
-                    if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
-                    {
-                        formattedValue = valueOverrideIfFormattingFails;
-                    }
-                }
+                return null;
             }
-            return formattedValue;
         }
 
         //Source: https://stackoverflow.com/a/7574615/1458738

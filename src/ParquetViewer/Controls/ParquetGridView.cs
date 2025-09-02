@@ -432,7 +432,7 @@ namespace ParquetViewer.Controls
             base.OnCellFormatting(e);
 
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
-            if (cellValueType == typeof(float) && e.Value is float f)
+            if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
             {
                 var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
                 if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
@@ -440,11 +440,11 @@ namespace ParquetViewer.Controls
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
                 {
-                    e.Value = f.ToDecimalString(FORMATTING_ERROR_TEXT);
+                    e.Value = f.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
                     e.FormattingApplied = true;
                 }
             }
-            else if (cellValueType == typeof(double) && e.Value is double d)
+            else if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(double) && e.Value is double d)
             {
                 var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
                 if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
@@ -452,7 +452,7 @@ namespace ParquetViewer.Controls
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
                 {
-                    e.Value = d.ToDecimalString(FORMATTING_ERROR_TEXT);
+                    e.Value = d.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
                     e.FormattingApplied = true;
                 }
             }
@@ -590,23 +590,15 @@ namespace ParquetViewer.Controls
         }
 
         /// <summary>
-        /// Provides very fast and basic column sizing for large data sets.
-        /// TODO: Switch to using grid cell formatted values instead of datatable values so we don't need to format the strings before we measure them
+        /// Provides fast and basic column sizing for large data sets.
         /// </summary>
+        /// <remarks>It's much faster than the default auto sizing.</remarks>
         private void FastAutoSizeColumns()
         {
-            const int MAX_WIDTH = 360;
-            const int DECIMAL_PREFERRED_WIDTH = 180;
-
-            if (this.DataSource is not DataTable gridTable)
-                return;
-
-            var maxWidth = MAX_WIDTH;
-
             // Create a graphics object from the target grid. Used for measuring text size.
             using var gfx = this.CreateGraphics();
 
-            for (int i = 0; i < gridTable.Columns.Count; i++)
+            for (int i = 0; i < this.Columns.Count; i++)
             {
                 //Don't autosize the same column twice
                 if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
@@ -615,65 +607,41 @@ namespace ParquetViewer.Controls
                     this.Columns[i].Tag = "AUTOSIZED";
 
                 //Fit header by default. If header is short, make sure NULLs will fit at least
-                string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
+                string columnNameOrNull = this.Columns[i].Name.Length < 5 ? "NULL" : this.Columns[i].Name;
                 var newColumnSize = MeasureStringWidth(gfx, this.Font, columnNameOrNull, true);
 
-                if (gridTable.Columns[i].DataType == typeof(DateTime))
-                {
-                    //All date time's will have the same string length so no need to go through all values.
-                    //We can just measure one and use that.
-                    var dateTime = gridTable.AsEnumerable()
-                        .FirstOrDefault(row => row[i] != DBNull.Value)?
-                        .Field<DateTime>(i);
-                    if (dateTime is not null)
-                    {
-                        string formattedDateTimeValue = dateTime.Value.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
-                        newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, formattedDateTimeValue, false));
-                    }
-                }
-                else
-                {
-                    // Collect all the rows into a string enumerable, making sure to exclude null values.
-                    IEnumerable<string> colStringCollection;
-                    if (gridTable.Columns[i].DataType == typeof(StructValue))
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL))
-                            .Where(value => value is not null)!;
-                    }
-                    else if (gridTable.Columns[i].DataType == typeof(float))
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Where(row => row[i] != DBNull.Value)
-                            .Select(row => row.Field<float>(i).ToDecimalString());
+                //Find the longest cell value in the column
+                string? longestCellValue = this.Rows.Cast<DataGridViewRow>()
+                    .Select(row => row.Cells[i])
+                    .Where(cell => cell.Value != DBNull.Value)
+                    .Select(cell => cell.FormattedValue.ToString())
+                    .Take(
+                        this.Columns[i].CellType != typeof(DateTime) ? int.MaxValue :
+                        //All DateTime's will probably have the same string length so don't go through all values.
+                        //Only case it will be different is if some dates don't have a time component while others do.
+                        100
+                    )
+                    .MaxBy(stringValue => stringValue?.Length ?? 0);
 
-                        //Allow longer than preferred width if header is longer
-                        maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
-                    }
-                    else if (gridTable.Columns[i].DataType == typeof(double))
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Where(row => row[i] != DBNull.Value)
-                            .Select(row => row.Field<double>(i).ToDecimalString());
+                if (longestCellValue is not null)
+                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestCellValue, true));
 
-                        //Allow longer than preferred width if header is longer
-                        maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
-                    }
-                    else
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Select(row => row.Field<object>(i)?.ToString())
-                            .Where(value => value is not null)!;
-                    }
-
-                    // Get the longest string in the array.
-                    string longestColString = colStringCollection
-                        .OrderByDescending((x) => x.Length).FirstOrDefault() ?? string.Empty;
-                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
-                }
-
-                this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
+                this.Columns[i].Width = Math.Min(newColumnSize, GetColumnMaxAutoWidth(i));
             }
+        }
+
+        private int GetColumnMaxAutoWidth(int columnIndex)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(columnIndex, this.Columns.Count);
+            ArgumentOutOfRangeException.ThrowIfLessThan(columnIndex, 0);
+
+            const int MAX_WIDTH = 360;
+            const int DECIMAL_PREFERRED_WIDTH = 180;
+            var columnType = this.Columns[columnIndex].CellType;
+            if (columnType == typeof(float) || columnType == typeof(double) || columnType == typeof(decimal))
+                return DECIMAL_PREFERRED_WIDTH;
+            else
+                return MAX_WIDTH;
         }
 
         private static int MeasureStringWidth(Graphics gfx, Font font, string input, bool appendWhitespaceBuffer)

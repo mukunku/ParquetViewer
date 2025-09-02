@@ -22,7 +22,7 @@ namespace ParquetViewer.Controls
                 if (control == this)
                 {
                     if (!this.Enabled && !this._tooltipShown)
-                    {                        
+                    {
                         //It's important the tooltip is outside the checkbox control's bounds; otherwise the MouseLeave event handler doesn't work very well.
                         var point = new Point(e.Location.X, (int)(this.Height * 1.5));
 
@@ -39,7 +39,8 @@ namespace ParquetViewer.Controls
             parent.MouseLeave += (_, _) =>
             {
                 this._tooltipShown = false;
-                this._tooltip.Hide(this);
+                if (!this.IsDisposed)
+                    this._tooltip.Hide(this);
             };
         }
 
