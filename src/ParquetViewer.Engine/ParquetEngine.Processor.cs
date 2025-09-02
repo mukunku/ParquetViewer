@@ -3,6 +3,7 @@ using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
+
 namespace ParquetViewer.Engine
 {
     public partial class ParquetEngine
@@ -112,9 +113,9 @@ namespace ParquetViewer.Engine
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
-
             int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
+
+            var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
 
             int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
             if (field.BelongsToListField || field.BelongsToListOfStructsField)
@@ -173,7 +174,7 @@ namespace ParquetViewer.Engine
                     int rowIndex = rowBeginIndex;
 
                     int skippedRecords = 0;
-                    var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
+                    var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
                     lastMilestone = "Read";
 
                     var dataEnumerable = dataColumn.Data.Cast<object?>().Select(d => d ?? DBNull.Value);
@@ -349,8 +350,8 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
-            var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
+            var keyDataColumn = await ReadColumnAsync(groupReader, keyField, cancellationToken);
+            var valueDataColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
 
             var dataEnumerable = Helpers.PairEnumerables(
                 keyDataColumn.Data.Cast<object?>().Select(key => key ?? DBNull.Value),
@@ -560,6 +561,31 @@ namespace ParquetViewer.Engine
                 }
             }
             return dataTable;
+        }
+
+        private static async Task<Parquet.Data.DataColumn> ReadColumnAsync(ParquetRowGroupReader groupReader, ParquetSchemaElement field, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Field `{field.PathWithParent}` has no data field"), cancellationToken);
+            }
+            catch (OverflowException ex)
+            {
+                var isDecimalField = field.SchemaElement?.ConvertedType == Parquet.Meta.ConvertedType.DECIMAL
+                    || field.SchemaElement?.LogicalType?.DECIMAL is not null;
+                if (isDecimalField)
+                {
+                    var scale = field.SchemaElement!.Scale ?? 0;
+                    var precision = field.SchemaElement.Precision ?? 0;
+                    if (scale > DecimalOverflowException.MAX_DECIMAL_SCALE 
+                        || precision > DecimalOverflowException.MAX_DECIMAL_PRECISION)
+                    {
+                        throw new DecimalOverflowException(field.PathWithParent, precision, scale, ex);
+                    }
+                }
+
+                throw;
+            }
         }
     }
 }

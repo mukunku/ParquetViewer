@@ -331,11 +331,6 @@ namespace ParquetViewer
                     this.newVersionLabel.Text = $"(Latest: {latestRelease.Version.ToString()})";
                     this.newVersionLabel.Enabled = false;
                 }
-                else
-                {
-                    this.newVersionLabel.Text = string.Empty;
-                    this.newVersionLabel.Tag = null;
-                }
             }
             catch (Exception ex)
             {

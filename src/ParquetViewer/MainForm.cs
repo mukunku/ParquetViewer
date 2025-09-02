@@ -344,6 +344,10 @@ namespace ParquetViewer
             {
                 HandleMalformedFieldException(ex);
             }
+            catch (DecimalOverflowException ex)
+            {
+                HandleDecimalOverflowException(ex);
+            }
             catch (Exception ex)
             {
                 if (ex is not OperationCanceledException)

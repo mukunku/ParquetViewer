@@ -7,6 +7,7 @@ namespace ParquetViewer.Engine
     public class ParquetSchemaElement
     {
         public string Path => SchemaElement.Name;
+        public string PathWithParent => string.Concat(this.Parent?.Parent is not null /*exclude root node*/ ? (this.Parent.Path + "/") : string.Empty, Path);
         public SchemaElement SchemaElement { get; set; }
         public DataField? DataField { get; set; }
         public ParquetSchemaElement? Parent { get; private set; }
