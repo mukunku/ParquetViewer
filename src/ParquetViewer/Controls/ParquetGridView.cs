@@ -544,6 +544,20 @@ namespace ParquetViewer.Controls
             }
         }
 
+        protected override void OnColumnDividerDoubleClick(DataGridViewColumnDividerDoubleClickEventArgs e)
+        {
+            //Override the auto-size behavior with our version
+            try
+            {
+                this.Cursor = Cursors.WaitCursor;
+                this.AutoSizeColumns(e.ColumnIndex);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -581,7 +595,7 @@ namespace ParquetViewer.Controls
         /// This is because iterating over cells/rows in the DGV is very slow due to row unsharing behavior.
         /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control#preventing-rows-from-becoming-unshared
         /// </remarks>
-        private void AutoSizeColumns()
+        private void AutoSizeColumns(int? forceAutoSizeColumnIndex = null)
         {
             const int MAX_WIDTH = 360;
             const int DECIMAL_PREFERRED_WIDTH = 180;
@@ -596,8 +610,11 @@ namespace ParquetViewer.Controls
 
             for (int i = 0; i < gridTable.Columns.Count; i++)
             {
+                if (forceAutoSizeColumnIndex is not null && forceAutoSizeColumnIndex != i)
+                    continue;
+
                 //Don't autosize the same column twice
-                if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
+                if (forceAutoSizeColumnIndex is null && this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
                     continue;
                 else
                     this.Columns[i].Tag = "AUTOSIZED";
@@ -622,7 +639,7 @@ namespace ParquetViewer.Controls
                     colStringCollection = nonNullColumnValues
                         .Select(row => row.Field<StructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
                 }
-                else if (gridTable.Columns[i].DataType == typeof(float) 
+                else if (gridTable.Columns[i].DataType == typeof(float)
                     && this.floatColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(float)), out var displayFormat)
                     && displayFormat == FloatDisplayFormat.Decimal)
                 {
@@ -633,7 +650,7 @@ namespace ParquetViewer.Controls
                     //Allow longer than preferred width if header is longer
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
-                else if (gridTable.Columns[i].DataType == typeof(double) 
+                else if (gridTable.Columns[i].DataType == typeof(double)
                     && this.floatColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(double)), out displayFormat)
                     && displayFormat == FloatDisplayFormat.Decimal)
                 {
@@ -652,7 +669,7 @@ namespace ParquetViewer.Controls
                     //Allow longer than preferred width if header is longer
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
-                else if (gridTable.Columns[i].DataType == typeof(ByteArrayValue) 
+                else if (gridTable.Columns[i].DataType == typeof(ByteArrayValue)
                     && this.byteArrayColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(ByteArrayValue)), out var byteArrayDisplayFormat))
                 {
                     colStringCollection = nonNullColumnValues
@@ -666,7 +683,7 @@ namespace ParquetViewer.Controls
                 }
 
                 // Get the longest string in the array. (Limit to 100k values to improve render time)
-                string? longestColString = colStringCollection.Take(100_000).MaxBy(stringValue => stringValue.Length);
+                string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 100_000).MaxBy(stringValue => stringValue.Length);
                 if (longestColString is not null)
                     newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
 

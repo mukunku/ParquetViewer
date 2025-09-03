@@ -39,6 +39,7 @@ namespace ParquetViewer
                 this.metadataViewerToolStripMenuItem.Enabled = false;
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
+                this.actualShownRecordCountLabel.Text = "0";
                 this.MainDataSource?.Dispose();
                 this.MainDataSource = null;
                 this.loadAllRowsButton.Enabled = false;
