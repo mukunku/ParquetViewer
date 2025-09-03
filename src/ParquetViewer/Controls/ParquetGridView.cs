@@ -5,6 +5,7 @@ using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -131,6 +132,7 @@ namespace ParquetViewer.Controls
         {
             const int DEFAULT_COL_WIDTH = 100;
 
+            var stopwatch = Stopwatch.StartNew();
             if (AppSettings.AutoSizeColumnsMode == Helpers.AutoSizeColumnsMode.AllCells)
                 this.FastAutoSizeColumns();
             else if (AppSettings.AutoSizeColumnsMode.ToDGVMode() != DataGridViewAutoSizeColumnsMode.None)
@@ -142,6 +144,7 @@ namespace ParquetViewer.Controls
                     column.Width = DEFAULT_COL_WIDTH;
                 }
             }
+            Debug.WriteLine($"Auto size duration: {stopwatch.ElapsedMilliseconds}ms");
         }
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
@@ -590,15 +593,27 @@ namespace ParquetViewer.Controls
         }
 
         /// <summary>
-        /// Provides fast and basic column sizing for large data sets.
+        /// Provides very fast and basic column sizing for large data sets.
         /// </summary>
-        /// <remarks>It's much faster than the default auto sizing.</remarks>
+        /// <remarks>
+        /// We unfortunately can't iterate through the gridview cells themselves to get the already formatted values.
+        /// This is because iterating over cells/rows in the DGV is very slow due to row unsharing behavior.
+        /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control#preventing-rows-from-becoming-unshared
+        /// </remarks>
         private void FastAutoSizeColumns()
         {
+            const int MAX_WIDTH = 360;
+            const int DECIMAL_PREFERRED_WIDTH = 180;
+
+            if (this.DataSource is not DataTable gridTable)
+                return;
+
+            var maxWidth = MAX_WIDTH;
+
             // Create a graphics object from the target grid. Used for measuring text size.
             using var gfx = this.CreateGraphics();
 
-            for (int i = 0; i < this.Columns.Count; i++)
+            for (int i = 0; i < gridTable.Columns.Count; i++)
             {
                 //Don't autosize the same column twice
                 if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
@@ -607,26 +622,68 @@ namespace ParquetViewer.Controls
                     this.Columns[i].Tag = "AUTOSIZED";
 
                 //Fit header by default. If header is short, make sure NULLs will fit at least
-                string columnNameOrNull = this.Columns[i].Name.Length < 5 ? "NULL" : this.Columns[i].Name;
+                string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
                 var newColumnSize = MeasureStringWidth(gfx, this.Font, columnNameOrNull, true);
 
-                //Find the longest cell value in the column
-                string? longestCellValue = this.Rows.Cast<DataGridViewRow>()
-                    .Select(row => row.Cells[i])
-                    .Where(cell => cell.Value != DBNull.Value)
-                    .Select(cell => cell.FormattedValue.ToString())
-                    .Take(
-                        this.Columns[i].CellType != typeof(DateTime) ? int.MaxValue :
-                        //All DateTime's will probably have the same string length so don't go through all values.
-                        //Only case it will be different is if some dates don't have a time component while others do.
-                        100
-                    )
-                    .MaxBy(stringValue => stringValue?.Length ?? 0);
+                // Collect all the rows into a string enumerable, making sure to exclude null values.
+                IEnumerable<string> colStringCollection;
+                var nonNullColumnValues = gridTable.AsEnumerable().Where(row => row[i] != DBNull.Value);
+                if (gridTable.Columns[i].DataType == typeof(DateTime))
+                {
+                    //All date time's will probably have the same string length so no need to go through all values.
+                    //We can just measure a few without going through all of them.
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<DateTime>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()))
+                        .Take(100);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(StructValue))
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<StructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
+                }
+                else if (gridTable.Columns[i].DataType == typeof(float) 
+                    && this.floatColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(float)), out var displayFormat)
+                    && displayFormat == FloatDisplayFormat.Decimal)
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<float>(i).ToDecimalString())
+                        .Where(stringValue => stringValue is not null)!;
 
-                if (longestCellValue is not null)
-                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestCellValue, true));
+                    //Allow longer than preferred width if header is longer
+                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(double) 
+                    && this.floatColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(double)), out displayFormat)
+                    && displayFormat == FloatDisplayFormat.Decimal)
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<double>(i).ToDecimalString())
+                        .Where(stringValue => stringValue is not null)!;
 
-                this.Columns[i].Width = Math.Min(newColumnSize, GetColumnMaxAutoWidth(i));
+                    //Allow longer than preferred width if header is longer
+                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(decimal))
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<decimal>(i).ToString());
+
+                    //Allow longer than preferred width if header is longer
+                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                }
+                else
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<object>(i)!.ToString())
+                        .Where(value => value is not null)!;
+                }
+
+                // Get the longest string in the array.
+                string? longestColString = colStringCollection.MaxBy(stringValue => stringValue.Length);
+                if (longestColString is not null)
+                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
+
+                this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
             }
         }
 
