@@ -576,8 +576,10 @@ namespace ParquetViewer.Controls
             {
                 try
                 {
-                    form.Value.Close();
-                    form.Value.Dispose();
+                    if (!form.Value.IsDisposed)
+                    {
+                        form.Value.Dispose();
+                    }
                 }
                 catch { /*Swallow*/ }
             }
@@ -851,9 +853,9 @@ namespace ParquetViewer.Controls
                     columnName = $"[{columnName}]";
                 }
 
-                var hasNulls = values.Any(value => value is null || value == DBNull.Value);
+                var hasNulls = values.Any(value => value == DBNull.Value || value is null);
                 values = values
-                    .Where(value => value != DBNull.Value)
+                    .Where(value => value != DBNull.Value && value is not null)
                     .Distinct() //Distinct() doesn't work if there are any DBNull's in the collection
                     .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
                     .Order()
@@ -887,7 +889,7 @@ namespace ParquetViewer.Controls
                     }
                     else
                     {
-                        queryBuilder.Append(",");
+                        queryBuilder.Append(',');
                     }
 
                     if (valueType == typeof(DateTime))
@@ -912,7 +914,7 @@ namespace ParquetViewer.Controls
                     //Close the `IN (` parenthesis if required
                     if (valueIndex == values.Length - 1 && values.Length > 1)
                     {
-                        queryBuilder.Append(")");
+                        queryBuilder.Append(')');
                     }
                 }
             }
