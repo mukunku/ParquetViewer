@@ -17,18 +17,6 @@ namespace ParquetViewer.Helpers
         private const string DefaultDateTimeFormat = "g";
         public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
 
-        [Obsolete]
-        private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
-        [Obsolete]
-        private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
-
-        public static DataGridViewAutoSizeColumnsMode ToDGVMode(this AutoSizeColumnsMode mode) => mode switch
-        {
-            AutoSizeColumnsMode.ColumnHeader => DataGridViewAutoSizeColumnsMode.ColumnHeader,
-            AutoSizeColumnsMode.AllCells => DataGridViewAutoSizeColumnsMode.AllCells,
-            _ => DataGridViewAutoSizeColumnsMode.None
-        };
-
         /// <summary>
         /// Returns a list of all column names within a given datatable
         /// </summary>
@@ -49,18 +37,13 @@ namespace ParquetViewer.Helpers
         /// </summary>
         /// <param name="dateFormat">Date format to get formatting string for</param>
         /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
-#pragma warning disable CS0612 // Type or member is obsolete
         public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
         {
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
-            //TODO: Get rid of this code that handles obsolete date formats after a few releases
-            DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
-            DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
             DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
             _ => string.Empty
         };
-#pragma warning restore CS0612 // Type or member is obsolete
 
         public static string GetExtension(this FileType fileType) => fileType switch
         {

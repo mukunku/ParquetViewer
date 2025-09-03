@@ -128,12 +128,4 @@ namespace ParquetViewer.Helpers
         JSON,
         PARQUET
     }
-
-    public enum AutoSizeColumnsMode
-    {
-        //Needs to match System.Windows.Forms.DataGridViewAutoSizeColumnsMode values
-        None = 1,
-        ColumnHeader = 2,
-        AllCells = 6
-    }
 }
