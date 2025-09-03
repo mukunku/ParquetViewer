@@ -47,10 +47,9 @@ namespace ParquetViewer.Controls
         private ContextMenuStrip? _contextMenu = null;
         private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
 
-        //We track format overrides by name+type so if the user adds/removes fields we can still continue formatting them the same.
-        //There's a chance the user will load a different file containing columns with the same name+type but it wouldn't be so bad if we formatted those as well.
-        private readonly Dictionary<(string ColumnName, Type ValueType), ByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
-        private readonly Dictionary<(string ColumnName, Type ValueType), FloatDisplayFormat> floatColumnsWithFormatOverrides = new();
+        //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
+        private readonly Dictionary<string, ByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
+        private readonly Dictionary<string, FloatDisplayFormat> floatColumnsWithFormatOverrides = new();
 
         public ParquetGridView() : base()
         {
@@ -132,10 +131,10 @@ namespace ParquetViewer.Controls
         {
             if (e.RowIndex == -1 && e.ColumnIndex >= 0)
             {
+                var columnName = this.Columns[e.ColumnIndex].Name;
                 //Draw a star '*' next to column headers that are using a non-default display format
-                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
-                if ((this.byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var dateFormat) && dateFormat != default)
-                    || (this.floatColumnsWithFormatOverrides.TryGetValue(key, out var floatFormat) && floatFormat != default))
+                if ((this.byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var dateFormat) && dateFormat != default)
+                    || (this.floatColumnsWithFormatOverrides.TryGetValue(columnName, out var floatFormat) && floatFormat != default))
                 {
                     e.PaintBackground(e.CellBounds, true);
                     e.PaintContent(e.CellBounds);
@@ -418,8 +417,7 @@ namespace ParquetViewer.Controls
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
             if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
             {
-                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
-                if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
+                if (!this.floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
@@ -430,8 +428,7 @@ namespace ParquetViewer.Controls
             }
             else if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(double) && e.Value is double d)
             {
-                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
-                if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
+                if (!this.floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
@@ -466,8 +463,7 @@ namespace ParquetViewer.Controls
                 int charLimit = this.isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
 
                 //Figure out which format to show the binary data in
-                var key = (this.Columns[e.ColumnIndex].Name, cellValueType);
-                if (!this.byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
+                if (!this.byteArrayColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 e.Value = FormatByteArrayString(byteArrayValue, userSelectedDisplayFormat, charLimit);
@@ -587,6 +583,12 @@ namespace ParquetViewer.Controls
             }
         }
 
+        public void ClearColumnFormatOverrides()
+        {
+            this.byteArrayColumnsWithFormatOverrides.Clear();
+            this.floatColumnsWithFormatOverrides.Clear();
+        }
+
         /// <summary>
         /// Provides fast and basic column sizing for large data sets.
         /// </summary>
@@ -640,7 +642,7 @@ namespace ParquetViewer.Controls
                         .Select(row => row.Field<StructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
                 }
                 else if (gridTable.Columns[i].DataType == typeof(float)
-                    && this.floatColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(float)), out var displayFormat)
+                    && this.floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
                     && displayFormat == FloatDisplayFormat.Decimal)
                 {
                     colStringCollection = nonNullColumnValues
@@ -651,7 +653,7 @@ namespace ParquetViewer.Controls
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
                 else if (gridTable.Columns[i].DataType == typeof(double)
-                    && this.floatColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(double)), out displayFormat)
+                    && this.floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out displayFormat)
                     && displayFormat == FloatDisplayFormat.Decimal)
                 {
                     colStringCollection = nonNullColumnValues
@@ -670,7 +672,7 @@ namespace ParquetViewer.Controls
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
                 else if (gridTable.Columns[i].DataType == typeof(ByteArrayValue)
-                    && this.byteArrayColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(ByteArrayValue)), out var byteArrayDisplayFormat))
+                    && this.byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
                 {
                     colStringCollection = nonNullColumnValues
                         .Select(row => FormatByteArrayString(row.Field<ByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
@@ -950,23 +952,22 @@ namespace ParquetViewer.Controls
                 var columnHeaderContextMenu = new ContextMenuStrip();
                 foreach (var supportedFormat in possibleDisplayFormats)
                 {
-                    var key = (this.Columns[columnIndex].Name, this.Columns[columnIndex].ValueType);
-
+                    var columnName = this.Columns[columnIndex].Name;
                     var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
                     toolstripMenuItem.Click += (object? _, EventArgs _) =>
                     {
                         ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
 
-                        if (byteArrayColumnsWithFormatOverrides.ContainsKey(key))
-                            byteArrayColumnsWithFormatOverrides[key] = supportedFormat;
+                        if (byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
+                            byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
                         else
-                            byteArrayColumnsWithFormatOverrides.Add(key, supportedFormat);
+                            byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
 
                         this.Refresh(); //Force a re-draw to render updated format
                     };
                     columnHeaderContextMenu.Items.Add(toolstripMenuItem);
 
-                    if (!byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var displayFormat))
+                    if (!byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                         displayFormat = default;
 
                     toolstripMenuItem.Checked = displayFormat == supportedFormat;
@@ -977,8 +978,8 @@ namespace ParquetViewer.Controls
             {
                 var columnHeaderContextMenu = new ContextMenuStrip();
 
-                var key = (this.Columns[columnIndex].Name, this.Columns[columnIndex].ValueType);
-                if (!floatColumnsWithFormatOverrides.TryGetValue(key, out var displayFormat))
+                var columnName = this.Columns[columnIndex].Name;
+                if (!floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                     displayFormat = default;
 
                 var scientificNotationMenuItem = new ToolStripMenuItem("Scientific")
@@ -987,10 +988,10 @@ namespace ParquetViewer.Controls
                 {
                     ColumnFormattedEvent.FireAndForget(scientificNotationMenuItem.Text);
 
-                    if (floatColumnsWithFormatOverrides.ContainsKey(key))
-                        floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Scientific;
+                    if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                        floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
                     else
-                        floatColumnsWithFormatOverrides.Add(key, FloatDisplayFormat.Scientific);
+                        floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
 
                     this.Refresh(); //Force a re-draw to render updated format
                 };
@@ -1002,10 +1003,10 @@ namespace ParquetViewer.Controls
                 {
                     ColumnFormattedEvent.FireAndForget(decimalNotationMenuItem.Text);
 
-                    if (floatColumnsWithFormatOverrides.ContainsKey(key))
-                        floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Decimal;
+                    if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                        floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
                     else
-                        floatColumnsWithFormatOverrides.Add(key, FloatDisplayFormat.Decimal);
+                        floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
 
                     this.Refresh(); //Force a re-draw to render updated format
                 };

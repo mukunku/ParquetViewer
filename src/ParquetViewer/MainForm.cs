@@ -46,6 +46,7 @@ namespace ParquetViewer
                 this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
                 this.currentOffset = DefaultOffset;
                 this.mainGridView.ClearQuickPeekForms();
+                this.mainGridView.ClearColumnFormatOverrides();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
