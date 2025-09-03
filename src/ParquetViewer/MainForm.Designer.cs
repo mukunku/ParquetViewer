@@ -185,7 +185,7 @@ namespace ParquetViewer
             runQueryButton.Location = new System.Drawing.Point(462, 3);
             runQueryButton.Margin = new Padding(4, 3, 4, 3);
             runQueryButton.Name = "runQueryButton";
-            runQueryButton.Padding = new Padding(0, 0, 0, 4);
+            runQueryButton.Padding = new Padding(0, 0, 0, 3);
             runQueryButton.Size = new System.Drawing.Size(109, 29);
             runQueryButton.TabIndex = 2;
             runQueryButton.Text = "&Execute";
