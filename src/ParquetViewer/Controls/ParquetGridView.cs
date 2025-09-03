@@ -964,6 +964,7 @@ namespace ParquetViewer.Controls
                             byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
 
                         this.Refresh(); //Force a re-draw to render updated format
+                        this.AutoSizeColumns(columnIndex); //Re-size the column
                     };
                     columnHeaderContextMenu.Items.Add(toolstripMenuItem);
 
@@ -994,6 +995,7 @@ namespace ParquetViewer.Controls
                         floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
 
                     this.Refresh(); //Force a re-draw to render updated format
+                    this.AutoSizeColumns(columnIndex); //Re-size the column
                 };
                 columnHeaderContextMenu.Items.Add(scientificNotationMenuItem);
 
@@ -1009,6 +1011,7 @@ namespace ParquetViewer.Controls
                         floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
 
                     this.Refresh(); //Force a re-draw to render updated format
+                    this.AutoSizeColumns(columnIndex); //Re-size the column
                 };
                 columnHeaderContextMenu.Items.Add(decimalNotationMenuItem);
 
