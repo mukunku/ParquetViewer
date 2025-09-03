@@ -80,8 +80,8 @@ namespace ParquetViewer
                     this.selectedFields = this.selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
                     MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
-                            $"\r\n\r\nCase sensitive field names are not currently supported.", "Duplicate fields detected",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            $"{Environment.NewLine}{Environment.NewLine}Case sensitive field names are not currently supported.", 
+                            "Duplicate fields detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
                 if (value?.Count > 0)
@@ -348,11 +348,12 @@ namespace ParquetViewer
             }
             finally
             {
-                //Little secret performance counter
                 stopwatch.Stop();
 
                 TimeSpan totalTime = stopwatch.Elapsed;
                 TimeSpan renderTime = totalTime - loadTime - indexTime;
+
+                //Little secret performance counter
                 this.showingStatusBarLabel.ToolTipText = $"Total time: {totalTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Load time: {loadTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Index time: {indexTime:mm\\:ss\\.ff}" + Environment.NewLine +

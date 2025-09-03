@@ -219,4 +219,21 @@ namespace ParquetViewer.Analytics
 
         }
     }
+
+    public class ColumnFormattedEvent : AmplitudeEvent
+    {
+        private const string EVENT_TYPE = "column.format";
+
+        public string FormatName { get; }
+
+        public ColumnFormattedEvent(string? formatName = null) : base(EVENT_TYPE)
+        {
+            FormatName = formatName ?? string.Empty;
+        }
+
+        public static void FireAndForget(string? formatName)
+        {
+            var _ = new ColumnFormattedEvent(formatName).Record();
+        }
+    }
 }
