@@ -181,13 +181,15 @@ namespace ParquetViewer
             runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold);
             runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
             runQueryButton.Image = Properties.Resources.exclamation_icon;
-            runQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            runQueryButton.ImageAlign = System.Drawing.ContentAlignment.BottomCenter;
             runQueryButton.Location = new System.Drawing.Point(462, 3);
             runQueryButton.Margin = new Padding(4, 3, 4, 3);
             runQueryButton.Name = "runQueryButton";
+            runQueryButton.Padding = new Padding(0, 0, 0, 4);
             runQueryButton.Size = new System.Drawing.Size(109, 29);
             runQueryButton.TabIndex = 2;
             runQueryButton.Text = "&Execute";
+            runQueryButton.TextAlign = System.Drawing.ContentAlignment.BottomRight;
             runQueryButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             runQueryButton.UseVisualStyleBackColor = true;
             runQueryButton.Click += runQueryButton_Click;
