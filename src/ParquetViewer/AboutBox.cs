@@ -122,25 +122,6 @@ namespace ParquetViewer
                 return ((AssemblyCompanyAttribute)attributes[0]).Company;
             }
         }
-
-        public string AssemblyPublicKey
-        {
-            get
-            {
-                var publicKey = Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
-                if (publicKey is null || publicKey.Length == 0)
-                {
-                    return string.Empty;
-                }
-
-                var sb = new StringBuilder();
-                for (int i = 0; i < publicKey.Length; i++)
-                {
-                    sb.AppendFormat("{0:x2}", publicKey[i]);
-                }
-                return sb.ToString();
-            }
-        }
         #endregion
 
         private void AboutBox_KeyUp(object sender, KeyEventArgs e)
@@ -151,6 +132,11 @@ namespace ParquetViewer
             }
         }
 
+        /// <summary>
+        /// Toggles .parquet file association for the current executable. Requires the app to be running with administrator rights.
+        /// </summary>
+        /// <param name="associate">Whether to associate or disassociate ParquetViewer as the default app for .parquet files</param>
+        /// <returns>True if association succeeded, False if it failed, and Null if the user canceled the operation</returns>
         public static bool ToggleFileAssociation(bool associate)
         {
             if (!User.IsAdministrator)
@@ -212,7 +198,13 @@ namespace ParquetViewer
             }
         }
 
-        //I tested this logic on both Windows 10 & 11 and it works for both
+        /// <summary>
+        /// Sets or retrieves .parquet file association for the current executable. Requires the app to be running with administrator rights.
+        /// </summary>
+        /// <param name="dryRun">When set to true the method will return true if the exe is already associated
+        /// with .parquet files and false if it's not, without making any changes to file associations</param>
+        /// <returns>True if the file association succeeded and false if it didn't</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this method is called from a non-administrator runtime with <paramref name="dryRun"/> set to false</exception>
         private static bool AssociateParquetFileExtension(bool dryRun)
         {
             if (!User.IsAdministrator && !dryRun)
@@ -340,6 +332,12 @@ namespace ParquetViewer
             }
         }
 
+        /// <summary>
+        /// Toggles .parquet file association for the current executable
+        /// </summary>
+        /// <param name="associate">Whether to associate or disassociate ParquetViewer as the default app for .parquet files</param>
+        /// <param name="exitCode">Exit code if the elevated exe was successfully launched</param>
+        /// <returns>True if association succeeded, False if it failed, and Null if the user canceled the operation</returns>
         public static bool? RunElevatedExeForFileAssociation(bool associate, out int? exitCode)
         {
             exitCode = null;
