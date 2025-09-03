@@ -33,7 +33,6 @@ namespace ParquetViewer.Analytics
         {
             AppSettings.AlwaysLoadAllRecords,
             AppSettings.AlwaysSelectAllFields,
-            AutoSizeColumnsMode = AppSettings.AutoSizeColumnsMode.ToString(),
             DateTimeDisplayFormat = AppSettings.DateTimeDisplayFormat.ToString(),
             SystemMemory = _systemRAM,
             Environment.ProcessorCount,

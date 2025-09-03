@@ -63,9 +63,6 @@ namespace ParquetViewer
             defaultToolStripMenuItem = new ToolStripMenuItem();
             iSO8601ToolStripMenuItem = new ToolStripMenuItem();
             customDateFormatToolStripMenuItem = new ToolStripMenuItem();
-            columnSizingToolStripMenuItem = new ToolStripMenuItem();
-            columnHeadersToolStripMenuItem = new ToolStripMenuItem();
-            columnHeadersContentToolStripMenuItem = new ToolStripMenuItem();
             alwaysLoadAllRecordsToolStripMenuItem = new ToolStripMenuItem();
             toolsToolStripMenuItem = new ToolStripMenuItem();
             getSQLCreateTableScriptToolStripMenuItem = new ToolStripMenuItem();
@@ -377,7 +374,7 @@ namespace ParquetViewer
             // 
             // editToolStripMenuItem
             // 
-            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, columnSizingToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem });
+            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
             editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             editToolStripMenuItem.Text = "&Edit";
@@ -425,31 +422,6 @@ namespace ParquetViewer
             customDateFormatToolStripMenuItem.Text = "Custom...";
             customDateFormatToolStripMenuItem.ToolTipText = "Configure a custom date format";
             customDateFormatToolStripMenuItem.Click += DateFormatMenuItem_Click;
-            // 
-            // columnSizingToolStripMenuItem
-            // 
-            columnSizingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { columnHeadersToolStripMenuItem, columnHeadersContentToolStripMenuItem });
-            columnSizingToolStripMenuItem.Name = "columnSizingToolStripMenuItem";
-            columnSizingToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            columnSizingToolStripMenuItem.Text = "Column Sizing";
-            // 
-            // columnHeadersToolStripMenuItem
-            // 
-            columnHeadersToolStripMenuItem.Name = "columnHeadersToolStripMenuItem";
-            columnHeadersToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-            columnHeadersToolStripMenuItem.Tag = "ColumnHeader";
-            columnHeadersToolStripMenuItem.Text = "Fit Headers Only";
-            columnHeadersToolStripMenuItem.ToolTipText = "Columns will be as wide as their name requires";
-            columnHeadersToolStripMenuItem.Click += changeColumnSizingToolStripMenuItem_Click;
-            // 
-            // columnHeadersContentToolStripMenuItem
-            // 
-            columnHeadersContentToolStripMenuItem.Name = "columnHeadersContentToolStripMenuItem";
-            columnHeadersContentToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-            columnHeadersContentToolStripMenuItem.Tag = "AllCells";
-            columnHeadersContentToolStripMenuItem.Text = "Fit Headers && Content";
-            columnHeadersContentToolStripMenuItem.ToolTipText = "Column widths will be adjusted to fit all cell contents";
-            columnHeadersContentToolStripMenuItem.Click += changeColumnSizingToolStripMenuItem_Click;
             // 
             // alwaysLoadAllRecordsToolStripMenuItem
             // 
@@ -677,9 +649,6 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem getSQLCreateTableScriptToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem metadataViewerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem columnSizingToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem columnHeadersToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem columnHeadersContentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem alwaysLoadAllRecordsToolStripMenuItem;
         private System.Windows.Forms.FolderBrowserDialog openFolderDialog;
         private System.Windows.Forms.ToolStripMenuItem openFolderToolStripMenuItem;

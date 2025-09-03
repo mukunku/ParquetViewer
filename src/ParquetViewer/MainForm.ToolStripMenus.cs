@@ -111,27 +111,6 @@ namespace ParquetViewer
             }
         }
 
-        private void changeColumnSizingToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (sender is ToolStripMenuItem tsi && tsi.Tag != null
-                && Enum.TryParse(tsi.Tag.ToString(), out AutoSizeColumnsMode columnSizingMode)
-                && AppSettings.AutoSizeColumnsMode != columnSizingMode)
-            {
-                AppSettings.AutoSizeColumnsMode = columnSizingMode;
-                foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent()!.Items)
-                {
-                    toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
-                }
-                this.mainGridView.AutoSizeColumns();
-
-                //Also clear out each column's Tag so auto sizing can pick it up again (see: FastAutoSizeColumns())
-                foreach (DataGridViewColumn column in this.mainGridView.Columns)
-                {
-                    column.Tag = null;
-                }
-            }
-        }
-
         private void alwaysLoadAllRecordsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.alwaysLoadAllRecordsToolStripMenuItem.Checked = !this.alwaysLoadAllRecordsToolStripMenuItem.Checked;

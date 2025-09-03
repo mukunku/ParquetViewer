@@ -171,15 +171,6 @@ namespace ParquetViewer
             //Setup date format checkboxes
             this.RefreshDateFormatMenuItemSelection();
 
-            foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
-            {
-                if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
-                {
-                    toolStripItem.Checked = true;
-                    break;
-                }
-            }
-
             this.alwaysLoadAllRecordsToolStripMenuItem.Checked = AppSettings.AlwaysLoadAllRecords;
             this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
             this.RefreshExperimentalFeatureToolStrips();

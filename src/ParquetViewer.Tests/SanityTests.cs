@@ -301,7 +301,6 @@ namespace ParquetViewer.Tests
         ""user_properties"": {{
             ""alwaysLoadAllRecords"": {AppSettings.AlwaysLoadAllRecords.ToString().ToLower()},
             ""alwaysSelectAllFields"": {AppSettings.AlwaysSelectAllFields.ToString().ToLower()},
-            ""autoSizeColumnsMode"": ""{AppSettings.AutoSizeColumnsMode}"",
             ""dateTimeDisplayFormat"": ""{AppSettings.DateTimeDisplayFormat}"",
             ""systemMemory"": {(int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/)},
             ""processorCount"": {Environment.ProcessorCount},

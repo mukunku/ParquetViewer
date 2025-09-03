@@ -128,25 +128,6 @@ namespace ParquetViewer.Controls
             ParquetEngineSettings.DateDisplayFormat = dateFormat;
         }
 
-        public void AutoSizeColumns()
-        {
-            const int DEFAULT_COL_WIDTH = 100;
-
-            var stopwatch = Stopwatch.StartNew();
-            if (AppSettings.AutoSizeColumnsMode == Helpers.AutoSizeColumnsMode.AllCells)
-                this.FastAutoSizeColumns();
-            else if (AppSettings.AutoSizeColumnsMode.ToDGVMode() != DataGridViewAutoSizeColumnsMode.None)
-                this.AutoResizeColumns(AppSettings.AutoSizeColumnsMode.ToDGVMode());
-            else
-            {
-                foreach (DataGridViewColumn column in this.Columns)
-                {
-                    column.Width = DEFAULT_COL_WIDTH;
-                }
-            }
-            Debug.WriteLine($"Auto size duration: {stopwatch.ElapsedMilliseconds}ms");
-        }
-
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
             if (e.RowIndex == -1 && e.ColumnIndex >= 0)
@@ -593,14 +574,14 @@ namespace ParquetViewer.Controls
         }
 
         /// <summary>
-        /// Provides very fast and basic column sizing for large data sets.
+        /// Provides fast and basic column sizing for large data sets.
         /// </summary>
         /// <remarks>
         /// We unfortunately can't iterate through the gridview cells themselves to get the already formatted values.
         /// This is because iterating over cells/rows in the DGV is very slow due to row unsharing behavior.
         /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control#preventing-rows-from-becoming-unshared
         /// </remarks>
-        private void FastAutoSizeColumns()
+        private void AutoSizeColumns()
         {
             const int MAX_WIDTH = 360;
             const int DECIMAL_PREFERRED_WIDTH = 180;
@@ -671,6 +652,12 @@ namespace ParquetViewer.Controls
                     //Allow longer than preferred width if header is longer
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
+                else if (gridTable.Columns[i].DataType == typeof(ByteArrayValue) 
+                    && this.byteArrayColumnsWithFormatOverrides.TryGetValue((gridTable.Columns[i].ColumnName, typeof(ByteArrayValue)), out var byteArrayDisplayFormat))
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => FormatByteArrayString(row.Field<ByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
+                }
                 else
                 {
                     colStringCollection = nonNullColumnValues
@@ -678,27 +665,13 @@ namespace ParquetViewer.Controls
                         .Where(value => value is not null)!;
                 }
 
-                // Get the longest string in the array.
-                string? longestColString = colStringCollection.MaxBy(stringValue => stringValue.Length);
+                // Get the longest string in the array. (Limit to 100k values to improve render time)
+                string? longestColString = colStringCollection.Take(100_000).MaxBy(stringValue => stringValue.Length);
                 if (longestColString is not null)
                     newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
 
                 this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
             }
-        }
-
-        private int GetColumnMaxAutoWidth(int columnIndex)
-        {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(columnIndex, this.Columns.Count);
-            ArgumentOutOfRangeException.ThrowIfLessThan(columnIndex, 0);
-
-            const int MAX_WIDTH = 360;
-            const int DECIMAL_PREFERRED_WIDTH = 180;
-            var columnType = this.Columns[columnIndex].CellType;
-            if (columnType == typeof(float) || columnType == typeof(double) || columnType == typeof(decimal))
-                return DECIMAL_PREFERRED_WIDTH;
-            else
-                return MAX_WIDTH;
         }
 
         private static int MeasureStringWidth(Graphics gfx, Font font, string input, bool appendWhitespaceBuffer)

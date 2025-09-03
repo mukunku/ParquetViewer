@@ -10,7 +10,6 @@ namespace ParquetViewer
     {
         private const string RegistrySubKey = "ParquetViewer";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
-        private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
         private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
         private const string AnalyticsDeviceIdKey = "AnalyticsDeviceId";
@@ -36,12 +35,6 @@ namespace ParquetViewer
         {
             get => ReadRegistryValue(AlwaysLoadAllRecordsKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
             set => SetRegistryValue(AlwaysLoadAllRecordsKey, value.ToString());
-        }
-
-        public static AutoSizeColumnsMode AutoSizeColumnsMode
-        {
-            get => ReadRegistryValue(AutoSizeColumnsModeKey, out int value) ? value.ToEnum(AutoSizeColumnsMode.AllCells) : AutoSizeColumnsMode.AllCells;
-            set => SetRegistryValue(AutoSizeColumnsModeKey, (int)value);
         }
 
         public static SemanticVersion? ConsentLastAskedOnVersion
