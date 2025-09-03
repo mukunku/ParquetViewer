@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,6 +43,8 @@ namespace ParquetViewer
                 this.MainDataSource = null;
                 this.loadAllRowsButton.Enabled = false;
                 this.searchFilterTextBox.PlaceholderText = "WHERE ";
+                this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
+                this.currentOffset = DefaultOffset;
                 this.mainGridView.ClearQuickPeekForms();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
 
@@ -382,11 +383,6 @@ namespace ParquetViewer
         private async Task OpenNewFileOrFolder(string fileOrFolderPath)
         {
             this.OpenFileOrFolderPath = fileOrFolderPath;
-
-            this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-            this.currentOffset = DefaultOffset;
-            this.mainGridView.ClearQuickPeekForms();
-            this.searchFilterTextBox.PlaceholderText = "WHERE ";
 
             var fieldList = await this.OpenFieldSelectionDialog(false);
             var wasOpenSuccess = this._openParquetEngine is not null;
