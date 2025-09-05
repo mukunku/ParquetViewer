@@ -1,6 +1,7 @@
 using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
+using ParquetViewer.Helpers;
 using RichardSzalay.MockHttp;
 using System.Globalization;
 using System.Text.Json.Nodes;
@@ -517,6 +518,40 @@ namespace ParquetViewer.Tests
             Assert.Equal(0.74527m, dataTable.Rows[100][5]);
             Assert.Equal(0m, dataTable.Rows[100][6]);
             Assert.Equal(0m, dataTable.Rows[100][7]);
+        }
+
+        [Theory]
+        [InlineData("1.0", null)]
+        [InlineData("1.0.0", "1.0.0.0")]
+        [InlineData("1.0.0.0", "1.0.0.0")]
+        [InlineData("1.0.0.0.0", null)]
+        [InlineData("v1.0.0", "1.0.0.0")]
+        [InlineData("v1.0.0.0", "1.0.0.0")]
+        [InlineData("99.99.99", "99.99.99.0")]
+        [InlineData("99.99.99.99", "99.99.99.99")]
+        public void SEMANTIC_VERSION_PARSER_TEST(string versionNumber, string? expectedParsedVersionNumber)
+        {
+            var isExpectedToBeValid = expectedParsedVersionNumber is not null;
+            Assert.Equal(SemanticVersion.TryParse(versionNumber, out var semanticVersion), isExpectedToBeValid);
+            if (isExpectedToBeValid)
+            {
+                Assert.Equal(semanticVersion.ToString(), expectedParsedVersionNumber);
+            }
+        }
+
+        [Theory]
+        [InlineData("1.0.0", "1.0.1")]
+        [InlineData("1.0.0.0", "1.0.0.1")]
+        [InlineData("2.3.4", "3.0.1")]
+        [InlineData("2.3.4.5", "3.0.0.1")]
+        [InlineData("v1.2.3", "1.2.4")]
+        [InlineData("v1.0.0.99", "1.0.1")]
+        [InlineData("v99.98.99.99", "99.99.0.0")]
+        public void SEMANTIC_VERSION_COMPARISON_TESTS(string smallerVersionNumber, string higherVersionNumber)
+        {
+            Assert.True(SemanticVersion.TryParse(smallerVersionNumber, out var smallerSemanticVersion), $"{smallerVersionNumber} is not a valid semantic version");
+            Assert.True(SemanticVersion.TryParse(higherVersionNumber, out var higherSemanticVersion), $"{higherVersionNumber} is not a valid semantic version");
+            Assert.True(smallerSemanticVersion < higherSemanticVersion, $"{smallerSemanticVersion} should have been lesser than {higherSemanticVersion}");
         }
     }
 }
