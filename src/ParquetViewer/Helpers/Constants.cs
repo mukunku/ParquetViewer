@@ -104,20 +104,11 @@ namespace ParquetViewer.Helpers
         #endregion
     }
 
-    public enum ParquetEngine
-    {
-        Default = 0,
-        Default_Multithreaded
-    }
-
     public enum DateFormat
     {
         Default = 0,
         ISO8601 = 2,
-        [Obsolete]
-        ISO8601_Alt1 = 4,
-        [Obsolete]
-        ISO8601_Alt2 = 5,
+        //1, 3, 4, and 5 have been discontinued. Should not be reused!
         Custom = 6
     }
 

@@ -8,7 +8,7 @@ namespace ParquetViewer.Controls
     /// Only exists to allow us to show tooltips on disabled checkbox elements.
     /// https://stackoverflow.com/q/1732140/1458738
     /// </summary>
-    public class CheckboxWithTooltip : CheckBox
+    public class CheckboxWithTooltip : StylableCheckBox
     {
         private ToolTip _tooltip = new();
         private bool _tooltipShown = false;

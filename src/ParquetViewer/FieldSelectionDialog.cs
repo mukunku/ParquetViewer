@@ -88,12 +88,13 @@ namespace ParquetViewer
 
                         string selectAllCheckBoxText = $"Select All (Count: {supportedFieldCount}{unsupportedFieldsText})";
                         string deselectAllCheckBoxText = $"Deselect All (Count: {supportedFieldCount}{unsupportedFieldsText})";
-                        var selectAllCheckbox = new CheckBox()
+                        var selectAllCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                         {
                             Name = SelectAllCheckboxName,
                             Text = selectAllCheckBoxText,
                             Tag = SelectAllCheckboxName,
                             Checked = false,
+                            DisabledForeColor = _disabledTextColor,
                             Location = new Point(locationX, locationY),
                             AutoSize = true
                         };
@@ -135,6 +136,7 @@ namespace ParquetViewer
                         Tag = field.Name,
                         Checked = preSelectedFields?.Contains(field.Name) == true,
                         Location = new Point(locationX, locationY),
+                        DisabledForeColor = _disabledTextColor,
                         AutoSize = true,
                         Enabled = !isUnsupportedFieldType
                     };
@@ -396,6 +398,7 @@ namespace ParquetViewer
                 ?? this.AvailableFields.Count);
         }
 
+        private Color _disabledTextColor;
         public override void SetTheme(Theme theme)
         {
             if (DesignMode)
@@ -406,6 +409,8 @@ namespace ParquetViewer
             base.SetTheme(theme);
             this.doneButton.ForeColor = Color.Black;
             this.clearfilterColumnsButton.ForeColor = Color.Black;
+            this._disabledTextColor = theme.DisabledTextColor;
+            this.rememberMyChoiceCheckBox.DisabledForeColor = this._disabledTextColor;
         }
     }
 }
