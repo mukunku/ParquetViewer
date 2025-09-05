@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -59,7 +60,8 @@ namespace ParquetViewer
 
         private async void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            await new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
+            var exitEventTask = new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
+            await Task.WhenAny(exitEventTask, Task.Delay(3000)); //don't prevent the app from closing for too long
             this.Close();
         }
 
@@ -93,8 +95,8 @@ namespace ParquetViewer
 
                 dataset.Tables.Remove(this.mainDataSource); //If we don't remove it, we can get errors in rare cases
 
-                Clipboard.SetText(sql);
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.SQLCreateTable);
+                Clipboard.SetText(sql);
                 MessageBox.Show(this, "Create table script copied to clipboard!", "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
