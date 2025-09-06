@@ -30,7 +30,7 @@ namespace ParquetViewer.Analytics
         }
 
         public static void FireAndForget(bool isFolder, int numPartitions, long numRows, int numRowGroups, int numFields,
-            string[] fieldTypes, long recordOffset, long recordCount, int numLoadedFields, 
+            string[] fieldTypes, long recordOffset, long recordCount, int numLoadedFields,
             long totalLoadTimeMilliseconds, long readTimeMS, long indexTimeMS, long renderTimeMS)
         {
             var _ = new FileOpenEvent
@@ -152,7 +152,7 @@ namespace ParquetViewer.Analytics
             get
             {
                 var dictionary = new Dictionary<string, object>();
-                foreach(DictionaryEntry keyValuePair in this.Exception.Data)
+                foreach (DictionaryEntry keyValuePair in this.Exception.Data)
                 {
                     if (keyValuePair.Key is string key && keyValuePair.Value is not null)
                     {

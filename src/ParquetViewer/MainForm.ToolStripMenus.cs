@@ -183,7 +183,7 @@ namespace ParquetViewer
                 if (dropdownItem is ToolStripMenuItem toolstrip && toolstrip.Checked)
                 {
                     //If someone has an experimental feature enabled, don't hide the checkbox so they can disable it if they want.
-                    dropdownItem.Visible = true; 
+                    dropdownItem.Visible = true;
                     continue;
                 }
 

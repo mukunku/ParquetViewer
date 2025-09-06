@@ -81,7 +81,7 @@ namespace ParquetViewer
                     this.selectedFields = this.selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
                     MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
-                            $"{Environment.NewLine}{Environment.NewLine}Case sensitive field names are not currently supported.", 
+                            $"{Environment.NewLine}{Environment.NewLine}Case sensitive field names are not currently supported.",
                             "Duplicate fields detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
@@ -364,15 +364,15 @@ namespace ParquetViewer
                 if (wasSuccessful)
                 {
                     FileOpenEvent.FireAndForget(
-                        Directory.Exists(this.OpenFileOrFolderPath), 
-                        this._openParquetEngine!.NumberOfPartitions, 
+                        Directory.Exists(this.OpenFileOrFolderPath),
+                        this._openParquetEngine!.NumberOfPartitions,
                         this._openParquetEngine.RecordCount,
                         this._openParquetEngine.ThriftMetadata.RowGroups.Count,
-                        this._openParquetEngine.Fields.Count, 
-                        this.MainDataSource!.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), 
-                        this.CurrentOffset, 
-                        this.CurrentMaxRowCount, 
-                        this.MainDataSource!.Columns.Count, 
+                        this._openParquetEngine.Fields.Count,
+                        this.MainDataSource!.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(),
+                        this.CurrentOffset,
+                        this.CurrentMaxRowCount,
+                        this.MainDataSource!.Columns.Count,
                         (long)totalTime.TotalMilliseconds,
                         (long)loadTime.TotalMilliseconds,
                         (long)indexTime.TotalMilliseconds,

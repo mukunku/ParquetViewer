@@ -10,7 +10,7 @@ namespace ParquetViewer.Engine.Types
         public byte[] Data { get; }
 
         private DisplayFormat[]? _possibleDisplayFormats;
-        public DisplayFormat[] PossibleDisplayFormats => 
+        public DisplayFormat[] PossibleDisplayFormats =>
             _possibleDisplayFormats ??= this.CalculatePossibleDisplayFormats();
 
         public ByteArrayValue(string name, byte[] data)
@@ -286,9 +286,9 @@ namespace ParquetViewer.Engine.Types
         /// Calculates how many bytes are needed to generate a string of the given length in hexadecimal format.
         /// </summary>
         private static int HexStringLengthToByteCount(int stringLength)
-            => stringLength != int.MaxValue 
+            => stringLength != int.MaxValue
             ? (stringLength + 1) / 3 //One byte = 3 chars. E.g. AA- (-1 for the last byte which won't have a dash)
-            : int.MaxValue; 
+            : int.MaxValue;
 
         /// <summary>
         /// Returns the binary data in hex with an ellipsis in the middle if required to reach <paramref name="desiredLength"/> 

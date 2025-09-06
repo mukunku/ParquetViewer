@@ -12,11 +12,11 @@ namespace ParquetViewer.Analytics
     {
         //The api key is meant to be public: https://www.docs.developers.amplitude.com/guides/amplitude-keys-guide/#api-key
         private const string AMPLITUDE_API_KEY = ""; //This will only be populated for official releases
-        
+
         private static readonly long _sessionId = DateTime.UtcNow.ToMillisecondsSinceEpoch();
         private static readonly int _systemRAM = (int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/);
         private static readonly AmplitudeConfiguration _defaultConfiguration = new(AMPLITUDE_API_KEY, () => new HttpClientHandler(), new AppSettingsConsentProvider());
-        
+
         private readonly AmplitudeConfiguration _amplitudeConfiguration;
 
         [JsonIgnore]

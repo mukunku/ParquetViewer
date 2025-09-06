@@ -110,7 +110,7 @@ namespace ParquetViewer.Helpers
         // Override Equals and GetHashCode for value comparison
         public override bool Equals(object? obj) =>
             obj is SemanticVersion other && this.Equals(other);
-            
+
         public bool Equals(SemanticVersion other) =>
             this.Major == other.Major
             && this.Minor == other.Minor

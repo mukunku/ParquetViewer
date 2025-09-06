@@ -577,7 +577,7 @@ namespace ParquetViewer.Engine
                 {
                     var scale = field.SchemaElement!.Scale ?? 0;
                     var precision = field.SchemaElement.Precision ?? 0;
-                    if (scale > DecimalOverflowException.MAX_DECIMAL_SCALE 
+                    if (scale > DecimalOverflowException.MAX_DECIMAL_SCALE
                         || precision > DecimalOverflowException.MAX_DECIMAL_PRECISION)
                     {
                         throw new DecimalOverflowException(field.PathWithParent, precision, scale, ex);

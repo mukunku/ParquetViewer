@@ -1,5 +1,4 @@
 ﻿using ParquetViewer.Analytics;
-using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.IO;
@@ -99,7 +98,7 @@ namespace ParquetViewer
         ///     analytics back-to-back. But chances of that happening are slim so maybe we don't need to worry about it?
         /// </remarks>
         public static void GetUserConsentToGatherAnalytics()
-        {   
+        {
             if (AppSettings.ConsentLastAskedOnVersion is null || AppSettings.ConsentLastAskedOnVersion < Env.AssemblyVersion)
             {
                 if (AppSettings.AnalyticsDataGatheringConsent)
@@ -119,7 +118,7 @@ namespace ParquetViewer
                 {
                     AppSettings.ConsentLastAskedOnVersion = Env.AssemblyVersion;
                     if (MessageBox.Show($"Would you like to share anonymous usage data to help make ParquetViewer better?" +
-                        $"{Environment.NewLine}{Environment.NewLine}You can always change this setting later from the Help menu.", 
+                        $"{Environment.NewLine}{Environment.NewLine}You can always change this setting later from the Help menu.",
                         "Share Anonymous Usage Data?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         //We got consent! Start gathering some data..
@@ -142,7 +141,7 @@ namespace ParquetViewer
             {
                 if (MessageBox.Show($"Would you like to associate ParquetViewer with .parquet files?{Environment.NewLine}{Environment.NewLine}" +
                         $"Executable path: {System.Windows.Forms.Application.ExecutablePath}{Environment.NewLine}{Environment.NewLine}" +
-                        $"You can also toggle this setting from the Help → About page.", 
+                        $"You can also toggle this setting from the Help → About page.",
                         "ParquetViewer file association request", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     if (!User.IsAdministrator)

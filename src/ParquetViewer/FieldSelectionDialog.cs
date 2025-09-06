@@ -264,7 +264,7 @@ namespace ParquetViewer
                     return false;
                 }
 
-                    unsupportedReason = null;
+                unsupportedReason = null;
                 return true;
             }
 

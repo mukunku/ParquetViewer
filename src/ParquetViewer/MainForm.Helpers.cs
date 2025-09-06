@@ -411,7 +411,7 @@ namespace ParquetViewer
 
         private static void HandleDecimalOverflowException(DecimalOverflowException ex)
             => ShowError($"Field `{ex.FieldName}` with type DECIMAL({ex.Precision}, {ex.Scale}) contains values outside ParquetViewer's supported range between " +
-                $"DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, {DecimalOverflowException.MAX_DECIMAL_SCALE}) and DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, 0)", 
+                $"DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, {DecimalOverflowException.MAX_DECIMAL_SCALE}) and DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, 0)",
                 "Decimal value too large");
 
         private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
