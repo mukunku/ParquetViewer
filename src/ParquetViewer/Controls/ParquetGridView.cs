@@ -734,13 +734,19 @@ namespace ParquetViewer.Controls
                 this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
                 this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
             }
-            Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
-            if (withHeaders)
+            try
             {
-                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-                this.RowHeadersVisible = true;
+                Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
             }
-            this.isCopyingToClipboard = false;
+            finally
+            {
+                if (withHeaders)
+                {
+                    this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+                    this.RowHeadersVisible = true;
+                }
+                this.isCopyingToClipboard = false;
+            }
         }
 
         /// <remarks>
