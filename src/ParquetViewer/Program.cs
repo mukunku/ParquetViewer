@@ -25,7 +25,15 @@ namespace ParquetViewer
                         {
                             if (args.Length > 1 && bool.TryParse(args[1], out bool associate))
                             {
-                                return AboutBox.ToggleFileAssociation(associate) ? 0 : 1;
+                                try
+                                {
+                                    AboutBox.ToggleFileAssociation(associate);
+                                    return 0;
+                                }
+                                catch
+                                {
+                                    return 1;
+                                }
                             }
                             else
                             {
