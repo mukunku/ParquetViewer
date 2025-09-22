@@ -190,5 +190,20 @@ namespace ParquetViewer
                 }
             }
         }
+
+        public static void AskUserIfTheyWantToSwitchToDarkMode()
+        {
+            if (!AppSettings.DarkMode 
+                && (AppSettings.OpenedFileCount == 30 || AppSettings.OpenedFileCount == 300) /*I'm just throwing out random numbers at this point*/
+                && (Env.AppsUseDarkTheme == true || Env.SystemUsesDarkTheme == true))
+            {
+                if (MessageBox.Show($"Would you like to use ParquetViewer in Dark Mode?{Environment.NewLine}{Environment.NewLine}" +
+                        $"You can always toggle this on/off from the Edit menu.",
+                        "Switch to Dark Mode?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    AppSettings.DarkMode = true;
+                }
+            }
+        }
     }
 }

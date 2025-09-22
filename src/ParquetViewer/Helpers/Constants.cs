@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Analytics;
+﻿using Microsoft.Win32;
+using ParquetViewer.Analytics;
 using ParquetViewer.Exceptions;
 using System;
 using System.Net.Http;
@@ -100,6 +101,61 @@ namespace ParquetViewer.Helpers
             }
 
             return (null, null);
+        }
+        #endregion
+
+        #region Windows Theme
+        /// <summary>
+        /// Gets a value indicating whether the current Windows theme for apps is set to dark mode.
+        /// `null` is returned if the value cannot be determined.
+        /// </summary>
+        public static bool? AppsUseDarkTheme
+        {
+            get
+            {
+                try
+                {
+                    if (Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", -1)
+                        is int appsUseLightTheme)
+                    {
+                        return appsUseLightTheme switch
+                        {
+                            0 => true, //Dark
+                            1 => false, //Light
+                            _ => null //Unknown
+                        };
+                    }
+                }
+                catch { /*Swallow*/ }
+
+                return null;
+            }
+        }
+        /// <summary>
+        /// Gets a value indicating whether the current Windows theme for the system is set to dark mode.
+        /// `null` is returned if the value cannot be determined.
+        /// </summary>
+        public static bool? SystemUsesDarkTheme
+        {
+            get
+            {
+                try
+                {
+                    if (Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "SystemUsesLightTheme", -1)
+                        is int systemUsesLightTheme)
+                    {
+                        return systemUsesLightTheme switch
+                        {
+                            0 => true, //Dark
+                            1 => false, //Light
+                            _ => null //Unknown
+                        };
+                    }
+                }
+                catch { /*Swallow*/ }
+
+                return null;
+            }
         }
         #endregion
     }

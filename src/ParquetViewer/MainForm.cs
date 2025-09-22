@@ -180,6 +180,9 @@ namespace ParquetViewer
             //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
             Program.GetUserConsentToGatherAnalytics();
             this.shareAnonymousUsageDataToolStripMenuItem.Checked = AppSettings.AnalyticsDataGatheringConsent;
+
+            //Ask the user if they want to enable dark mode (only if their system is in dark mode)
+            Program.AskUserIfTheyWantToSwitchToDarkMode();
         }
 
         private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)
