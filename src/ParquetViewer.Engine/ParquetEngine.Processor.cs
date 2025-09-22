@@ -366,9 +366,9 @@ namespace ParquetViewer.Engine
             if (levelCount > dataCount)
             {
                 if (keyDataColumn.RepetitionLevels?.Length != keyDataColumn.DefinitionLevels?.Length)
-                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed keys due to different lengths in repetition and definition levels");
+                    throw new MalformedFieldException($"Field `{field.Path}` appears to have malformed keys due to different lengths in repetition and definition levels");
                 else if (valueDataColumn.RepetitionLevels?.Length != valueDataColumn.DefinitionLevels?.Length)
-                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed values due to different lengths in repetition and definition levels");
+                    throw new MalformedFieldException($"Field `{field.Path}` appears to have malformed values due to different lengths in repetition and definition levels");
 
                 dataEnumerable = GetDataWithPaddedNulls();
 
@@ -556,7 +556,7 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    var clrType = schema.DataField?.ClrType ?? throw new MalformedFieldException($"{(parent is not null ? parent + "/" : string.Empty)}/{field} has no data field");
+                    var clrType = schema.DataField?.ClrType ?? throw new MalformedFieldException($"`{(parent is not null ? parent + "/" : string.Empty)}/{field}` has no data field");
                     dataTable.AddColumn(field, clrType, parent);
                 }
             }
