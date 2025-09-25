@@ -246,7 +246,15 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
         {
             if (this.MainDataSource?.DefaultView.RowFilter is not null)
             {
-                this.MainDataSource.DefaultView.RowFilter = null;
+                try
+                {
+                    this.Cursor = Cursors.WaitCursor;
+                    this.MainDataSource.DefaultView.RowFilter = null;
+                }
+                finally
+                {
+                    this.Cursor = Cursors.Default;
+                }
             }
         }
 

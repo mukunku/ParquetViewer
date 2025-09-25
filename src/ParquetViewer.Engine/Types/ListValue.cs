@@ -62,7 +62,7 @@ namespace ParquetViewer.Engine.Types
                 return 1;
             else if (this is null)
                 return -1;
-            
+
             for (var i = 0; i < Data.Count; i++)
             {
                 if (other.Data.Count == i)
@@ -94,7 +94,7 @@ namespace ParquetViewer.Engine.Types
 
         public IEnumerator<object> GetEnumerator()
         {
-            foreach(var item in Data)
+            foreach (var item in Data)
             {
                 yield return item;
             }

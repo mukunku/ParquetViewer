@@ -17,18 +17,6 @@ namespace ParquetViewer.Helpers
         private const string DefaultDateTimeFormat = "g";
         public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
 
-        [Obsolete]
-        private const string ISO8601Alt1DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
-        [Obsolete]
-        private const string ISO8601Alt2DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
-
-        public static DataGridViewAutoSizeColumnsMode ToDGVMode(this AutoSizeColumnsMode mode) => mode switch
-        {
-            AutoSizeColumnsMode.ColumnHeader => DataGridViewAutoSizeColumnsMode.ColumnHeader,
-            AutoSizeColumnsMode.AllCells => DataGridViewAutoSizeColumnsMode.AllCells,
-            _ => DataGridViewAutoSizeColumnsMode.None
-        };
-
         /// <summary>
         /// Returns a list of all column names within a given datatable
         /// </summary>
@@ -49,18 +37,13 @@ namespace ParquetViewer.Helpers
         /// </summary>
         /// <param name="dateFormat">Date format to get formatting string for</param>
         /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
-#pragma warning disable CS0612 // Type or member is obsolete
         public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
         {
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
-            //TODO: Get rid of this code that handles obsolete date formats after a few releases
-            DateFormat.ISO8601_Alt1 => ISO8601Alt1DateTimeFormat,
-            DateFormat.ISO8601_Alt2 => ISO8601Alt2DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
             DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
             _ => string.Empty
         };
-#pragma warning restore CS0612 // Type or member is obsolete
 
         public static string GetExtension(this FileType fileType) => fileType switch
         {
@@ -159,52 +142,30 @@ namespace ParquetViewer.Helpers
                 ? sourceType
                 : typeof(Nullable<>).MakeGenericType(sourceType);
 
-        private const float DECIMAL_MIN_FLOAT = (float)decimal.MinValue;
-        private const float DECIMAL_MAX_FLOAT = (float)decimal.MaxValue;
-        private const double DECIMAL_MIN_DOUBLE = (double)decimal.MinValue;
-        private const double DECIMAL_MAX_DOUBLE = (double)decimal.MaxValue;
-
         /// <summary>
         /// Converts a float to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this float floatValue, string? valueOverrideIfFormattingFails = null)
-            => ToDecimalStringImpl(floatValue, floatValue >= DECIMAL_MIN_FLOAT && floatValue <= DECIMAL_MAX_FLOAT, valueOverrideIfFormattingFails);
+        /// <returns><paramref name="floatValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
+        public static string? ToDecimalString(this float floatValue)
+            => floatValue >= (float)decimal.MinValue && floatValue <= (float)decimal.MaxValue ? ToDecimalStringImpl(floatValue) : null;
 
         /// <summary>
         /// Converts a double to a string without using the scientific notation, if possible
         /// </summary>
-        public static string ToDecimalString(this double doubleValue, string? valueOverrideIfFormattingFails = null)
-            => ToDecimalStringImpl(doubleValue, doubleValue >= DECIMAL_MIN_DOUBLE && doubleValue <= DECIMAL_MAX_DOUBLE, valueOverrideIfFormattingFails);
+        /// <returns><paramref name="doubleValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
+        public static string? ToDecimalString(this double doubleValue)
+            => doubleValue >= (double)decimal.MinValue && doubleValue <= (double)decimal.MaxValue ? ToDecimalStringImpl(doubleValue) : null;
 
-        private static string ToDecimalStringImpl(object value, bool isInRange, string? valueOverrideIfFormattingFails)
+        private static string? ToDecimalStringImpl(object value)
         {
-            var formattedValue = value?.ToString() ?? string.Empty;
-
-            if (!isInRange)
+            try
             {
-                if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
-                    return valueOverrideIfFormattingFails;
-                else
-                    return formattedValue;
+                return Convert.ToDecimal(value).ToString();
             }
-
-            var isUsingScientificNotation = formattedValue.Contains('E', StringComparison.InvariantCultureIgnoreCase);
-            if (isUsingScientificNotation)
+            catch
             {
-                try
-                {
-                    //Convert the float/double to a decimal which is formatted much nicer as string
-                    formattedValue = Convert.ToDecimal(value).ToString();
-                }
-                catch
-                {
-                    if (!string.IsNullOrWhiteSpace(valueOverrideIfFormattingFails))
-                    {
-                        formattedValue = valueOverrideIfFormattingFails;
-                    }
-                }
+                return null;
             }
-            return formattedValue;
         }
 
         //Source: https://stackoverflow.com/a/7574615/1458738

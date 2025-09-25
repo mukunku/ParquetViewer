@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,11 +38,15 @@ namespace ParquetViewer
                 this.metadataViewerToolStripMenuItem.Enabled = false;
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
+                this.actualShownRecordCountLabel.Text = "0";
                 this.MainDataSource?.Dispose();
                 this.MainDataSource = null;
                 this.loadAllRowsButton.Enabled = false;
                 this.searchFilterTextBox.PlaceholderText = "WHERE ";
+                this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
+                this.currentOffset = DefaultOffset;
                 this.mainGridView.ClearQuickPeekForms();
+                this.mainGridView.ClearColumnFormatOverrides();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
@@ -78,8 +81,8 @@ namespace ParquetViewer
                     this.selectedFields = this.selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
                     MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
-                            $"\r\n\r\nCase sensitive field names are not currently supported.", "Duplicate fields detected",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            $"{Environment.NewLine}{Environment.NewLine}Case sensitive field names are not currently supported.",
+                            "Duplicate fields detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
                 if (value?.Count > 0)
@@ -168,18 +171,8 @@ namespace ParquetViewer
                 await this.OpenNewFileOrFolder(this.fileToLoadOnLaunch);
             }
 
-            //Setup date format checkboxes
+            //Check necessary toolstrip menu items
             this.RefreshDateFormatMenuItemSelection();
-
-            foreach (ToolStripMenuItem toolStripItem in this.columnSizingToolStripMenuItem.DropDown.Items)
-            {
-                if (toolStripItem.Tag?.Equals(AppSettings.AutoSizeColumnsMode.ToString()) == true)
-                {
-                    toolStripItem.Checked = true;
-                    break;
-                }
-            }
-
             this.alwaysLoadAllRecordsToolStripMenuItem.Checked = AppSettings.AlwaysLoadAllRecords;
             this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
             this.RefreshExperimentalFeatureToolStrips();
@@ -187,6 +180,9 @@ namespace ParquetViewer
             //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
             Program.GetUserConsentToGatherAnalytics();
             this.shareAnonymousUsageDataToolStripMenuItem.Checked = AppSettings.AnalyticsDataGatheringConsent;
+
+            //Ask the user if they want to enable dark mode (only if their system is in dark mode)
+            Program.AskUserIfTheyWantToSwitchToDarkMode();
         }
 
         private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)
@@ -281,6 +277,7 @@ namespace ParquetViewer
         {
             var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
             LoadingIcon? loadingIcon = null;
+            var wasSuccessful = false;
             try
             {
                 if (!this.IsAnyFileOpen)
@@ -321,9 +318,7 @@ namespace ParquetViewer
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                 this.MainDataSource = finalResult;
-
-                FileOpenEvent.FireAndForget(Directory.Exists(this.OpenFileOrFolderPath), this._openParquetEngine.NumberOfPartitions, this._openParquetEngine.RecordCount, this._openParquetEngine.ThriftMetadata.RowGroups.Count,
-                    this._openParquetEngine.Fields.Count, finalResult.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(), this.CurrentOffset, this.CurrentMaxRowCount, finalResult.Columns.Count, stopwatch.ElapsedMilliseconds);
+                wasSuccessful = true;
             }
             catch (AllFilesSkippedException ex)
             {
@@ -341,6 +336,14 @@ namespace ParquetViewer
             {
                 HandleMultipleSchemasFoundException(ex);
             }
+            catch (MalformedFieldException ex)
+            {
+                HandleMalformedFieldException(ex);
+            }
+            catch (DecimalOverflowException ex)
+            {
+                HandleDecimalOverflowException(ex);
+            }
             catch (Exception ex)
             {
                 if (ex is not OperationCanceledException)
@@ -348,28 +351,42 @@ namespace ParquetViewer
             }
             finally
             {
-                //Little secret performance counter
                 stopwatch.Stop();
 
                 TimeSpan totalTime = stopwatch.Elapsed;
                 TimeSpan renderTime = totalTime - loadTime - indexTime;
+
+                //Little secret performance counter
                 this.showingStatusBarLabel.ToolTipText = $"Total time: {totalTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Load time: {loadTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Index time: {indexTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Render time: {renderTime:mm\\:ss\\.ff}" + Environment.NewLine;
 
                 loadingIcon?.Dispose();
+
+                if (wasSuccessful)
+                {
+                    FileOpenEvent.FireAndForget(
+                        Directory.Exists(this.OpenFileOrFolderPath),
+                        this._openParquetEngine!.NumberOfPartitions,
+                        this._openParquetEngine.RecordCount,
+                        this._openParquetEngine.ThriftMetadata.RowGroups.Count,
+                        this._openParquetEngine.Fields.Count,
+                        this.MainDataSource!.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(),
+                        this.CurrentOffset,
+                        this.CurrentMaxRowCount,
+                        this.MainDataSource!.Columns.Count,
+                        (long)totalTime.TotalMilliseconds,
+                        (long)loadTime.TotalMilliseconds,
+                        (long)indexTime.TotalMilliseconds,
+                        (long)renderTime.TotalMilliseconds);
+                }
             }
         }
 
         private async Task OpenNewFileOrFolder(string fileOrFolderPath)
         {
             this.OpenFileOrFolderPath = fileOrFolderPath;
-
-            this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-            this.currentOffset = DefaultOffset;
-            this.mainGridView.ClearQuickPeekForms();
-            this.searchFilterTextBox.PlaceholderText = "WHERE ";
 
             var fieldList = await this.OpenFieldSelectionDialog(false);
             var wasOpenSuccess = this._openParquetEngine is not null;
@@ -403,7 +420,6 @@ namespace ParquetViewer
             this.iSO8601ToolStripMenuItem.Checked = false;
             this.customDateFormatToolStripMenuItem.Checked = false;
 
-#pragma warning disable CS0612 // Type or member is obsolete
             switch (AppSettings.DateTimeDisplayFormat)
             {
                 case DateFormat.Default:
@@ -412,16 +428,12 @@ namespace ParquetViewer
                 case DateFormat.ISO8601:
                     this.iSO8601ToolStripMenuItem.Checked = true;
                     break;
-                //TODO: Get rid of this code that handles obsolete date formats after a few releases
-                case DateFormat.ISO8601_Alt1:
-                case DateFormat.ISO8601_Alt2:
                 case DateFormat.Custom:
                     this.customDateFormatToolStripMenuItem.Checked = true;
                     break;
                 default:
                     break;
             }
-#pragma warning restore CS0612 // Type or member is obsolete
         }
 
         /// <summary>

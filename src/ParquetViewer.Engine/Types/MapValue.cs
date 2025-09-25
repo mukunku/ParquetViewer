@@ -72,7 +72,7 @@ namespace ParquetViewer.Engine.Types
             }
         }
 
-        private (object Key, object Value) GetMapValue(int index) 
+        private (object Key, object Value) GetMapValue(int index)
             => (Keys[index] ?? DBNull.Value, Values[index] ?? DBNull.Value);
 
         /// <summary>

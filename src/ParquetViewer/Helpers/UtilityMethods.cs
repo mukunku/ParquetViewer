@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers
 {
@@ -25,7 +24,7 @@ namespace ParquetViewer.Helpers
                         formattedValue = string.Concat("\"", formattedValue, "\"");
                         break;
                     }
-                }                    
+                }
 
                 return formattedValue;
             }

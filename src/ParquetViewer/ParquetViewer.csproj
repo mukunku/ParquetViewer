@@ -48,9 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Apache.Arrow" />
-    <PackageReference Include="Microsoft.CSharp" />
+    <PackageReference Include="dotnet-file-associator" />
     <PackageReference Include="Parquet.Net" />
-    <PackageReference Include="System.Data.DataSetExtensions" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />

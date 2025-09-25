@@ -51,7 +51,7 @@ namespace ParquetViewer
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel file (*.xls)|*.xls";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
-                    if (this._openParquetEngine?.ParquetSchemaTree?.Children.All(s => s.FieldType() == Engine.ParquetSchemaElement.FieldTypeId.Primitive) == true)
+                    if (this._openParquetEngine?.ParquetSchemaTree?.Children.All(s => s.FieldType == Engine.ParquetSchemaElement.FieldTypeId.Primitive) == true)
                     {
                         this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
                     }
@@ -325,7 +325,7 @@ namespace ParquetViewer
 "ParquetViewer", @"
 {
     ""CreatedWith"": ""ParquetViewer"",
-    ""Version"": """ + AboutBox.AssemblyVersion + @""",
+    ""Version"": """ + Env.AssemblyVersion.ToString() + @""",
     ""Website"": ""https://github.com/mukunku/ParquetViewer"",
     ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + @"""
 }"
@@ -402,6 +402,17 @@ namespace ParquetViewer
             }
             ShowError(sb.ToString());
         }
+
+        private static void HandleMalformedFieldException(MalformedFieldException ex)
+        {
+            ShowError($"{ex.Message}{Environment.NewLine}{Environment.NewLine}" +
+                $"If you think the file is valid please consider opening an issue in the GitHub repo. See: Help → About");
+        }
+
+        private static void HandleDecimalOverflowException(DecimalOverflowException ex)
+            => ShowError($"Field `{ex.FieldName}` with type DECIMAL({ex.Precision}, {ex.Scale}) contains values outside ParquetViewer's supported range between " +
+                $"DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, {DecimalOverflowException.MAX_DECIMAL_SCALE}) and DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, 0)",
+                "Decimal value too large");
 
         private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }

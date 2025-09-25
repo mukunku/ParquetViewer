@@ -12,11 +12,11 @@ namespace ParquetViewer.Analytics
     {
         //The api key is meant to be public: https://www.docs.developers.amplitude.com/guides/amplitude-keys-guide/#api-key
         private const string AMPLITUDE_API_KEY = ""; //This will only be populated for official releases
-        
+
         private static readonly long _sessionId = DateTime.UtcNow.ToMillisecondsSinceEpoch();
         private static readonly int _systemRAM = (int)(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1048576.0 /*magic number*/);
         private static readonly AmplitudeConfiguration _defaultConfiguration = new(AMPLITUDE_API_KEY, () => new HttpClientHandler(), new AppSettingsConsentProvider());
-        
+
         private readonly AmplitudeConfiguration _amplitudeConfiguration;
 
         [JsonIgnore]
@@ -33,7 +33,6 @@ namespace ParquetViewer.Analytics
         {
             AppSettings.AlwaysLoadAllRecords,
             AppSettings.AlwaysSelectAllFields,
-            AutoSizeColumnsMode = AppSettings.AutoSizeColumnsMode.ToString(),
             DateTimeDisplayFormat = AppSettings.DateTimeDisplayFormat.ToString(),
             SystemMemory = _systemRAM,
             Environment.ProcessorCount,
@@ -74,14 +73,13 @@ namespace ParquetViewer.Analytics
                         language = CultureInfo.CurrentUICulture.Name,
                         os_name = Environment.OSVersion.Platform.ToString(),
                         os_version = Environment.OSVersion.VersionString,
-                        app_version = AboutBox.AssemblyVersion
+                        app_version = Env.AssemblyVersion.ToString()
                         }
                     }
                 };
 
-                //TODO: Not caching HttpClient is bad practice but changing it to singleton with thread safety has proven difficult
-                //as it broke tests in my first attempt. (Also not sure if thread safety is required)
-                //https://stackoverflow.com/a/48778707/1458738
+                //We're not reusing HttpClient instances because this is a very infrequent operation and implementing HttpClientFactory seems overkill for this.
+                //Reference: https://medium.com/@asad99/httpclient-woes-avoiding-socket-leaks-and-boosting-performance-with-httpclientfactory-34a5c6b6c9b1
                 using var result = await new HttpClient(this._amplitudeConfiguration.HttpMessageHandlerProvider.Invoke())
                     .PostAsync("https://api2.amplitude.com/2/httpapi", JsonContent.Create(request));
 
