@@ -142,6 +142,11 @@ namespace ParquetViewer.Helpers
                 ? sourceType
                 : typeof(Nullable<>).MakeGenericType(sourceType);
 
+        private const float DECIMAL_MIN_FLOAT = (float)decimal.MinValue;
+        private const float DECIMAL_MAX_FLOAT = (float)decimal.MaxValue;
+        private const double DECIMAL_MIN_DOUBLE = (double)decimal.MinValue;
+        private const double DECIMAL_MAX_DOUBLE = (double)decimal.MaxValue;
+
         /// <summary>
         /// Converts a float to a string without using the scientific notation, if possible
         /// </summary>
@@ -158,7 +163,6 @@ namespace ParquetViewer.Helpers
 
         private static string? ToDecimalStringImpl(object value)
         {
-
             try
             {
                 return Convert.ToDecimal(value).ToString();

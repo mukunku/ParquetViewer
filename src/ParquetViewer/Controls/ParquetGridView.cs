@@ -964,7 +964,6 @@ namespace ParquetViewer.Controls
                     toolstripMenuItem.Click += (object? _, EventArgs _) =>
                     {
                         ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
-
                         if (byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
                             byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
                         else

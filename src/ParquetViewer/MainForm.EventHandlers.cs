@@ -267,5 +267,15 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
                 this.mainGridView.CloseContextMenu();
             }
         }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                //Hide context menu on minimize to avoid a glitch where
+                //the context menu won't go away until you click on it.
+                this.mainGridView.CloseContextMenu();
+            }
+        }
     }
 }

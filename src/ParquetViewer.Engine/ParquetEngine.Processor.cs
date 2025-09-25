@@ -116,7 +116,6 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
 
             var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
-
             int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
             if (field.BelongsToListField || field.BelongsToListOfStructsField)
             {
@@ -172,8 +171,8 @@ namespace ParquetViewer.Engine
                 if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
                 {
                     int rowIndex = rowBeginIndex;
-
                     int skippedRecords = 0;
+
                     var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
                     lastMilestone = "Read";
 
