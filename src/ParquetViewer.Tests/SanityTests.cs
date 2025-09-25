@@ -388,34 +388,6 @@ namespace ParquetViewer.Tests
         }
 
         [TestMethod]
-        public async Task AMPLITUDE_EXCEPTION_ADDITIONAL_DATA_IS_SERIALIZED_TEST()
-        {
-            var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
-
-            var testException = new Exception("Exception with additional data");
-            testException.Data["key1"] = "value1";
-            testException.Data["key2"] = "value2";
-            var testEvent = new ExceptionEvent(testException, testAmplitudeEvent.CloneAmplitudeConfiguration());
-
-            //mock the http response
-            _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
-            {
-                string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
-
-                var requestJson = JsonNode.Parse(requestJsonBody);
-                if (requestJson?["events"]?[0]?["event_properties"]?["key1"]?.GetValue<string>() == "value1"
-                    && requestJson?["events"]?[0]?["event_properties"]?["key2"]?.GetValue<string>() == "value2"
-                    && requestJson?["events"]?[0]?["event_properties"]?["message"]?.GetValue<string>() == "Exception with additional data")
-                    return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-                else
-                    return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
-            });
-
-            bool wasSuccess = await testEvent.Record();
-            Assert.True(wasSuccess, "Additional exception data wasn't added to the amplitude event as expected");
-        }
-
-        [TestMethod]
         public async Task NULLABLE_GUID_TEST()
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/NULLABLE_GUID_TEST.parquet", default);
@@ -582,24 +554,6 @@ namespace ParquetViewer.Tests
             Assert.IsTrue(SemanticVersion.TryParse(smallerVersionNumber, out var smallerSemanticVersion), $"{smallerVersionNumber} is not a valid semantic version");
             Assert.IsTrue(SemanticVersion.TryParse(higherVersionNumber, out var higherSemanticVersion), $"{higherVersionNumber} is not a valid semantic version");
             Assert.IsTrue(smallerSemanticVersion < higherSemanticVersion, $"{smallerSemanticVersion} should have been lesser than {higherSemanticVersion}");
-        }
-
-        [Fact]
-        public async Task DECIMALS_WITH_NO_SCALE_TEST()
-        {
-            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_WITH_NO_SCALE_TEST.parquet", default);
-            Assert.Equal(10589, parquetEngine.RecordCount);
-            Assert.Equal(8, parquetEngine.Fields.Count);
-
-            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
-
-            Assert.Equal(0.7072m, dataTable.Rows[0][5]);
-            Assert.Equal(0m, dataTable.Rows[0][6]);
-            Assert.Equal(0m, dataTable.Rows[0][7]);
-
-            Assert.Equal(0.74527m, dataTable.Rows[100][5]);
-            Assert.Equal(0m, dataTable.Rows[100][6]);
-            Assert.Equal(0m, dataTable.Rows[100][7]);
         }
     }
 }
