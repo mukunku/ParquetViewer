@@ -78,9 +78,8 @@ namespace ParquetViewer.Analytics
                     }
                 };
 
-                //TODO: Not caching HttpClient is bad practice but changing it to singleton with thread safety has proven difficult
-                //as it broke tests in my first attempt. (Also not sure if thread safety is required)
-                //https://stackoverflow.com/a/48778707/1458738
+                //We're not reusing HttpClient instances because this is a very infrequent operation and implementing HttpClientFactory seems overkill for this.
+                //Reference: https://medium.com/@asad99/httpclient-woes-avoiding-socket-leaks-and-boosting-performance-with-httpclientfactory-34a5c6b6c9b1
                 using var result = await new HttpClient(this._amplitudeConfiguration.HttpMessageHandlerProvider.Invoke())
                     .PostAsync("https://api2.amplitude.com/2/httpapi", JsonContent.Create(request));
 
