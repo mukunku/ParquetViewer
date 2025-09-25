@@ -546,11 +546,14 @@ namespace ParquetViewer.Controls
             {
                 this.Cursor = Cursors.WaitCursor;
                 this.AutoSizeColumns(e.ColumnIndex);
+                e.Handled = true;
             }
             finally
             {
                 this.Cursor = Cursors.Default;
             }
+
+            base.OnColumnDividerDoubleClick(e);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
