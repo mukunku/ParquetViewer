@@ -33,7 +33,7 @@
             clearfilterColumnsButton = new System.Windows.Forms.Button();
             showSelectedFieldsRadioButton = new System.Windows.Forms.RadioButton();
             allFieldsRadioButton = new System.Windows.Forms.RadioButton();
-            rememberMyChoiceCheckBox = new System.Windows.Forms.CheckBox();
+            rememberMyChoiceCheckBox = new StylableCheckBox();
             filterColumnsTextbox = new System.Windows.Forms.TextBox();
             fieldsPanel = new System.Windows.Forms.Panel();
             mainTableLayoutPanel.SuspendLayout();
@@ -195,6 +195,6 @@
         private System.Windows.Forms.Button clearfilterColumnsButton;
         private System.Windows.Forms.RadioButton showSelectedFieldsRadioButton;
         private System.Windows.Forms.RadioButton allFieldsRadioButton;
-        private System.Windows.Forms.CheckBox rememberMyChoiceCheckBox;
+        private StylableCheckBox rememberMyChoiceCheckBox;
     }
 }

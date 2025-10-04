@@ -3,6 +3,7 @@ using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -87,12 +88,13 @@ namespace ParquetViewer
 
                         string selectAllCheckBoxText = $"Select All (Count: {supportedFieldCount}{unsupportedFieldsText})";
                         string deselectAllCheckBoxText = $"Deselect All (Count: {supportedFieldCount}{unsupportedFieldsText})";
-                        var selectAllCheckbox = new CheckBox()
+                        var selectAllCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                         {
                             Name = SelectAllCheckboxName,
                             Text = selectAllCheckBoxText,
                             Tag = SelectAllCheckboxName,
                             Checked = false,
+                            DisabledForeColor = _disabledTextColor,
                             Location = new Point(locationX, locationY),
                             AutoSize = true
                         };
@@ -126,14 +128,15 @@ namespace ParquetViewer
                         locationY += DynamicFieldCheckboxYIncrement;
                     }
 
-                    bool isUnsupportedFieldType = !IsSupportedFieldType(field);
-                    var fieldCheckbox = new CheckBox()
+                    bool isUnsupportedFieldType = !IsSupportedFieldType(field, out var unsupportedReason);
+                    var fieldCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                     {
                         Name = string.Concat("checkbox_", field.Name),
                         Text = string.Concat(field.Name, isUnsupportedFieldType ? $" {UnsupportedFieldText}" : string.Empty),
                         Tag = field.Name,
                         Checked = preSelectedFields?.Contains(field.Name) == true,
                         Location = new Point(locationX, locationY),
+                        DisabledForeColor = _disabledTextColor,
                         AutoSize = true,
                         Enabled = !isUnsupportedFieldType
                     };
@@ -175,6 +178,11 @@ namespace ParquetViewer
                         }
                     };
                     checkboxControls.Add(fieldCheckbox);
+
+                    if (isUnsupportedFieldType)
+                    {
+                        fieldCheckbox.SetTooltip(unsupportedReason!);
+                    }
 
                     locationY += DynamicFieldCheckboxYIncrement;
                 }
@@ -219,15 +227,66 @@ namespace ParquetViewer
             this.fieldsPanel.Controls.Clear();
         }
 
-        public static bool IsSupportedFieldType(Field field) =>
-            field.SchemaType switch
+        public static bool IsSupportedFieldType(Field field)
+            => IsSupportedFieldType(field, out var _);
+
+        public static bool IsSupportedFieldType(Field field, [NotNullWhen(false)] out string? unsupportedReason)
+        {
+            if (field.SchemaType == SchemaType.Data)
             {
-                SchemaType.Data => true,
-                SchemaType.List when field is ListField lf && (lf.Item.SchemaType == SchemaType.Data || lf.Item.SchemaType == SchemaType.Struct) => true,
-                SchemaType.Map when field is MapField mp && mp.Key.SchemaType == SchemaType.Data && mp.Value.SchemaType == SchemaType.Data => true,
-                SchemaType.Struct when field is StructField sf => sf.Fields.All(IsSupportedFieldType),
-                _ => false
-            };
+                unsupportedReason = null;
+                return true;
+            }
+
+            if (field.SchemaType == SchemaType.List && field is ListField lf)
+            {
+                //We only support lists of structs and lists of primitives :(
+                if (lf.Item.SchemaType == SchemaType.Map || lf.Item.SchemaType == SchemaType.List)
+                {
+                    unsupportedReason = $"Lists of {lf.Item.SchemaType.ToString()}s are currently unsupported";
+                    return false;
+                }
+
+                unsupportedReason = null;
+                return true;
+            }
+
+            if (field.SchemaType == SchemaType.Map && field is MapField mf)
+            {
+                if (mf.Key.SchemaType != SchemaType.Data)
+                {
+                    unsupportedReason = $"Maps of {mf.Key.SchemaType}s are currently unsupported";
+                    return false;
+                }
+                else if (mf.Value.SchemaType != SchemaType.Data)
+                {
+                    unsupportedReason = $"Maps of {mf.Value.SchemaType}s are currently unsupported";
+                    return false;
+                }
+
+                unsupportedReason = null;
+                return true;
+            }
+
+            if (field.SchemaType == SchemaType.Struct && field is StructField sf)
+            {
+                foreach (var structField in sf.Fields)
+                {
+                    if (!IsSupportedFieldType(structField, out unsupportedReason))
+                    {
+                        unsupportedReason = $"Struct `{field.Name}` contains unsupported field: `{structField.Name}`{Environment.NewLine}" +
+                            $"{unsupportedReason}";
+                        return false;
+                    }
+                }
+
+                unsupportedReason = null;
+                return true;
+            }
+
+            unsupportedReason = "Unknown field type";
+            return false;
+        }
 
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
@@ -339,6 +398,7 @@ namespace ParquetViewer
                 ?? this.AvailableFields.Count);
         }
 
+        private Color _disabledTextColor;
         public override void SetTheme(Theme theme)
         {
             if (DesignMode)
@@ -349,6 +409,8 @@ namespace ParquetViewer
             base.SetTheme(theme);
             this.doneButton.ForeColor = Color.Black;
             this.clearfilterColumnsButton.ForeColor = Color.Black;
+            this._disabledTextColor = theme.DisabledTextColor;
+            this.rememberMyChoiceCheckBox.DisabledForeColor = this._disabledTextColor;
         }
     }
 }
