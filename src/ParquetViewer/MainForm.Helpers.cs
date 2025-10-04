@@ -1,4 +1,5 @@
-﻿using ParquetViewer.Analytics;
+﻿using MiniExcelLibs;
+using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
@@ -10,6 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -48,7 +50,7 @@ namespace ParquetViewer
                 if (this.MainDataSource?.DefaultView.Count > 0)
                 {
                     this.exportFileDialog.Title = string.Format("{0} records will be exported", this.MainDataSource.DefaultView.Count);
-                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel file (*.xls)|*.xls";
+                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
                     if (this._openParquetEngine?.ParquetSchemaTree?.Children.All(s => s.FieldType == Engine.ParquetSchemaElement.FieldTypeId.Primitive) == true)
@@ -83,6 +85,20 @@ namespace ParquetViewer
                             }
 
                             await WriteDataToExcelFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
+                        }
+                        else if (selectedFileType == FileType.XLSX)
+                        {
+                            const int MAX_XLSX_COLUMN_COUNT = 16384; //.xlsx format has a hard limit on 16384 columns
+                            if (this.MainDataSource!.Columns.Count > MAX_XLSX_COLUMN_COUNT)
+                            {
+                                MessageBox.Show($"the .xlsx file format supports a maximum of {MAX_XLSX_COLUMN_COUNT} columns.{Environment.NewLine}{Environment.NewLine}" +
+                                    $"Please try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
+                                    "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                                return;
+                            }
+
+                            await WriteDataToExcel2007File(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
                         }
                         else if (selectedFileType == FileType.JSON)
                         {
@@ -136,6 +152,18 @@ namespace ParquetViewer
                 }
                 catch (Exception) { /*Swallow*/ }
             }
+        }
+
+        private async Task WriteDataToExcel2007File(DataTable mainDataSource, string path, CancellationToken cancellationToken, IProgress<int> progress)
+        {
+            const int MAX_XLSX_SHEET_NAME_LENGTH = 31;
+            var sheetName = Path.GetFileNameWithoutExtension(this.OpenFileOrFolderPath) ?? "Sheet1";
+            
+            //sanitize sheet name
+            sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
+
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, cancellationToken);
         }
 
         private static Task WriteDataToCSVFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)

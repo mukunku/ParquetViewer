@@ -45,14 +45,10 @@ namespace ParquetViewer.Helpers
             _ => string.Empty
         };
 
-        public static string GetExtension(this FileType fileType) => fileType switch
-        {
-            FileType.CSV => ".csv",
-            FileType.XLS => ".xls",
-            FileType.JSON => ".json",
-            FileType.PARQUET => ".parquet",
-            _ => throw new ArgumentOutOfRangeException(nameof(fileType))
-        };
+        public static string GetExtension(this FileType fileType)
+            => Enum.IsDefined(fileType) 
+            ? $".{fileType.ToString().ToLowerInvariant()}" 
+            : throw new ArgumentOutOfRangeException(nameof(fileType));
 
         public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
 
@@ -171,13 +167,11 @@ namespace ParquetViewer.Helpers
         //Source: https://stackoverflow.com/a/7574615/1458738
         public static string Left(this string value, int maxLength, string? truncateSuffix = null)
         {
-            if (string.IsNullOrEmpty(value)) return value;
+            if (string.IsNullOrEmpty(value)) 
+                return value;
+            
             maxLength = Math.Abs(maxLength);
-
-            return (value.Length <= maxLength
-                   ? value
-                   : (value.Substring(0, maxLength) + truncateSuffix)
-                   );
+            return value.Length <= maxLength ? value : (value.Substring(0, maxLength) + truncateSuffix);
         }
 
         public static IEnumerable<ToolStripItem> Children(this MenuStrip menuStrip)

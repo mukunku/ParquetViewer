@@ -165,7 +165,7 @@ namespace ParquetViewer.Helpers
         Default = 0,
         ISO8601 = 2,
         //1, 3, 4, and 5 have been discontinued. Should not be reused!
-        Custom = 6
+        Custom = 6,
     }
 
     public enum FileType
@@ -173,6 +173,7 @@ namespace ParquetViewer.Helpers
         CSV = 0,
         XLS,
         JSON,
-        PARQUET
+        PARQUET,
+        XLSX,
     }
 }

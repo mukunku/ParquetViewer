@@ -5,6 +5,7 @@
   <ItemGroup>
     <PackageVersion Include="Apache.Arrow" Version="22.0.1" />
     <PackageVersion Include="dotnet-file-associator" Version="0.1.4" />
+    <PackageVersion Include="MiniExcel" Version="1.41.4" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.10.4" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.10.4" />
     <PackageVersion Include="Parquet.Net" Version="5.2.0" />
