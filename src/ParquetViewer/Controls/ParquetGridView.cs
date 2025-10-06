@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
-    internal class ParquetGridView : DataGridView
+    public class ParquetGridView : DataGridView
     {
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
         //But let's use something smaller to increase rendering performance.
@@ -865,9 +865,11 @@ namespace ParquetViewer.Controls
                 values = values
                     .Where(value => value != DBNull.Value && value is not null)
                     .Distinct() //Distinct() doesn't work if there are any DBNull's in the collection
-                    .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
                     .Order()
+                    .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
                     .ToArray();
+
+                var needsOrClause = hasNulls && values.Length > 1;
 
                 for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
                 {
@@ -877,6 +879,11 @@ namespace ParquetViewer.Controls
                         if (columnIndex > 0)
                         {
                             queryBuilder.Append(" AND ");
+                        }
+
+                        if (needsOrClause)
+                        {
+                            queryBuilder.Append('(');
                         }
 
                         queryBuilder.Append(columnName);
@@ -895,28 +902,31 @@ namespace ParquetViewer.Controls
                             queryBuilder.Append(" IN (");
                         }
                     }
-                    else
+                    else if (value != DBNull.Value)
                     {
                         queryBuilder.Append(',');
                     }
 
-                    if (valueType == typeof(DateTime))
+                    if (value != DBNull.Value)
                     {
-                        //Use a standard date format so the query is always syntactically correct
-                        queryBuilder.Append($"#{((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF")}#");
-                    }
-                    else if (valueType.IsNumber())
-                    {
-                        var stringValue = value.ToString();
-                        if ((valueType == typeof(float) || valueType == typeof(double))
-                            && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
-                            stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
+                        if (valueType == typeof(DateTime))
+                        {
+                            //Use a standard date format so the query is always syntactically correct
+                            queryBuilder.Append($"#{((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF")}#");
+                        }
+                        else if (valueType.IsNumber())
+                        {
+                            var stringValue = value.ToString();
+                            if ((valueType == typeof(float) || valueType == typeof(double))
+                                && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
+                                stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
 
-                        queryBuilder.Append(stringValue);
-                    }
-                    else
-                    {
-                        queryBuilder.Append($"'{value}'");
+                            queryBuilder.Append(stringValue);
+                        }
+                        else
+                        {
+                            queryBuilder.Append($"'{value}'");
+                        }
                     }
 
                     //Close the `IN (` parenthesis if required
@@ -924,6 +934,12 @@ namespace ParquetViewer.Controls
                     {
                         queryBuilder.Append(')');
                     }
+                }
+
+                if (needsOrClause)
+                {
+                    queryBuilder.Append($" OR {columnName} IS NULL");
+                    queryBuilder.Append(')'); //close the parenthesis opened above
                 }
             }
 
