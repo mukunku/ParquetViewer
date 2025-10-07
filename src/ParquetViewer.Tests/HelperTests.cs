@@ -124,7 +124,7 @@ namespace ParquetViewer.Tests
         [DataRow("v1.0.0.0", "1.0.0.0")]
         [DataRow("99.99.99", "99.99.99.0")]
         [DataRow("99.99.99.99", "99.99.99.99")]
-        public void SEMANTIC_VERSION_PARSER_TEST(string versionNumber, string? expectedParsedVersionNumber)
+        public void SEMANTIC_VERSION_PARSER_TESTS(string versionNumber, string? expectedParsedVersionNumber)
         {
             var isExpectedToBeValid = expectedParsedVersionNumber is not null;
             Assert.AreEqual(SemanticVersion.TryParse(versionNumber, out var semanticVersion), isExpectedToBeValid);

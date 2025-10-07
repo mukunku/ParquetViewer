@@ -28,12 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             tabControl = new System.Windows.Forms.TabControl();
             loadingTab = new System.Windows.Forms.TabPage();
             closeButton = new System.Windows.Forms.Button();
             copyRawThriftMetadataButton = new System.Windows.Forms.Button();
             mainBackgroundWorker = new System.ComponentModel.BackgroundWorker();
+            copyRawMetadataToolTip = new System.Windows.Forms.ToolTip(components);
             tableLayoutPanel.SuspendLayout();
             tabControl.SuspendLayout();
             SuspendLayout();
@@ -121,7 +123,6 @@
             KeyUp += MetadataViewer_KeyUp;
             tableLayoutPanel.ResumeLayout(false);
             tabControl.ResumeLayout(false);
-            Icon = Properties.Resources.text_file_icon;
             ResumeLayout(false);
         }
 
@@ -132,5 +133,6 @@
         private System.Windows.Forms.TabPage loadingTab;
         private System.ComponentModel.BackgroundWorker mainBackgroundWorker;
         private System.Windows.Forms.Button copyRawThriftMetadataButton;
+        private System.Windows.Forms.ToolTip copyRawMetadataToolTip;
     }
 }

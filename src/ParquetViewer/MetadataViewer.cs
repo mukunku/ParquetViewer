@@ -30,6 +30,7 @@ namespace ParquetViewer
         private void MetadataViewer_Load(object sender, EventArgs e)
         {
             this.mainBackgroundWorker.RunWorkerAsync();
+            this.copyRawMetadataToolTip.SetToolTip(this.copyRawThriftMetadataButton, "Exports full, raw Thrift metadata to the clipboard.");
         }
 
         private void AddTab(string tabName, string text)

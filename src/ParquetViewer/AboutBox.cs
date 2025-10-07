@@ -229,7 +229,7 @@ namespace ParquetViewer
         public static bool? RunElevatedExeForFileAssociation(bool associate, out int? exitCode)
         {
             exitCode = null;
-            Process proc = new();
+            using Process proc = new();
             proc.StartInfo.FileName = _exePath;
             proc.StartInfo.UseShellExecute = true;
             proc.StartInfo.Verb = "runas";
