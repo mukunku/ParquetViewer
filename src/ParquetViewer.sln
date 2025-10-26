@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Engine", "ParquetViewer.Engine\ParquetViewer.Engine.csproj", "{77900356-25F3-4A24-B638-845C784C1175}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer", "ParquetViewer\ParquetViewer.csproj", "{6019FC1B-3610-4682-BF96-8345C95CB7EC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Tests", "ParquetViewer.Tests\ParquetViewer.Tests.csproj", "{16D10BC9-08BF-4248-8975-1B54C42EB2C2}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Engine", "ParquetViewer.Engine\ParquetViewer.Engine.csproj", "{77900356-25F3-4A24-B638-845C784C1175}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

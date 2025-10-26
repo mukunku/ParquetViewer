@@ -2,6 +2,7 @@
 using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ParquetViewer
 {
@@ -9,7 +10,6 @@ namespace ParquetViewer
     {
         private const string RegistrySubKey = "ParquetViewer";
         private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
-        private const string AutoSizeColumnsModeKey = "AutoSizeColumnsMode";
         private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
         private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
         private const string AnalyticsDeviceIdKey = "AnalyticsDeviceId";
@@ -37,16 +37,10 @@ namespace ParquetViewer
             set => SetRegistryValue(AlwaysLoadAllRecordsKey, value.ToString());
         }
 
-        public static AutoSizeColumnsMode AutoSizeColumnsMode
+        public static SemanticVersion? ConsentLastAskedOnVersion
         {
-            get => ReadRegistryValue(AutoSizeColumnsModeKey, out int value) ? value.ToEnum(AutoSizeColumnsMode.AllCells) : AutoSizeColumnsMode.AllCells;
-            set => SetRegistryValue(AutoSizeColumnsModeKey, (int)value);
-        }
-
-        public static string? ConsentLastAskedOnVersion
-        {
-            get => ReadRegistryValue(ConsentLastAskedOnVersionKey, out string? value) ? value : null;
-            set => SetRegistryValue(ConsentLastAskedOnVersionKey, value ?? string.Empty);
+            get => ReadRegistryValue(ConsentLastAskedOnVersionKey, out string? value) ? SemanticVersion.TryParse(value, out var semanticVersion) ? semanticVersion : null : null;
+            set => SetRegistryValue(ConsentLastAskedOnVersionKey, value?.ToString() ?? string.Empty);
         }
 
         public static Guid AnalyticsDeviceId
@@ -110,7 +104,7 @@ namespace ParquetViewer
 
         public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;
 
-        private static bool ReadRegistryValue<T>(string key, out T? value)
+        private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)
         {
             try
             {

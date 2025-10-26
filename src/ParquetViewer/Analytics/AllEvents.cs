@@ -20,6 +20,9 @@ namespace ParquetViewer.Analytics
         public long RecordCount { get; set; }
         public int NumLoadedFields { get; set; }
         public long LoadTimeMS { get; set; }
+        public long ReadTimeMS { get; set; }
+        public long IndexTimeMS { get; set; }
+        public long RenderTimeMS { get; set; }
 
         public FileOpenEvent() : base(EVENT_TYPE)
         {
@@ -27,7 +30,8 @@ namespace ParquetViewer.Analytics
         }
 
         public static void FireAndForget(bool isFolder, int numPartitions, long numRows, int numRowGroups, int numFields,
-            string[] fieldTypes, long recordOffset, long recordCount, int numLoadedFields, long loadTimeMilliseconds)
+            string[] fieldTypes, long recordOffset, long recordCount, int numLoadedFields,
+            long totalLoadTimeMilliseconds, long readTimeMS, long indexTimeMS, long renderTimeMS)
         {
             var _ = new FileOpenEvent
             {
@@ -40,7 +44,10 @@ namespace ParquetViewer.Analytics
                 RecordOffset = recordOffset,
                 RecordCount = recordCount,
                 NumLoadedFields = numLoadedFields,
-                LoadTimeMS = loadTimeMilliseconds
+                LoadTimeMS = totalLoadTimeMilliseconds,
+                ReadTimeMS = readTimeMS,
+                IndexTimeMS = indexTimeMS,
+                RenderTimeMS = readTimeMS
             }.Record();
         }
     }
@@ -145,7 +152,7 @@ namespace ParquetViewer.Analytics
             get
             {
                 var dictionary = new Dictionary<string, object>();
-                foreach(DictionaryEntry keyValuePair in this.Exception.Data)
+                foreach (DictionaryEntry keyValuePair in this.Exception.Data)
                 {
                     if (keyValuePair.Key is string key && keyValuePair.Value is not null)
                     {

@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
-    internal class ParquetGridView : DataGridView
+    public class ParquetGridView : DataGridView
     {
         //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
         //But let's use something smaller to increase rendering performance.
@@ -46,10 +46,9 @@ namespace ParquetViewer.Controls
         private ContextMenuStrip? _contextMenu = null;
         private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
 
-        //We track format overrides by name+type so if the user adds/removes fields we can still continue formatting them the same.
-        //There's a chance the user will load a different file containing columns with the same name+type but it wouldn't be so bad if we formatted those as well.
-        private readonly Dictionary<(string ColumnName, Type ValueType), ByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
-        private readonly Dictionary<(string ColumnName, Type ValueType), FloatDisplayFormat> floatColumnsWithFormatOverrides = new();
+        //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
+        private readonly Dictionary<string, ByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
+        private readonly Dictionary<string, FloatDisplayFormat> floatColumnsWithFormatOverrides = new();
 
         public ParquetGridView() : base()
         {
@@ -127,31 +126,14 @@ namespace ParquetViewer.Controls
             ParquetEngineSettings.DateDisplayFormat = dateFormat;
         }
 
-        public void AutoSizeColumns()
-        {
-            const int DEFAULT_COL_WIDTH = 100;
-
-            if (AppSettings.AutoSizeColumnsMode == Helpers.AutoSizeColumnsMode.AllCells)
-                this.FastAutoSizeColumns();
-            else if (AppSettings.AutoSizeColumnsMode.ToDGVMode() != DataGridViewAutoSizeColumnsMode.None)
-                this.AutoResizeColumns(AppSettings.AutoSizeColumnsMode.ToDGVMode());
-            else
-            {
-                foreach (DataGridViewColumn column in this.Columns)
-                {
-                    column.Width = DEFAULT_COL_WIDTH;
-                }
-            }
-        }
-
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
             if (e.RowIndex == -1 && e.ColumnIndex >= 0)
             {
+                var columnName = this.Columns[e.ColumnIndex].Name;
                 //Draw a star '*' next to column headers that are using a non-default display format
-                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
-                if ((this.byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var dateFormat) && dateFormat != default)
-                    || (this.floatColumnsWithFormatOverrides.TryGetValue(key, out var floatFormat) && floatFormat != default))
+                if ((this.byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var dateFormat) && dateFormat != default)
+                    || (this.floatColumnsWithFormatOverrides.TryGetValue(columnName, out var floatFormat) && floatFormat != default))
                 {
                     e.PaintBackground(e.CellBounds, true);
                     e.PaintContent(e.CellBounds);
@@ -432,27 +414,25 @@ namespace ParquetViewer.Controls
             base.OnCellFormatting(e);
 
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
-            if (cellValueType == typeof(float) && e.Value is float f)
+            if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
             {
-                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
-                if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
+                if (!this.floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
                 {
-                    e.Value = f.ToDecimalString(FORMATTING_ERROR_TEXT);
+                    e.Value = f.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
                     e.FormattingApplied = true;
                 }
             }
-            else if (cellValueType == typeof(double) && e.Value is double d)
+            else if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(double) && e.Value is double d)
             {
-                var key = (this.Columns[e.ColumnIndex].Name, this.Columns[e.ColumnIndex].ValueType);
-                if (!this.floatColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
+                if (!this.floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
                 {
-                    e.Value = d.ToDecimalString(FORMATTING_ERROR_TEXT);
+                    e.Value = d.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
                     e.FormattingApplied = true;
                 }
             }
@@ -482,8 +462,7 @@ namespace ParquetViewer.Controls
                 int charLimit = this.isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
 
                 //Figure out which format to show the binary data in
-                var key = (this.Columns[e.ColumnIndex].Name, cellValueType);
-                if (!this.byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var userSelectedDisplayFormat))
+                if (!this.byteArrayColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 e.Value = FormatByteArrayString(byteArrayValue, userSelectedDisplayFormat, charLimit);
@@ -560,6 +539,23 @@ namespace ParquetViewer.Controls
             }
         }
 
+        protected override void OnColumnDividerDoubleClick(DataGridViewColumnDividerDoubleClickEventArgs e)
+        {
+            //Override the auto-size behavior with our version
+            try
+            {
+                this.Cursor = Cursors.WaitCursor;
+                this.AutoSizeColumns(e.ColumnIndex);
+                e.Handled = true;
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+
+            base.OnColumnDividerDoubleClick(e);
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -582,18 +578,30 @@ namespace ParquetViewer.Controls
             {
                 try
                 {
-                    form.Value.Close();
-                    form.Value.Dispose();
+                    if (!form.Value.IsDisposed)
+                    {
+                        form.Value.Dispose();
+                    }
                 }
                 catch { /*Swallow*/ }
             }
         }
 
+        public void ClearColumnFormatOverrides()
+        {
+            this.byteArrayColumnsWithFormatOverrides.Clear();
+            this.floatColumnsWithFormatOverrides.Clear();
+        }
+
         /// <summary>
-        /// Provides very fast and basic column sizing for large data sets.
-        /// TODO: Switch to using grid cell formatted values instead of datatable values so we don't need to format the strings before we measure them
+        /// Provides fast and basic column sizing for large data sets.
         /// </summary>
-        private void FastAutoSizeColumns()
+        /// <remarks>
+        /// We unfortunately can't iterate through the gridview cells themselves to get the already formatted values.
+        /// This is because iterating over cells/rows in the DGV is very slow due to row unsharing behavior.
+        /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control#preventing-rows-from-becoming-unshared
+        /// </remarks>
+        private void AutoSizeColumns(int? forceAutoSizeColumnIndex = null)
         {
             const int MAX_WIDTH = 360;
             const int DECIMAL_PREFERRED_WIDTH = 180;
@@ -608,8 +616,11 @@ namespace ParquetViewer.Controls
 
             for (int i = 0; i < gridTable.Columns.Count; i++)
             {
+                if (forceAutoSizeColumnIndex is not null && forceAutoSizeColumnIndex != i)
+                    continue;
+
                 //Don't autosize the same column twice
-                if (this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
+                if (forceAutoSizeColumnIndex is null && this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
                     continue;
                 else
                     this.Columns[i].Tag = "AUTOSIZED";
@@ -618,59 +629,69 @@ namespace ParquetViewer.Controls
                 string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
                 var newColumnSize = MeasureStringWidth(gfx, this.Font, columnNameOrNull, true);
 
+                // Collect all the rows into a string enumerable, making sure to exclude null values.
+                IEnumerable<string> colStringCollection;
+                var nonNullColumnValues = gridTable.AsEnumerable().Where(row => row[i] != DBNull.Value);
                 if (gridTable.Columns[i].DataType == typeof(DateTime))
                 {
-                    //All date time's will have the same string length so no need to go through all values.
-                    //We can just measure one and use that.
-                    var dateTime = gridTable.AsEnumerable()
-                        .FirstOrDefault(row => row[i] != DBNull.Value)?
-                        .Field<DateTime>(i);
-                    if (dateTime is not null)
-                    {
-                        string formattedDateTimeValue = dateTime.Value.ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat());
-                        newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, formattedDateTimeValue, false));
-                    }
+                    //All date time's will probably have the same string length so no need to go through all values.
+                    //We can just measure a few without going through all of them.
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<DateTime>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()))
+                        .Take(100);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(StructValue))
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<StructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
+                }
+                else if (gridTable.Columns[i].DataType == typeof(float)
+                    && this.floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
+                    && displayFormat == FloatDisplayFormat.Decimal)
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<float>(i).ToDecimalString())
+                        .Where(stringValue => stringValue is not null)!;
+
+                    //Allow longer than preferred width if header is longer
+                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(double)
+                    && this.floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out displayFormat)
+                    && displayFormat == FloatDisplayFormat.Decimal)
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<double>(i).ToDecimalString())
+                        .Where(stringValue => stringValue is not null)!;
+
+                    //Allow longer than preferred width if header is longer
+                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(decimal))
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<decimal>(i).ToString());
+
+                    //Allow longer than preferred width if header is longer
+                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(ByteArrayValue)
+                    && this.byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
+                {
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => FormatByteArrayString(row.Field<ByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
                 }
                 else
                 {
-                    // Collect all the rows into a string enumerable, making sure to exclude null values.
-                    IEnumerable<string> colStringCollection;
-                    if (gridTable.Columns[i].DataType == typeof(StructValue))
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Select(row => row.Field<StructValue>(i)?.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL))
-                            .Where(value => value is not null)!;
-                    }
-                    else if (gridTable.Columns[i].DataType == typeof(float))
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Where(row => row[i] != DBNull.Value)
-                            .Select(row => row.Field<float>(i).ToDecimalString());
-
-                        //Allow longer than preferred width if header is longer
-                        maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
-                    }
-                    else if (gridTable.Columns[i].DataType == typeof(double))
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Where(row => row[i] != DBNull.Value)
-                            .Select(row => row.Field<double>(i).ToDecimalString());
-
-                        //Allow longer than preferred width if header is longer
-                        maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
-                    }
-                    else
-                    {
-                        colStringCollection = gridTable.AsEnumerable()
-                            .Select(row => row.Field<object>(i)?.ToString())
-                            .Where(value => value is not null)!;
-                    }
-
-                    // Get the longest string in the array.
-                    string longestColString = colStringCollection
-                        .OrderByDescending((x) => x.Length).FirstOrDefault() ?? string.Empty;
-                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<object>(i)!.ToString())
+                        .Where(value => value is not null)!;
                 }
+
+                // Get the longest string in the array. (Limit to 100k values to improve render time)
+                string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 100_000).MaxBy(stringValue => stringValue.Length);
+                if (longestColString is not null)
+                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
 
                 this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
             }
@@ -716,13 +737,19 @@ namespace ParquetViewer.Controls
                 this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
                 this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
             }
-            Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
-            if (withHeaders)
+            try
             {
-                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-                this.RowHeadersVisible = true;
+                Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
             }
-            this.isCopyingToClipboard = false;
+            finally
+            {
+                if (withHeaders)
+                {
+                    this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+                    this.RowHeadersVisible = true;
+                }
+                this.isCopyingToClipboard = false;
+            }
         }
 
         /// <remarks>
@@ -834,13 +861,15 @@ namespace ParquetViewer.Controls
                     columnName = $"[{columnName}]";
                 }
 
-                var hasNulls = values.Any(value => value is null || value == DBNull.Value);
+                var hasNulls = values.Any(value => value == DBNull.Value || value is null);
                 values = values
-                    .Where(value => value != DBNull.Value)
+                    .Where(value => value != DBNull.Value && value is not null)
                     .Distinct() //Distinct() doesn't work if there are any DBNull's in the collection
-                    .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
                     .Order()
+                    .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
                     .ToArray();
+
+                var needsOrClause = hasNulls && values.Length > 1;
 
                 for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
                 {
@@ -850,6 +879,11 @@ namespace ParquetViewer.Controls
                         if (columnIndex > 0)
                         {
                             queryBuilder.Append(" AND ");
+                        }
+
+                        if (needsOrClause)
+                        {
+                            queryBuilder.Append('(');
                         }
 
                         queryBuilder.Append(columnName);
@@ -868,35 +902,44 @@ namespace ParquetViewer.Controls
                             queryBuilder.Append(" IN (");
                         }
                     }
-                    else
+                    else if (value != DBNull.Value)
                     {
-                        queryBuilder.Append(",");
+                        queryBuilder.Append(',');
                     }
 
-                    if (valueType == typeof(DateTime))
+                    if (value != DBNull.Value)
                     {
-                        //Use a standard date format so the query is always syntactically correct
-                        queryBuilder.Append($"#{((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF")}#");
-                    }
-                    else if (valueType.IsNumber())
-                    {
-                        var stringValue = value.ToString();
-                        if ((valueType == typeof(float) || valueType == typeof(double))
-                            && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
-                            stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
+                        if (valueType == typeof(DateTime))
+                        {
+                            //Use a standard date format so the query is always syntactically correct
+                            queryBuilder.Append($"#{((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF")}#");
+                        }
+                        else if (valueType.IsNumber())
+                        {
+                            var stringValue = value.ToString();
+                            if ((valueType == typeof(float) || valueType == typeof(double))
+                                && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
+                                stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
 
-                        queryBuilder.Append(stringValue);
-                    }
-                    else
-                    {
-                        queryBuilder.Append($"'{value}'");
+                            queryBuilder.Append(stringValue);
+                        }
+                        else
+                        {
+                            queryBuilder.Append($"'{value}'");
+                        }
                     }
 
                     //Close the `IN (` parenthesis if required
                     if (valueIndex == values.Length - 1 && values.Length > 1)
                     {
-                        queryBuilder.Append(")");
+                        queryBuilder.Append(')');
                     }
+                }
+
+                if (needsOrClause)
+                {
+                    queryBuilder.Append($" OR {columnName} IS NULL");
+                    queryBuilder.Append(')'); //close the parenthesis opened above
                 }
             }
 
@@ -935,23 +978,22 @@ namespace ParquetViewer.Controls
                 var columnHeaderContextMenu = new ContextMenuStrip();
                 foreach (var supportedFormat in possibleDisplayFormats)
                 {
-                    var key = (this.Columns[columnIndex].Name, this.Columns[columnIndex].ValueType);
-
+                    var columnName = this.Columns[columnIndex].Name;
                     var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
                     toolstripMenuItem.Click += (object? _, EventArgs _) =>
                     {
                         ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
-
-                        if (byteArrayColumnsWithFormatOverrides.ContainsKey(key))
-                            byteArrayColumnsWithFormatOverrides[key] = supportedFormat;
+                        if (byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
+                            byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
                         else
-                            byteArrayColumnsWithFormatOverrides.Add(key, supportedFormat);
+                            byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
 
                         this.Refresh(); //Force a re-draw to render updated format
+                        this.AutoSizeColumns(columnIndex); //Re-size the column
                     };
                     columnHeaderContextMenu.Items.Add(toolstripMenuItem);
 
-                    if (!byteArrayColumnsWithFormatOverrides.TryGetValue(key, out var displayFormat))
+                    if (!byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                         displayFormat = default;
 
                     toolstripMenuItem.Checked = displayFormat == supportedFormat;
@@ -962,8 +1004,8 @@ namespace ParquetViewer.Controls
             {
                 var columnHeaderContextMenu = new ContextMenuStrip();
 
-                var key = (this.Columns[columnIndex].Name, this.Columns[columnIndex].ValueType);
-                if (!floatColumnsWithFormatOverrides.TryGetValue(key, out var displayFormat))
+                var columnName = this.Columns[columnIndex].Name;
+                if (!floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                     displayFormat = default;
 
                 var scientificNotationMenuItem = new ToolStripMenuItem("Scientific")
@@ -972,12 +1014,13 @@ namespace ParquetViewer.Controls
                 {
                     ColumnFormattedEvent.FireAndForget(scientificNotationMenuItem.Text);
 
-                    if (floatColumnsWithFormatOverrides.ContainsKey(key))
-                        floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Scientific;
+                    if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                        floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
                     else
-                        floatColumnsWithFormatOverrides.Add(key, FloatDisplayFormat.Scientific);
+                        floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
 
                     this.Refresh(); //Force a re-draw to render updated format
+                    this.AutoSizeColumns(columnIndex); //Re-size the column
                 };
                 columnHeaderContextMenu.Items.Add(scientificNotationMenuItem);
 
@@ -987,12 +1030,13 @@ namespace ParquetViewer.Controls
                 {
                     ColumnFormattedEvent.FireAndForget(decimalNotationMenuItem.Text);
 
-                    if (floatColumnsWithFormatOverrides.ContainsKey(key))
-                        floatColumnsWithFormatOverrides[key] = FloatDisplayFormat.Decimal;
+                    if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                        floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
                     else
-                        floatColumnsWithFormatOverrides.Add(key, FloatDisplayFormat.Decimal);
+                        floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
 
                     this.Refresh(); //Force a re-draw to render updated format
+                    this.AutoSizeColumns(columnIndex); //Re-size the column
                 };
                 columnHeaderContextMenu.Items.Add(decimalNotationMenuItem);
 

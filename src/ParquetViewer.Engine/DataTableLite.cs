@@ -83,11 +83,19 @@ namespace ParquetViewer.Engine
             for (var i = 0; i < _rows.Count; i++)
             {
                 token.ThrowIfCancellationRequested();
+                LoadRow(dataTable, _rows[i]);
+                progress?.Report(_columns.Count);
+            }
+            dataTable.EndLoadData();
 
+            return dataTable;
+
+            void LoadRow(DataTable dataTable, object[] values)
+            {
                 try
                 {
                     //supposedly this is the fastest way to load data into a datatable https://stackoverflow.com/a/17123914/1458738
-                    dataTable.LoadDataRow(_rows[i]!, false);
+                    dataTable.LoadDataRow(values, false);
                 }
                 catch (Exception ex)
                 {
@@ -97,9 +105,9 @@ namespace ParquetViewer.Engine
                         var columnIndex = 0;
                         foreach (var column in this._columns.Values)
                         {
-                            if (_rows[i][columnIndex] != DBNull.Value && column.Type != _rows[i][columnIndex].GetType())
+                            if (values[columnIndex] != DBNull.Value && column.Type != values[columnIndex].GetType())
                             {
-                                throw new TypeMismatchException($"Value type '{_rows[i][columnIndex]?.GetType()}' doesn't match column type {column.Type} for field `{column.Name}`");
+                                throw new TypeMismatchException($"Value type '{values[columnIndex]?.GetType()}' doesn't match column type {column.Type} for field `{column.Name}`");
                             }
                             columnIndex++;
                         }
@@ -109,12 +117,7 @@ namespace ParquetViewer.Engine
 
                     throw;
                 }
-
-                progress?.Report(_columns.Count);
             }
-            dataTable.EndLoadData();
-
-            return dataTable;
         }
     }
 }

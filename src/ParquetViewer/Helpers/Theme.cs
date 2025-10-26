@@ -18,6 +18,7 @@ namespace ParquetViewer.Helpers
         public Color CellPlaceholderTextColor { get; }
         public Color SelectionBackColor { get; }
         public Color FormBackgroundColor { get; }
+        public Color DisabledTextColor { get; }
 
         private readonly Func<Theme, ToolStripProfessionalRenderer>? _toolStripRendererProvider = null;
         public bool HasToolStripRendererProvider => _toolStripRendererProvider is not null;
@@ -39,7 +40,8 @@ namespace ParquetViewer.Helpers
             Color selectionBackColor,
             Color formBackgroundColor,
             Func<Theme, ToolStripProfessionalRenderer>? toolStripRendererProvider,
-            Color activeHyperlinkColor)
+            Color activeHyperlinkColor,
+            Color disabledTextColor)
         {
             this.CellBackgroundColor = cellBackgroundColor;
             this.TextColor = textColor;
@@ -56,6 +58,7 @@ namespace ParquetViewer.Helpers
             this.FormBackgroundColor = formBackgroundColor;
             this._toolStripRendererProvider = toolStripRendererProvider;
             this.ActiveHyperlinkColor = activeHyperlinkColor;
+            this.DisabledTextColor = disabledTextColor;
         }
 
         public static Theme DarkModeTheme => new(
@@ -72,7 +75,8 @@ namespace ParquetViewer.Helpers
             Color.FromArgb(64, 129, 201),
             Color.FromArgb(44, 44, 44),
             (theme) => { return new DarkModeToolStripRenderer(theme); },
-            Color.LightGray
+            Color.LightGray,
+            Color.DarkGray
             );
 
         public static Theme LightModeTheme => new(
@@ -89,7 +93,8 @@ namespace ParquetViewer.Helpers
             SystemColors.Highlight,
             SystemColors.Control,
             null,
-            Color.Red
+            Color.Red,
+            Color.DarkGray
             );
 
         public bool Equals(Theme other) => this.GetHashCode() == other.GetHashCode(); //Not perfect but good enough
