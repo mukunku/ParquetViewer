@@ -3,6 +3,7 @@ using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
+
 namespace ParquetViewer.Engine
 {
     public partial class ParquetEngine
@@ -81,23 +82,15 @@ namespace ParquetViewer.Engine
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var field = column.ParentSchema.GetChild(column.Name);
-                switch (field.FieldType())
+                switch (field.FieldType)
                 {
                     case ParquetSchemaElement.FieldTypeId.Primitive:
                         await ReadPrimitiveField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
                     case ParquetSchemaElement.FieldTypeId.List:
-                        var listField = field.GetSingleOrByName("list");
-                        ParquetSchemaElement itemField;
-                        try
-                        {
-                            itemField = listField.GetSingleOrByName("item");
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Invalid List type.", ex);
-                        }
+                        var listField = field.GetListField();
+                        var itemField = listField.GetListItemField();
                         var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
                         await ReadListField(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
@@ -120,13 +113,11 @@ namespace ParquetViewer.Engine
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             int rowIndex = rowBeginIndex;
-
             int skippedRecords = 0;
-            var dataColumn = await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Pritimive field `{field.Path}` is missing its data field"), cancellationToken);
 
-            bool doesFieldBelongToAList = field.Parents.Any(field => field.FieldType() == ParquetSchemaElement.FieldTypeId.List);
+            var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
             int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
-            if (doesFieldBelongToAList)
+            if (field.BelongsToListField || field.BelongsToListOfStructsField)
             {
                 dataColumn = null;
                 await ReadListField(dataTable, groupReader, rowBeginIndex, field, fieldIndex, skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
@@ -177,12 +168,12 @@ namespace ParquetViewer.Engine
             var lastMilestone = "Start";
             try
             {
-                if (itemField.FieldType() == ParquetSchemaElement.FieldTypeId.Primitive)
+                if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
                 {
                     int rowIndex = rowBeginIndex;
-
                     int skippedRecords = 0;
-                    var dataColumn = await groupReader.ReadColumnAsync(itemField.DataField!, cancellationToken);
+
+                    var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
                     lastMilestone = "Read";
 
                     var dataEnumerable = dataColumn.Data.Cast<object?>().Select(d => d ?? DBNull.Value);
@@ -233,7 +224,7 @@ namespace ParquetViewer.Engine
                         index++;
 
                         bool IsEndOfRow(int index) => (index + 1) == dataColumn.RepetitionLevels!.Length
-                            || dataColumn.RepetitionLevels[index + 1] == 0; //0 means new list
+                            || dataColumn.RepetitionLevels[index + 1] == (itemField.NumberOfListParents - 1); //means new list
 
                         //Skip rows
                         if (skipRecords > skippedRecords)
@@ -243,7 +234,6 @@ namespace ParquetViewer.Engine
 
                             continue;
                         }
-
 
                         rowValue ??= new ArrayList();
                         if (IsEndOfRow(index))
@@ -278,7 +268,7 @@ namespace ParquetViewer.Engine
                         }
                     }
                 }
-                else if (itemField.FieldType() == ParquetSchemaElement.FieldTypeId.Struct)
+                else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
                 {
                     //Read struct data as a new datatable
                     DataTableLite structFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
@@ -336,7 +326,7 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    throw new NotSupportedException($"Lists of {itemField.FieldType()}s are not currently supported");
+                    throw new NotSupportedException($"Lists of {itemField.FieldType}s are not currently supported");
                 }
             }
             catch (Exception ex)
@@ -349,9 +339,9 @@ namespace ParquetViewer.Engine
         private static async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            var keyValueField = field.GetSingleOrByName("key_value");
-            var keyField = keyValueField.GetChildCI("key");
-            var valueField = keyValueField.GetChildCI("value");
+            var keyValueField = field.GetMapKeyValueField();
+            var keyField = keyValueField.GetMapKeyField();
+            var valueField = keyValueField.GetMapValueField();
 
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested map types are not supported");
@@ -359,8 +349,8 @@ namespace ParquetViewer.Engine
             int rowIndex = rowBeginIndex;
 
             int skippedRecords = 0;
-            var keyDataColumn = await groupReader.ReadColumnAsync(keyField.DataField!, cancellationToken);
-            var valueDataColumn = await groupReader.ReadColumnAsync(valueField.DataField!, cancellationToken);
+            var keyDataColumn = await ReadColumnAsync(groupReader, keyField, cancellationToken);
+            var valueDataColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
 
             var dataEnumerable = Helpers.PairEnumerables(
                 keyDataColumn.Data.Cast<object?>().Select(key => key ?? DBNull.Value),
@@ -375,9 +365,9 @@ namespace ParquetViewer.Engine
             if (levelCount > dataCount)
             {
                 if (keyDataColumn.RepetitionLevels?.Length != keyDataColumn.DefinitionLevels?.Length)
-                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed keys due to different lengths in repetition and definition levels");
+                    throw new MalformedFieldException($"Field `{field.Path}` appears to have malformed keys due to different lengths in repetition and definition levels");
                 else if (valueDataColumn.RepetitionLevels?.Length != valueDataColumn.DefinitionLevels?.Length)
-                    throw new MalformedFieldException($"Field `{field.Path}` appears have malformed values due to different lengths in repetition and definition levels");
+                    throw new MalformedFieldException($"Field `{field.Path}` appears to have malformed values due to different lengths in repetition and definition levels");
 
                 dataEnumerable = GetDataWithPaddedNulls();
 
@@ -545,15 +535,15 @@ namespace ParquetViewer.Engine
             foreach (var field in fields)
             {
                 var schema = parent.GetChild(field);
-                if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.List)
+                if (schema.FieldType == ParquetSchemaElement.FieldTypeId.List)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
-                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Map)
+                else if (schema.FieldType == ParquetSchemaElement.FieldTypeId.Map)
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (schema.FieldType() == ParquetSchemaElement.FieldTypeId.Struct)
+                else if (schema.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
                 {
                     dataTable.AddColumn(field, typeof(StructValue), parent);
                 }
@@ -565,11 +555,36 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    var clrType = schema.DataField?.ClrType ?? throw new MalformedFieldException($"{(parent is not null ? parent + "/" : string.Empty)}/{field} has no data field");
+                    var clrType = schema.DataField?.ClrType ?? throw new MalformedFieldException($"`{(parent is not null ? parent + "/" : string.Empty)}/{field}` has no data field");
                     dataTable.AddColumn(field, clrType, parent);
                 }
             }
             return dataTable;
+        }
+
+        private static async Task<Parquet.Data.DataColumn> ReadColumnAsync(ParquetRowGroupReader groupReader, ParquetSchemaElement field, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Field `{field.PathWithParent}` has no data field"), cancellationToken);
+            }
+            catch (OverflowException ex)
+            {
+                var isDecimalField = field.SchemaElement?.ConvertedType == Parquet.Meta.ConvertedType.DECIMAL
+                    || field.SchemaElement?.LogicalType?.DECIMAL is not null;
+                if (isDecimalField)
+                {
+                    var scale = field.SchemaElement!.Scale ?? 0;
+                    var precision = field.SchemaElement.Precision ?? 0;
+                    if (scale > DecimalOverflowException.MAX_DECIMAL_SCALE
+                        || precision > DecimalOverflowException.MAX_DECIMAL_PRECISION)
+                    {
+                        throw new DecimalOverflowException(field.PathWithParent, precision, scale, ex);
+                    }
+                }
+
+                throw;
+            }
         }
     }
 }

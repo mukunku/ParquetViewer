@@ -241,5 +241,17 @@ namespace ParquetViewer.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon help_icon
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("help_icon_16x16", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }

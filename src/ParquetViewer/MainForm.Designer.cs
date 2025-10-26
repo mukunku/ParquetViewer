@@ -63,17 +63,14 @@ namespace ParquetViewer
             defaultToolStripMenuItem = new ToolStripMenuItem();
             iSO8601ToolStripMenuItem = new ToolStripMenuItem();
             customDateFormatToolStripMenuItem = new ToolStripMenuItem();
-            columnSizingToolStripMenuItem = new ToolStripMenuItem();
-            columnHeadersToolStripMenuItem = new ToolStripMenuItem();
-            columnHeadersContentToolStripMenuItem = new ToolStripMenuItem();
             alwaysLoadAllRecordsToolStripMenuItem = new ToolStripMenuItem();
+            darkModeToolStripMenuItem = new ToolStripMenuItem();
             toolsToolStripMenuItem = new ToolStripMenuItem();
             getSQLCreateTableScriptToolStripMenuItem = new ToolStripMenuItem();
             metadataViewerToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             userGuideToolStripMenuItem = new ToolStripMenuItem();
             shareAnonymousUsageDataToolStripMenuItem = new ToolStripMenuItem();
-            darkModeToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             showingRecordCountStatusBarLabel = new ToolStripStatusLabel();
             actualShownRecordCountLabel = new ToolStripStatusLabel();
@@ -184,13 +181,15 @@ namespace ParquetViewer
             runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold);
             runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
             runQueryButton.Image = Properties.Resources.exclamation_icon;
-            runQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            runQueryButton.ImageAlign = System.Drawing.ContentAlignment.BottomCenter;
             runQueryButton.Location = new System.Drawing.Point(462, 3);
             runQueryButton.Margin = new Padding(4, 3, 4, 3);
             runQueryButton.Name = "runQueryButton";
+            runQueryButton.Padding = new Padding(0, 0, 0, 3);
             runQueryButton.Size = new System.Drawing.Size(109, 29);
             runQueryButton.TabIndex = 2;
             runQueryButton.Text = "&Execute";
+            runQueryButton.TextAlign = System.Drawing.ContentAlignment.BottomRight;
             runQueryButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             runQueryButton.UseVisualStyleBackColor = true;
             runQueryButton.Click += runQueryButton_Click;
@@ -377,7 +376,7 @@ namespace ParquetViewer
             // 
             // editToolStripMenuItem
             // 
-            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, columnSizingToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem });
+            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem, darkModeToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
             editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             editToolStripMenuItem.Text = "&Edit";
@@ -402,7 +401,7 @@ namespace ParquetViewer
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             defaultToolStripMenuItem.Tag = "0";
             defaultToolStripMenuItem.Text = "Default";
             defaultToolStripMenuItem.ToolTipText = "Local date format";
@@ -411,7 +410,7 @@ namespace ParquetViewer
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             iSO8601ToolStripMenuItem.Tag = "2";
             iSO8601ToolStripMenuItem.Text = "ISO 8601";
             iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
@@ -420,36 +419,10 @@ namespace ParquetViewer
             // customDateFormatToolStripMenuItem
             // 
             customDateFormatToolStripMenuItem.Name = "customDateFormatToolStripMenuItem";
-            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
+            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             customDateFormatToolStripMenuItem.Tag = "6";
             customDateFormatToolStripMenuItem.Text = "Custom...";
-            customDateFormatToolStripMenuItem.ToolTipText = "Configure a custom date format";
             customDateFormatToolStripMenuItem.Click += DateFormatMenuItem_Click;
-            // 
-            // columnSizingToolStripMenuItem
-            // 
-            columnSizingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { columnHeadersToolStripMenuItem, columnHeadersContentToolStripMenuItem });
-            columnSizingToolStripMenuItem.Name = "columnSizingToolStripMenuItem";
-            columnSizingToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            columnSizingToolStripMenuItem.Text = "Column Sizing";
-            // 
-            // columnHeadersToolStripMenuItem
-            // 
-            columnHeadersToolStripMenuItem.Name = "columnHeadersToolStripMenuItem";
-            columnHeadersToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-            columnHeadersToolStripMenuItem.Tag = "ColumnHeader";
-            columnHeadersToolStripMenuItem.Text = "Fit Headers Only";
-            columnHeadersToolStripMenuItem.ToolTipText = "Columns will be as wide as their name requires";
-            columnHeadersToolStripMenuItem.Click += changeColumnSizingToolStripMenuItem_Click;
-            // 
-            // columnHeadersContentToolStripMenuItem
-            // 
-            columnHeadersContentToolStripMenuItem.Name = "columnHeadersContentToolStripMenuItem";
-            columnHeadersContentToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-            columnHeadersContentToolStripMenuItem.Tag = "AllCells";
-            columnHeadersContentToolStripMenuItem.Text = "Fit Headers && Content";
-            columnHeadersContentToolStripMenuItem.ToolTipText = "Column widths will be adjusted to fit all cell contents";
-            columnHeadersContentToolStripMenuItem.Click += changeColumnSizingToolStripMenuItem_Click;
             // 
             // alwaysLoadAllRecordsToolStripMenuItem
             // 
@@ -460,6 +433,13 @@ namespace ParquetViewer
             alwaysLoadAllRecordsToolStripMenuItem.Text = "Always Load All Records";
             alwaysLoadAllRecordsToolStripMenuItem.ToolTipText = "When opening a new file ParquetViewer will load all records";
             alwaysLoadAllRecordsToolStripMenuItem.Click += alwaysLoadAllRecordsToolStripMenuItem_Click;
+            // 
+            // darkModeToolStripMenuItem
+            // 
+            darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
+            darkModeToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            darkModeToolStripMenuItem.Text = "Dark Mode";
+            darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem
             // 
@@ -505,20 +485,12 @@ namespace ParquetViewer
             // 
             // shareAnonymousUsageDataToolStripMenuItem
             // 
-            shareAnonymousUsageDataToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { darkModeToolStripMenuItem });
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
             shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
             shareAnonymousUsageDataToolStripMenuItem.ToolTipText = "See About page for link to privacy policy";
             shareAnonymousUsageDataToolStripMenuItem.CheckedChanged += shareAnonymousUsageDataToolStripMenuItem_CheckedChanged;
             shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
-            // 
-            // darkModeToolStripMenuItem
-            // 
-            darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
-            darkModeToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            darkModeToolStripMenuItem.Text = "Dark Mode (Beta)";
-            darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
@@ -677,9 +649,6 @@ namespace ParquetViewer
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem getSQLCreateTableScriptToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem metadataViewerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem columnSizingToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem columnHeadersToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem columnHeadersContentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem alwaysLoadAllRecordsToolStripMenuItem;
         private System.Windows.Forms.FolderBrowserDialog openFolderDialog;
         private System.Windows.Forms.ToolStripMenuItem openFolderToolStripMenuItem;

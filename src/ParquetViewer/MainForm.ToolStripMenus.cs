@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -59,7 +60,8 @@ namespace ParquetViewer
 
         private async void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            await new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
+            var exitEventTask = new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
+            await Task.WhenAny(exitEventTask, Task.Delay(3000)); //don't prevent the app from closing for too long
             this.Close();
         }
 
@@ -93,8 +95,8 @@ namespace ParquetViewer
 
                 dataset.Tables.Remove(this.mainDataSource); //If we don't remove it, we can get errors in rare cases
 
-                Clipboard.SetText(sql);
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.SQLCreateTable);
+                Clipboard.SetText(sql);
                 MessageBox.Show(this, "Create table script copied to clipboard!", "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -108,27 +110,6 @@ namespace ParquetViewer
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.MetadataViewer);
                 using var metadataViewer = new MetadataViewer(this._openParquetEngine!);
                 metadataViewer.ShowDialog(this);
-            }
-        }
-
-        private void changeColumnSizingToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (sender is ToolStripMenuItem tsi && tsi.Tag != null
-                && Enum.TryParse(tsi.Tag.ToString(), out AutoSizeColumnsMode columnSizingMode)
-                && AppSettings.AutoSizeColumnsMode != columnSizingMode)
-            {
-                AppSettings.AutoSizeColumnsMode = columnSizingMode;
-                foreach (ToolStripMenuItem toolStripItem in tsi.GetCurrentParent()!.Items)
-                {
-                    toolStripItem.Checked = toolStripItem.Tag?.Equals(tsi.Tag) == true;
-                }
-                this.mainGridView.AutoSizeColumns();
-
-                //Also clear out each column's Tag so auto sizing can pick it up again (see: FastAutoSizeColumns())
-                foreach (DataGridViewColumn column in this.mainGridView.Columns)
-                {
-                    column.Tag = null;
-                }
             }
         }
 
@@ -164,17 +145,10 @@ namespace ParquetViewer
                 else
                 {
                     string? customDateFormat = null;
-#pragma warning disable CS0612 // Type or member is obsolete
-                    //TODO: Get rid of this code that handles obsolete date formats after a few releases
-                    if (AppSettings.DateTimeDisplayFormat == DateFormat.ISO8601_Alt1 || AppSettings.DateTimeDisplayFormat == DateFormat.ISO8601_Alt2)
-                    {
-                        customDateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                    }
-                    else if (AppSettings.DateTimeDisplayFormat == DateFormat.Custom)
+                    if (AppSettings.DateTimeDisplayFormat == DateFormat.Custom)
                     {
                         customDateFormat = AppSettings.CustomDateFormat;
                     }
-#pragma warning restore CS0612 // Type or member is obsolete
 
                     using var customDateFormatInputForm = new CustomDateFormatInputForm(customDateFormat);
                     if (customDateFormatInputForm.ShowDialog(this) == DialogResult.OK)
@@ -194,7 +168,7 @@ namespace ParquetViewer
         {
             this.shareAnonymousUsageDataToolStripMenuItem.Checked = !this.shareAnonymousUsageDataToolStripMenuItem.Checked;
             AppSettings.AnalyticsDataGatheringConsent = this.shareAnonymousUsageDataToolStripMenuItem.Checked;
-            AppSettings.ConsentLastAskedOnVersion = AboutBox.AssemblyVersion;
+            AppSettings.ConsentLastAskedOnVersion = Env.AssemblyVersion;
         }
 
         private void shareAnonymousUsageDataToolStripMenuItem_CheckedChanged(object sender, System.EventArgs e)
@@ -209,7 +183,7 @@ namespace ParquetViewer
                 if (dropdownItem is ToolStripMenuItem toolstrip && toolstrip.Checked)
                 {
                     //If someone has an experimental feature enabled, don't hide the checkbox so they can disable it if they want.
-                    dropdownItem.Visible = true; 
+                    dropdownItem.Visible = true;
                     continue;
                 }
 
