@@ -130,7 +130,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(SemanticVersion.TryParse(versionNumber, out var semanticVersion), isExpectedToBeValid);
             if (isExpectedToBeValid)
             {
-                Assert.AreEqual(semanticVersion.ToString(), expectedParsedVersionNumber);
+                Assert.AreEqual(expectedParsedVersionNumber, semanticVersion.ToString());
             }
         }
 
