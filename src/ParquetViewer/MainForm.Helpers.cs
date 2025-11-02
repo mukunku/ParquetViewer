@@ -294,7 +294,6 @@ namespace ParquetViewer
                                 var stringValue = value.ToString();
 
                                 //BUG: for some reason strings longer than 255 characters appear empty.
-                                //Don't know how to fix it so throwing for now...
                                 const int maxSupportedCellLength = 255;
                                 if (stringValue!.Length > maxSupportedCellLength)
                                 {

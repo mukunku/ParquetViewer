@@ -19,7 +19,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_AND_BOOLS_TEST.parquet", default);
 
             Assert.AreEqual(30, parquetEngine.RecordCount);
-            Assert.AreEqual(337, parquetEngine.Fields.Count);
+            Assert.HasCount(337, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual((UInt16)156, dataTable.Rows[0][0]);
@@ -35,7 +35,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST1.parquet", default);
 
             Assert.AreEqual(10, parquetEngine.RecordCount);
-            Assert.AreEqual(3, parquetEngine.Fields.Count);
+            Assert.HasCount(3, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual("36/2015-16", dataTable.Rows[0][0]);
@@ -49,7 +49,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DATETIME_TEST2.parquet", default);
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
-            Assert.AreEqual(11, parquetEngine.Fields.Count);
+            Assert.HasCount(11, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual((long)1, dataTable.Rows[0][0]);
@@ -71,7 +71,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/RANDOM_TEST_FILE.parquet", default);
 
             Assert.AreEqual(5, parquetEngine.RecordCount);
-            Assert.AreEqual(42, parquetEngine.Fields.Count);
+            Assert.HasCount(42, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual((long)798921, dataTable.Rows[0][0]);
@@ -89,7 +89,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING.parquet", default);
 
             Assert.AreEqual(14610, parquetEngine.RecordCount);
-            Assert.AreEqual(12, parquetEngine.Fields.Count);
+            Assert.HasCount(12, parquetEngine.Fields);
 
             var ex = await Assert.ThrowsAsync<NotSupportedException>(async ()
                 => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false));
@@ -109,7 +109,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST", default);
 
             Assert.AreEqual(2000, parquetEngine.RecordCount);
-            Assert.AreEqual(9, parquetEngine.Fields.Count);
+            Assert.HasCount(9, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual("SHAPEFILE_JSON", dataTable.Rows[0][0]);
@@ -134,11 +134,11 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST.parquet", default);
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
-            Assert.AreEqual(11, parquetEngine.Fields.Count);
+            Assert.HasCount(11, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual(202252, dataTable.Rows[0][0]);
-            Assert.AreEqual(false, dataTable.Rows[0]["Output as FP"]);
+            Assert.IsFalse(dataTable.Rows[0]["Output as FP"] as bool?);
             Assert.AreEqual((byte)0, dataTable.Rows[0]["Preorder FP equi."]);
         }
 
@@ -148,7 +148,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
 
             Assert.AreEqual(3, parquetEngine.RecordCount);
-            Assert.AreEqual(2, parquetEngine.Fields.Count);
+            Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][0]);
@@ -175,7 +175,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_TYPE_TEST2.parquet", default);
 
             Assert.AreEqual(8, parquetEngine.RecordCount);
-            Assert.AreEqual(2, parquetEngine.Fields.Count);
+            Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 4, default))(false);
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][1]);
@@ -201,7 +201,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST1.parquet", default);
 
             Assert.AreEqual(2, parquetEngine.RecordCount);
-            Assert.AreEqual(2, parquetEngine.Fields.Count);
+            Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 2, default))(false);
 
@@ -228,7 +228,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet", default);
 
             Assert.AreEqual(8, parquetEngine.RecordCount);
-            Assert.AreEqual(2, parquetEngine.Fields.Count);
+            Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 4, default))(false);
             Assert.IsInstanceOfType<MapValue>(dataTable.Rows[0][1]);
@@ -259,7 +259,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/STRUCT_TYPE_TEST.parquet", default);
 
             Assert.AreEqual(10, parquetEngine.RecordCount);
-            Assert.AreEqual(6, parquetEngine.Fields.Count);
+            Assert.HasCount(6, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.IsInstanceOfType<StructValue>(dataTable.Rows[0][0]);
@@ -283,10 +283,10 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/NULLABLE_GUID_TEST.parquet", default);
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
-            Assert.AreEqual(33, parquetEngine.Fields.Count);
+            Assert.HasCount(33, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
-            Assert.AreEqual(false, dataTable.Rows[0][22]);
+            Assert.IsFalse(dataTable.Rows[0][22] as bool?);
             Assert.AreEqual(new Guid("fdcbf90c-20d3-d745-b29f-9c2de1baa979"), dataTable.Rows[0][1]);
             Assert.AreEqual(new DateTime(2019, 1, 1), dataTable.Rows[0][4]);
         }
@@ -307,7 +307,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH.parquet", default);
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
-            Assert.AreEqual(320, parquetEngine.Fields.Count);
+            Assert.HasCount(320, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 1, default))(false);
             Assert.AreEqual((byte)0, dataTable.Rows[0]["FLC K/L"]);
@@ -319,7 +319,7 @@ namespace ParquetViewer.Tests
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/ORACLE_MALFORMED_INT64_TEST.parquet", default);
 
             Assert.AreEqual(126, parquetEngine.RecordCount);
-            Assert.AreEqual(2, parquetEngine.Fields.Count);
+            Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual("DEPOSIT", dataTable.Rows[0][0]);
@@ -331,7 +331,7 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS1.parquet", default);
             Assert.AreEqual(2, parquetEngine.RecordCount);
-            Assert.AreEqual(2, parquetEngine.Fields.Count);
+            Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
 
@@ -349,7 +349,7 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS2.parquet", default);
             Assert.AreEqual(1, parquetEngine.RecordCount);
-            Assert.AreEqual(29, parquetEngine.Fields.Count);
+            Assert.HasCount(29, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
 
@@ -362,7 +362,7 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/EMPTY_LIST_OF_STRUCTS.parquet", default);
             Assert.AreEqual(2, parquetEngine.RecordCount);
-            Assert.AreEqual(2, parquetEngine.Fields.Count);
+            Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
 
@@ -380,7 +380,7 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/PARQUET-MR_1.15.0.parquet", default);
             Assert.AreEqual(5, parquetEngine.RecordCount);
-            Assert.AreEqual(7, parquetEngine.Fields.Count);
+            Assert.HasCount(7, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
 
@@ -390,8 +390,8 @@ namespace ParquetViewer.Tests
             Assert.AreEqual("John Doe", dataTable.Rows[0][1]);
             Assert.AreEqual("David Lee", dataTable.Rows[4][1]);
 
-            Assert.AreEqual(true, dataTable.Rows[0][4]);
-            Assert.AreEqual(true, dataTable.Rows[4][4]);
+            Assert.IsTrue(dataTable.Rows[0][4] as bool?);
+            Assert.IsTrue(dataTable.Rows[4][4] as bool?);
         }
 
         [TestMethod]
@@ -399,7 +399,7 @@ namespace ParquetViewer.Tests
         {
             using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/DECIMALS_WITH_NO_SCALE_TEST.parquet", default);
             Assert.AreEqual(10589, parquetEngine.RecordCount);
-            Assert.AreEqual(8, parquetEngine.Fields.Count);
+            Assert.HasCount(8, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
 
