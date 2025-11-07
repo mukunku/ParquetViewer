@@ -262,19 +262,20 @@ namespace ParquetViewer.Tests
             Assert.HasCount(6, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
-            Assert.IsInstanceOfType<StructValue>(dataTable.Rows[0][0]);
-            Assert.AreEqual("{\"appId\":null,\"version\":0,\"lastUpdated\":null}", ((StructValue)dataTable.Rows[0][0]).ToString());
-            Assert.IsInstanceOfType<StructValue>(dataTable.Rows[0][1]);
-            Assert.AreEqual("{\"path\":null,\"partitionValues\":null,\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":null}", ((StructValue)dataTable.Rows[0][1]).ToString());
-            Assert.IsInstanceOfType<StructValue>(dataTable.Rows[0][2]);
-            Assert.AreEqual("{\"path\":null,\"deletionTimestamp\":null,\"dataChange\":false}", ((StructValue)dataTable.Rows[0][2]).ToString());
+            Assert.AreEqual(DBNull.Value, dataTable.Rows[0][0]);
+            Assert.IsInstanceOfType<StructValue>(dataTable.Rows[2][0]);
+            Assert.AreEqual("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":0,\"lastUpdated\":1564524299648}", ((StructValue)dataTable.Rows[2][0]).ToString());
+            Assert.AreEqual(DBNull.Value, dataTable.Rows[0][1]);
+            Assert.IsInstanceOfType<StructValue>(dataTable.Rows[5][1]);
+            Assert.AreEqual("{\"path\":\"part-00000-cb6b150b-30b8-4662-ad28-ff32ddab96d2-c000.snappy.parquet\",\"partitionValues\":[],\"size\":404,\"modificationTime\":1564524299000,\"dataChange\":false,\"stats\":null,\"tags\":null}", ((StructValue)dataTable.Rows[5][1]).ToString());
+            Assert.IsInstanceOfType<StructValue>(dataTable.Rows[3][2]);
+            Assert.AreEqual("{\"path\":\"part-00000-512e1537-8aaa-4193-b8b4-bef3de0de409-c000.snappy.parquet\",\"deletionTimestamp\":1564524298213,\"dataChange\":false}", ((StructValue)dataTable.Rows[3][2]).ToString());
             Assert.AreEqual(DBNull.Value, dataTable.Rows[0][3]);
+            Assert.IsInstanceOfType<StructValue>(dataTable.Rows[1][3]);
+            Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":[],\"configuration\":[],\"createdTime\":1564524294376}", ((StructValue)dataTable.Rows[1][3]).ToString());
             Assert.IsInstanceOfType<StructValue>(dataTable.Rows[0][4]);
             Assert.AreEqual("{\"minReaderVersion\":1,\"minWriterVersion\":2}", ((StructValue)dataTable.Rows[0][4]).ToString());
             Assert.AreEqual(DBNull.Value, dataTable.Rows[0][5]);
-            Assert.IsInstanceOfType<DBNull>(dataTable.Rows[9][4]);
-            Assert.AreEqual(DBNull.Value, dataTable.Rows[9][4]);
-            Assert.AreEqual("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":null,\"lastUpdated\":1564524299648}", ((StructValue)dataTable.Rows[2][0]).ToString());
         }
 
         [TestMethod]
@@ -370,8 +371,10 @@ namespace ParquetViewer.Tests
             Assert.AreEqual("Product2", dataTable.Rows[1][0]);
 
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][1]);
+            Assert.IsEmpty(((ListValue)dataTable.Rows[0][1]).Data);
             Assert.AreEqual("[]", dataTable.Rows[0][1].ToString());
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[1][1]);
+            Assert.IsEmpty(((ListValue)dataTable.Rows[1][1]).Data);
             Assert.AreEqual("[]", dataTable.Rows[1][1].ToString());
         }
 
@@ -410,6 +413,25 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(0.74527m, dataTable.Rows[100][5]);
             Assert.AreEqual(0m, dataTable.Rows[100][6]);
             Assert.AreEqual(0m, dataTable.Rows[100][7]);
+        }
+
+        [TestMethod]
+        public async Task LIST_OF_LIST_OF_INT()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_LIST_OF_INT.parquet", default);
+            Assert.AreEqual(3, parquetEngine.RecordCount);
+            Assert.HasCount(1, parquetEngine.Fields);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+            Assert.AreEqual("[[1],[1,2],[1,2,3],[1,2,3,4],[1,2,3,4,5]]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual(DBNull.Value, dataTable.Rows[1][0]);
+            Assert.AreEqual("[[1],[],[3],,[5]]", dataTable.Rows[2][0].ToString());
+
+            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
+            Assert.AreEqual(DBNull.Value, dataTable.Rows[0][0]);
+
+            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 1, default))(false);
+            Assert.AreEqual("[[1],[],[3],,[5]]", dataTable.Rows[0][0].ToString());
         }
     }
 }

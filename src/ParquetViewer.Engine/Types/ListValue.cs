@@ -8,6 +8,8 @@ namespace ParquetViewer.Engine.Types
         public IList Data { get; }
         public Type? Type { get; private set; }
 
+        public int Length => Data.Count;
+
         public ListValue(Array data)
         {
             Data = data ?? throw new ArgumentNullException(nameof(data));
@@ -28,8 +30,6 @@ namespace ParquetViewer.Engine.Types
                 }
             }
         }
-
-        public int Length => Data.Count;
 
         public override string ToString()
         {
