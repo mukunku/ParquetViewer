@@ -171,7 +171,7 @@ namespace ParquetViewer.Engine
         }
         public bool BelongsToListField => this._systemFieldType == SystemFieldTypeId.ListItemNode;
         public bool BelongsToListOfStructsField => this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
-        public int NumberOfListParents => _parentsExcludingRoot.Count(field => field.IsListNode);
+        public int NumberOfListParents => _parentsExcludingRoot.Count(field => field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
 
         public int CurrentDefinitionLevel => _parentsExcludingRoot
             .Count(
