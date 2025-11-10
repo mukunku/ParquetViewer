@@ -171,119 +171,39 @@ namespace ParquetViewer.Engine
             {
                 if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.List)
                 {
-                    var listField = itemField.GetListField();
-                    var itemField2 = listField.GetListItemField();
+                    var nestedListField = itemField.GetListField();
+                    var nestedItemField = nestedListField.GetListItemField();
                     lastMilestone = "Read";
 
-                    var rowIndex = rowBeginIndex;
+                    await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0, 
+                        skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
+                }
+                else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
+                {
+                    int rowIndex = rowBeginIndex;
 
-                    //Read each row one at a time because I can't recursion
-                    for (var i = 0; i < readRecords; i++)
+                    var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
+                    lastMilestone = "Read";
+
+                    var dataEnumerable = dataColumn.GetDataWithPaddedNulls(itemField);
+                    
+                    var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, dataColumn.Field.ClrType);
+                    var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, itemField.NumberOfListParents, 
+                        itemField.CurrentDefinitionLevel, dataColumn.Field.MaxDefinitionLevel, cancellationToken);
+                    lastMilestone = "ReadRows";
+
+                    foreach (var listValue in listValues)
                     {
-                        lastMilestone = $"${i}-start";
-
-                        DataTableLite listValuesTable = BuildDataTable(itemField.Parent, [itemField.Path], (int)readRecords);
-                        await ReadListField(listValuesTable, groupReader, rowBeginIndex, itemField2, fieldIndex: 0,
-                                skipRecords + i, readRecords: 1, isFirstColumn: true, cancellationToken, progress);
-
-                        lastMilestone = $"${i}-read";
+                        cancellationToken.ThrowIfCancellationRequested();
 
                         if (isFirstColumn)
                         {
                             dataTable.NewRow();
                         }
 
-                        var arrayList = new ArrayList(listValuesTable.Rows.Count);
-                        if (listValuesTable.Rows.Count == 1 && listValuesTable.Rows[0][0] == DBNull.Value)
-                        {
-                            dataTable.Rows[rowIndex][fieldIndex] = DBNull.Value;
-                        }
-                        else
-                        {
-                            for (var j = 0; j < listValuesTable.Rows.Count; j++)
-                            {
-                                arrayList.Add(listValuesTable.Rows[j][0]);
-                            }
-                            var listValue = new ListValue(arrayList, typeof(ListValue));
-                            dataTable.Rows[rowIndex][fieldIndex] = listValue;
-                        }
-
+                        dataTable.Rows[rowIndex][fieldIndex] = (object?)listValue ?? DBNull.Value;
                         rowIndex++;
-                    }
-                }
-                else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
-                {
-                    int rowIndex = rowBeginIndex;
-                    int skippedRecords = 0;
-
-                    var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
-                    lastMilestone = "Read";
-
-                    var dataEnumerable = dataColumn.GetDataWithPaddedNulls(itemField);
-                    lastMilestone = "Null";
-
-                    ArrayList? rowValue = null;
-                    int index = -1;
-                    var listIndex = 0;
-                    foreach (var data in dataEnumerable)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        index++;
-
-                        bool IsEndOfRow(int index) => (index + 1) == dataColumn.RepetitionLevels!.Length
-                            || dataColumn.RepetitionLevels[index + 1] == 0;
-
-                        bool IsEndOfList(int index) => (index + 1) == dataColumn.RepetitionLevels!.Length
-                            || dataColumn.RepetitionLevels[index + 1] == (itemField.NumberOfListParents - 1); //means new list
-
-                        //Skip rows
-                        if (skipRecords > skippedRecords)
-                        {
-                            if (IsEndOfRow(index))
-                                skippedRecords++;
-
-                            continue;
-                        }
-
-                        rowValue ??= new ArrayList();
-                        if (IsEndOfRow(index) || IsEndOfList(index))
-                        {
-                            if (isFirstColumn)
-                            {
-                                dataTable.NewRow();
-                            }
-
-                            lastMilestone = $"${listIndex}";
-
-                            rowValue.Add(data);
-
-                            if (dataColumn.IsNull(index, itemField))
-                                dataTable.Rows[listIndex][fieldIndex] = DBNull.Value;
-                            else if (dataColumn.IsEmpty(index, itemField))
-                                dataTable.Rows[listIndex][fieldIndex] = new ListValue([], itemField.DataField!.ClrType);
-                            else
-                                dataTable.Rows[listIndex][fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
-
-                            rowValue = null;
-
-                            if (IsEndOfRow(index))
-                            {                                
-                                rowIndex++;
-                                progress?.Report(1);
-                            }
-                            
-                            if (IsEndOfList(index))
-                            {
-                                listIndex++;
-                            }
-
-                            if (rowIndex - rowBeginIndex >= readRecords)
-                                break;
-                        }
-                        else
-                        {
-                            rowValue.Add(data);
-                        }
+                        progress?.Report(1);
                     }
                 }
                 else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
@@ -381,7 +301,7 @@ namespace ParquetViewer.Engine
             var valueDataEnumerable = valueDataColumn.GetDataWithPaddedNulls(valueField);
 
             var dataEnumerable = Helpers.PairEnumerables(keyDataEnumerable, valueDataEnumerable, DBNull.Value);
-            
+
             var levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
             var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
             ArrayList? mapKeys = null;

@@ -173,10 +173,10 @@ namespace ParquetViewer.Engine
         public bool BelongsToListOfStructsField => this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
         public int NumberOfListParents => _parentsExcludingRoot.Count(field => field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
 
-        public int CurrentDefinitionLevel => _parentsExcludingRoot
+        public int CurrentDefinitionLevel => _parentsExcludingRoot.Append(this)
             .Count(
                 field => field.SchemaElement.RepetitionType == FieldRepetitionType.OPTIONAL
-                || (field._systemFieldType == SystemFieldTypeId.ListNode && field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists
+                || (field._systemFieldType == SystemFieldTypeId.ListNode && field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
             );
 
         private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)

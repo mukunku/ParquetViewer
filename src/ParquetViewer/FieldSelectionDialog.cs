@@ -252,7 +252,7 @@ namespace ParquetViewer
                     && lf2.Item.SchemaType == SchemaType.List)
                 {
                     unsupportedReason = $"This {lf.Item.SchemaType.ToString()} is nested too deeply";
-                    return false;
+                    //TODO: return false;
                 }
 
                 unsupportedReason = null;
