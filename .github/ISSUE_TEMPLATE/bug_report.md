@@ -6,20 +6,25 @@ labels: bug
 assignees: ''
 ---
 
-**Parquet Viewer Version**
-What version of Parquet Viewer are you experiencing the issue with?
+#### Parquet Viewer Version
+<!--What version of Parquet Viewer are you experiencing the issue with?-->
 
-**Where was the parquet file created?**
-Apache Spark, Hive, Java, C#, pyarrow, etc.
 
-**Sample File**
-Upload a sample file so the issue can be debugged! You can zip your parquet file to upload it directly to GitHub.
+#### Where was the parquet file created?
+<!--Apache Spark, Hive, Java, C#, pyarrow, etc.-->
 
-**Describe the bug**
-A clear and concise description of what the bug is.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+#### Sample File
+<!--Upload a sample file so the issue can be debugged! You can zip your parquet file to upload it directly to GitHub.-->
 
-**Additional context**
-Add any other context about the problem here.
+
+#### Describe the bug
+<!--A clear and concise description of what the bug is.-->
+
+
+#### Screenshots
+<!--If applicable, add screenshots to help explain your problem.-->
+
+
+#### Additional context
+<!--Add any other context about the problem here.-->
