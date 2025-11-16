@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Immutable;
+using System.Data;
 using System.Numerics;
 
 namespace ParquetViewer.Engine.Types
@@ -7,9 +8,10 @@ namespace ParquetViewer.Engine.Types
     {
         public string Name { get; }
 
-        public DataRow Data { get; }
+        internal DataRowLite Data { get; }
 
-        public StructValue(string name, DataRow data)
+        //TODO: Add a public constructor?
+        internal StructValue(string name, DataRowLite data)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Data = data ?? throw new ArgumentNullException(nameof(data));
@@ -28,14 +30,14 @@ namespace ParquetViewer.Engine.Types
                 using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
                 {
                     jsonWriter.WriteStartObject();
-                    for (var i = 0; i < this.Data.Table.Columns.Count; i++)
-                    {
-                        string columnName = this.Data.Table.Columns[i].ColumnName
+                    for (var i = 0; i < this.Data.Columns.Count; i++)
+                    {   
+                        string columnName = this.Data.Columns.Values.ElementAt(i).Name
                             //Remove the parent field name from columns when rendering the data as json in the gridview cell.
                             .Replace($"{this.Name}/", string.Empty);
                         jsonWriter.WritePropertyName(columnName);
 
-                        object value = this.Data[i];
+                        object value = this.Data.Row[i];
                         WriteValue(jsonWriter, value, desiredLength is not null);
 
                         if (desiredLength > 0 && jsonWriter.ApproximateStringLengthSoFar > desiredLength)
@@ -62,6 +64,8 @@ namespace ParquetViewer.Engine.Types
                 return $"Error while deserializing field '{Name}': {Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
+
+        public DataTable ToDataTable() => this.Data.ToDataTable();
 
         public static void WriteValue(Utf8JsonWriterWithRunningLength jsonWriter, object value, bool truncateForDisplay)
         {
@@ -139,9 +143,9 @@ namespace ParquetViewer.Engine.Types
         private static bool IsNumber(Type type) =>
             Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
-        private IReadOnlyCollection<string>? _columnNames = null;
-        private IReadOnlyCollection<string> GetFieldNames() =>
-            _columnNames ??= GetColumns(Data).Select(c => c.ColumnName).ToList().AsReadOnly();
+        private ImmutableList<string>? _columnNames = null;
+        private ImmutableList<string> GetFieldNames() =>
+            _columnNames ??= Data.Columns.Keys.ToImmutableList();
 
         /// <summary>
         /// Sorts by field names first, then by values
@@ -164,22 +168,14 @@ namespace ParquetViewer.Engine.Types
             int fieldCount = GetFieldNames().Count;
             for (var i = 0; i < fieldCount; i++)
             {
-                var otherValue = other.Data[i];
-                var value = Data[i];
+                var otherValue = other.Data.Row[i];
+                var value = Data.Row[i];
                 int comparison = Helpers.CompareTo(value, otherValue);
                 if (comparison != 0)
                     return comparison;
             }
 
             return 0; //Both structs appear equal
-        }
-
-        private static IEnumerable<DataColumn> GetColumns(DataRow dataRow)
-        {
-            foreach (DataColumn column in dataRow.Table.Columns)
-            {
-                yield return column;
-            }
         }
 
         public int CompareTo(object? obj)

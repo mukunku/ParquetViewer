@@ -175,7 +175,7 @@ namespace ParquetViewer.Engine
                     var nestedItemField = nestedListField.GetListItemField();
                     lastMilestone = "Read";
 
-                    await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0, 
+                    await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0,
                         skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                 }
                 else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
@@ -186,9 +186,9 @@ namespace ParquetViewer.Engine
                     lastMilestone = "Read";
 
                     var dataEnumerable = dataColumn.GetDataWithPaddedNulls(itemField);
-                    
+
                     var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, dataColumn.Field.ClrType);
-                    var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, itemField.NumberOfListParents, 
+                    var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, itemField.NumberOfListParents,
                         itemField.CurrentDefinitionLevel, dataColumn.Field.MaxDefinitionLevel, cancellationToken);
                     lastMilestone = "ReadRows";
 
@@ -250,18 +250,18 @@ namespace ParquetViewer.Engine
                         if (isFirstColumn)
                             dataTable.NewRow();
 
-                        var listValuesDataTable = newStructFieldTable.ToDataTable(cancellationToken);
-                        var listValues = new ArrayList(listValuesDataTable.Rows.Count);
-                        foreach (DataRow row in listValuesDataTable.Rows)
+                        var listValues = new ArrayList(newStructFieldTable.Rows.Count);
+                        for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
                         {
+                            var dataRow = newStructFieldTable.GetRowAt(i);
                             //If all the fields of the struct are null, we assume the struct itself is null
-                            if (row.ItemArray.All(item => item == DBNull.Value))
+                            if (dataRow.Row.All(value => value == DBNull.Value))
                             {
                                 listValues.Add(DBNull.Value);
                             }
                             else
                             {
-                                listValues.Add(new StructValue(itemField.Path, row));
+                                listValues.Add(new StructValue(itemField.Path, dataRow));
                             }
                         }
 
@@ -386,8 +386,7 @@ namespace ParquetViewer.Engine
 
             var rowIndex = rowBeginIndex;
             var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
-            var finalResultDataTable = structFieldTable.ToDataTable(cancellationToken);
-            for (var i = 0; i < finalResultDataTable.Rows.Count; i++)
+            for (var i = 0; i < structFieldTable.Rows.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -397,7 +396,7 @@ namespace ParquetViewer.Engine
                 }
 
                 //If all the fields of the struct are null, we assume the struct itself is null
-                bool isNull = !finalResultDataTable.Rows[i].ItemArray.Any(item => item != DBNull.Value);
+                bool isNull = !structFieldTable.Rows[i].Any(item => item != DBNull.Value);
 
                 if (isNull)
                 {
@@ -405,7 +404,8 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, finalResultDataTable.Rows[i]);
+                    var dataRow = structFieldTable.GetRowAt(i);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, dataRow);
                 }
                 rowIndex++;
             }

@@ -330,11 +330,8 @@ namespace ParquetViewer.Controls
             {
                 dataType = QuickPeekEvent.DataTypeId.Struct;
 
-                var dt = structValue.Data.Table.Clone();
-                var row = dt.NewRow();
-                row.ItemArray = structValue.Data.ItemArray;
-                dt.Rows.Add(row);
 
+                var dt = structValue.ToDataTable();
                 quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
             else if (clickedCell.Value is ByteArrayValue byteArray && byteArray.ToImage(out var image))
