@@ -43,7 +43,11 @@ namespace ParquetViewer.Engine
             yield return new(startIndex, _repetitionLevels.Length);
         }
 
-        public IEnumerable<ListValue?> ReadRows(int skipRecords, int readRecords, int numberOfListParents, int currentDefinitionLevel, int maxDefinitionLevel, CancellationToken cancellationToken)
+        /// <summary>
+        /// Reads nested list values
+        /// </summary>
+        /// <returns>Enumerable of ListValue's. We need to return object to support DBNull.Value</returns>
+        public IEnumerable<object> ReadRows(int skipRecords, int readRecords, int numberOfListParents, int currentDefinitionLevel, int maxDefinitionLevel, CancellationToken cancellationToken)
         {
             var ranges = GetRowRanges();
 
@@ -62,10 +66,9 @@ namespace ParquetViewer.Engine
                 });
                 yield return listValue;
             }
-
         }
 
-        private ListValue? ReadListValue(Range range, int numberOfListParents, Func<object[]> dataProvider, Func<int, bool> isEmptyProvider)
+        private object ReadListValue(Range range, int numberOfListParents, Func<object[]> dataProvider, Func<int, bool> isEmptyProvider)
         {
             var rangeRepetition = _repetitionLevels.AsSpan(range);
             var rangeData = dataProvider.Invoke();
@@ -78,9 +81,9 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    return null;
+                    return DBNull.Value;
                 }
-            }            
+            }
 
             LinkedArrayList root = new();
             var node = root.GoDownToLevel(numberOfListParents);
@@ -106,6 +109,7 @@ namespace ParquetViewer.Engine
                     node = node.NextList();
                     node.Add(data);
                     node.IsNull = data == DBNull.Value && !isEmptyProvider(range.Start.Value + index);
+                    node.IsEmpty = data == DBNull.Value && isEmptyProvider(range.Start.Value + index);
                     continue;
                 }
 
@@ -120,28 +124,34 @@ namespace ParquetViewer.Engine
                 node = node.GoDownToLevel(numberOfListParents);
                 node.Add(data);
                 node.IsNull = data == DBNull.Value && !isEmptyProvider(range.Start.Value + index);
+                node.IsEmpty = data == DBNull.Value && isEmptyProvider(range.Start.Value + index);
             }
 
             return ConstructListValues(root);
         }
 
-        private ListValue? ConstructListValues(LinkedArrayList array)
+
+        private object ConstructListValues(LinkedArrayList array)
         {
             if (array.IsNull)
-                return null;
+                return DBNull.Value;
 
             var hasChildArrays = false;
             var convertedArray = new ArrayList();
-            foreach (var data in array)
+
+            if (!array.IsEmpty)
             {
-                if (data is LinkedArrayList childArray)
+                foreach (var data in array)
                 {
-                    convertedArray.Add(ConstructListValues(childArray));
-                    hasChildArrays = true;
-                }
-                else
-                {
-                    convertedArray.Add(data);
+                    if (data is LinkedArrayList childArray)
+                    {
+                        convertedArray.Add(ConstructListValues(childArray));
+                        hasChildArrays = true;
+                    }
+                    else
+                    {
+                        convertedArray.Add(data);
+                    }
                 }
             }
 
@@ -154,6 +164,7 @@ namespace ParquetViewer.Engine
             public LinkedArrayList? Parent { get; set; }
             public int Level { get; private set; }
             public bool IsNull { get; set; }
+            public bool IsEmpty { get; set; }
 
             public LinkedArrayList Root
             {

@@ -118,7 +118,17 @@ namespace ParquetViewer.Engine
             ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _rows.Count, nameof(index));
 
-            return new DataRowLite(_rows[index], _columns.Values);
+            return new DataRowLite(_rows[index], _columns.Values, this);
+        }
+    
+        public DataTableLite Clone()
+        {
+            var clone = new DataTableLite();
+            foreach (var column in this.Columns.Values)
+            {
+                clone.AddColumn(column.Name, column.Type, column.ParentSchema);
+            }
+            return clone;
         }
     }
 
@@ -126,12 +136,15 @@ namespace ParquetViewer.Engine
     {
         public Dictionary<string, ColumnLite> Columns { get; }
         public object[] Row { get; }
+        public DataTableLite Table { get; }
 
-        public DataRowLite(object[] data, IEnumerable<ColumnLite> columns)
+        public DataRowLite(object[] data, IEnumerable<ColumnLite> columns, DataTableLite table)
         {
             ArgumentNullException.ThrowIfNull(data);
             ArgumentNullException.ThrowIfNull(columns);
+            ArgumentNullException.ThrowIfNull(table);
 
+            Table = table;
             Row = data;
             Columns = columns.ToDictionary(c => c.Name);
             if (Row.Length != Columns.Count)

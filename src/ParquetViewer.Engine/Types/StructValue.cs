@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.Data;
-using System.Numerics;
 
 namespace ParquetViewer.Engine.Types
 {
@@ -9,6 +8,8 @@ namespace ParquetViewer.Engine.Types
         public string Name { get; }
 
         internal DataRowLite Data { get; }
+
+        internal bool IsList { get; set; }
 
         //TODO: Add a public constructor?
         internal StructValue(string name, DataRowLite data)
@@ -86,7 +87,7 @@ namespace ParquetViewer.Engine.Types
             {
                 jsonWriter.WriteBooleanValue(@bool);
             }
-            else if (IsNumber(value.GetType()))
+            else if (value.GetType().IsNumber())
             {
                 jsonWriter.WriteNumberValue(Convert.ToDecimal(value));
             }
@@ -111,8 +112,12 @@ namespace ParquetViewer.Engine.Types
             }
             else if (value is ListValue list)
             {
-                //Hopefully lists also generate valid JSON on .ToString()
-                jsonWriter.WriteRawValue(list.ToString());
+                jsonWriter.WriteStartArray();
+                foreach (var item in list)
+                {
+                    WriteValue(jsonWriter, item, truncateForDisplay);
+                }
+                jsonWriter.WriteEndArray();
             }
             else if (value is ByteArrayValue byteArray /*&& truncateForDisplay //should use the entire byte array if 
                                                         * we're not truncating for display? Seems kind of unreasonable 
@@ -136,12 +141,6 @@ namespace ParquetViewer.Engine.Types
                 jsonWriter.WriteStringValue(value.ToString()!);
             }
         }
-
-        /// <summary>
-        /// Returns true if the type is a number type.
-        /// </summary>
-        private static bool IsNumber(Type type) =>
-            Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
 
         private ImmutableList<string>? _columnNames = null;
         private ImmutableList<string> GetFieldNames() =>

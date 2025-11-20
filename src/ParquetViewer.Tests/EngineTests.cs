@@ -154,9 +154,9 @@ namespace ParquetViewer.Tests
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][0]);
             Assert.AreEqual("[1,2,3]", dataTable.Rows[0][0].ToString());
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][1]);
-            Assert.AreEqual("[abc,efg,hij]", dataTable.Rows[0][1].ToString());
+            Assert.AreEqual("[\"abc\",\"efg\",\"hij\"]", dataTable.Rows[0][1].ToString());
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[1][0]);
-            Assert.AreEqual("[,1]", dataTable.Rows[1][0].ToString());
+            Assert.AreEqual("[null,1]", dataTable.Rows[1][0].ToString());
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[2][1]);
             Assert.AreEqual(4, ((ListValue)dataTable.Rows[2][1]).Length);
             Assert.AreEqual("efg", ((ListValue)dataTable.Rows[2][1]).Data![0]);
@@ -166,7 +166,7 @@ namespace ParquetViewer.Tests
             //Also try reading with a record offset
             dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][0]);
-            Assert.AreEqual("[,1]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[null,1]", dataTable.Rows[0][0].ToString());
         }
 
         [TestMethod]
@@ -425,13 +425,13 @@ namespace ParquetViewer.Tests
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual("[[1],[1,2],[1,2,3],[1,2,3,4],[1,2,3,4,5]]", dataTable.Rows[0][0].ToString());
             Assert.AreEqual(DBNull.Value, dataTable.Rows[1][0]);
-            Assert.AreEqual("[[1],[],[3],,[5]]", dataTable.Rows[2][0].ToString());
+            Assert.AreEqual("[[1],[],[3],null,[5]]", dataTable.Rows[2][0].ToString());
 
             dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
             Assert.AreEqual(DBNull.Value, dataTable.Rows[0][0]);
 
             dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 1, default))(false);
-            Assert.AreEqual("[[1],[],[3],,[5]]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[[1],[],[3],null,[5]]", dataTable.Rows[0][0].ToString());
         }
 
         [TestMethod]
@@ -442,15 +442,28 @@ namespace ParquetViewer.Tests
             Assert.HasCount(2, parquetEngine.Fields);
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
-            Assert.AreEqual("[[[a,b],[c]],[,[d]]]", dataTable.Rows[0][0].ToString());
-            Assert.AreEqual("[[[a,b],[c,d]],[,[e]]]", dataTable.Rows[1][0].ToString());
-            Assert.AreEqual("[[[a,b],[c,d],[e]],[,[f]]]", dataTable.Rows[2][0].ToString());
+            Assert.AreEqual("[[[\"a\",\"b\"],[\"c\"]],[null,[\"d\"]]]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[[[\"a\",\"b\"],[\"c\",\"d\"]],[null,[\"e\"]]]", dataTable.Rows[1][0].ToString());
+            Assert.AreEqual("[[[\"a\",\"b\"],[\"c\",\"d\"],[\"e\"]],[null,[\"f\"]]]", dataTable.Rows[2][0].ToString());
 
             dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
-            Assert.AreEqual("[[[a,b],[c,d]],[,[e]]]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[[[\"a\",\"b\"],[\"c\",\"d\"]],[null,[\"e\"]]]", dataTable.Rows[0][0].ToString());
 
             dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 2, 1, default))(false);
-            Assert.AreEqual("[[[a,b],[c,d],[e]],[,[f]]]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[[[\"a\",\"b\"],[\"c\",\"d\"],[\"e\"]],[null,[\"f\"]]]", dataTable.Rows[0][0].ToString());
+        }
+
+        [TestMethod]
+        public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT.parquet", default);
+            Assert.AreEqual(1, parquetEngine.RecordCount);
+            Assert.HasCount(1, parquetEngine.Fields);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+            const string expectedJson = @"[{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0710999965667725},{""Name"":""INSULT"",""Score"":0.113300003111362},{""Name"":""GRAPHIC"",""Score"":0.0186000000685453},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.0710999965667725},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0838999971747398},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0702999979257584},{""Name"":""HATE_SPEECH"",""Score"":0.0883999988436699},{""Name"":""INSULT"",""Score"":0.132699996232986},{""Name"":""GRAPHIC"",""Score"":0.0186000000685453},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.0239000003784895},{""Name"":""SEXUAL"",""Score"":0.0710999965667725},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.097900003194809},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0797000005841255},{""Name"":""INSULT"",""Score"":0.117499999701977},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.143399998545647},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0276999995112419}],""Toxicity"":0.10249999910593},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0604000017046928},{""Name"":""HATE_SPEECH"",""Score"":0.0874999985098839},{""Name"":""INSULT"",""Score"":0.127399995923042},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.142199993133545},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.10809999704361},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.047800000756979},{""Name"":""HATE_SPEECH"",""Score"":0.0797000005841255},{""Name"":""INSULT"",""Score"":0.120399996638298},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.133100003004074},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0949999988079071},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0710999965667725},{""Name"":""INSULT"",""Score"":0.119699999690056},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.1300999969244},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.089699998497963},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0693999975919724},{""Name"":""HATE_SPEECH"",""Score"":0.0785999968647957},{""Name"":""INSULT"",""Score"":0.12219999730587},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.146300002932549},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0276999995112419}],""Toxicity"":0.089699998497963},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0604000017046928},{""Name"":""HATE_SPEECH"",""Score"":0.0702999979257584},{""Name"":""INSULT"",""Score"":0.10249999910593},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.184000000357628},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0741999968886376}]";
+
+            Assert.AreEqual(expectedJson, dataTable.Rows[0][0].ToString());
         }
     }
 }

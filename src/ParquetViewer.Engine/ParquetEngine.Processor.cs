@@ -201,7 +201,7 @@ namespace ParquetViewer.Engine
                             dataTable.NewRow();
                         }
 
-                        dataTable.Rows[rowIndex][fieldIndex] = (object?)listValue ?? DBNull.Value;
+                        dataTable.Rows[rowIndex][fieldIndex] = listValue;
                         rowIndex++;
                         progress?.Report(1);
                     }
@@ -222,48 +222,84 @@ namespace ParquetViewer.Engine
                     int rowIndex = rowBeginIndex;
                     foreach (var values in structFieldTable.Rows)
                     {
-                        var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
-                        for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        DataTableLite PivotTable(object[] valueArray, DataTableLite? newStructFieldTableOverride = null)
                         {
-                            lastMilestone = $"#{rowIndex}-{columnOrdinal}";
-                            if (values[columnOrdinal] == DBNull.Value)
+                            var newStructFieldTable = newStructFieldTableOverride ?? BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
+                            for (var columnOrdinal = 0; columnOrdinal < valueArray.Length; columnOrdinal++)
                             {
-                                //Empty array
-                                continue;
-                            }
-
-                            var columnValues = (ListValue)values[columnOrdinal];
-                            for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
-                            {
-                                lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
-
-                                var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
-                                bool isFirstValueColumn = columnOrdinal == 0;
-                                if (isFirstValueColumn)
+                                lastMilestone = $"#{rowIndex}-{columnOrdinal}";
+                                if (valueArray[columnOrdinal] == DBNull.Value)
                                 {
-                                    newStructFieldTable.NewRow();
+                                    //Empty array
+                                    continue;
                                 }
-                                newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
+
+                                var columnValues = (ListValue)valueArray[columnOrdinal];
+                                for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
+                                {
+                                    lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
+
+                                    var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
+                                    #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
+                                    if (columnValue is StructValue structValue && structValue.IsList)
+                                    {
+                                        //We need to convert `columnValue` from struct to a list of structs as it was a nested structure
+                                        var areTypesAsExpected = newStructFieldTable.Columns.Values.ElementAt(columnOrdinal).Type == typeof(ListValue);
+                                        if (!areTypesAsExpected)
+                                        {
+                                            throw new UnsupportedFieldException("Failed to pivot list of structs.");
+                                        }
+
+                                        var nestedStructFieldTable = PivotTable(structValue.Data.Row, structValue.Data.Table.Clone());
+                                        var listValues = new ArrayList(nestedStructFieldTable.Rows.Count);
+                                        for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
+                                        {
+                                            var row = nestedStructFieldTable.GetRowAt(i);
+                                            listValues.Add(new StructValue(itemField.Path, row));
+                                        }
+                                        columnValue = new ListValue(listValues, typeof(StructValue));
+                                    }
+                                    #endregion
+
+                                    bool isFirstValueColumn = columnOrdinal == 0;
+                                    if (isFirstValueColumn)
+                                    {
+                                        newStructFieldTable.NewRow();
+                                    }
+                                    newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
+                                }
                             }
+                            return newStructFieldTable;
                         }
+
+                        ArrayList GetListOfStructs(object[] _values)
+                        {
+                            DataTableLite newStructFieldTable = PivotTable(_values);
+
+                            var listValues = new ArrayList(newStructFieldTable.Rows.Count);
+                            for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
+                            {
+                                var dataRow = newStructFieldTable.GetRowAt(i);
+
+                                //If all the fields of the struct are null, we assume the struct itself is null
+                                if (dataRow.Row.All(value => value == DBNull.Value))
+                                {
+                                    listValues.Add(DBNull.Value);
+                                }
+                                else
+                                {
+                                    listValues.Add(new StructValue(itemField.Path, dataRow) { IsList = itemField.NumberOfListParents > 1 });
+                                }
+                            }
+                            return listValues;
+                        }
+
+                        var listValues = GetListOfStructs(values);
 
                         if (isFirstColumn)
                             dataTable.NewRow();
-
-                        var listValues = new ArrayList(newStructFieldTable.Rows.Count);
-                        for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
-                        {
-                            var dataRow = newStructFieldTable.GetRowAt(i);
-                            //If all the fields of the struct are null, we assume the struct itself is null
-                            if (dataRow.Row.All(value => value == DBNull.Value))
-                            {
-                                listValues.Add(DBNull.Value);
-                            }
-                            else
-                            {
-                                listValues.Add(new StructValue(itemField.Path, dataRow));
-                            }
-                        }
 
                         dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValue));
                         rowIndex++;

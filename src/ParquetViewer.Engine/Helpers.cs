@@ -1,4 +1,6 @@
-﻿namespace ParquetViewer.Engine
+﻿using System.Numerics;
+
+namespace ParquetViewer.Engine
 {
     internal static class Helpers
     {
@@ -99,5 +101,11 @@
                 hasMore2 = enumerator2.MoveNext();
             }
         }
+
+        /// <summary>
+        /// Returns true if the type is a number type.
+        /// </summary>
+        public static bool IsNumber(this Type type) =>
+            Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
     }
 }
