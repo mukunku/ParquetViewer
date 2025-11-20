@@ -130,7 +130,6 @@ namespace ParquetViewer.Engine
             return ConstructListValues(root);
         }
 
-
         private object ConstructListValues(LinkedArrayList array)
         {
             if (array.IsNull)

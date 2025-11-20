@@ -116,7 +116,7 @@ namespace ParquetViewer.Engine
             int skippedRecords = 0;
             var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
 
-            if (field.BelongsToListField || field.BelongsToListOfStructsField)
+            if (field.BelongsToListField || field.BelongsToListOfStructsField || field.DataField?.IsArray == true)
             {
                 await ReadListField(dataTable, groupReader, rowBeginIndex, field, fieldIndex, skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
             }
@@ -125,7 +125,7 @@ namespace ParquetViewer.Engine
                 var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
                 var dataEnumerable = dataColumn.GetDataWithPaddedNulls(field);
 
-                var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
+                var fieldType = dataTable.Columns[field.Path].Type;
                 foreach (var value in dataEnumerable)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -148,7 +148,7 @@ namespace ParquetViewer.Engine
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                     }
-                    else if (fieldType == byteArrayValueType)
+                    else if (fieldType == typeof(ByteArrayValue))
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
                     }
@@ -187,8 +187,13 @@ namespace ParquetViewer.Engine
 
                     var dataEnumerable = dataColumn.GetDataWithPaddedNulls(itemField);
 
+                    var numberOfListParents = itemField.NumberOfListParents;
+                    #region Fixes TWO_TIER_LIST_TYPE_TEST
+                    numberOfListParents = numberOfListParents == 0 ? 1 : numberOfListParents;
+                    #endregion
+
                     var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, dataColumn.Field.ClrType);
-                    var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, itemField.NumberOfListParents,
+                    var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, numberOfListParents,
                         itemField.CurrentDefinitionLevel, dataColumn.Field.MaxDefinitionLevel, cancellationToken);
                     lastMilestone = "ReadRows";
 
@@ -476,7 +481,8 @@ namespace ParquetViewer.Engine
             foreach (var field in fields)
             {
                 var schema = parent.GetChild(field);
-                if (schema.FieldType == ParquetSchemaElement.FieldTypeId.List)
+                if (schema.FieldType == ParquetSchemaElement.FieldTypeId.List
+                    || schema.DataField?.IsArray == true)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
