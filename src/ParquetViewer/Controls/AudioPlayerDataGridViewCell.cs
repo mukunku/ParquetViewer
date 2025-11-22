@@ -1,6 +1,5 @@
-﻿using Apache.Arrow.Types;
+﻿
 using NAudio.Wave;
-using Parquet.Schema;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using ParquetViewer.Properties;
@@ -18,14 +17,12 @@ namespace ParquetViewer.Controls
 
         private WaveStream? _audioStream;
         private IWavePlayer? _audioPlayer;
-        private Timer updateTimer = new Timer { Interval = 100 };
-        private Timer initializationTimer = new Timer { Interval = 100 };
-
+        private Timer _updateTimer = new Timer { Interval = 100 };
+        private Timer _initializationTimer = new Timer { Interval = 100 };
 
         private bool _isInitialized = false;
         private bool? _isValidWavFile = null;
         private string _errorMessage = "loading...";
-        private bool _isPlaying = false;
         private bool _isCellTooSmall = false;
 
         private Rectangle _cellBounds;
@@ -33,6 +30,12 @@ namespace ParquetViewer.Controls
         private Rectangle stopButtonBounds;
         private Rectangle trackBarBounds;
         private Rectangle contextMenuButtonBounds;
+
+        private string? debugText = null;
+        private bool _isCursorHoveringPlayPauseButton;
+        private bool _isCursorHoveringStopButton;
+        private bool _isCursorHoveringMenuButton;
+        private bool _isPlaying = false;
 
         private Stream TestData(out byte[] data)
         {
@@ -45,16 +48,16 @@ namespace ParquetViewer.Controls
 
         public AudioPlayerDataGridViewCell()
         {
-            updateTimer.Tick += (sender, e) => RedrawCell();
-            initializationTimer.Tick += (sender, e) =>
+            _updateTimer.Tick += (sender, e) => RedrawCell();
+            _initializationTimer.Tick += (sender, e) =>
             {
                 if (this._isInitialized)
                 {
-                    initializationTimer.Stop();
+                    _initializationTimer.Stop();
                     RedrawCell();
                 }
             };
-            initializationTimer.Start();
+            _initializationTimer.Start();
         }
 
         private void RedrawCell() => DataGridView?.InvalidateCell(this);
@@ -82,7 +85,7 @@ namespace ParquetViewer.Controls
                         this._audioPlayer.Init(this._audioStream);
                         this._audioPlayer.PlaybackStopped += (s, e) =>
                         {
-                            this.updateTimer.Stop();
+                            this._updateTimer.Stop();
                             this._isPlaying = false;
                             this._audioStream.Position = 0;
                             this.RedrawCell();
@@ -94,7 +97,7 @@ namespace ParquetViewer.Controls
                     }
                     else
                     {
-                        throw new InvalidDataException($"{this.ValueType.Name} was not the expected type {nameof(ListType)}");
+                        throw new InvalidDataException($"{this.ValueType.Name} was not the expected type {nameof(ByteArrayValue)}");
                     }
                 }
                 catch (Exception ex)
@@ -146,9 +149,9 @@ namespace ParquetViewer.Controls
                 using var foreColorBrush = new SolidBrush(cellStyle.ForeColor);
 
                 // Draw Buttons
-                ControlPaint.DrawButton(graphics, playPauseButtonBounds, GetButtonState(this.isCursorHoveringPlayPauseButton));
-                ControlPaint.DrawButton(graphics, stopButtonBounds, GetButtonState(this.isCursorHoveringStopButton));
-                ControlPaint.DrawButton(graphics, contextMenuButtonBounds, GetButtonState(this.isCursorHoveringMenuButton));
+                ControlPaint.DrawButton(graphics, playPauseButtonBounds, GetButtonState(this._isCursorHoveringPlayPauseButton));
+                ControlPaint.DrawButton(graphics, stopButtonBounds, GetButtonState(this._isCursorHoveringStopButton));
+                ControlPaint.DrawButton(graphics, contextMenuButtonBounds, GetButtonState(this._isCursorHoveringMenuButton));
 
                 if (this._isPlaying) // Draw Pause
                 {
@@ -181,7 +184,6 @@ namespace ParquetViewer.Controls
                 graphics.FillEllipse(foreColorBrush, centerX - dotSize / 2 - dotSpacing, centerY - dotSize / 2, dotSize, dotSize);
                 graphics.FillEllipse(foreColorBrush, centerX - dotSize / 2, centerY - dotSize / 2, dotSize, dotSize);
                 graphics.FillEllipse(foreColorBrush, centerX - dotSize / 2 + dotSpacing, centerY - dotSize / 2, dotSize, dotSize);
-
             }
             else
             {
@@ -204,19 +206,15 @@ namespace ParquetViewer.Controls
             TextRenderer.DrawText(graphics, debugText ?? $"{currentTime} / {totalTime}", cellStyle.Font, trackBarBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
         }
 
-        private string debugText = null;
-        private bool isCursorHoveringPlayPauseButton;
-        private bool isCursorHoveringStopButton;
-        private bool isCursorHoveringMenuButton;
         protected override void OnMouseMove(DataGridViewCellMouseEventArgs e)
         {
             base.OnMouseMove(e);
 
             Rectangle translatedBounds = this.playPauseButtonBounds;
             translatedBounds.Offset(-this._cellBounds.Location.X, -this._cellBounds.Location.Y);
-            this.isCursorHoveringPlayPauseButton = ContainsCursor(this.playPauseButtonBounds, e.Location);
-            this.isCursorHoveringStopButton = ContainsCursor(this.stopButtonBounds, e.Location);
-            this.isCursorHoveringMenuButton = ContainsCursor(this.contextMenuButtonBounds, e.Location);
+            this._isCursorHoveringPlayPauseButton = ContainsCursor(this.playPauseButtonBounds, e.Location);
+            this._isCursorHoveringStopButton = ContainsCursor(this.stopButtonBounds, e.Location);
+            this._isCursorHoveringMenuButton = ContainsCursor(this.contextMenuButtonBounds, e.Location);
 
             this.RedrawCell();
         }
@@ -225,9 +223,9 @@ namespace ParquetViewer.Controls
         {
             base.OnMouseLeave(rowIndex);
 
-            this.isCursorHoveringPlayPauseButton = false;
-            this.isCursorHoveringStopButton = false;
-            this.isCursorHoveringMenuButton = false;
+            this._isCursorHoveringPlayPauseButton = false;
+            this._isCursorHoveringStopButton = false;
+            this._isCursorHoveringMenuButton = false;
             this._isLeftMouseButtonPressed = false; //better ux
             this.RedrawCell();
         }
@@ -298,13 +296,13 @@ namespace ParquetViewer.Controls
             {
                 this._audioPlayer.Pause();
                 this._isPlaying = false;
-                this.updateTimer.Stop();
+                this._updateTimer.Stop();
             }
             else
             {
                 this._audioPlayer.Play();
                 this._isPlaying = true;
-                this.updateTimer.Start();
+                this._updateTimer.Start();
             }
 
             this.RedrawCell();
@@ -367,12 +365,17 @@ namespace ParquetViewer.Controls
                 //Show additional metadata about the audio in the context menu
                 menu.Items.Add(new ToolStripSeparator());
 
-                var waveFormatItem = new ToolStripButton(this._audioStream.WaveFormat.ToString())
+                var isFirst = true;
+                foreach (var text in this._audioStream.WaveFormat.ToString().Split(":"))
                 {
-                    Enabled = false,
-                    AutoToolTip = false,
-                };
-                menu.Items.Add(waveFormatItem);
+                    var waveFormatItem = new ToolStripButton((isFirst ? "Format: " : string.Empty) + text.Trim())
+                    {
+                        Enabled = false,
+                        AutoToolTip = false,
+                    };
+                    menu.Items.Add(waveFormatItem);
+                    isFirst = false;
+                }
             }
 
             menu.Show(this.DataGridView, location + (Size)this._cellBounds.Location);
@@ -388,31 +391,16 @@ namespace ParquetViewer.Controls
                 catch (Exception) { /*Swallow*/ }
             }
         }
-        /*
-        public override void DetachEditingControl()
-        {
-            CleanUp();
-            base.DetachEditingControl();
-        }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                CleanUp();
+                this._audioPlayer?.Dispose();
+                this._audioStream?.Dispose();
+                this._updateTimer.Dispose();
             }
             base.Dispose(disposing);
         }
-
-        private void CleanUp()
-        {
-            updateTimer?.Stop();
-            wavePlayer?.Dispose();
-            audioStream?.Dispose();
-            wavePlayer = null;
-            audioStream = null;
-            isPlaying = false;
-        }
-        */
     }
 }
