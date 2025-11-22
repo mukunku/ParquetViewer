@@ -247,14 +247,6 @@ namespace ParquetViewer
                     return false;
                 }
 
-                //We only support lists 2 levels deep
-                if (lf.Item.SchemaType == SchemaType.List && lf.Item is ListField lf2
-                    && lf2.Item.SchemaType == SchemaType.List)
-                {
-                    unsupportedReason = $"This {lf.Item.SchemaType.ToString()} is nested too deeply";
-                    //TODO: return false;
-                }
-
                 unsupportedReason = null;
                 return true;
             }
