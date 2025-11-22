@@ -334,15 +334,17 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(2, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
 
-            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 1, default))(false);
 
             Assert.AreEqual("Product1", dataTable.Rows[0][0]);
-            Assert.AreEqual("Product2", dataTable.Rows[1][0]);
-
             Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][1]);
             Assert.AreEqual("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":10},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":20}]", dataTable.Rows[0][1].ToString());
-            Assert.IsInstanceOfType<ListValue>(dataTable.Rows[1][1]);
-            Assert.AreEqual("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":30},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":40}]", dataTable.Rows[1][1].ToString());
+
+            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
+
+            Assert.AreEqual("Product2", dataTable.Rows[0][0]);
+            Assert.IsInstanceOfType<ListValue>(dataTable.Rows[0][1]);
+            Assert.AreEqual("[{\"DateTime\":\"2024-04-15 22:00:00\",\"Quantity\":30},{\"DateTime\":\"2024-04-16 22:00:00\",\"Quantity\":40}]", dataTable.Rows[0][1].ToString());
         }
 
         [TestMethod]
