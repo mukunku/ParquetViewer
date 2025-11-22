@@ -672,6 +672,11 @@ namespace ParquetViewer.Controls
                     //Allow longer than preferred width if header is longer
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
+                else if (this.Columns[i].CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell))
+                {
+                    this.Columns[i].Width = Math.Min(Math.Max(240, newColumnSize), maxWidth);
+                    return;
+                }
                 else if (gridTable.Columns[i].DataType == typeof(ByteArrayValue)
                     && this.byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
                 {
@@ -946,7 +951,8 @@ namespace ParquetViewer.Controls
         private void ShowDisplayFormatOptions(int columnIndex)
         {
             //If this is a byte array column, show available formatting options
-            if (this.Columns[columnIndex].ValueType == typeof(ByteArrayValue))
+            if (this.Columns[columnIndex].ValueType == typeof(ByteArrayValue) 
+                && this.Columns[columnIndex].CellTemplate.GetType() != typeof(AudioPlayerDataGridViewCell))
             {
                 const int RECORDS_TO_INTERSECT_COUNT = 8;
 
@@ -995,6 +1001,7 @@ namespace ParquetViewer.Controls
 
                     toolstripMenuItem.Checked = displayFormat == supportedFormat;
                 }
+
                 columnHeaderContextMenu.Show(Cursor.Position);
             }
             else if (this.Columns[columnIndex].ValueType == typeof(float) || this.Columns[columnIndex].ValueType == typeof(double))
@@ -1153,6 +1160,44 @@ namespace ParquetViewer.Controls
             else
             {
                 return byteArrayValue.ToStringTruncated(desiredLength);
+            }
+        }
+
+        protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
+        {
+            if (this.DataSource is not DataTable dataTable)
+                return;
+
+            //Check for audio data
+            foreach (DataGridViewColumn column in this.Columns)
+            {
+                if (column.ValueType == typeof(ByteArrayValue))
+                {
+                    var isAudioColumn = false;
+                    var tryCount = 0;
+                    for (var i = 0; i < dataTable.Rows.Count; i++)
+                    {
+                        if (tryCount > 1)
+                            break; //give up after checking a few non-null values
+
+                        var value = dataTable.Rows[i][column.Name];
+                        if (value == DBNull.Value)
+                            continue;
+
+                        byte[] data = ((ByteArrayValue)value).Data;
+                        if (AudioPlayerDataGridViewCell.IsWavAudio(data))
+                        {
+                            isAudioColumn = true;
+                            break;
+                        }
+                        tryCount++;
+                    }
+
+                    if (isAudioColumn)
+                    {
+                        column.CellTemplate = new AudioPlayerDataGridViewCell();
+                    }
+                }
             }
         }
 
