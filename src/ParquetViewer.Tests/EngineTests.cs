@@ -465,5 +465,24 @@ namespace ParquetViewer.Tests
 
             Assert.AreEqual(expectedJson, dataTable.Rows[0][0].ToString());
         }
+
+        [TestMethod]
+        public async Task TWO_TIER_TEPEATED_LIST_FIELDS_TEST()
+        {
+            using var parquetEngine = await ParquetEngine.OpenFileOrFolderAsync("Data/TWO_TIER_TEPEATED_LIST_FIELDS_TEST.parquet", default);
+            Assert.AreEqual(1, parquetEngine.RecordCount);
+            Assert.HasCount(8, parquetEngine.Fields);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+
+            Assert.AreEqual(32, dataTable.Rows[0][0]);
+            Assert.AreEqual((long)64, dataTable.Rows[0][1]);
+            Assert.AreEqual(DBNull.Value, dataTable.Rows[0][2]);
+            Assert.AreEqual("hello", dataTable.Rows[0][3]);
+            Assert.AreEqual("[10,20]", dataTable.Rows[0][4].ToString());
+            Assert.AreEqual(DBNull.Value, dataTable.Rows[0][5]); //BUG: This shouldn't be null: ["nested!"]
+            Assert.AreEqual("096d06d7-e00b-4f70-ad5c-ca4da9a9630a", dataTable.Rows[0][6]);
+            Assert.AreEqual("[\"element1\",\"element2\"]", dataTable.Rows[0][7].ToString());
+        }
     }
 }

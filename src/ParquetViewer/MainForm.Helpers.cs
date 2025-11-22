@@ -140,7 +140,7 @@ namespace ParquetViewer
                 CleanupFile(filePath);
                 if (MessageBox.Show($"Maximum {ex.MaxLength} characters per cell are supported for {ex.FileType.GetExtension()} files. " +
                     Environment.NewLine + Environment.NewLine + $"Would you like to switch to a {FileType.XLSX.GetExtension()} file instead?",
-                    "Data too large", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
+                    "Data too large - Switch export type?", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
                 {
                     rerunType = FileType.XLSX;
                 }
