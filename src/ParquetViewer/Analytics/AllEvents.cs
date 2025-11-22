@@ -47,7 +47,7 @@ namespace ParquetViewer.Analytics
                 LoadTimeMS = totalLoadTimeMilliseconds,
                 ReadTimeMS = readTimeMS,
                 IndexTimeMS = indexTimeMS,
-                RenderTimeMS = readTimeMS
+                RenderTimeMS = renderTimeMS
             }.Record();
         }
     }
