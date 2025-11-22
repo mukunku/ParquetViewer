@@ -100,10 +100,11 @@ namespace ParquetViewer.Controls
                         var cellValue = this[column.Index, i].Value;
                         if (cellValue != DBNull.Value)
                         {
-                            var isImage = ((ByteArrayValue)cellValue).ToImage(out _);
+                            var isImage = ((ByteArrayValue)cellValue).ToImage(out var image);
                             if (isImage)
                             {
                                 column.DefaultCellStyle = GetHyperlinkCellStyle(column);
+                                image?.Dispose();
                             }
                             break;
                         }
@@ -239,6 +240,26 @@ namespace ParquetViewer.Controls
                     _contextMenu.Show(this, new Point(e.X, e.Y));
                 }
             }
+            else if (e.Button == MouseButtons.Middle)
+            {
+                //TODO: Add some kind of in-app notification to inform users of this useful shortcut
+                //Add a shortcut to open images easily when data conforms to the huggingface format
+                //https://huggingface.co/docs/hub/en/datasets-image#parquet-format
+                int rowIndex = this.HitTest(e.X, e.Y).RowIndex;
+                int columnIndex = this.HitTest(e.X, e.Y).ColumnIndex;
+
+                if (rowIndex >= 0 && columnIndex >= 0 
+                    && this[columnIndex, rowIndex].Value is StructValue structValue
+                    && structValue.IsHuggingFaceImageFormat(out var data))
+                {
+                    using var ms = new System.IO.MemoryStream(data);
+                    var image = Image.FromStream(ms); //quick peek form will dispose of this image when closed
+
+                    var uniqueCellTag = Guid.NewGuid();
+                    var quickPeekForm = new QuickPeekForm(this.Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
+                    ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
+                }
+            }
 
             base.OnMouseClick(e);
         }
@@ -276,7 +297,7 @@ namespace ParquetViewer.Controls
 
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
                 return;
-
+            
             var clickedCell = this[e.ColumnIndex, e.RowIndex];
 
             //Check if there's already a quick peek open for this cell
@@ -345,6 +366,12 @@ namespace ParquetViewer.Controls
                 return;
             }
 
+            ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
+        }
+
+        private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell, 
+            Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
+        {
             clickedCell.Tag = uniqueCellTag;
 
             quickPeekForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
@@ -383,15 +410,15 @@ namespace ParquetViewer.Controls
 
             quickPeekForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
             {
-                if (openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
+                if (openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var quickPeekForm)
                     && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
                 {
-                    openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex));
+                    openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex));
                 }
             };
 
-            openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
-            openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeekForm);
+            openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex)); //Remove any leftover value if the user navigated the file
+            openQuickPeekForms.Add((clickedCell.RowIndex, clickedCell.ColumnIndex), quickPeekForm);
             quickPeekForm.Show(this.Parent ?? this);
             QuickPeekEvent.FireAndForget(dataType);
         }
@@ -951,7 +978,7 @@ namespace ParquetViewer.Controls
         private void ShowDisplayFormatOptions(int columnIndex)
         {
             //If this is a byte array column, show available formatting options
-            if (this.Columns[columnIndex].ValueType == typeof(ByteArrayValue) 
+            if (this.Columns[columnIndex].ValueType == typeof(ByteArrayValue)
                 && this.Columns[columnIndex].CellTemplate.GetType() != typeof(AudioPlayerDataGridViewCell))
             {
                 const int RECORDS_TO_INTERSECT_COUNT = 8;

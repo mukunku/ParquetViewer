@@ -120,7 +120,7 @@ namespace ParquetViewer.Engine
 
             return new DataRowLite(_rows[index], _columns.Values, this);
         }
-    
+
         public DataTableLite Clone()
         {
             var clone = new DataTableLite();
@@ -156,7 +156,7 @@ namespace ParquetViewer.Engine
         public DataTable ToDataTable()
         {
             var dt = new DataTable();
-            foreach(var column in this.Columns)
+            foreach (var column in this.Columns)
             {
                 dt.Columns.Add(new DataColumn(column.Key, column.Value.Type));
             }
@@ -164,6 +164,25 @@ namespace ParquetViewer.Engine
             row.ItemArray = this.Row;
             dt.Rows.Add(row);
             return dt;
+        }
+
+        public object GetValue(string columnName)
+        {
+            if (!this.Columns.ContainsKey(columnName))
+            {
+                throw new IndexOutOfRangeException($"Column `{columnName}` not found");
+            }
+
+            var index = 0;
+            foreach (var column in this.Columns.Keys)
+            {
+                if (column.Equals(columnName))
+                {
+                    return this.Row[index];
+                }
+                index++;
+            }
+            throw new IndexOutOfRangeException($"Could not get value for column `{columnName}`");
         }
     }
 }

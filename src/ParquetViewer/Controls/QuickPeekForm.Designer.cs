@@ -15,9 +15,16 @@ namespace ParquetViewer.Controls
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                try
+                {
+                    this.mainPictureBox?.Image.Dispose();
+                }
+                catch { /*swallow*/ }
+                
+                if (components is not null)
+                    components.Dispose();
             }
             base.Dispose(disposing);
         }
