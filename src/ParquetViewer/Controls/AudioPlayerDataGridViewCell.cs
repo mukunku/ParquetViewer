@@ -73,19 +73,7 @@ namespace ParquetViewer.Controls
                         this._audioPlayer = new WaveOutEvent();
 
                         this._audioPlayer.Init(this._audioStream);
-                        this._audioPlayer.PlaybackStopped += (s, e) =>
-                        {
-                            this._updateTimer.Stop();
-                            this._isPlaying = false;
-                            this._audioStream.Position = 0;
-                            if (this._postStopSeekLocation is not null)
-                            {
-                                this._audioStream.CurrentTime = this._postStopSeekLocation.Value;
-                                this._postStopSeekLocation = null;
-                            }
-
-                            this.RedrawCell();
-                        };
+                        this._audioPlayer.PlaybackStopped += OnPlaybackStopped;
                     }
                     else if (this.Value == DBNull.Value)
                     {
@@ -106,6 +94,25 @@ namespace ParquetViewer.Controls
                     this._isInitialized = true;
                 }
             });
+
+        private void OnPlaybackStopped(object? source, StoppedEventArgs args)
+        {
+            this._updateTimer.Stop();
+            this._isPlaying = false;
+
+            if (this._audioStream is not null)
+            {
+                this._audioStream.Position = 0;
+
+                if (this._postStopSeekLocation is not null)
+                {
+                    this._audioStream.CurrentTime = this._postStopSeekLocation.Value;
+                    this._postStopSeekLocation = null;
+                }
+            }
+
+            this.RedrawCell();
+        }
 
         protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
         {
@@ -315,7 +322,13 @@ namespace ParquetViewer.Controls
             if (this._audioPlayer == null || this._audioPlayer == null)
                 return;
 
-            this._audioPlayer.Stop(); //Triggers playback stopped event
+            if (this._audioPlayer.PlaybackState != PlaybackState.Stopped)
+                this._audioPlayer.Stop(); //Triggers playback stopped event
+            else
+            {
+                //If we're already stopped, trigger the playback stopped event ourselves
+                this.OnPlaybackStopped(null, new StoppedEventArgs());
+            }
         }
 
         private void Seek(Point location)
