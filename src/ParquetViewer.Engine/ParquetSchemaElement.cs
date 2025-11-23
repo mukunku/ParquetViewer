@@ -15,7 +15,7 @@ namespace ParquetViewer.Engine
         private readonly Dictionary<string, ParquetSchemaElement> _children = new();
         public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
 
-        public IEnumerable<ParquetSchemaElement> NonSystemFieldParents
+        private IEnumerable<ParquetSchemaElement> _parentsExcludingRoot
         {
             get
             {
@@ -27,9 +27,7 @@ namespace ParquetViewer.Engine
                     if (isRoot)
                         break;
 
-                    //Skip system fields: list, item, key_value, key, value
-                    if (current._systemFieldType is null)
-                        yield return current;
+                    yield return current;
 
                     current = current.Parent;
                 }
@@ -96,7 +94,7 @@ namespace ParquetViewer.Engine
         /// Case insensitive version of <see cref="GetChild(string)"/>
         /// Only exists to deal with non-standard Parquet implementations
         /// </summary>
-        public ParquetSchemaElement GetChildCI(string name) =>
+        private ParquetSchemaElement GetChildCI(string name) =>
             GetChildImpl(_children.Keys.FirstOrDefault((key) => key?.Equals(name, StringComparison.InvariantCultureIgnoreCase) == true) ?? name);
 
         private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
@@ -170,8 +168,15 @@ namespace ParquetViewer.Engine
             return field;
         }
         public bool BelongsToListField => this._systemFieldType == SystemFieldTypeId.ListItemNode;
-        public bool BelongsToListOfStructsField => this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
-        public int NumberOfListParents => NonSystemFieldParents.Count(field => field.FieldType == FieldTypeId.List);
+        public bool BelongsToListOfStructsField => 
+            this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
+        public int NumberOfListParents => _parentsExcludingRoot.Count(field => field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
+
+        public int CurrentDefinitionLevel => _parentsExcludingRoot.Append(this)
+            .Count(
+                field => field.SchemaElement.RepetitionType == FieldRepetitionType.OPTIONAL
+                || (field._systemFieldType == SystemFieldTypeId.ListNode && field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
+            );
 
         private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
             => new InvalidOperationException($"Can't get {fieldType} node from '{this.Parent?._systemFieldType}' " +

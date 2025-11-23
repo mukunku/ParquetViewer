@@ -50,6 +50,7 @@
     <PackageReference Include="Apache.Arrow" />
     <PackageReference Include="dotnet-file-associator" />
     <PackageReference Include="MiniExcel" />
+    <PackageReference Include="NAudio.WinForms" />
     <PackageReference Include="Parquet.Net" />
   </ItemGroup>
   <ItemGroup>

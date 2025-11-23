@@ -237,7 +237,7 @@ namespace ParquetViewer.Tests
         {
             var query = ParquetGridView.GenerateFilterQuery(new()
             {
-                ("Age", typeof(int), new object[] { 1, null })
+                ("Age", typeof(int), new object[] { 1, null! })
             });
             Assert.AreEqual("(Age IN (1) OR Age IS NULL)", query);
         }
@@ -247,7 +247,7 @@ namespace ParquetViewer.Tests
         {
             var query = ParquetGridView.GenerateFilterQuery(new()
             {
-                ("Age", typeof(int), new object[] { 1, null }),
+                ("Age", typeof(int), new object[] { 1, null! }),
                 ("Name", typeof(string), new object[] { "Alice", "Alice" })
             });
             Assert.AreEqual("(Age IN (1) OR Age IS NULL) AND Name = 'Alice'", query);

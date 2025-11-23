@@ -240,8 +240,8 @@ namespace ParquetViewer
 
             if (field.SchemaType == SchemaType.List && field is ListField lf)
             {
-                //We only support lists of structs and lists of primitives :(
-                if (lf.Item.SchemaType == SchemaType.Map || lf.Item.SchemaType == SchemaType.List)
+                //We don't support lists of maps
+                if (lf.Item.SchemaType == SchemaType.Map)
                 {
                     unsupportedReason = $"Lists of {lf.Item.SchemaType.ToString()}s are currently unsupported";
                     return false;
