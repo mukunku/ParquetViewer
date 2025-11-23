@@ -1222,6 +1222,11 @@ namespace ParquetViewer.Controls
 
                     if (isAudioColumn)
                     {
+                        //This is technically a hack as the column was created with AutoGenerateColumns = true
+                        //which means it's a DataGridViewTextBoxColumn. Changing the cell template to this causes
+                        //'System.ArgumentException' in System.Drawing.Common.dll at runtime. However these
+                        //exceptions "seem" to be innocuous so going to keep doing it this way for now.
+                        //Only other alternative is to stop using AutoGenerateColumns :/
                         column.CellTemplate = new AudioPlayerDataGridViewCell();
                     }
                 }
