@@ -328,14 +328,14 @@ namespace ParquetViewer
                     jsonWriter.WriteStartArray();
                     foreach (DataRowView row in dataTable.DefaultView)
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
-
                         jsonWriter.WriteStartObject();
                         for (var i = 0; i < row.Row.ItemArray.Length; i++)
                         {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
+
                             var columnName = dataTable.Columns[i].ColumnName;
                             jsonWriter.WritePropertyName(columnName);
 

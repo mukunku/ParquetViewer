@@ -229,6 +229,7 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
                     this.Cursor = Cursors.Default;
                     queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
                     var _ = queryEvent.Record(); //Fire and forget
+                    this.actualShownRecordCountLabel.Text = this.MainDataSource.DefaultView.Count.ToString();
                 }
             }
             catch (InvalidQueryException ex)
@@ -244,7 +245,7 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
 
         private void clearFilterButton_Click(object sender, EventArgs? e)
         {
-            if (this.MainDataSource?.DefaultView.RowFilter is not null)
+            if (!string.IsNullOrEmpty(this.MainDataSource?.DefaultView.RowFilter))
             {
                 try
                 {
@@ -254,6 +255,8 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
                 finally
                 {
                     this.Cursor = Cursors.Default;
+                    this.actualShownRecordCountLabel.Text = this.MainDataSource.DefaultView.Count.ToString();
+
                 }
             }
         }
