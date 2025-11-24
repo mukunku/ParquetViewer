@@ -1233,6 +1233,22 @@ namespace ParquetViewer.Controls
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
+            //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
+            foreach (var audioColumn in this.Columns.Cast<DataGridViewColumn>()
+                .Where(column => column.CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell)))
+            {
+                foreach (DataGridViewRow row in this.Rows)
+                {
+                    row.Cells[audioColumn.Index].Dispose();
+                }
+            }
+
+            base.Dispose(disposing);
+        }
+
         private enum FloatDisplayFormat
         {
             Scientific = 0,

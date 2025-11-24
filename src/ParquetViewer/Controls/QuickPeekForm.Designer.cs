@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using ParquetViewer.Helpers;
+using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
@@ -17,14 +18,11 @@ namespace ParquetViewer.Controls
         {
             if (disposing)
             {
-                try
-                {
-                    this.mainPictureBox?.Image.Dispose();
-                }
-                catch { /*swallow*/ }
-                
+                this.mainPictureBox?.Image.DisposeSafely();
+                this.mainGridView?.DisposeSafely();
+
                 if (components is not null)
-                    components.Dispose();
+                    components.DisposeSafely();
             }
             base.Dispose(disposing);
         }

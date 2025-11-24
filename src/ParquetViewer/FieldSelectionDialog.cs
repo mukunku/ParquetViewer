@@ -215,12 +215,8 @@ namespace ParquetViewer
             //Dispose each control
             foreach (var checkbox in this.fieldsPanel.Controls)
             {
-                try
-                {
-                    if (checkbox is Control c)
-                        c.Dispose();
-                }
-                catch { /* swallow exception */ }
+                if (checkbox is Control c)
+                    c.DisposeSafely();
             }
 
             //Now we're safe to clear the panel

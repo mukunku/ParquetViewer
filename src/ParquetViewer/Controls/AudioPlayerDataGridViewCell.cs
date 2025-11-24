@@ -423,11 +423,12 @@ namespace ParquetViewer.Controls
         {
             if (disposing)
             {
-                this._audioPlayer?.Dispose();
-                this._audioStream?.Dispose();
-                this._updateTimer.Dispose();
-                this._initializationTimer.Dispose();
+                this._audioPlayer?.DisposeSafely();
+                this._audioStream?.DisposeSafely();
+                this._updateTimer.DisposeSafely();
+                this._initializationTimer.DisposeSafely();
             }
+
             base.Dispose(disposing);
         }
 
