@@ -496,8 +496,8 @@ namespace ParquetViewer.Controls
             //In order to get full cell values into the clipboard during a copy to
             //clipboard operation we need to skip the truncation formatting below 
             var skipTruncation = this.isCopyingToClipboard
-                || e.FormattingApplied; //Also exit early if we already formatted the value above
-
+                || e.FormattingApplied //Also exit early if we already formatted the value above
+                || e.Value == DBNull.Value; //Also exit if null as there's nothing to format
             if (skipTruncation)
             {
                 return;
@@ -515,6 +515,11 @@ namespace ParquetViewer.Controls
             else if (cellValueType == typeof(StructValue) && e.Value is StructValue structValue)
             {
                 e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+                e.FormattingApplied = true;
+            }
+            else if (cellValueType == typeof(ListValue) && e.Value is ListValue listValue)
+            {
+                e.Value = listValue.ToString().Left(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL - 3, "...");
                 e.FormattingApplied = true;
             }
         }
