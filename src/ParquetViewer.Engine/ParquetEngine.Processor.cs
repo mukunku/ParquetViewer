@@ -110,22 +110,23 @@ namespace ParquetViewer.Engine
         }
 
         private async Task ReadPrimitiveField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
-        long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
+            long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
-            int rowIndex = rowBeginIndex;
+            var rowIndex = rowBeginIndex;
             int skippedRecords = 0;
+            var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
 
-            var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
-            int fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
-            if (field.BelongsToListField || field.BelongsToListOfStructsField)
+            if (field.BelongsToListField || field.BelongsToListOfStructsField || field.DataField?.IsArray == true)
             {
-                dataColumn = null;
                 await ReadListField(dataTable, groupReader, rowBeginIndex, field, fieldIndex, skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
             }
             else
             {
-                var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
-                foreach (var value in dataColumn.Data)
+                var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
+                var dataEnumerable = dataColumn.GetDataWithPaddedNulls(field);
+
+                var fieldType = dataTable.Columns[field.Path].Type;
+                foreach (var value in dataEnumerable)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -147,7 +148,7 @@ namespace ParquetViewer.Engine
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                     }
-                    else if (fieldType == byteArrayValueType)
+                    else if (fieldType == typeof(ByteArrayValue))
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
                     }
@@ -168,104 +169,46 @@ namespace ParquetViewer.Engine
             var lastMilestone = "Start";
             try
             {
-                if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
+                if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.List)
+                {
+                    var nestedListField = itemField.GetListField();
+                    var nestedItemField = nestedListField.GetListItemField();
+                    lastMilestone = "Read";
+
+                    await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0,
+                        skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
+                }
+                else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
                 {
                     int rowIndex = rowBeginIndex;
-                    int skippedRecords = 0;
 
                     var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
                     lastMilestone = "Read";
 
-                    var dataEnumerable = dataColumn.Data.Cast<object?>().Select(d => d ?? DBNull.Value);
-                    //Some parquet writers don't write null entries into the data array for empty and null lists.
-                    //This throws off our logic below so lets find all empty/null lists and add a null entry into 
-                    //the data array to align it with the repetition levels.
-                    int levelCount = dataColumn.RepetitionLevels?.Length ?? 0;
-                    if (levelCount > dataColumn.Data.Length)
-                    {
-                        if (dataColumn.RepetitionLevels?.Length != dataColumn.DefinitionLevels?.Length)
-                        {
-                            throw new MalformedFieldException($"Field `{itemField.Path}` appears malformed due to different lengths in repetition and definition levels");
-                        }
+                    var dataEnumerable = dataColumn.GetDataWithPaddedNulls(itemField);
 
-                        dataEnumerable = GetDataWithPaddedNulls();
+                    var numberOfListParents = itemField.NumberOfListParents;
+                    #region Fixes TWO_TIER_LIST_TYPE_TEST
+                    numberOfListParents = numberOfListParents == 0 ? 1 : numberOfListParents;
+                    #endregion
 
-                        IEnumerable<object> GetDataWithPaddedNulls()
-                        {
-                            var index = -1;
-                            foreach (var data in dataColumn.Data)
-                            {
-                                index++;
+                    var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, dataColumn.Field.ClrType);
+                    var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, numberOfListParents,
+                        itemField.CurrentDefinitionLevel, dataColumn.Field.MaxDefinitionLevel, cancellationToken);
+                    lastMilestone = "ReadRows";
 
-                                while (dataColumn.IsEmpty(index) || dataColumn.IsNull(index))
-                                {
-                                    yield return DBNull.Value;
-                                    index++;
-                                }
-
-                                yield return data ?? DBNull.Value;
-                            }
-
-                            //Need to handle case where last N rows are null/empty
-                            while (levelCount > index + 1)
-                            {
-                                yield return DBNull.Value;
-                                index++;
-                            }
-                        }
-                    }
-                    lastMilestone = "Null";
-
-                    ArrayList? rowValue = null;
-                    int index = -1;
-                    foreach (var data in dataEnumerable)
+                    foreach (var listValue in listValues)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        index++;
 
-                        bool IsEndOfRow(int index) => (index + 1) == dataColumn.RepetitionLevels!.Length
-                            || dataColumn.RepetitionLevels[index + 1] == (itemField.NumberOfListParents - 1); //means new list
-
-                        //Skip rows
-                        if (skipRecords > skippedRecords)
+                        if (isFirstColumn)
                         {
-                            if (IsEndOfRow(index))
-                                skippedRecords++;
-
-                            continue;
+                            dataTable.NewRow();
                         }
 
-                        rowValue ??= new ArrayList();
-                        if (IsEndOfRow(index))
-                        {
-                            if (isFirstColumn)
-                            {
-                                dataTable.NewRow();
-                            }
-
-                            lastMilestone = $"${rowIndex}";
-
-                            rowValue.Add(data);
-
-                            if (dataColumn.IsNull(index))
-                                dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                            else if (dataColumn.IsEmpty(index))
-                                dataTable.Rows[rowIndex]![fieldIndex] = new ListValue([], itemField.DataField!.ClrType);
-                            else
-                                dataTable.Rows[rowIndex]![fieldIndex] = new ListValue(rowValue, itemField.DataField!.ClrType);
-
-                            rowValue = null;
-
-                            rowIndex++;
-                            progress?.Report(1);
-
-                            if (rowIndex - rowBeginIndex >= readRecords)
-                                break;
-                        }
-                        else
-                        {
-                            rowValue.Add(data);
-                        }
+                        dataTable.Rows[rowIndex][fieldIndex] = listValue;
+                        rowIndex++;
+                        progress?.Report(1);
                     }
                 }
                 else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
@@ -284,41 +227,84 @@ namespace ParquetViewer.Engine
                     int rowIndex = rowBeginIndex;
                     foreach (var values in structFieldTable.Rows)
                     {
-                        var newStructFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
-                        for (var columnOrdinal = 0; columnOrdinal < values.Length; columnOrdinal++)
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        DataTableLite PivotTable(object[] valueArray, DataTableLite? newStructFieldTableOverride = null)
                         {
-                            lastMilestone = $"#{rowIndex}-{columnOrdinal}";
-                            if (values[columnOrdinal] == DBNull.Value)
+                            var newStructFieldTable = newStructFieldTableOverride ?? BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
+                            for (var columnOrdinal = 0; columnOrdinal < valueArray.Length; columnOrdinal++)
                             {
-                                //Empty array
-                                continue;
-                            }
-
-                            var columnValues = (ListValue)values[columnOrdinal];
-                            for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
-                            {
-                                lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
-
-                                var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
-                                bool isFirstValueColumn = columnOrdinal == 0;
-                                if (isFirstValueColumn)
+                                lastMilestone = $"#{rowIndex}-{columnOrdinal}";
+                                if (valueArray[columnOrdinal] == DBNull.Value)
                                 {
-                                    newStructFieldTable.NewRow();
+                                    //Empty array
+                                    continue;
                                 }
-                                newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
+
+                                var columnValues = (ListValue)valueArray[columnOrdinal];
+                                for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
+                                {
+                                    lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
+
+                                    var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
+                                    #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
+                                    if (columnValue is StructValue structValue && structValue.IsList)
+                                    {
+                                        //We need to convert `columnValue` from struct to a list of structs as it was a nested structure
+                                        var areTypesAsExpected = newStructFieldTable.Columns.Values.ElementAt(columnOrdinal).Type == typeof(ListValue);
+                                        if (!areTypesAsExpected)
+                                        {
+                                            throw new UnsupportedFieldException("Failed to pivot list of structs.");
+                                        }
+
+                                        var nestedStructFieldTable = PivotTable(structValue.Data.Row, structValue.Data.Table.Clone());
+                                        var listValues = new ArrayList(nestedStructFieldTable.Rows.Count);
+                                        for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
+                                        {
+                                            var row = nestedStructFieldTable.GetRowAt(i);
+                                            listValues.Add(new StructValue(itemField.Path, row));
+                                        }
+                                        columnValue = new ListValue(listValues, typeof(StructValue));
+                                    }
+                                    #endregion
+
+                                    bool isFirstValueColumn = columnOrdinal == 0;
+                                    if (isFirstValueColumn)
+                                    {
+                                        newStructFieldTable.NewRow();
+                                    }
+                                    newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
+                                }
                             }
+                            return newStructFieldTable;
                         }
+
+                        ArrayList GetListOfStructs(object[] _values)
+                        {
+                            DataTableLite newStructFieldTable = PivotTable(_values);
+
+                            var listValues = new ArrayList(newStructFieldTable.Rows.Count);
+                            for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
+                            {
+                                var dataRow = newStructFieldTable.GetRowAt(i);
+
+                                //If all the fields of the struct are null, we assume the struct itself is null
+                                if (dataRow.Row.All(value => value == DBNull.Value))
+                                {
+                                    listValues.Add(DBNull.Value);
+                                }
+                                else
+                                {
+                                    listValues.Add(new StructValue(itemField.Path, dataRow) { IsList = itemField.NumberOfListParents > 1 });
+                                }
+                            }
+                            return listValues;
+                        }
+
+                        var listValues = GetListOfStructs(values);
 
                         if (isFirstColumn)
                             dataTable.NewRow();
-
-                        var listValuesDataTable = newStructFieldTable.ToDataTable(cancellationToken);
-                        var listValues = new ArrayList(listValuesDataTable.Rows.Count);
-                        foreach (DataRow row in listValuesDataTable.Rows)
-                        {
-                            var newStructField = new StructValue(itemField.Path, row);
-                            listValues.Add(newStructField);
-                        }
 
                         dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValue));
                         rowIndex++;
@@ -352,51 +338,12 @@ namespace ParquetViewer.Engine
             var keyDataColumn = await ReadColumnAsync(groupReader, keyField, cancellationToken);
             var valueDataColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
 
-            var dataEnumerable = Helpers.PairEnumerables(
-                keyDataColumn.Data.Cast<object?>().Select(key => key ?? DBNull.Value),
-                valueDataColumn.Data.Cast<object?>().Select(value => value ?? DBNull.Value),
-                DBNull.Value);
+            var keyDataEnumerable = keyDataColumn.GetDataWithPaddedNulls(keyField);
+            var valueDataEnumerable = valueDataColumn.GetDataWithPaddedNulls(valueField);
 
-            //Some parquet writers don't write null entries into the data array for empty and null maps.
-            //This throws off our logic below so lets find all empty/null maps and add a null entry into 
-            //the data array to align it with the repetition levels.
-            int levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
-            int dataCount = Math.Max(keyDataColumn.Data.Length, valueDataColumn.Data.Length);
-            if (levelCount > dataCount)
-            {
-                if (keyDataColumn.RepetitionLevels?.Length != keyDataColumn.DefinitionLevels?.Length)
-                    throw new MalformedFieldException($"Field `{field.Path}` appears to have malformed keys due to different lengths in repetition and definition levels");
-                else if (valueDataColumn.RepetitionLevels?.Length != valueDataColumn.DefinitionLevels?.Length)
-                    throw new MalformedFieldException($"Field `{field.Path}` appears to have malformed values due to different lengths in repetition and definition levels");
+            var dataEnumerable = Helpers.PairEnumerables(keyDataEnumerable, valueDataEnumerable, DBNull.Value);
 
-                dataEnumerable = GetDataWithPaddedNulls();
-
-                IEnumerable<(object?, object?)> GetDataWithPaddedNulls()
-                {
-                    var index = -1;
-                    foreach ((var key, var value) in Helpers.PairEnumerables(keyDataColumn.Data.Cast<object?>(), valueDataColumn.Data.Cast<object?>(), DBNull.Value))
-                    {
-                        index++;
-
-                        while (keyDataColumn.IsNull(index) || valueDataColumn.IsNull(index)
-                            || keyDataColumn.IsEmpty(index) || valueDataColumn.IsEmpty(index))
-                        {
-                            yield return (DBNull.Value, DBNull.Value);
-                            index++;
-                        }
-
-                        yield return (key ?? DBNull.Value, value ?? DBNull.Value);
-                    }
-
-                    //Need to handle case where last N rows are null/empty
-                    while (levelCount > index + 1)
-                    {
-                        yield return (DBNull.Value, DBNull.Value);
-                        index++;
-                    }
-                }
-            }
-
+            var levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
             var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
             ArrayList? mapKeys = null;
             ArrayList? mapValues = null;
@@ -430,10 +377,10 @@ namespace ParquetViewer.Engine
                     mapKeys.Add(key);
                     mapValues.Add(value);
 
-                    if (keyDataColumn.IsNull(index) || valueDataColumn.IsNull(index)) //If one is null the other should be as well
-                        dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                    else if (keyDataColumn.IsEmpty(index) || valueDataColumn.IsEmpty(index)) //If one is empty the other should be as well
+                    if (keyDataColumn.IsEmpty(index, keyField) || valueDataColumn.IsEmpty(index, valueField))
                         dataTable.Rows[rowIndex]![fieldIndex] = new MapValue([], keyField.DataField!.ClrType, [], valueField.DataField!.ClrType);
+                    else if (keyDataColumn.IsNull(index, keyField) || valueDataColumn.IsNull(index, valueField))
+                        dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                     else
                         dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.DataField!.ClrType, mapValues, valueField.DataField!.ClrType);
 
@@ -480,8 +427,7 @@ namespace ParquetViewer.Engine
 
             var rowIndex = rowBeginIndex;
             var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
-            var finalResultDataTable = structFieldTable.ToDataTable(cancellationToken);
-            for (var i = 0; i < finalResultDataTable.Rows.Count; i++)
+            for (var i = 0; i < structFieldTable.Rows.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -490,9 +436,8 @@ namespace ParquetViewer.Engine
                     dataTable.NewRow();
                 }
 
-                //Not sure how to detect if a Struct is NULL vs. all its fields being NULL.
-                //For now lets consider that if all fields are NULL, the row is supposed to be NULL.
-                bool isNull = !finalResultDataTable.Rows[i].ItemArray.Any(item => item != DBNull.Value);
+                //If all the fields of the struct are null, we assume the struct itself is null
+                bool isNull = !structFieldTable.Rows[i].Any(item => item != DBNull.Value);
 
                 if (isNull)
                 {
@@ -500,7 +445,8 @@ namespace ParquetViewer.Engine
                 }
                 else
                 {
-                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, finalResultDataTable.Rows[i]);
+                    var dataRow = structFieldTable.GetRowAt(i);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, dataRow);
                 }
                 rowIndex++;
             }
@@ -535,7 +481,8 @@ namespace ParquetViewer.Engine
             foreach (var field in fields)
             {
                 var schema = parent.GetChild(field);
-                if (schema.FieldType == ParquetSchemaElement.FieldTypeId.List)
+                if (schema.FieldType == ParquetSchemaElement.FieldTypeId.List
+                    || schema.DataField?.IsArray == true)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
