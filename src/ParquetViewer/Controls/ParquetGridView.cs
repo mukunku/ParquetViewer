@@ -248,7 +248,7 @@ namespace ParquetViewer.Controls
                 int rowIndex = this.HitTest(e.X, e.Y).RowIndex;
                 int columnIndex = this.HitTest(e.X, e.Y).ColumnIndex;
 
-                if (rowIndex >= 0 && columnIndex >= 0 
+                if (rowIndex >= 0 && columnIndex >= 0
                     && this[columnIndex, rowIndex].Value is StructValue structValue
                     && structValue.IsHuggingFaceImageFormat(out var data))
                 {
@@ -297,7 +297,7 @@ namespace ParquetViewer.Controls
 
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
                 return;
-            
+
             var clickedCell = this[e.ColumnIndex, e.RowIndex];
 
             //Check if there's already a quick peek open for this cell
@@ -369,7 +369,7 @@ namespace ParquetViewer.Controls
             ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
         }
 
-        private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell, 
+        private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell,
             Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
         {
             clickedCell.Tag = uniqueCellTag;
@@ -430,11 +430,19 @@ namespace ParquetViewer.Controls
                 this.CopySelectionToClipboard(false);
                 e.Handled = true;
             }
-            else if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.Right))
+            //Fix a rare bug where the horizontal scroll won't move all the way to the right sometimes with keyboard shortcuts (#156)
+            else if (
+                e.KeyValue == (int)Keys.End ||
+                (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.Right))
+            )
             {
-                //Fixes a rare bug where the horizontal scroll won't move all the way to the right sometimes (#156)
-                this.FirstDisplayedScrollingColumnIndex = this.Columns.Count - 1;
                 //We don't set e.Handled = true here so the DGV can perform its own handling as well.
+                this.FirstDisplayedScrollingColumnIndex = this.Columns.Count - 1;
+                if (e.KeyValue == (int)Keys.End && e.Modifiers.HasFlag(Keys.Control))
+                {
+                    //Need to also scroll to vertical bottom in this case
+                    this.FirstDisplayedScrollingRowIndex = this.RowCount - 1;
+                }
             }
 
             base.OnKeyDown(e);
