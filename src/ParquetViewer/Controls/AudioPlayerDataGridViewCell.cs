@@ -15,13 +15,14 @@ namespace ParquetViewer.Controls
 {
     internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
+        private Stream? _memoryStream;
         private WaveStream? _audioStream;
         private IWavePlayer? _audioPlayer;
         private Timer _updateTimer = new() { Interval = 100 };
         private Timer _initializationTimer = new() { Interval = 100 };
 
         private bool _isInitialized = false;
-        private bool? _isValidWavFile = null;
+        private AudioFormat? _audioFormat = AudioFormat.Invalid;
         private string _errorMessage = "loading...";
         private bool _isCellTooSmall = false;
 
@@ -64,10 +65,8 @@ namespace ParquetViewer.Controls
                     //Prepare audio stream
                     if (this.Value is ByteArrayValue byteArray)
                     {
-                        //It's somewhat safe to not dispose memory streams: https://stackoverflow.com/a/4274769/1458738
-                        var ms = new MemoryStream(byteArray.Data);
-                        this._audioStream = new WaveFileReader(ms);
-                        this._isValidWavFile = true;
+                        this._audioStream = GetAudioStream(byteArray.Data, out var audioFormat);
+                        this._audioFormat = audioFormat;
 
                         //Prepare output device
                         this._audioPlayer = new WaveOutEvent();
@@ -77,7 +76,7 @@ namespace ParquetViewer.Controls
                     }
                     else if (this.Value == DBNull.Value)
                     {
-                        this._isValidWavFile = false;
+                        this._audioFormat = null;
                     }
                     else
                     {
@@ -86,7 +85,7 @@ namespace ParquetViewer.Controls
                 }
                 catch (Exception ex)
                 {
-                    this._isValidWavFile = false;
+                    this._audioFormat = AudioFormat.Invalid;
                     this._errorMessage = ex.Message.Left(50);
                 }
                 finally
@@ -122,12 +121,12 @@ namespace ParquetViewer.Controls
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
                 paintParts & ~DataGridViewPaintParts.ContentForeground & ~DataGridViewPaintParts.SelectionBackground);
 
-            if (value == null || value == DBNull.Value)
+            if (value is null || value == DBNull.Value || this._audioFormat is null)
             {
                 return;
             }
 
-            if (this._isValidWavFile != true || !this._isInitialized)
+            if (this._audioFormat == AudioFormat.Invalid || !this._isInitialized)
             {
                 TextRenderer.DrawText(graphics, this._errorMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
                 return;
@@ -361,16 +360,19 @@ namespace ParquetViewer.Controls
             if (this.DataGridView is null) //just in case
                 return;
 
-            if (this.Value is not ByteArrayValue byteArrayValue && false /*TODO: FOR TESTING. REMOVE!!!*/)
+            if (this.Value is not ByteArrayValue byteArrayValue)
+                return;
+
+            if (this._audioFormat is null || this._audioFormat == AudioFormat.Invalid)
                 return;
 
             var menu = new ContextMenuStrip();
-            menu.Items.Add("Save as Wav", Resources.save_icon, async (s, a) =>
+            menu.Items.Add($"Save as {this._audioFormat.ToString()}", Resources.save_icon, async (s, a) =>
             {
                 using var saveFileDialog = new SaveFileDialog
                 {
-                    Filter = "WAV file|*.wav",
-                    Title = $"Save audio as WAV"
+                    Filter = $"{this._audioFormat?.ToString().ToUpperInvariant()} file|*.{this._audioFormat?.ToString().ToLowerInvariant()}",
+                    Title = $"Save audio as {this._audioFormat?.ToString().ToUpperInvariant()}"
                 };
                 saveFileDialog.ShowDialog();
 
@@ -427,24 +429,68 @@ namespace ParquetViewer.Controls
                 this._audioStream?.DisposeSafely();
                 this._updateTimer.DisposeSafely();
                 this._initializationTimer.DisposeSafely();
+                this._memoryStream?.DisposeSafely();
             }
 
             base.Dispose(disposing);
         }
 
-        public static bool IsWavAudio(byte[] data)
+        private WaveStream GetAudioStream(byte[] data, out AudioFormat audioFormat)
         {
+            this._memoryStream?.DisposeSafely(); //just in case
+            this._memoryStream = new MemoryStream(data);
+
             try
             {
-                using var ms = new MemoryStream(data);
+                audioFormat = AudioFormat.Wav;
+                return new WaveFileReader(this._memoryStream);
+            }
+            catch
+            {
+                try
+                {
+                    audioFormat = AudioFormat.Mp3;
+                    return new Mp3FileReader(this._memoryStream);
+                }
+                catch
+                {
+                    throw new InvalidDataException("Invalid audio data: not a valid .wav or .mp3 file.");
+                }
+            }
+        }
+
+        public static bool IsAudio(byte[] data, out AudioFormat audioFormat)
+        {
+            using var ms = new MemoryStream(data);
+            try
+            {
                 var wavReader = new WaveFileChunkReader();
                 wavReader.ReadWaveHeader(ms);
+                audioFormat = AudioFormat.Wav;
                 return true;
             }
             catch
             {
-                return false;
+                try
+                {
+                    using var mp3Reader = new Mp3FileReaderBase(ms, Mp3FileReader.CreateAcmFrameDecompressor);
+                    audioFormat = AudioFormat.Mp3;
+                    return true;
+
+                }
+                catch
+                {
+                    audioFormat = AudioFormat.Invalid;
+                    return false;
+                }
             }
+        }
+    
+        public enum AudioFormat
+        {
+            Invalid,
+            Wav,
+            Mp3,
         }
     }
 }

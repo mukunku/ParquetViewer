@@ -1217,7 +1217,7 @@ namespace ParquetViewer.Controls
                             continue;
 
                         byte[] data = ((ByteArrayValue)value).Data;
-                        if (AudioPlayerDataGridViewCell.IsWavAudio(data))
+                        if (AudioPlayerDataGridViewCell.IsAudio(data, out var _))
                         {
                             isAudioColumn = true;
                             break;
