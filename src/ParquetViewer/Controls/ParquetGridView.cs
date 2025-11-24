@@ -430,6 +430,13 @@ namespace ParquetViewer.Controls
                 this.CopySelectionToClipboard(false);
                 e.Handled = true;
             }
+            else if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.Right))
+            {
+                //Fixes a rare bug where the horizontal scroll won't move all the way to the right sometimes (#156)
+                this.FirstDisplayedScrollingColumnIndex = this.Columns.Count - 1;
+                //We don't set e.Handled = true here so the DGV can perform its own handling as well.
+            }
+
             base.OnKeyDown(e);
         }
 
