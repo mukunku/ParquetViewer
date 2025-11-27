@@ -87,6 +87,11 @@ namespace ParquetViewer.Controls
                     width += column.Width;
                 }
                 this.Width = Math.Min(Math.Max(width, 280), 900); //900 pixel max seems reasonable, right?
+
+                if (this.mainGridView.Rows.Count == 1)
+                {
+                    this.Height = 200;
+                }
             }
             else if (this.mainPictureBox is not null)
             {

@@ -230,5 +230,14 @@ namespace ParquetViewer.Helpers
                 return false;
             }
         }
+
+        public static void DisposeSafely(this IDisposable? disposable)
+        {
+            try
+            {
+                disposable?.Dispose();
+            }
+            catch { /*swallow*/ }
+        }
     }
 }

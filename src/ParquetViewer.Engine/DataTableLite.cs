@@ -1,5 +1,6 @@
 ﻿using ParquetViewer.Engine.Exceptions;
 using System.Data;
+using static ParquetViewer.Engine.DataTableLite;
 
 namespace ParquetViewer.Engine
 {
@@ -48,15 +49,6 @@ namespace ParquetViewer.Engine
         {
             var row = new object[Columns.Count];
             _rows.Add(row);
-        }
-
-        public ColumnLite GetColumn(string name)
-        {
-            if (_columns.TryGetValue(name, out var value))
-            {
-                return value;
-            }
-            throw new KeyNotFoundException($"{nameof(name)}: {name}");
         }
 
         public DataTable ToDataTable(CancellationToken token, IProgress<int>? progress = null)
@@ -118,6 +110,79 @@ namespace ParquetViewer.Engine
                     throw;
                 }
             }
+        }
+
+        //Gets a reference to the row data at the specified index
+        public DataRowLite GetRowAt(int index)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _rows.Count, nameof(index));
+
+            return new DataRowLite(_rows[index], _columns.Values, this);
+        }
+
+        public DataTableLite Clone()
+        {
+            var clone = new DataTableLite();
+            foreach (var column in this.Columns.Values)
+            {
+                clone.AddColumn(column.Name, column.Type, column.ParentSchema);
+            }
+            return clone;
+        }
+    }
+
+    internal class DataRowLite
+    {
+        public Dictionary<string, ColumnLite> Columns { get; }
+        public object[] Row { get; }
+        public DataTableLite Table { get; }
+
+        public DataRowLite(object[] data, IEnumerable<ColumnLite> columns, DataTableLite table)
+        {
+            ArgumentNullException.ThrowIfNull(data);
+            ArgumentNullException.ThrowIfNull(columns);
+            ArgumentNullException.ThrowIfNull(table);
+
+            Table = table;
+            Row = data;
+            Columns = columns.ToDictionary(c => c.Name);
+            if (Row.Length != Columns.Count)
+            {
+                throw new ArgumentException($"Data length {data.Length} doesn't match number of columns {columns.Count()}", nameof(data));
+            }
+        }
+
+        public DataTable ToDataTable()
+        {
+            var dt = new DataTable();
+            foreach (var column in this.Columns)
+            {
+                dt.Columns.Add(new DataColumn(column.Key, column.Value.Type));
+            }
+            var row = dt.NewRow();
+            row.ItemArray = this.Row;
+            dt.Rows.Add(row);
+            return dt;
+        }
+
+        public object GetValue(string columnName)
+        {
+            if (!this.Columns.ContainsKey(columnName))
+            {
+                throw new IndexOutOfRangeException($"Column `{columnName}` not found");
+            }
+
+            var index = 0;
+            foreach (var column in this.Columns.Keys)
+            {
+                if (column.Equals(columnName))
+                {
+                    return this.Row[index];
+                }
+                index++;
+            }
+            throw new IndexOutOfRangeException($"Could not get value for column `{columnName}`");
         }
     }
 }

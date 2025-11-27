@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Text;
 
 namespace ParquetViewer.Engine.Types
 {
@@ -7,6 +6,8 @@ namespace ParquetViewer.Engine.Types
     {
         public IList Data { get; }
         public Type? Type { get; private set; }
+
+        public int Length => Data.Count;
 
         public ListValue(Array data)
         {
@@ -29,31 +30,16 @@ namespace ParquetViewer.Engine.Types
             }
         }
 
-        public int Length => Data.Count;
-
         public override string ToString()
         {
-            var sb = new StringBuilder("[");
-
-            if (Data is not null)
+            using var ms = new MemoryStream();
+            using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
             {
-                bool isFirst = true;
-                foreach (var data in Data)
-                {
-                    if (!isFirst)
-                        sb.Append(',');
-
-                    if (data is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
-                        sb.Append(dt.ToString(ParquetEngineSettings.DateDisplayFormat));
-                    else
-                        sb.Append(data?.ToString() ?? string.Empty);
-
-                    isFirst = false;
-                }
+                StructValue.WriteValue(jsonWriter, this, false);
             }
-
-            sb.Append(']');
-            return sb.ToString();
+            ms.Position = 0;
+            using var sr = new StreamReader(ms);
+            return sr.ReadToEnd();
         }
 
         public int CompareTo(ListValue? other)

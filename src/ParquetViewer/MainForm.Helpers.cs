@@ -40,11 +40,13 @@ namespace ParquetViewer
 
         //TODO: Should we export floats and binary data with custom formatting if activated?
         //E.g. float -> Decimal format, Binary -> Size format, etc.
-        //We can't use the gridview formattedValue directly as we're changing the type sometimes.
-        private async void ExportResults(FileType defaultFileType)
+        //We can't use the gridview formattedValue directly as we're changing the type sometimes plus enumerating the dgv is really slow due to row unsharing.
+        private async void ExportResults(FileType defaultFileType, string? filePathWithExtension = null)
         {
             string? filePath = null;
             LoadingIcon? loadingIcon = null;
+            FileType? rerunType = null;
+            filePathWithExtension = string.IsNullOrWhiteSpace(filePathWithExtension) ? null : filePathWithExtension;
             try
             {
                 if (this.MainDataSource?.DefaultView.Count > 0)
@@ -58,9 +60,9 @@ namespace ParquetViewer
                         this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
                     }
 
-                    if (this.exportFileDialog.ShowDialog() == DialogResult.OK)
+                    if (filePathWithExtension is not null || this.exportFileDialog.ShowDialog() == DialogResult.OK)
                     {
-                        filePath = this.exportFileDialog.FileName;
+                        filePath = filePathWithExtension ?? this.exportFileDialog.FileName;
                         CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
 
                         var fileExtension = Path.GetExtension(filePath);
@@ -84,7 +86,7 @@ namespace ParquetViewer
                                 return;
                             }
 
-                            await WriteDataToExcelFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
+                            await WriteDataToExcel93File(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
                         }
                         else if (selectedFileType == FileType.XLSX)
                         {
@@ -133,6 +135,16 @@ namespace ParquetViewer
                 CleanupFile(filePath);
                 ShowError(ex.Message, "File export failed");
             }
+            catch (XlsCellLengthException ex)
+            {
+                CleanupFile(filePath);
+                if (MessageBox.Show($"Maximum {ex.MaxLength} characters per cell are supported for {ex.FileType.GetExtension()} files. " +
+                    Environment.NewLine + Environment.NewLine + $"Would you like to switch to a {FileType.XLSX.GetExtension()} file instead?",
+                    "Data too large - Switch export type?", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
+                {
+                    rerunType = FileType.XLSX;
+                }
+            }
             catch (Exception)
             {
                 CleanupFile(filePath);
@@ -141,6 +153,11 @@ namespace ParquetViewer
             finally
             {
                 loadingIcon?.Dispose();
+            }
+
+            if (rerunType is not null)
+            {
+                ExportResults(default, filePath is not null ? Path.ChangeExtension(filePath, rerunType.Value.GetExtension()) : filePath);
             }
 
             static void CleanupFile(string? filePath)
@@ -163,7 +180,7 @@ namespace ParquetViewer
             sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
 
             using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, cancellationToken);
+            await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
         }
 
         private static Task WriteDataToCSVFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
@@ -231,7 +248,7 @@ namespace ParquetViewer
                     }
                 }, cancellationToken);
 
-        private static Task WriteDataToExcelFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+        private static Task WriteDataToExcel93File(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
             => Task.Run(() =>
                 {
                     string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
@@ -277,11 +294,10 @@ namespace ParquetViewer
                                 var stringValue = value.ToString();
 
                                 //BUG: for some reason strings longer than 255 characters appear empty.
-                                //Don't know how to fix it so throwing for now...
                                 const int maxSupportedCellLength = 255;
                                 if (stringValue!.Length > maxSupportedCellLength)
                                 {
-                                    throw new XlsCellLengthException("Maximum 255 characters per cell are supported. Please try another file format.");
+                                    throw new XlsCellLengthException(maxSupportedCellLength);
                                 }
 
                                 excelWriter.WriteCell(i + 1, j, stringValue);
@@ -312,14 +328,14 @@ namespace ParquetViewer
                     jsonWriter.WriteStartArray();
                     foreach (DataRowView row in dataTable.DefaultView)
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
-
                         jsonWriter.WriteStartObject();
                         for (var i = 0; i < row.Row.ItemArray.Length; i++)
                         {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
+
                             var columnName = dataTable.Columns[i].ColumnName;
                             jsonWriter.WritePropertyName(columnName);
 

@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using ParquetViewer.Helpers;
+using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
@@ -15,9 +16,13 @@ namespace ParquetViewer.Controls
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                this.mainPictureBox?.Image.DisposeSafely();
+                this.mainGridView?.DisposeSafely();
+
+                if (components is not null)
+                    components.DisposeSafely();
             }
             base.Dispose(disposing);
         }
