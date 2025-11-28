@@ -79,9 +79,7 @@ jobs:
 
       - id: should-publish
         run: | 
-          "should_publish=" + (
-          '${{ steps.check-release.outputs.exists }}' -eq 'false' -or
-          '${{ steps.check-release.outputs.prerelease }}' -eq 'true').ToString() >> $env:GITHUB_OUTPUT
+          "should_publish=" + ('${{ steps.check-release.outputs.exists }}' -eq 'false').ToString() >> $env:GITHUB_OUTPUT
 
   publish:
     runs-on: windows-latest
