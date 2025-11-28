@@ -3,45 +3,48 @@ using Parquet.Meta;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
-    public partial class ParquetEngine : IDisposable
+    public partial class ParquetEngine : IParquetEngine, IDisposable
     {
         private readonly ParquetReader[] _parquetFiles;
         private long? _recordCount;
+
+        private ParquetReader _defaultReader => _parquetFiles.FirstOrDefault() ?? throw new ParquetEngineException("No parquet readers available");
+
+        private FileMetaData _thriftMetadata => _defaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
+
+        private ParquetSchema _schema => _defaultReader.Schema;
+
+        private ParquetSchemaElement? _parquetSchemaTree;
+
+        public Dictionary<string, string> CustomMetadata => _defaultReader.CustomMetadata;
 
         public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Metadata?.NumRows ?? 0);
 
         public int NumberOfPartitions => _parquetFiles.Length;
 
-        private ParquetReader DefaultReader => _parquetFiles.FirstOrDefault() ?? throw new ParquetEngineException("No parquet readers available");
+        public List<string> Fields => _defaultReader.Schema.Fields.Select(f => f.Name).ToList();
 
-        public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList();
+        private ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
 
-        public FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
+        public string Path { get; }
 
-        public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata;
-
-        public ParquetSchema Schema => DefaultReader.Schema;
-
-        private ParquetSchemaElement? _parquetSchemaTree;
-        public ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
-
-        public string OpenFileOrFolderPath { get; }
+        public IParquetMetadata Metadata => new ParquetMetadata(_thriftMetadata, (int)RecordCount);
 
         private ParquetEngine(string fileOrFolderPath, params ParquetReader[] parquetFiles)
         {
             _parquetFiles = parquetFiles ?? throw new ArgumentNullException(nameof(parquetFiles), "No parquet readers provided");
-            OpenFileOrFolderPath = fileOrFolderPath;
+            Path = fileOrFolderPath;
         }
 
         private ParquetSchemaElement BuildParquetSchemaTree()
         {
-            var thriftSchema = ThriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
+            var thriftSchema = _thriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
             var schemaElements = thriftSchema.GetEnumerator();
             var thriftSchemaTree = ReadSchemaTree(ref schemaElements);
 
-            foreach (var dataField in Schema.GetDataFields())
+            foreach (var dataField in _schema.GetDataFields())
             {
                 var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new MalformedFieldException($"Field has no schema path: `{dataField.Name}`"));
                 for (var i = 1; i < dataField.Path.Length; i++)
@@ -93,7 +96,7 @@ namespace ParquetViewer.Engine
 
             try
             {
-                var parquetReader = await ParquetReader.CreateAsync(parquetFilePath, null, cancellationToken);
+                var parquetReader = await ParquetReader.CreateAsync(parquetFilePath, new() { UseDateOnlyTypeForDates = true }, cancellationToken);
                 return new ParquetEngine(parquetFilePath, parquetReader);
             }
             catch (Exception ex)
@@ -117,7 +120,7 @@ namespace ParquetViewer.Engine
 
                 try
                 {
-                    var parquetReader = await ParquetReader.CreateAsync(file, null, cancellationToken);
+                    var parquetReader = await ParquetReader.CreateAsync(file, new() { UseDateOnlyTypeForDates = true }, cancellationToken);
                     if (!fileGroups.ContainsKey(parquetReader.Schema))
                     {
                         fileGroups.Add(parquetReader.Schema, new List<ParquetReader>());
@@ -127,7 +130,7 @@ namespace ParquetViewer.Engine
                 }
                 catch (Exception ex)
                 {
-                    skippedFiles.Add(Path.GetRelativePath(folderPath, file), ex);
+                    skippedFiles.Add(System.IO.Path.GetRelativePath(folderPath, file), ex);
                 }
             }
 
@@ -150,7 +153,9 @@ namespace ParquetViewer.Engine
                     EZDispose(fileGroupList);
                 }
 
-                throw new MultipleSchemasFoundException(fileGroups.Keys.ToList());
+                //TODO: Fix this nasty mess
+                throw new MultipleSchemasFoundException(fileGroups.Keys.ToList()
+                    .Select(schema => new ParquetSchemaX(schema.Fields.Select(f => f.Name).ToList())).Cast<IParquetSchema>().ToList());
             }
             else if (skippedFiles.Count > 0)
             {
@@ -215,5 +220,16 @@ namespace ParquetViewer.Engine
         }
 
         public void Dispose() => EZDispose(_parquetFiles);
+
+        private class ParquetSchemaX : IParquetSchema
+        {
+            public IReadOnlyList<string> Fields { get; }
+
+            public ParquetSchemaX(IReadOnlyList<string> fields)
+            {
+                ArgumentNullException.ThrowIfNull(fields, nameof(fields));
+                Fields = fields;
+            }
+        }
     }
 }

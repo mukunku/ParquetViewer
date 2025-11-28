@@ -1,17 +1,18 @@
-﻿using System.Collections;
+﻿using ParquetViewer.Engine.Types;
+using System.Collections;
 using System.Text;
 
-namespace ParquetViewer.Engine.Types
+namespace ParquetViewer.Engine.ParquetNET.Types
 {
-    public class ListValue : IComparable<ListValue>, IComparable, IEnumerable<object>
+    public class ListValue : IListValue, IComparable<ListValue>, IComparable, IEnumerable<object>
     {
         public IList Data { get; }
-        public Type? Type { get; private set; }
+        public Type Type { get; private set; }
 
         public ListValue(Array data)
         {
             Data = data ?? throw new ArgumentNullException(nameof(data));
-            Type = Data.GetType().GetElementType();
+            Type = Data.GetType().GetElementType() ?? throw new ArgumentException("Invalid array type");
         }
 
         public ListValue(ArrayList data, Type type)
@@ -45,6 +46,8 @@ namespace ParquetViewer.Engine.Types
 
                     if (data is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
                         sb.Append(dt.ToString(ParquetEngineSettings.DateDisplayFormat));
+                    else if (data is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                        sb.Append(dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat));
                     else
                         sb.Append(data?.ToString() ?? string.Empty);
 
@@ -101,5 +104,7 @@ namespace ParquetViewer.Engine.Types
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public int CompareTo(IListValue? other) => this.CompareTo((object?)other);
     }
 }

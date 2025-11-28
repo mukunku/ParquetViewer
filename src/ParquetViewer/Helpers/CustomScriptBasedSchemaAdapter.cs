@@ -28,10 +28,10 @@ namespace ParquetViewer.Helpers
                 { typeof(string), "NVARCHAR({0}) {1}NULL" },
                 { typeof(TimeSpan), "INT {1}NULL" },
                 { typeof(byte[]), "VARBINARY {1}NULL" },
-                { typeof(ListValue), "sql_variant {1}NULL /*LIST*/" },
-                { typeof(MapValue), "sql_variant {1}NULL /*MAP*/" },
-                { typeof(StructValue), "sql_variant {1}NULL /*STRUCT*/" },
-                { typeof(ByteArrayValue), "VARBINARY({0}) {1}NULL" },
+                { typeof(IListValue), "sql_variant {1}NULL /*LIST*/" },
+                { typeof(IMapValue), "sql_variant {1}NULL /*MAP*/" },
+                { typeof(IStructValue), "sql_variant {1}NULL /*STRUCT*/" },
+                { typeof(IByteArrayValue), "VARBINARY({0}) {1}NULL" },
             };
 
         public string? TablePrefix { get; set; }
@@ -87,7 +87,7 @@ namespace ParquetViewer.Helpers
             {
                 throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
             }
-            bool useMaxKeyword = column.DataType == typeof(string) || column.DataType == typeof(ByteArrayValue);
+            bool useMaxKeyword = column.DataType == typeof(string) || column.DataType.ImplementsInterface<IByteArrayValue>();
             return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
         }
 

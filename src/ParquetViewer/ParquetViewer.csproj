@@ -53,6 +53,7 @@
     <PackageReference Include="Parquet.Net" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ParquetViewer.Engine.ParquetNET\ParquetViewer.Engine.ParquetNET.csproj" />
     <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />
   </ItemGroup>
 </Project>

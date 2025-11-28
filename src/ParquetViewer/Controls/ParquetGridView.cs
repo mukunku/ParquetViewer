@@ -47,7 +47,7 @@ namespace ParquetViewer.Controls
         private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
 
         //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
-        private readonly Dictionary<string, ByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
+        private readonly Dictionary<string, IByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
         private readonly Dictionary<string, FloatDisplayFormat> floatColumnsWithFormatOverrides = new();
 
         public ParquetGridView() : base()
@@ -86,13 +86,13 @@ namespace ParquetViewer.Controls
                 {
                     checkboxColumn.ThreeState = true;
                 }
-                else if (column.ValueType == typeof(ListValue)
-                    || column.ValueType == typeof(MapValue)
-                    || column.ValueType == typeof(StructValue))
+                else if (column.ValueType.ImplementsInterface<IListValue>()
+                    || column.ValueType.ImplementsInterface<IMapValue>()
+                    || column.ValueType.ImplementsInterface<IStructValue>())
                 {
                     column.DefaultCellStyle = GetHyperlinkCellStyle(column);
                 }
-                else if (column.ValueType == typeof(ByteArrayValue))
+                else if (column.ValueType.ImplementsInterface<IByteArrayValue>())
                 {
                     //Check if this column contains images
                     for (var i = 0; i < this.Rows.Count; i++)
@@ -100,7 +100,7 @@ namespace ParquetViewer.Controls
                         var cellValue = this[column.Index, i].Value;
                         if (cellValue != DBNull.Value)
                         {
-                            var isImage = ((ByteArrayValue)cellValue).ToImage(out _);
+                            var isImage = ((IByteArrayValue)cellValue).ToImage(out _);
                             if (isImage)
                             {
                                 column.DefaultCellStyle = GetHyperlinkCellStyle(column);
@@ -115,15 +115,19 @@ namespace ParquetViewer.Controls
         public void UpdateDateFormats()
         {
             string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+            string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
 
             foreach (DataGridViewColumn column in this.Columns)
             {
                 if (column.ValueType == typeof(DateTime))
                     column.DefaultCellStyle.Format = dateFormat;
+                else if (column.ValueType == typeof(DateOnly))
+                    column.DefaultCellStyle.Format = dateOnlyFormat;
             }
 
             //Need to tell the parquet engine how to render date values
             ParquetEngineSettings.DateDisplayFormat = dateFormat;
+            ParquetEngineSettings.DateOnlyDisplayFormat = dateOnlyFormat;
         }
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
@@ -292,7 +296,7 @@ namespace ParquetViewer.Controls
             var dataType = QuickPeekEvent.DataTypeId.Unknown;
             QuickPeekForm? quickPeekForm = null;
             var uniqueCellTag = Guid.NewGuid();
-            if (clickedCell.Value is ListValue listValue)
+            if (clickedCell.Value is IListValue listValue)
             {
                 dataType = QuickPeekEvent.DataTypeId.List;
 
@@ -308,7 +312,7 @@ namespace ParquetViewer.Controls
 
                 quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
-            else if (clickedCell.Value is MapValue mapValue)
+            else if (clickedCell.Value is IMapValue mapValue)
             {
                 dataType = QuickPeekEvent.DataTypeId.Map;
 
@@ -326,7 +330,7 @@ namespace ParquetViewer.Controls
 
                 quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
-            else if (clickedCell.Value is StructValue structValue)
+            else if (clickedCell.Value is IStructValue structValue)
             {
                 dataType = QuickPeekEvent.DataTypeId.Struct;
 
@@ -337,7 +341,7 @@ namespace ParquetViewer.Controls
 
                 quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
-            else if (clickedCell.Value is ByteArrayValue byteArray && byteArray.ToImage(out var image))
+            else if (clickedCell.Value is IByteArrayValue byteArray && byteArray.ToImage(out var image))
             {
                 dataType = QuickPeekEvent.DataTypeId.Image;
                 quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, image!, uniqueCellTag, e.RowIndex, e.ColumnIndex);
@@ -456,7 +460,7 @@ namespace ParquetViewer.Controls
                 }
             }
 
-            if (cellValueType == typeof(ByteArrayValue) && e.Value is ByteArrayValue byteArrayValue)
+            if (cellValueType.ImplementsInterface<IByteArrayValue>() && e.Value is IByteArrayValue byteArrayValue)
             {
                 //Don't truncate the binary data if this is a copy to clipboard operation
                 int charLimit = this.isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
@@ -488,7 +492,7 @@ namespace ParquetViewer.Controls
                     e.FormattingApplied = true;
                 }
             }
-            else if (cellValueType == typeof(StructValue) && e.Value is StructValue structValue)
+            else if (cellValueType.ImplementsInterface<IStructValue>() && e.Value is IStructValue structValue)
             {
                 e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
                 e.FormattingApplied = true;
@@ -638,12 +642,21 @@ namespace ParquetViewer.Controls
                     //We can just measure a few without going through all of them.
                     colStringCollection = nonNullColumnValues
                         .Select(row => row.Field<DateTime>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()))
-                        .Take(100);
+                        .Take(50);
                 }
-                else if (gridTable.Columns[i].DataType == typeof(StructValue))
+                else if (gridTable.Columns[i].DataType == typeof(DateOnly))
                 {
+                    //All date only's will probably have the same string length so no need to go through all values.
+                    //We can just measure a few without going through all of them.
                     colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<StructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
+                        .Select(row => row.Field<DateOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat()))
+                        .Take(10);
+                }
+                else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
+                {
+                    //TODO: Confirm the IStructValue type works here
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
                 }
                 else if (gridTable.Columns[i].DataType == typeof(float)
                     && this.floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
@@ -675,11 +688,11 @@ namespace ParquetViewer.Controls
                     //Allow longer than preferred width if header is longer
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
-                else if (gridTable.Columns[i].DataType == typeof(ByteArrayValue)
+                else if (gridTable.Columns[i].DataType.ImplementsInterface<IByteArrayValue>()
                     && this.byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
                 {
                     colStringCollection = nonNullColumnValues
-                        .Select(row => FormatByteArrayString(row.Field<ByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
+                        .Select(row => FormatByteArrayString(row.Field<IByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
                 }
                 else
                 {
@@ -949,17 +962,17 @@ namespace ParquetViewer.Controls
         private void ShowDisplayFormatOptions(int columnIndex)
         {
             //If this is a byte array column, show available formatting options
-            if (this.Columns[columnIndex].ValueType == typeof(ByteArrayValue))
+            if (this.Columns[columnIndex].ValueType.ImplementsInterface<IByteArrayValue>())
             {
                 const int RECORDS_TO_INTERSECT_COUNT = 8;
 
                 //Find a few different non-null values and find the common display formats that all of them support.
                 //This will reduce the chance the user sees #ERR in the cells from bad formatting conversions.
                 int intersectCounter = RECORDS_TO_INTERSECT_COUNT;
-                IEnumerable<ByteArrayValue.DisplayFormat> possibleDisplayFormats = Enum.GetValues<ByteArrayValue.DisplayFormat>();
+                IEnumerable<IByteArrayValue.DisplayFormat> possibleDisplayFormats = Enum.GetValues<IByteArrayValue.DisplayFormat>();
                 for (var i = 0; i < this.RowCount; i++)
                 {
-                    if (this[columnIndex, i].Value is not ByteArrayValue byteArrayValue)
+                    if (this[columnIndex, i].Value is not IByteArrayValue byteArrayValue)
                         continue;
 
                     possibleDisplayFormats = possibleDisplayFormats.Intersect(byteArrayValue.PossibleDisplayFormats);
@@ -1052,12 +1065,12 @@ namespace ParquetViewer.Controls
         /// <returns>String representation of the binary data in the desired format if possible.
         /// If conversion fails, <see cref="FORMATTING_ERROR_TEXT"/> is returned instead</returns>
         /// <remarks>Utilize <see cref="ByteArrayValue.PossibleDisplayFormats"/> to avoid calling incompatible conversions</remarks>
-        private static string FormatByteArrayString(ByteArrayValue byteArrayValue, ByteArrayValue.DisplayFormat desiredFormat, int desiredLength = int.MaxValue)
+        private static string FormatByteArrayString(IByteArrayValue byteArrayValue, IByteArrayValue.DisplayFormat desiredFormat, int desiredLength = int.MaxValue)
         {
             ArgumentNullException.ThrowIfNull(byteArrayValue);
             ArgumentOutOfRangeException.ThrowIfLessThan(desiredLength, 1);
 
-            if (desiredFormat == ByteArrayValue.DisplayFormat.IPv4)
+            if (desiredFormat == IByteArrayValue.DisplayFormat.IPv4)
             {
                 if (byteArrayValue.ToIPv4(out var ipAddress))
                 {
@@ -1066,7 +1079,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.IPv6)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.IPv6)
             {
                 if (byteArrayValue.ToIPv6(out var ipAddress))
                 {
@@ -1075,7 +1088,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Guid)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Guid)
             {
                 if (byteArrayValue.ToGuid(out var @guid))
                 {
@@ -1084,7 +1097,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Short)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Short)
             {
                 if (byteArrayValue.ToShort(out var @short))
                 {
@@ -1093,7 +1106,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Integer)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Integer)
             {
                 if (byteArrayValue.ToInteger(out var @int))
                 {
@@ -1102,7 +1115,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Long)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Long)
             {
                 if (byteArrayValue.ToLong(out var @long))
                 {
@@ -1111,7 +1124,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Float)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Float)
             {
                 if (byteArrayValue.ToFloat(out var @float))
                 {
@@ -1120,7 +1133,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Double)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Double)
             {
                 if (byteArrayValue.ToDouble(out var @double))
                 {
@@ -1129,7 +1142,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.ASCII)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.ASCII)
             {
                 if (byteArrayValue.ToASCII(out var ascii))
                 {
@@ -1141,7 +1154,7 @@ namespace ParquetViewer.Controls
 
                 return FORMATTING_ERROR_TEXT;
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Base64)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Base64)
             {
                 byteArrayValue.ToBase64(out var base64);
                 if (base64.Length <= desiredLength)
@@ -1149,7 +1162,7 @@ namespace ParquetViewer.Controls
 
                 return base64[..desiredLength] + "[...]";
             }
-            else if (desiredFormat == ByteArrayValue.DisplayFormat.Size)
+            else if (desiredFormat == IByteArrayValue.DisplayFormat.Size)
             {
                 return byteArrayValue.Data.Length.ToString() + (byteArrayValue.Data.Length == 1 ? " byte" : " bytes");
             }

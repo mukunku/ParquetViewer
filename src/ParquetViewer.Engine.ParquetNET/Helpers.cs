@@ -1,4 +1,4 @@
-﻿namespace ParquetViewer.Engine
+﻿namespace ParquetViewer.Engine.ParquetNET
 {
     internal static class Helpers
     {
@@ -48,6 +48,5 @@
                 hasMore2 = enumerator2.MoveNext();
             }
         }
-
     }
 }

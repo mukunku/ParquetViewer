@@ -1,6 +1,7 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
+using ParquetViewer.Helpers;
 using ParquetViewer.Properties;
 using System;
 using System.Diagnostics;
@@ -191,8 +192,8 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
 
                 //Treat list, map, and struct types as strings by casting them automatically
                 foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
-                    .Where(c => c.ValueType == typeof(ListValue) || c.ValueType == typeof(MapValue)
-                        || c.ValueType == typeof(StructValue) || c.ValueType == typeof(ByteArrayValue))
+                    .Where(c => c.ValueType.ImplementsInterface<IListValue>() || c.ValueType.ImplementsInterface<IMapValue>()
+                        || c.ValueType.ImplementsInterface<IStructValue>() || c.ValueType.ImplementsInterface<IByteArrayValue>())
                     .Select(c => c.Name))
                 {
                     //This isn't perfect but it should handle most cases

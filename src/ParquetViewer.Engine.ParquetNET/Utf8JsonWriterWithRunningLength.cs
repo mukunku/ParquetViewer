@@ -1,7 +1,7 @@
 ﻿using System.Text.Encodings.Web;
 using System.Text.Json;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
     public class Utf8JsonWriterWithRunningLength : IDisposable
     {

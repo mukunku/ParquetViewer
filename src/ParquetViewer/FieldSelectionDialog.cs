@@ -18,7 +18,7 @@ namespace ParquetViewer
         private const int MaxNumberOfFieldsWeCanRender = 5000;
 
         public List<string> PreSelectedFields { get; set; }
-        public List<Field> AvailableFields { get; set; }
+        public List<string> AvailableFields { get; set; }
         public List<string> NewSelectedFields { get; set; }
 
         private string _selectedFieldsOnlyLabelTemplate;
@@ -26,14 +26,14 @@ namespace ParquetViewer
         public FieldsToLoadForm()
         {
             InitializeComponent();
-            this.AvailableFields ??= new List<Field>();
+            this.AvailableFields ??= new List<string>();
             this.PreSelectedFields ??= new List<string>();
             this.NewSelectedFields ??= new List<string>();
             this._selectedFieldsOnlyLabelTemplate = this.showSelectedFieldsRadioButton.Text;
             this.SetSelectedFieldCount();
         }
 
-        public FieldsToLoadForm(IEnumerable<Field> availableFields, IEnumerable<string> preSelectedFields) : this()
+        public FieldsToLoadForm(IEnumerable<string> availableFields, IEnumerable<string> preSelectedFields) : this()
         {
             this.AvailableFields = availableFields?.ToList() ?? new();
             this.PreSelectedFields = preSelectedFields?.ToList() ?? new();
@@ -45,7 +45,7 @@ namespace ParquetViewer
             this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
         }
 
-        private void RenderFieldsCheckboxes(List<Field> availableFields, List<string>? preSelectedFields)
+        private void RenderFieldsCheckboxes(List<string> availableFields, List<string>? preSelectedFields)
         {
             this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
             this.ClearAndDisposeCheckboxes();
@@ -69,7 +69,7 @@ namespace ParquetViewer
                 bool isClearingSelectAllCheckbox = false;
 
                 var checkboxControls = new List<CheckBox>();
-                foreach (Field field in availableFields)
+                foreach (string field in availableFields)
                 {
                     if (isFirst) //Add toggle all checkbox and some other setting changes
                     {
@@ -82,7 +82,7 @@ namespace ParquetViewer
                         }
 
                         var totalFieldCount = availableFields.Count;
-                        var supportedFieldCount = availableFields.Where(IsSupportedFieldType).Count();
+                        var supportedFieldCount = availableFields.Count; //TODO: Remove supportedFieldCount
                         var unsupportedFieldCount = totalFieldCount - supportedFieldCount;
                         var unsupportedFieldsText = unsupportedFieldCount > 0 ? $" - Unsupported: {unsupportedFieldCount}" : string.Empty;
 
@@ -128,13 +128,13 @@ namespace ParquetViewer
                         locationY += DynamicFieldCheckboxYIncrement;
                     }
 
-                    bool isUnsupportedFieldType = !IsSupportedFieldType(field, out var unsupportedReason);
+                    bool isUnsupportedFieldType = false; //We support everything now!?
                     var fieldCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                     {
-                        Name = string.Concat("checkbox_", field.Name),
-                        Text = string.Concat(field.Name, isUnsupportedFieldType ? $" {UnsupportedFieldText}" : string.Empty),
-                        Tag = field.Name,
-                        Checked = preSelectedFields?.Contains(field.Name) == true,
+                        Name = string.Concat("checkbox_", field),
+                        Text = string.Concat(field, isUnsupportedFieldType ? $" {UnsupportedFieldText}" : string.Empty),
+                        Tag = field,
+                        Checked = preSelectedFields?.Contains(field) == true,
                         Location = new Point(locationX, locationY),
                         DisabledForeColor = _disabledTextColor,
                         AutoSize = true,
@@ -181,7 +181,7 @@ namespace ParquetViewer
 
                     if (isUnsupportedFieldType)
                     {
-                        fieldCheckbox.SetTooltip(unsupportedReason!);
+                        //fieldCheckbox.SetTooltip(unsupportedReason!);
                     }
 
                     locationY += DynamicFieldCheckboxYIncrement;
@@ -226,6 +226,8 @@ namespace ParquetViewer
             //Now we're safe to clear the panel
             this.fieldsPanel.Controls.Clear();
         }
+
+        public static bool IsSupportedFieldType(string fieldName) => true;
 
         public static bool IsSupportedFieldType(Field field)
             => IsSupportedFieldType(field, out var _);
@@ -324,7 +326,7 @@ namespace ParquetViewer
                 this.NewSelectedFields.Clear();
                 if (this.allFieldsRadioButton.Checked || (this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true).FirstOrDefault() as CheckBox)?.Checked == true)
                 {
-                    this.NewSelectedFields.AddRange(this.AvailableFields.Where(IsSupportedFieldType).Select(f => f.Name));
+                    this.NewSelectedFields.AddRange(this.AvailableFields.Where(IsSupportedFieldType).Select(f => f));
                 }
                 else if (this.PreSelectedFields.Count > 0)
                 {
@@ -354,19 +356,19 @@ namespace ParquetViewer
         {
             if (!string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text))
             {
-                IEnumerable<Field> filteredFields;
+                IEnumerable<string> filteredFields;
                 var filteredColumnsNames = this.filterColumnsTextbox.Text.Split(',').ToList();
 
                 if (filteredColumnsNames.Count == 1)
                 {
                     var filter = filteredColumnsNames[0];
-                    filteredFields = this.AvailableFields.Where(w => w.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
+                    filteredFields = this.AvailableFields.Where(w => w.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
                 }
                 else
                 {
                     char[] charsToTrim = { '"', ' ', '\'' };
                     filteredColumnsNames = filteredColumnsNames.Select(s => s.Trim(charsToTrim)).ToList();
-                    filteredFields = this.AvailableFields.Where(w => filteredColumnsNames.Contains(w.Name));
+                    filteredFields = this.AvailableFields.Where(w => filteredColumnsNames.Contains(w));
                 }
 
                 this.RenderFieldsCheckboxes(filteredFields.ToList(), this.PreSelectedFields);

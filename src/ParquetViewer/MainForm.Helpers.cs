@@ -53,7 +53,7 @@ namespace ParquetViewer
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
-                    if (this._openParquetEngine?.ParquetSchemaTree?.Children.All(s => s.FieldType == Engine.ParquetSchemaElement.FieldTypeId.Primitive) == true)
+                    if (this._openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.Type.IsPrimitive) == true)
                     {
                         this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
                     }
@@ -193,6 +193,7 @@ namespace ParquetViewer
                     writer.WriteLine(rowBuilder.ToString());
 
                     string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                    string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
                     foreach (DataRowView row in dataTable.DefaultView)
                     {
                         rowBuilder.Clear();
@@ -218,6 +219,10 @@ namespace ParquetViewer
                             {
                                 rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
                             }
+                            else if (value is DateOnly dateOnly)
+                            {
+                                rowBuilder.Append(UtilityMethods.CleanCSVValue(dateOnly.ToString(dateOnlyFormat)));
+                            }
                             else
                             {
                                 var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
@@ -235,6 +240,7 @@ namespace ParquetViewer
             => Task.Run(() =>
                 {
                     string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                    string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
                     using var fs = new FileStream(path, FileMode.OpenOrCreate);
                     var excelWriter = new ExcelWriter(fs);
                     excelWriter.BeginWrite();
@@ -272,6 +278,10 @@ namespace ParquetViewer
                             {
                                 excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
                             }
+                            else if (value is DateOnly dateOnly)
+                            {
+                                excelWriter.WriteCell(i + 1, j, dateOnly.ToString(dateOnlyFormat));
+                            }
                             else
                             {
                                 var stringValue = value.ToString();
@@ -307,7 +317,7 @@ namespace ParquetViewer
             => Task.Run(() =>
                 {
                     using var fs = new FileStream(path, FileMode.OpenOrCreate);
-                    using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
+                    using var jsonWriter = new Engine.ParquetNET.Utf8JsonWriterWithRunningLength(fs);
 
                     jsonWriter.WriteStartArray();
                     foreach (DataRowView row in dataTable.DefaultView)
@@ -324,7 +334,7 @@ namespace ParquetViewer
                             jsonWriter.WritePropertyName(columnName);
 
                             object? value = row.Row.ItemArray[i];
-                            StructValue.WriteValue(jsonWriter, value!, false);
+                            Engine.ParquetNET.Types.StructValue.WriteValue(jsonWriter, value!, false);
                             progress.Report(1);
                         }
                         jsonWriter.WriteEndObject();
@@ -335,12 +345,13 @@ namespace ParquetViewer
         private Task WriteDataToParquetFile(string path, CancellationToken cancellationToken, IProgress<int> progress)
             => Task.Run(async () =>
                 {
+                    throw new NotImplementedException("Not implemented yet");
                     var fields = new List<Parquet.Schema.Field>(this.MainDataSource!.Columns.Count);
                     foreach (DataColumn column in this.MainDataSource.Columns)
                     {
-                        fields.Add(this._openParquetEngine!.Schema!.Fields
-                            .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
-                            .First());
+                        //fields.Add(this._openParquetEngine?.Fields
+                        //    .Where(field => field?.Equals(column.ColumnName, StringComparison.InvariantCulture) == true)
+                        //    .First());
                     }
                     var parquetSchema = new Parquet.Schema.ParquetSchema(fields);
 
@@ -425,7 +436,7 @@ namespace ParquetViewer
                     if (i == schema.Fields.Count)
                         break;
 
-                    sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
+                    sb.AppendLine($"  {schema.Fields.ElementAt(i)}");
                 }
             }
             ShowError(sb.ToString());

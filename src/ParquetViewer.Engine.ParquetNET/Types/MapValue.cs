@@ -1,9 +1,10 @@
-﻿using System.Collections;
+﻿using ParquetViewer.Engine.Types;
+using System.Collections;
 using System.Text;
 
-namespace ParquetViewer.Engine.Types
+namespace ParquetViewer.Engine.ParquetNET.Types
 {
-    public class MapValue : IComparable<MapValue>, IComparable, IEnumerable<(object Key, object Value)>
+    public class MapValue : IMapValue, IComparable<MapValue>, IComparable, IEnumerable<(object Key, object Value)>
     {
         public ArrayList Keys { get; }
         public Type KeyType { get; }
@@ -59,12 +60,16 @@ namespace ParquetViewer.Engine.Types
                 string key;
                 if (map.Key is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
                     key = dt.ToString(ParquetEngineSettings.DateDisplayFormat);
+                else if (map.Key is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                    key = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
                 else
                     key = map.Key?.ToString() ?? string.Empty;
 
                 string value;
                 if (map.Value is DateTime dt2 && ParquetEngineSettings.DateDisplayFormat is not null)
                     value = dt2.ToString(ParquetEngineSettings.DateDisplayFormat);
+                else if (map.Value is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                    value = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
                 else
                     value = map.Value?.ToString() ?? string.Empty;
 
@@ -128,5 +133,7 @@ namespace ParquetViewer.Engine.Types
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public int CompareTo(IMapValue? other) => this.CompareTo((object?)other);
     }
 }

@@ -1,9 +1,10 @@
-﻿using System.Data;
+﻿using ParquetViewer.Engine.Types;
+using System.Data;
 using System.Numerics;
 
-namespace ParquetViewer.Engine.Types
+namespace ParquetViewer.Engine.ParquetNET.Types
 {
-    public class StructValue : IComparable<StructValue>, IComparable
+    public class StructValue : IStructValue, IComparable<StructValue>, IComparable
     {
         public string Name { get; }
 
@@ -126,6 +127,14 @@ namespace ParquetViewer.Engine.Types
                 else
                     jsonWriter.WriteStringValue(dt.ToString());
             }
+            else if (value is DateOnly dateOnly)
+            {
+                //Write dates as string
+                if (ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat));
+                else
+                    jsonWriter.WriteStringValue(dateOnly.ToString());
+            }
             else
             {
                 //Everything else just try to write it as string
@@ -189,5 +198,7 @@ namespace ParquetViewer.Engine.Types
             else
                 return 1;
         }
+
+        public int CompareTo(IStructValue? other) => this.CompareTo((object?)other);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Apache.Arrow.Ipc;
 using Parquet.Meta;
+using ParquetViewer.Engine;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -25,37 +26,23 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static string ThriftMetadataToJSON(Engine.ParquetEngine parquetEngine, long recordCount, int fieldCount)
+        public static string ThriftMetadataToJSON(IParquetEngine parquetEngine, long recordCount, int fieldCount)
         {
             try
             {
-                object ProcessSchemaTree(Engine.ParquetSchemaElement parquetSchemaElement)
-                {
-                    return new
-                    {
-                        parquetSchemaElement.Path,
-                        Type = parquetSchemaElement.SchemaElement.Type.ToString(),
-                        parquetSchemaElement.SchemaElement.TypeLength,
-                        LogicalType = LogicalTypeToJSONObject(parquetSchemaElement.SchemaElement.LogicalType),
-                        RepetitionType = parquetSchemaElement.SchemaElement.RepetitionType.ToString(),
-                        ConvertedType = parquetSchemaElement.SchemaElement.ConvertedType.ToString(),
-                        Children = parquetSchemaElement.Children.Select(pse => ProcessSchemaTree(pse)).ToArray()
-                    };
-                }
-
                 var jsonObject = new
                 {
-                    parquetEngine.ThriftMetadata.Version,
+                    parquetEngine.Metadata.ParquetVersion,
                     NumRows = recordCount,
-                    NumRowGroups = parquetEngine.ThriftMetadata.RowGroups?.Count ?? -1, //What about partitioned files?
+                    NumRowGroups = parquetEngine.Metadata.RowGroupCount, //We assume partitioned files all have the same row group count
                     NumFields = fieldCount,
-                    parquetEngine.ThriftMetadata.CreatedBy,
-                    Schema = ProcessSchemaTree(parquetEngine.ParquetSchemaTree),
-                    RowGroups = (parquetEngine.ThriftMetadata.RowGroups ?? Enumerable.Empty<RowGroup>()).Select(rowGroup => new
+                    parquetEngine.Metadata.CreatedBy,
+                    Schema = parquetEngine.Metadata.SchemaTree,
+                    RowGroups = (parquetEngine.Metadata.RowGroups ?? Enumerable.Empty<IRowGroupMetadata>()).Select(rowGroup => new
                     {
                         rowGroup.Ordinal,
-                        rowGroup.NumRows,
-                        SortingColumns = (rowGroup.SortingColumns ?? Enumerable.Empty<SortingColumn>()).Select(sortingColumn => new
+                        rowGroup.RowCount,
+                        SortingColumns = (rowGroup.SortingColumns ?? Enumerable.Empty<ISortingColumnMetadata>()).Select(sortingColumn => new
                         {
                             sortingColumn.ColumnIdx,
                             sortingColumn.Descending,

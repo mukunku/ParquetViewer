@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Controls;
+using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,11 @@ namespace ParquetViewer
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
         private static readonly string PANDAS_SCHEMA = "pandas";
-        private Engine.ParquetEngine? parquetEngine;
+        private IParquetEngine? _parquetEngine;
 
-        public MetadataViewer(Engine.ParquetEngine parquetEngine) : this()
+        public MetadataViewer(IParquetEngine parquetEngine) : this()
         {
-            this.parquetEngine = parquetEngine;
+            this._parquetEngine = parquetEngine;
         }
 
         public MetadataViewer()
@@ -58,17 +59,17 @@ namespace ParquetViewer
         private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var metadataResult = new List<(string TabName, string Text)>();
-            if (parquetEngine!.ThriftMetadata != null)
+            if (_parquetEngine!.Metadata != null)
             {
-                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine, parquetEngine.RecordCount, parquetEngine.Fields.Count);
+                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(_parquetEngine, _parquetEngine.RecordCount, _parquetEngine.Fields.Count);
                 metadataResult.Add((THRIFT_METADATA, json));
             }
             else
                 metadataResult.Add((THRIFT_METADATA, "No thrift metadata available"));
 
-            if (parquetEngine.CustomMetadata != null)
+            if (_parquetEngine.CustomMetadata != null)
             {
-                foreach (var _customMetadata in parquetEngine.CustomMetadata)
+                foreach (var _customMetadata in _parquetEngine.CustomMetadata)
                 {
                     string value = _customMetadata.Value;
                     if (PANDAS_SCHEMA.Equals(_customMetadata.Key))
@@ -124,7 +125,7 @@ namespace ParquetViewer
 
         private void copyRawThriftMetadataButton_Click(object sender, EventArgs e)
         {
-            var rawJson = JsonSerializer.Serialize(this.parquetEngine!.ThriftMetadata,
+            var rawJson = JsonSerializer.Serialize(this._parquetEngine!.Metadata,
                 new JsonSerializerOptions()
                 {
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, //don't escape anything to make it human readable

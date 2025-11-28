@@ -1,4 +1,4 @@
-﻿namespace ParquetViewer.Engine
+﻿namespace ParquetViewer.Engine.ParquetNET
 {
     public class SimpleProgress : IProgress<int>
     {

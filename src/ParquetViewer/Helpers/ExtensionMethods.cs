@@ -15,7 +15,9 @@ namespace ParquetViewer.Helpers
     public static class ExtensionMethods
     {
         private const string DefaultDateTimeFormat = "g";
+        private const string DefaultDateOnlyFormat = "d";
         public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
+        public const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
 
         /// <summary>
         /// Returns a list of all column names within a given datatable
@@ -42,6 +44,15 @@ namespace ParquetViewer.Helpers
             DateFormat.ISO8601 => ISO8601DateTimeFormat,
             DateFormat.Default => DefaultDateTimeFormat,
             DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
+            _ => string.Empty
+        };
+
+        public static string GetDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
+        {
+            DateFormat.ISO8601 => ISO8601DateOnlyFormat,
+            DateFormat.Default => DefaultDateOnlyFormat,
+            DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
+                UtilityMethods.StripTimeComponentsFromDateFormat(AppSettings.CustomDateFormat) : DefaultDateOnlyFormat,
             _ => string.Empty
         };
 
@@ -120,9 +131,9 @@ namespace ParquetViewer.Helpers
                 var value = dataTable.Rows[i][columnName];
                 if (value == DBNull.Value)
                     value = null;
-                else if (value is ByteArrayValue byteArray)
+                else if (value is IByteArrayValue byteArray)
                     value = byteArray.Data;
-                else if (value is ListValue || value is MapValue || value is StructValue)
+                else if (value is IListValue || value is IMapValue || value is IStructValue)
                     throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
 
                 values.SetValue(value, i);
@@ -213,8 +224,8 @@ namespace ParquetViewer.Helpers
                 return enumerable;
         }
 
-        /// <remarks>Can't put this into ByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
-        public static bool ToImage(this ByteArrayValue byteArrayValue, out Image? image)
+        /// <remarks>Can't put this into IByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
+        public static bool ToImage(this IByteArrayValue byteArrayValue, out Image? image)
         {
             ArgumentNullException.ThrowIfNull(byteArrayValue);
 
@@ -229,6 +240,14 @@ namespace ParquetViewer.Helpers
                 image = null;
                 return false;
             }
+        }
+
+        public static bool ImplementsInterface<T>(this Type type)
+        {
+            if (type is null)
+                return false;
+            else
+                return typeof(T).IsAssignableFrom(type);
         }
     }
 }

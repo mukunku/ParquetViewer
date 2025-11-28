@@ -1,10 +1,12 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using ParquetViewer.Engine.Types;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
+using static ParquetViewer.Engine.Types.IByteArrayValue;
 
-namespace ParquetViewer.Engine.Types
+namespace ParquetViewer.Engine.ParquetNET.Types
 {
-    public class ByteArrayValue : IComparable<ByteArrayValue>, IComparable
+    public class ByteArrayValue : IByteArrayValue, IComparable<ByteArrayValue>, IComparable
     {
         public string Name { get; }
         public byte[] Data { get; }
@@ -82,22 +84,6 @@ namespace ParquetViewer.Engine.Types
             possibleDisplayFormats.Add(DisplayFormat.Size);
 
             return possibleDisplayFormats.ToArray();
-        }
-
-        public enum DisplayFormat
-        {
-            Hex = 0,    //Default hexadecimal format
-            IPv6,       // 16 bytes
-            IPv4,       // 4 bytes
-            Guid,       // 16 bytes
-            Short,      // 2 bytes
-            Integer,    // 4 bytes
-            Long,       // 8 bytes
-            Float,      // 4 bytes
-            Double,     // 8 bytes
-            ASCII,      // ASCII text if printable (any size)
-            Base64,     // Base64 encoded string (any size)
-            Size        // Size information (any size)
         }
 
         #region Type Conversions
@@ -303,5 +289,7 @@ namespace ParquetViewer.Engine.Types
             return BitConverter.ToString(Data, 0, desiredLength / 2) + "[...]"
             + BitConverter.ToString(Data, Data.Length - (desiredLength / 2));
         }
+
+        public int CompareTo(IByteArrayValue? other) => this.CompareTo((object?)other);
     }
 }

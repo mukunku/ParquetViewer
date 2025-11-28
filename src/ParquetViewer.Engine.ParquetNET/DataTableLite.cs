@@ -1,7 +1,7 @@
 ﻿using ParquetViewer.Engine.Exceptions;
 using System.Data;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
     internal class DataTableLite
     {

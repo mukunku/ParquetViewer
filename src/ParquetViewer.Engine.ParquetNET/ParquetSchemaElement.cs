@@ -2,9 +2,9 @@
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
-    public class ParquetSchemaElement
+    public class ParquetSchemaElement : IParquetSchemaElement
     {
         public string Path => SchemaElement.Name;
         public string PathWithParent => string.Concat(this.Parent?.Parent is not null /*exclude root node*/ ? (this.Parent.Path + "/") : string.Empty, Path);
@@ -42,9 +42,9 @@ namespace ParquetViewer.Engine
             {
                 if (this.DataField is not null)
                     return FieldTypeId.Primitive;
-                else if (this.SchemaElement.LogicalType?.LIST is not null || this.SchemaElement.ConvertedType == ConvertedType.LIST)
+                else if (this.SchemaElement.LogicalType?.LIST is not null || this.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                     return FieldTypeId.List;
-                else if (this.SchemaElement.LogicalType?.MAP is not null || this.SchemaElement.ConvertedType == ConvertedType.MAP)
+                else if (this.SchemaElement.LogicalType?.MAP is not null || this.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.MAP)
                     return FieldTypeId.Map;
                 else if (this.SchemaElement.NumChildren > 0) //Struct
                     return FieldTypeId.Struct;
@@ -172,6 +172,26 @@ namespace ParquetViewer.Engine
         public bool BelongsToListField => this._systemFieldType == SystemFieldTypeId.ListItemNode;
         public bool BelongsToListOfStructsField => this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
         public int NumberOfListParents => NonSystemFieldParents.Count(field => field.FieldType == FieldTypeId.List);
+
+        public System.Type Type => throw new NotImplementedException();
+
+        public int? TypeLength => throw new NotImplementedException();
+
+        public string LogicalType => throw new NotImplementedException();
+
+        public string RepetitionType => throw new NotImplementedException();
+
+        public string ConvertedType => throw new NotImplementedException();
+
+        ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.Cast<IParquetSchemaElement>().ToList();
+
+        IParquetSchemaElement.RepetitionTypeId IParquetSchemaElement.RepetitionType => SchemaElement.RepetitionType switch
+        {
+            FieldRepetitionType.REQUIRED => IParquetSchemaElement.RepetitionTypeId.Required,
+            FieldRepetitionType.OPTIONAL => IParquetSchemaElement.RepetitionTypeId.Optional,
+            FieldRepetitionType.REPEATED => IParquetSchemaElement.RepetitionTypeId.Repeated,
+            _ => throw new ArgumentOutOfRangeException(nameof(SchemaElement.RepetitionType))
+        };
 
         private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
             => new InvalidOperationException($"Can't get {fieldType} node from '{this.Parent?._systemFieldType}' " +

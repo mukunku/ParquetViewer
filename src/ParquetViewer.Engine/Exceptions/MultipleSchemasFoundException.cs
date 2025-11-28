@@ -2,11 +2,11 @@
 {
     public class MultipleSchemasFoundException : Exception
     {
-        public List<Parquet.Schema.ParquetSchema> Schemas;
+        public List<IParquetSchema> Schemas;
 
-        internal MultipleSchemasFoundException(List<Parquet.Schema.ParquetSchema> parquetSchemas) : base("Multiple schemas found in directory.")
+        public MultipleSchemasFoundException(List<IParquetSchema> parquetSchemas) : base("Multiple schemas found in directory.")
         {
-            Schemas = parquetSchemas ?? new List<Parquet.Schema.ParquetSchema>();
+            Schemas = parquetSchemas ?? new List<IParquetSchema>();
         }
     }
 }

@@ -1,5 +1,6 @@
 using ParquetViewer.Analytics;
 using ParquetViewer.Controls;
+using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Helpers;
 using System;
@@ -140,7 +141,7 @@ namespace ParquetViewer
             }
         }
 
-        private Engine.ParquetEngine? _openParquetEngine = null;
+        private IParquetEngine? _openParquetEngine = null;
         #endregion
 
         public MainForm()
@@ -196,7 +197,7 @@ namespace ParquetViewer
             {
                 try
                 {
-                    this._openParquetEngine = await Engine.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, default);
+                    this._openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, default);
                 }
                 catch (Exception ex)
                 {
@@ -235,10 +236,10 @@ namespace ParquetViewer
                 }
             }
 
-            Parquet.Schema.ParquetSchema? schema = null;
+           List<string>? fields = null;
             try
             {
-                schema = this._openParquetEngine.Schema;
+                fields = this._openParquetEngine.Fields;
             }
             catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
             catch (Exception ex)
@@ -246,12 +247,11 @@ namespace ParquetViewer
                 throw new Parquet.ParquetException("Could not read parquet schema.", ex);
             }
 
-            var fields = schema?.Fields;
             if (fields?.Count > 0)
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
-                    return fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f.Name).ToList();
+                    return fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f).ToList();
                 }
                 else
                 {
@@ -314,7 +314,7 @@ namespace ParquetViewer
                 indexTime = stopwatch.Elapsed - loadTime;
 
                 this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
-                this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey]!.ToString();
+                this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetNET.ParquetEngine.TotalRecordCountExtendedPropertyKey]!.ToString();
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                 this.MainDataSource = finalResult;
@@ -370,7 +370,7 @@ namespace ParquetViewer
                         Directory.Exists(this.OpenFileOrFolderPath),
                         this._openParquetEngine!.NumberOfPartitions,
                         this._openParquetEngine.RecordCount,
-                        this._openParquetEngine.ThriftMetadata.RowGroups.Count,
+                        this._openParquetEngine.Metadata.RowGroups.Count,
                         this._openParquetEngine.Fields.Count,
                         this.MainDataSource!.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(),
                         this.CurrentOffset,

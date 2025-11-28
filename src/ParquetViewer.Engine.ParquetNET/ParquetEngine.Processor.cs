@@ -1,10 +1,13 @@
-﻿using Parquet;
+﻿using Microsoft.VisualBasic;
+using Parquet;
+using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
     public partial class ParquetEngine
     {
@@ -12,27 +15,29 @@ namespace ParquetViewer.Engine
 
         public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
-            long recordsLeftToRead = recordCount;
-            DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
-
-            foreach (var reader in this.GetReaders(offset))
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                long recordsLeftToRead = recordCount;
+                DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
 
-                if (recordsLeftToRead <= 0)
-                    break;
+                foreach (var reader in this.GetReaders(offset))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                recordsLeftToRead = await PopulateDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
+                    if (recordsLeftToRead <= 0)
+                        break;
+
+                    recordsLeftToRead = await PopulateDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
+                }
+
+                result.DataSetSize = this.RecordCount;
+
+                return (logProgress) =>
+                {
+                    var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
+                    datatable.ExtendedProperties[TotalRecordCountExtendedPropertyKey] = result.DataSetSize;
+                    return datatable;
+                };
             }
-
-            result.DataSetSize = this.RecordCount;
-
-            return (logProgress) =>
-            {
-                var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
-                datatable.ExtendedProperties[TotalRecordCountExtendedPropertyKey] = result.DataSetSize;
-                return datatable;
-            };
         }
 
         private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,
@@ -124,7 +129,7 @@ namespace ParquetViewer.Engine
             }
             else
             {
-                var fieldType = dataTable.Columns[field.Path].Type; var byteArrayValueType = typeof(ByteArrayValue);
+                var fieldType = dataTable.Columns[field.Path].Type;
                 foreach (var value in dataColumn.Data)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -147,7 +152,7 @@ namespace ParquetViewer.Engine
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                     }
-                    else if (fieldType == byteArrayValueType)
+                    else if (fieldType == typeof(ByteArrayValue))
                     {
                         dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
                     }
@@ -552,6 +557,17 @@ namespace ParquetViewer.Engine
                     && schema.SchemaElement.ConvertedType is null)
                 {
                     dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
+                }
+                else if (schema.DataField is DateTimeDataField dateField)
+                {
+                    if (dateField.DateTimeFormat == DateTimeFormat.Date)
+                    {
+                        dataTable.AddColumn(field, typeof(DateOnly), parent);
+                    }
+                    else
+                    {
+                        dataTable.AddColumn(field, typeof(DateTime), parent);
+                    }
                 }
                 else
                 {
