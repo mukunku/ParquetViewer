@@ -47,7 +47,7 @@ namespace ParquetViewer.Analytics
                 LoadTimeMS = totalLoadTimeMilliseconds,
                 ReadTimeMS = readTimeMS,
                 IndexTimeMS = indexTimeMS,
-                RenderTimeMS = readTimeMS
+                RenderTimeMS = renderTimeMS
             }.Record();
         }
     }
@@ -195,7 +195,8 @@ namespace ParquetViewer.Analytics
             List,
             Map,
             Struct,
-            Image
+            Image,
+            Audio,
         }
 
         public static void FireAndForget(DataTypeId dataType)
