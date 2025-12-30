@@ -232,4 +232,10 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
   <data name="MultipleSchemasDetectedEntriesErrorMessageFormat" xml:space="preserve">
     <value>ŞEMA-{0} ALANLARI (TOP 5):</value>
   </data>
+  <data name="CopyAsWhereTooLargeErrorMessage" xml:space="preserve">
+    <value>Çok fazla veri seçili. Lütfen daha az hücre seçin.</value>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorTitle" xml:space="preserve">
+    <value>Panoya kopyalama başarısız oldu</value>
+  </data>
 </root>

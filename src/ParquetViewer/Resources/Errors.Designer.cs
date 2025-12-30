@@ -61,6 +61,24 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected data is too large. Please select less cells..
+        /// </summary>
+        internal static string CopyAsWhereTooLargeErrorMessage {
+            get {
+                return ResourceManager.GetString("CopyAsWhereTooLargeErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy to clipboard failed.
+        /// </summary>
+        internal static string CopyAsWhereTooLargeErrorTitle {
+            get {
+                return ResourceManager.GetString("CopyAsWhereTooLargeErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to copy metadata to your clipboard. Save to a file instead?.
         /// </summary>
         internal static string CopyRawMetadataFailedErrorMessage {

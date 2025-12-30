@@ -267,4 +267,12 @@ If you think the file is valid please consider opening an issue in the GitHub re
     <value>SCHEMA-{0} FIELDS (TOP 5):</value>
     <comment>Shown when the user tries to open a folder containing parquet files with different schemas</comment>
   </data>
+  <data name="CopyAsWhereTooLargeErrorMessage" xml:space="preserve">
+    <value>The selected data is too large. Please select less cells.</value>
+    <comment>Shown when the user right-click's on too many cells and selects the Copy as WHERE... option</comment>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorTitle" xml:space="preserve">
+    <value>Copy to clipboard failed</value>
+    <comment>Shown when the user right-click's on too many cells and selects the Copy as WHERE... option</comment>
+  </data>
 </root>

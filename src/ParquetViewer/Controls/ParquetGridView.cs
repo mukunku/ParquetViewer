@@ -888,8 +888,10 @@ namespace ParquetViewer.Controls
             }
             else
             {
-                MessageBox.Show("The selected data is too large. Please select less cells.",
-                    "Copy to clipboard failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    Resources.Errors.CopyAsWhereTooLargeErrorMessage,
+                    Resources.Errors.CopyAsWhereTooLargeErrorTitle, 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
