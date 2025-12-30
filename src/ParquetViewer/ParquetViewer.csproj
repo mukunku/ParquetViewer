@@ -52,11 +52,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Icons.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Strings.tr.Designer.cs">
-      <DependentUpon>Strings.tr.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
     <Compile Update="Resources\Strings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
