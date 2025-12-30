@@ -1,0 +1,234 @@
+"File","Key","Comment","EnglishValue","TurkishValue","NewLanguageValue"
+"AboutBox.resx","$this.Text",,"About {0}","{0} Hakkında",""
+"AboutBox.resx","associateFileExtensionCheckBox.Text",,"Associate with .parquet files",".parquet dosyaları ile ilişkilendir",""
+"AboutBox.resx","labelCompanyName.Text",,"Author: Mukunku","Yazar: Mukunku",""
+"AboutBox.resx","labelCopyright.Text",,"Copyright","Telif Hakkı",""
+"AboutBox.resx","labelProductName.Text",,"Product Name","Ürün İsmi",""
+"AboutBox.resx","labelVersion.Text",,"Version {0}{1}","Sürüm {0}{1}",""
+"AboutBox.resx","newVersionLabel.Text",,"(Latest: {0})","(Güncel: {0})",""
+"CustomDateFormatInputForm.resx","$this.Text",,"ParquetViewer - Date Format Configuration","ParquetViewer - Tarih Formatı Ayarı",""
+"CustomDateFormatInputForm.resx","dateFormatDocsLinkLabel.Text",,"Click here to see all format specifiers","Tüm format dizeleri için buraya tıklayın",""
+"CustomDateFormatInputForm.resx","desiredDateFormatTextBox.PlaceholderText",,"E.g. yyyy-MM-dd hh:mm:ss tt","Örnek: yyyy-MM-dd hh:mm:ss tt",""
+"CustomDateFormatInputForm.resx","label1.Text",,"Enter your desired date format:","Dilediğiniz tarih formatını girin:",""
+"CustomDateFormatInputForm.resx","label12.Text",,"The second, from 00 to 59.","Saniye, 00'dan 59'a.",""
+"CustomDateFormatInputForm.resx","label15.Text",,"The month, from 1 to 12.","Ay, 1'den 12'ye.",""
+"CustomDateFormatInputForm.resx","label18.Text",,"The minute, from 0 to 59.","Dakika, 0'dan 59'a.",""
+"CustomDateFormatInputForm.resx","label21.Text",,"The month, from 01 to 12.","Ay, 01'den 12'ye",""
+"CustomDateFormatInputForm.resx","label24.Text",,"The minute, from 00 to 59.","Dakika, 00'dan 59'a.",""
+"CustomDateFormatInputForm.resx","label27.Text",,"The year, from 00 to 99.","Yıl, 00'dan 99'a.",""
+"CustomDateFormatInputForm.resx","label3.Text",,"The day of the month, from 1 to 31.","Ayın günü 1'den 31'e.",""
+"CustomDateFormatInputForm.resx","label30.Text",,"The hour, using a 12-hour clock from 01 to 12.","Saat, 12-saatlik dilimler 01'den 12'ye.",""
+"CustomDateFormatInputForm.resx","label33.Text",,"The year as a four-digit number.","Yıl, dört basamaklı sayı olarak",""
+"CustomDateFormatInputForm.resx","label36.Text",,"The hour, using a 24-hour clock from 00 to 23.","Saat, 24-saatlik dilim 00'dan 23'e.",""
+"CustomDateFormatInputForm.resx","label38.Text",,"Format specifier","Format dizesi",""
+"CustomDateFormatInputForm.resx","label39.Text",,"Description","Açıklama",""
+"CustomDateFormatInputForm.resx","label40.Text",,"Examples","Örnekler",""
+"CustomDateFormatInputForm.resx","label45.Text",,"The AM/PM designator.","AM/PM belirteci.",""
+"CustomDateFormatInputForm.resx","label48.Text",,"The milliseconds in a date and time value.","Zamanlı tarihlerdeki milisaniye değeri",""
+"CustomDateFormatInputForm.resx","label54.Text",,"The ten millionths of a second in a date and time.","Zaman değerindeki saniyenin on milyonda biri",""
+"CustomDateFormatInputForm.resx","label56.Text",,"Live preview:","Canlı önizleme:",""
+"CustomDateFormatInputForm.resx","label6.Text",,"The second, from 0 to 59.","Saniye, 0'dan 59'a.",""
+"CustomDateFormatInputForm.resx","label9.Text",,"The day of the month, from 01 to 31.","Ayın günü 01'den 31'e.",""
+"CustomDateFormatInputForm.resx","livePreviewTextBox.PlaceholderText",,"👈🏽 Start typing to preview your date format","👈🏽 Önizleme için yazmaya başlayın",""
+"CustomDateFormatInputForm.resx","saveDateFormatButton.Text",,"Save","Kaydet",""
+"FieldSelectionDialog.resx","$this.Text",,"Select Fields to Load","Yüklenecek Alanları Seçin",""
+"FieldSelectionDialog.resx","allFieldsRadioButton.Text",,"All Fields","Tüm Alanlar",""
+"FieldSelectionDialog.resx","doneButton.Text",,"Done","Bitti",""
+"FieldSelectionDialog.resx","filterColumnsTextbox.PlaceholderText",,"Search by name","Alan ismi ile filtreleyin",""
+"FieldSelectionDialog.resx","rememberMyChoiceCheckBox.Text",,"Remember My Choice","Seçimimi Hatırla",""
+"FieldSelectionDialog.resx","showSelectedFieldsRadioButton.Text",,"Selected Fields (Count: {0}):","Seçilmiş Alanlar (Sayı: {0}):",""
+"MainForm.resx","$this.Text",,"New Parquet File","Yeni Parquet Dosyası",""
+"MainForm.resx","aboutToolStripMenuItem.Text",,"&About...","Hakkında",""
+"MainForm.resx","alwaysLoadAllRecordsToolStripMenuItem.Text",,"Always Load All Records","Hep Tüm Kayitları Yükle",""
+"MainForm.resx","alwaysLoadAllRecordsToolStripMenuItem.ToolTipText",,"When opening a new file ParquetViewer will load all records","Yeni dosya açarken ParquetViewer dosyadaki tüm kayıtları yükler",""
+"MainForm.resx","changeDateFormatToolStripMenuItem.Text",,"Date Format","Tarih Formatı",""
+"MainForm.resx","changeFieldsMenuStripButton.Text",,"Add/Remove &Fields","Alan Ekle/Çıkar",""
+"MainForm.resx","clearFilterButton.Text",,"Clear","Temizle",""
+"MainForm.resx","customDateFormatToolStripMenuItem.Text",,"Custom...","Özel...",""
+"MainForm.resx","darkModeToolStripMenuItem.Text",,"Dark Mode","Gece Modu",""
+"MainForm.resx","defaultToolStripMenuItem.ToolTipText",,"Local date format","Yerel tarih formatı",""
+"MainForm.resx","editToolStripMenuItem.Text",,"&Edit","Düzen",""
+"MainForm.resx","exitToolStripMenuItem.Text",,"Exit","Kapat",""
+"MainForm.resx","fileToolStripMenuItem.Text",,"&File","Dosya",""
+"MainForm.resx","getSQLCreateTableScriptToolStripMenuItem.Text",,"Get SQL Create Table Script","SQL Create Table Sorgusu Oluştur",""
+"MainForm.resx","getSQLCreateTableScriptToolStripMenuItem.ToolTipText",,"The schema will match the fields you've loaded","Tablo şeması yüklenen alanları içerecektir",""
+"MainForm.resx","helpToolStripMenuItem.Text",,"&Help","Yardım",""
+"MainForm.resx","languageToolStripMenuItem.Text",,"Language","Dil",""
+"MainForm.resx","loadAllRowsButton.ToolTip",,"Load all records (Ctrl+E)","Tüm kayıtları yükle (Ctrl+E)",""
+"MainForm.resx","metadataViewerToolStripMenuItem.Text",,"Metadata Viewer","Metadata Önizleyicisi",""
+"MainForm.resx","newToolStripMenuItem.Text",,"&New","Yeni",""
+"MainForm.resx","openFolderToolStripMenuItem.Text",,"&Open Folder","Klasör Aç",""
+"MainForm.resx","openFolderToolStripMenuItem.ToolTipText",,"All parquet files in the folder must have the same schema","Klasördeki tüm parquet dosyaları aynı veri şemasına sahip olmalıdır",""
+"MainForm.resx","openToolStripMenuItem.Text",,"&Open File","Dosya Aç",""
+"MainForm.resx","outOfStatusBarLabel.Text",,"Out of:","Toplam:",""
+"MainForm.resx","recordsTextStatusBarLabel.Text",,"Results","Sonuç",""
+"MainForm.resx","recordsToLabel.Text",,"Record Count:","Kayıt Sayısı:",""
+"MainForm.resx","runQueryButton.Text",,"&Execute","İşle",""
+"MainForm.resx","saveAsToolStripMenuItem.Text",,"Save Results As","Sonuçları Kaydet",""
+"MainForm.resx","searchFilterLabel.Text",,"Filter Query (?):","Sorgu Filtresi (?):",""
+"MainForm.resx","shareAnonymousUsageDataToolStripMenuItem.Text",,"Share Usage Data","Kullanım Verisi Paylaş",""
+"MainForm.resx","shareAnonymousUsageDataToolStripMenuItem.ToolTipText",,"See About page for link to privacy policy","Gizlilik politikası için Hakkında sayfasına bakınız",""
+"MainForm.resx","showingRecordCountStatusBarLabel.Text",,"Showing:","Gösterilen:",""
+"MainForm.resx","showingStatusBarLabel.Text",,"Loaded:","Yüklenen:",""
+"MainForm.resx","showRecordsFromLabel.Text",,"Record Offset:","Kayıt Atla:",""
+"MainForm.resx","toolsToolStripMenuItem.Text",,"Tools","Araçlar",""
+"MainForm.resx","userGuideToolStripMenuItem.Text",,"User Guide","Kullanıcı Kılavuzu",""
+"MetadataViewer.resx","$this.Text",,"Parquet Metadata Viewer","Parquet Metadata Önizleyicisi",""
+"MetadataViewer.resx","closeButton.Text",,"Close","Kapat",""
+"MetadataViewer.resx","copyRawThriftMetadataButton.Text",,"Copy Raw Metadata","Ham Metadatayı Kopyala",""
+"MetadataViewer.resx","copyRawThriftMetadataButton.ToolTip",,"Exports full, raw Thrift metadata to the clipboard.","Ham Thrift metadatasını panoya kopyalar",""
+"MetadataViewer.resx","loadingTab.Text",,"Loading...","Yükleniyor...",""
+"QuickPeekForm.resx","$this.Text",,"Quick Peek","Hızlı Önizleme",""
+"QuickPeekForm.resx","copyToClipboardToolStripMenuItem.Text",,"Copy to clipboard","Panoya kopyala",""
+"QuickPeekForm.resx","saveImageToFileButton.Text",,"Save as PNG","PNG olarak Kaydet",""
+"QuickPeekForm.resx","takeMeBackLinkLabel.Text",,"<<< back","<<< geri",""
+"Errors.resx","CopyAsWhereTooLargeErrorMessage","Shown when the user right-click's on too many cells and selects the Copy as WHERE... option","The selected data is too large. Please select less cells.","Çok fazla veri seçili. Lütfen daha az hücre seçin.",""
+"Errors.resx","CopyAsWhereTooLargeErrorTitle","Shown when the user right-click's on too many cells and selects the Copy as WHERE... option","Copy to clipboard failed","Panoya kopyalama başarısız oldu",""
+"Errors.resx","CopyRawMetadataFailedErrorMessage","Shown when the copy to clipboard operation fails. The text should prompt the user if they'd like to save the data to a file instead.","Failed to copy metadata to your clipboard. Save to a file instead?","Metadayı panoya kopyalarken bir hata oluştu. Veriyi dosyaya kaydetmek ister miydiniz?",""
+"Errors.resx","CopyRawMetadataFailedErrorTitle","Shown when the copy to clipboard operation fails. ","Copy error","Kopyalama hatası",""
+"Errors.resx","CopyToClipboardErrorTitle","Shown when copying to the clipboard fails","Copy to clipboard failed","Panoya kopyalama başarısız oldu",""
+"Errors.resx","DecimalValueTooLargeErrorMessageFormat","Shown when a field contains decimal values outside the supported range for .NET","Field `{0}` with type DECIMAL({1}, {2}) contains values outside ParquetViewer's supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0)","DECIMAL({1}, {2}) tipli alan `{0}` ParquetViewer'ın desteklediği aralığın dışında bulunuyor: DECIMAL({3}, {4}) ve DECIMAL({3}, 0)",""
+"Errors.resx","DecimalValueTooLargeErrorTitle","Shown when a field contains decimal values outside the supported range for .NET","Decimal value too large","Decimal değeri çok büyük",""
+"Errors.resx","ExportFailedErrorTitle","Shown when an exception is encountered during a file export","File export failed","Dosyaya aktarım başarısız oldu",""
+"Errors.resx","FieldListGenerationError","Generic error shown when the field list in the field selection dialog cannot be rendered for some reason","Something went wrong while generating the field list.","Alan listesi oluşturulurken bir hata oldu.",""
+"Errors.resx","FileAssociationFailedErrorMessageFormat","Shown when file association fails in the Help page","Something went wrong (Error code: {0}). Try running ParquetViewer as administrator and try again. ","Birşey ters gitti (Hata kodu: {0}). ParquetViewer'ı yönetici olarak çaliştırıp tekrar deneyin.",""
+"Errors.resx","FileAssociationFailedErrorTitle","Shown when file association fails in the Help page","File association failed","Uzanti ilişkilendirmesi başarısız oldu",""
+"Errors.resx","GenericErrorMessage","Generic message preceding an actual error message","Something went wrong","Birşey ters gitti",""
+"Errors.resx","InvalidDateFormatErrorMessage","Shown in the custom date format dialog when the user tries to save an invalid date","Invalid date format. Please refer to the documentation for valid date format specifiers.","Geçersiz tarih formatı. Geçerli format dizeleri için lütfen dökümantasyona bakın.",""
+"Errors.resx","InvalidDateFormatErrorTitle","Shown in the custom date format dialog when the user tries to save an invalid date","Invalid Date Format","Geçersiz Tarih Formatı",""
+"Errors.resx","InvalidQueryErrorMessage","Thrown when an invalid query is executed","The query doesn't seem to be valid. Please try again.","Sorgu geçerli gözükmüyor.",""
+"Errors.resx","InvalidQueryErrorTitle","Shown when the user inputs an invalid filter query and clicks Execute","Invalid Query","Geçersiz Sorgu",""
+"Errors.resx","MalformedFieldErrorMessageFormat","Shown to users when ParquetViewer fails to read a specific field. It should prompt the user to open a bug ticket if they believe the file is valid","{0}
+
+If you think the file is valid please consider opening an issue in the GitHub repo. See: Help → About","{0}
+
+Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin GitHub repo'sunda sorunu bildirin: Yardım → Hakkında",""
+"Errors.resx","MetadataReadErrorMessage","Shown if the metadata viewer fails to read the metadata of a file","Something went wrong while reading the file's metadata.","Dosyanın metadatasını okurken bir hata oluştu.",""
+"Errors.resx","MetadataReadErrorTitle","Shown if the metadata viewer fails to read the metadata of a file","Metadata Error","Metadata Hatası",""
+"Errors.resx","MultipleSchemasDetectedEntriesErrorMessageFormat","Shown when the user tries to open a folder containing parquet files with different schemas","SCHEMA-{0} FIELDS (TOP 5):","ŞEMA-{0} ALANLARI (TOP 5):",""
+"Errors.resx","MultipleSchemasDetectedErrorMessage","Shown when the user tries to open a folder containing parquet files with different schemas","Multiple schemas detected.","Birden fazla şema bulundu.",""
+"Errors.resx","NestedListOfTypeNotSupportedMessageFormat","Tooltip text shown in the field selection dialog when hovering the cursor over an unsupported field. Example: ""Lists of Maps are..."", ""Map of Structs..."", ""Struct of Lists""..., etc.","{0} of {1}s are currently unsupported","{1} içeren {0} alanlar şu anda desteklenmiyor",""
+"Errors.resx","NoFieldsFoundErrorMessage","Shown when the parquet file contains no fields","The selected file/folder doesn't have any fields.","Seçilen dosya/klasör hiç alan içermiyor.",""
+"Errors.resx","NoFieldsFoundErrorTitle","Shown when the parquet file contains no fields","No fields found","Alan bulunamadı",""
+"Errors.resx","NoThriftMetadataAvailableErrorMessage","Fallback error just in case something goes catastrophically wrong while fetching metadata","No Thrift metadata available","Thrift metadata bulunamadı",""
+"Errors.resx","NoValidParquetFilesFoundErrorMessage","Shown when the user tries to open a folder and all found parquet files are invalid","No valid parquet files found in folder. Invalid parquet files:","Geçerli parquet dosyası bulunamadı. Bulunan geçersiz dosyalar:",""
+"Errors.resx","OpenFileNoLongerExistsErrorMessageFormat","Shown in the unlikely event where the open file(s) were somehow deleted","The specified file/folder no longer exists: {0}Please try opening a new file or folder.","Belirtilen dosya/klasör artık bulunamıyor: {0}Lütfen başka bir dosya veya klasör açın.",""
+"Errors.resx","ParquetSchemaReadErrorMessage","Generic error shown when ParquetViewer is unable to read the schema of a parquet file","Could not read parquet schema.","Parquet şeması okunamadı.",""
+"Errors.resx","SelectAtLeastOneFieldErrorMessage","Shown when the user tries to close the field selection dialog without selecting any fields","Please select at least one field","En az bir alan seçin",""
+"Errors.resx","SelectAtLeastOneFieldErrorTitle","Shown when the user tries to close the field selection dialog without selecting any fields","Error","Hata",""
+"Errors.resx","SomeInvalidParquetFilesFoundErrorMessage","Shown when the user tries to open a folder and some of the found parquet files are invalid","Some files could not be loaded. Invalid Parquet files:","Bazı parquet dosyaları yüklenemedi. Bulunan geçersiz dosyalar:",""
+"Errors.resx","StructWithUnsupportedFieldErrorMessageFormat","Tooltip text shown in the field selection dialog when hovering the cursor over an unsupported struct field","Struct `{0}` contains unsupported field: `{1}`","Struct `{0}` desteklenmeyen bir alan içeriyor: `{1}`",""
+"Errors.resx","TooManyColumnsErrorTitle","Shown when the user tries to export data to an xls file that has too many columns","Too many columns","Çok fazla sütun",""
+"Errors.resx","TooManyColumnsXlsErrorMessageFormat","Shown when the user tries to export data to an xls file that has too many columns","The .xls file format supports a maximum of {0} columns.
+
+Please try another file format or reduce the amount of columns you are exporting. Your columns: {1}",".xls dosya formatı en fazla {0} sütun desteklemektedir.
+
+Lütfen farklı bir dosya tipi seçin veya kaydetmeye çalıştığınız alan sayısını azaltın. Alan sayınız: {1} ",""
+"Errors.resx","TooManyColumnsXlsxErrorMessageFormat","Shown when the user tries to export data to an xlsx file that has too many columns","The .xlsx file format supports a maximum of {0} columns.
+
+Please try another file format or reduce the amount of columns you are exporting. Your columns: {1}",".xlsx dosya formatı en fazla {0} sütun desteklemektedir.
+
+Lütfen farklı bir dosya tipi seçin veya kaydetmeye çalıştığınız alan sayısını azaltın. Alan sayınız: {1} ",""
+"Errors.resx","UnexpectedAssemblyVersionErrorFormat","Thrown in the rare case the executable has a non semantic version number","An unexpected assembly version was encountered: {0}","Beklenmedik bir program sürümü ile karşılaşıldı: {0}",""
+"Errors.resx","UnexpectedFileReadErrorMessageFormat","Shown when we can't open a parquet file and we don't know why.","Could not load parquet file.
+
+If the problem persists please consider opening a bug ticket in the project repo: Help → About
+
+{0}","Parquet dosyası okunamadı.
+
+Sorun devam ederse lütfen projenin GitHub repo'suna bildirmeyi düşünün: Yardım → Hakkında
+
+{0}",""
+"Errors.resx","UnknownFieldTypeErrorMessage","Fallback error message for a field type that isn't supported","Unknown field type","Bilinmeyen alan tipi",""
+"Errors.resx","UnsupportedExportType","Fallback error that is thrown if the user tries to export to a file extension we don't recognize.","Unsupported export type: '{0}'","Desteklenmeyen dosya tipi: '{0}'",""
+"Strings.resx","CancelButtonText","Text to be shown on cancel buttons","Cancel","İptal Et",""
+"Strings.resx","CancelInitiatedLabelText","Text to be shown between the time a user initiates a cancel operation and when it completes.","Cancelling...","İptal ediliyor...",""
+"Strings.resx","CantGoBackLinkButtonText","Text shown when the quick peek window's link to go back to the source cell is clicked but the source cell no longer exists","can't go back","geri gidilemiyor",""
+"Strings.resx","CopyAsWhereConditionText","Text shown for creating a where condition based on the current selection in the right-click context menu","Copy as WHERE...","WHERE olarak kopyala",""
+"Strings.resx","CopyToClipboardText","Text shown for copying in the right-click context menu","Copy","Kopyala",""
+"Strings.resx","CopyToClipboardWithHeadersText","Text shown for copying with headers in the right-click context menu","Copy with headers","Başlıklarla kopyala",""
+"Strings.resx","CreateTableScriptCopiedToClipboardMessage","Shown when the user clicks the tool to generate the SQL CREATE TABLE script for the open parquet file(s)","Create table script copied to clipboard!","Create table sorgusu panoya kopyalandı!",""
+"Strings.resx","CreateTableScriptFailedWithNoFieldsMessage","Shown if the user somehow tries to generate sql create table script without having any fields loaded","Please select some fields first to get the SQL script","SQL sorgusunu yaratmak için lütfen önce birkaç alan seçin",""
+"Strings.resx","DecimalFormatting","When the user right-clicks on a decimal column header this is the text shown for the decimal formatting option.","Decimal","Desimal",""
+"Strings.resx","DecimalScientificFormatting","When the user right-clicks on a decimal column header this is the text shown for the scientific formatting option.","Scientific","Bilimsel",""
+"Strings.resx","DeselectAllCheckmarkTextFormat","Shown in the field selection dialog to bulk deselect checkmarks","Deselect All (Count: {0})","Seçimleri Kaldır (Sayı: {0})",""
+"Strings.resx","DimensionsText","Shown in the title bar of quick peek windows for image previews","Dimensions","Boyutlar",""
+"Strings.resx","DotNetDateFormatHelpUrl","This is the link that the user will be taken to if they click on the link label at the bottom of the custom date format configuration screen.","https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings","https://docs.microsoft.com/tr-tr/dotnet/standard/base-types/custom-date-and-time-format-strings",""
+"Strings.resx","ExportCancelledMessage","Shown when the user cancels the export operation before it completes","Export has been cancelled","Dosyaya kayıt işlemi iptal edilmiştir",""
+"Strings.resx","ExportCancelledTitle","Shown when the user cancels the export operation before it completes","Export Cancelled","Aktarma İptal Edildi",""
+"Strings.resx","ExportingDataLabelText","Text shown while data is being exported to a file","Exporting Data","Veri Aktarılıyor",""
+"Strings.resx","ExportSuccessfulMessageFormat","Shown after a successful file export","Export successful!
+
+File size: {0} MB","Sonuçlar başarıyla kaydedildi!
+
+Dosya boyutu: {0} MB",""
+"Strings.resx","ExportSuccessfulTitle","Shown after a successful file export","Success","Aktarma başarılı",""
+"Strings.resx","ImageSavedToDiskMessage","Shown when an image is successfully saved to disk from the quick peek form","Image saved to {0}","Görüntü kaydedildi: {0}",""
+"Strings.resx","ImageSavedToDiskTitle","Shown when an image is successfully saved to disk from the quick peek form","Save complete","Kayıt tamamlandı",""
+"Strings.resx","IndexingDataLabelText","Text shown while data is being indexed","Indexing","Dizinleniyor",""
+"Strings.resx","InvalidDateFormatErrorText","Text shown in the custom date format preview textbox when an invalid format is specified","invalid date format","geçersiz tarih formatı",""
+"Strings.resx","LanguageChangeConfirmationMessage","Shown when the user clicks on a different UI language from the help menu","Changing the language requires an app restart. Would you like to continue?","Dili değiştirmek için uygulamanın yeniden başlatılmasi gerekiyor. Devam etmek ister misiniz?",""
+"Strings.resx","LanguageChangeConfirmationTitle","Shown when the user clicks on a different UI language from the help menu","Restart ParquetViewer?","ParquetViewer'ı yeniden başlat?",""
+"Strings.resx","LoadedRecordCountRangeFormat","This is the value shown in the bottom right status bar once records are loaded from a parquet file. Example: ""0 to 1000""","{0} to {1}","{0} - {1}",""
+"Strings.resx","LoadingDataLabelText","Text shown when data is being loaded from a parquet file","Loading Data","Veri Yükleniyor",""
+"Strings.resx","MainWindowOpenFileTitleFormat","Title format string when a new file is opened","File: {0}","Dosya: {0}",""
+"Strings.resx","MainWindowOpenFolderTitleFormat","Title format string when a new folder is opened","Folder: {0}","Klasör: {0}",""
+"Strings.resx","MetadataSuccessfullyExportedToFileMessageFormat","Shown when raw thrift metadata is successfully exported to a file","Metadata successfully exported to: {0}","Metadata başarıyla kaydedildi: {0}",""
+"Strings.resx","MetadataSuccessfullyExportedToFileMessageTitle","Shown when raw thrift metadata is successfully exported to a file","Export complete","Kayıt başarılı",""
+"Strings.resx","PrivacyPolicyLabelText","Title to be shown before the privacy policy","Privacy policy","Gizlilik politikası",""
+"Strings.resx","QuerySyntaxHelpText","Shown when the user clicks on the Filter Query (?): link button","NULL CHECK: 
+    WHERE field_name IS NULL
+    WHERE field_name IS NOT NULL
+DATETIME:   
+    WHERE field_name >= #2000-12-31#
+    WHERE field_name = #2000-01-13 01:00:00#
+NUMERIC:
+    WHERE field_name <= 123.4
+    WHERE (field1 * field2) / 100 > 0.1
+STRING:
+    WHERE field_name LIKE '%value%' 
+    WHERE field_name = 'equals value'
+    WHERE field_name <> 'not equals'
+IN CHECK:
+    WHERE field_name IN (value1, value2)
+    WHERE field_name NOT IN (value3, value4)
+MULTIPLE CONDITIONS: 
+    WHERE (field_1 = 0 AND field_2 <> 'value') OR field_3 IS NULL
+
+Checkout 'Help → User Guide' for more information.","NULL KONTROLÜ: 
+    WHERE field_name IS NULL
+    WHERE field_name IS NOT NULL
+TARİH ve ZAMAN:   
+    WHERE field_name >= #2000-12-31#
+    WHERE field_name = #2000-01-13 01:00:00#
+SAYISAL:
+    WHERE field_name <= 123.4
+    WHERE (field1 * field2) / 100 > 0.1
+METİN:
+    WHERE field_name LIKE '%value%' 
+    WHERE field_name = 'equals value'
+    WHERE field_name <> 'not equals'
+IN KONTROLÜ:
+    WHERE field_name IN (value1, value2)
+    WHERE field_name NOT IN (value3, value4)
+BIRDEN FAZLA KOŞUL: 
+    WHERE (field_1 = 0 AND field_2 <> 'value') OR field_3 IS NULL
+
+Daha fazla bilgi için: 'Hakkında → Kullanıcı Kılavuzu'",""
+"Strings.resx","QuerySyntaxHelpTitle","Shown when the user clicks on the Filter Query (?): link button","Filter Query Syntax Examples","Sorgu Filtresi Söz Dizim Örnekleri",""
+"Strings.resx","RecordsToBeExportedTitleFormat","Title shown on the save file dialog when the user is exporting data","{0} records will be exported","{0} kayıt kaydedilecektir",""
+"Strings.resx","SaveImageAsButtonText","Shown on the save image to file button in the quick peek form","Save image as {0}","Resmi {0} olarak kaydet",""
+"Strings.resx","SaveImageToFileButtonTextFormat","Text template for the button to save an image preview to disk","Save as {0}","{0} olarak Kaydet",""
+"Strings.resx","SaveRawMetadataToFileDialogTitle","Shown when falling back to saving the raw thrift metadata to a file instead of the clipboard","Save raw metadata","Ham metadatayı kaydet",""
+"Strings.resx","SelectAllCheckmarkTextFormat","Shown in the field selection dialog to bulk select checkmarks","Select All (Count: {0})","Hepsini Seç (Sayı: {0})",""
+"Strings.resx","SwitchFromXlsToXlsxMessageFormat","Shown when the user tries to export data to an xls file with too many characters in a single cell. The text should prompt the user if they want to switch to xlsx instead which supports more data in a single cell","Maximum {0} characters per cell are supported for {1} files.
+
+Would you like to switch to a {2} file instead?","{1} dosyaları hücre başına maksimum {0} karakter desteklemektedir. 
+
+Onun yerine sonuçlari {2} dosyasına aktarmak ister misiniz?",""
+"Strings.resx","SwitchFromXlsToXlsxMessageTitle","Shown when the user tries to export data to an xls file with too many characters in a single cell. The text should prompt the user if they want to switch to xlsx instead which supports more data in a single cell","Data too large - Switch export type?","Fazla uzun veri - Dosya tipi değiştirilsin mi?",""
+"Strings.resx","ThriftMetadataCopiedToClipboardMessage","Shown when the user clicks the Copy Raw Thrift Metadata button","Raw Thrift metadata copied to clipboard.","Ham Thrift metadatası panoya kopyalandı.",""
+"Strings.resx","TooManyFieldsErrorFormat","Shown on the Field Selection Dialog when there are too many fields to filter by","Too many fields: {0}","Desteklenmeyen sayıda alan: {0}",""
+"Strings.resx","TypeText","Shown in the title bar of quick peek windows for image previews","Type","Format",""
+"Strings.resx","UnsupportedFieldCountTextFormat","Shown in the field selection dialog to indicate how many fields are unsupported by ParquetViewer","Unsupported: {0}","Desteklenmeyen: {0}",""
+"Strings.resx","UnsupportedFieldText","Shown in the field selection dialog next to field names to indicate the field is not supported for viewing with ParquetViewer","(Unsupported)","(Desteklenmiyor)",""
