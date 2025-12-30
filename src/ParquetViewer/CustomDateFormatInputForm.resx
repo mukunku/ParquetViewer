@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!--
-    Microsoft ResX Schema
-
+  <!-- 
+    Microsoft ResX Schema 
+    
     Version 2.0
-
-    The primary goals of this format is to allow a simple XML format
-    that is mostly human readable. The generation and parsing of the
-    various data types are done through the TypeConverter classes
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
     associated with the data types.
-
+    
     Example:
-
+    
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
     <resheader name="version">2.0</resheader>
@@ -26,36 +26,36 @@
         <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
         <comment>This is a comment</comment>
     </data>
-
-    There are any number of "resheader" rows that contain simple
+                
+    There are any number of "resheader" rows that contain simple 
     name/value pairs.
-
-    Each data row contains a name, and value. The row also contains a
-    type or mimetype. Type corresponds to a .NET class that support
-    text/value conversion through the TypeConverter architecture.
-    Classes that don't support this are serialized and stored with the
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
     mimetype set.
-
-    The mimetype is used for serialized objects, and tells the
-    ResXResourceReader how to depersist the object. This is currently not
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
     extensible. For a given mimetype the value must be set accordingly:
-
-    Note - application/x-microsoft.net.object.binary.base64 is the format
-    that the ResXResourceWriter will generate, however the reader can
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
     read any of the formats listed below.
-
+    
     mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
-
+    
     mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
             : and then encoded with base64 encoding.
 
     mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array
+    value   : The object must be serialized into a byte array 
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
@@ -157,6 +157,7 @@
   </data>
   <data name="label45.Text" xml:space="preserve">
     <value>The AM/PM designator.</value>
+    <comment>tt</comment>
   </data>
   <data name="&gt;&gt;label12.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -230,6 +231,7 @@
   </data>
   <data name="label36.Text" xml:space="preserve">
     <value>The hour, using a 24-hour clock from 00 to 23.</value>
+    <comment>HH</comment>
   </data>
   <data name="label28.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -335,6 +337,7 @@
   </data>
   <data name="label39.Text" xml:space="preserve">
     <value>Description</value>
+    <comment>Column header for format specifier descriptions</comment>
   </data>
   <data name="label5.Text" xml:space="preserve">
     <value>"s"</value>
@@ -458,6 +461,7 @@
   </data>
   <data name="label40.Text" xml:space="preserve">
     <value>Examples</value>
+    <comment>Column header for format specifier examples</comment>
   </data>
   <data name="label32.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>None</value>
@@ -523,6 +527,7 @@
   </data>
   <data name="label9.Text" xml:space="preserve">
     <value>The day of the month, from 01 to 31.</value>
+    <comment>dd</comment>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -630,6 +635,7 @@
   </data>
   <data name="label30.Text" xml:space="preserve">
     <value>The hour, using a 12-hour clock from 01 to 12.</value>
+    <comment>hh</comment>
   </data>
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -741,6 +747,7 @@
   </data>
   <data name="label6.Text" xml:space="preserve">
     <value>The second, from 0 to 59.</value>
+    <comment>s</comment>
   </data>
   <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
     <value>30, 15</value>
@@ -825,6 +832,7 @@
   </data>
   <data name="saveDateFormatButton.Text" xml:space="preserve">
     <value>                Save</value>
+    <comment>save button text</comment>
   </data>
   <data name="label35.TabIndex" type="System.Int32, mscorlib">
     <value>31</value>
@@ -948,6 +956,7 @@
   </data>
   <data name="label33.Text" xml:space="preserve">
     <value>The year as a four-digit number.</value>
+    <comment>yyyy</comment>
   </data>
   <data name="&gt;&gt;livePreviewTextBox.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -1123,6 +1132,7 @@
   </data>
   <data name="label18.Text" xml:space="preserve">
     <value>The minute, from 0 to 59.</value>
+    <comment>m</comment>
   </data>
   <data name="label12.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1153,6 +1163,7 @@
   </data>
   <data name="label54.Text" xml:space="preserve">
     <value>The ten millionths of a second in a date and time.</value>
+    <comment>fffffff</comment>
   </data>
   <data name="&gt;&gt;label28.Parent" xml:space="preserve">
     <value>instructionsTableLayoutPanel</value>
@@ -1175,6 +1186,7 @@
   </data>
   <data name="dateFormatDocsLinkLabel.Text" xml:space="preserve">
     <value>Click here to see all format specifiers</value>
+    <comment>Text for linkbutton that takes the user to the help page for .NET date formats. </comment>
   </data>
   <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
     <value>314, 353</value>
@@ -1220,6 +1232,7 @@
   </data>
   <data name="label15.Text" xml:space="preserve">
     <value>The month, from 1 to 12.</value>
+    <comment>M</comment>
   </data>
   <data name="&gt;&gt;dateFormatDocsLinkLabel.Parent" xml:space="preserve">
     <value>instructionsTableLayoutPanel</value>
@@ -1229,6 +1242,7 @@
   </data>
   <data name="label12.Text" xml:space="preserve">
     <value>The second, from 00 to 59.</value>
+    <comment>ss</comment>
   </data>
   <data name="label13.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -1268,12 +1282,14 @@
   </data>
   <data name="label27.Text" xml:space="preserve">
     <value>The year, from 00 to 99.</value>
+    <comment>yy</comment>
   </data>
   <data name="label25.Size" type="System.Drawing.Size, System.Drawing">
     <value>145, 30</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>ParquetViewer - Date Format Configuration</value>
+    <comment>Title bar text</comment>
   </data>
   <data name="label39.Font" type="System.Drawing.Font, System.Drawing">
     <value>Segoe UI, 9pt, style=Bold</value>
@@ -1311,6 +1327,7 @@
   </data>
   <data name="label56.Text" xml:space="preserve">
     <value>Live preview:</value>
+    <comment>Label text shown above the live preview textbox</comment>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1320,6 +1337,7 @@
   </data>
   <data name="label21.Text" xml:space="preserve">
     <value>The month, from 01 to 12.</value>
+    <comment>MM</comment>
   </data>
   <data name="label30.Size" type="System.Drawing.Size, System.Drawing">
     <value>222, 30</value>
@@ -1356,6 +1374,7 @@
   </data>
   <data name="livePreviewTextBox.PlaceholderText" xml:space="preserve">
     <value>👈🏽 Start typing to preview your date format</value>
+    <comment>date format preview textbox placeholder text</comment>
   </data>
   <data name="label7.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -1607,9 +1626,11 @@
   </data>
   <data name="label24.Text" xml:space="preserve">
     <value>The minute, from 00 to 59.</value>
+    <comment>mm</comment>
   </data>
   <data name="label48.Text" xml:space="preserve">
     <value>The milliseconds in a date and time value.</value>
+    <comment>fff</comment>
   </data>
   <data name="&gt;&gt;label15.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -1626,6 +1647,7 @@
   </data>
   <data name="label38.Text" xml:space="preserve">
     <value>Format specifier</value>
+    <comment>Column header for format specifiers</comment>
   </data>
   <data name="label39.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1665,6 +1687,7 @@
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>The day of the month, from 1 to 31.</value>
+    <comment>d</comment>
   </data>
   <data name="label55.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1800,6 +1823,7 @@
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>Enter your desired date format:</value>
+    <comment>Label above textbox for user to enter a custom date format</comment>
   </data>
   <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
     <value>28</value>
@@ -1931,6 +1955,7 @@
   </data>
   <data name="desiredDateFormatTextBox.PlaceholderText" xml:space="preserve">
     <value>E.g. yyyy-MM-dd hh:mm:ss tt</value>
+    <comment>Date format example placeholder</comment>
   </data>
   <data name="&gt;&gt;label13.Parent" xml:space="preserve">
     <value>instructionsTableLayoutPanel</value>
@@ -1947,13 +1972,14 @@
   <data name="label46.TabIndex" type="System.Int32, mscorlib">
     <value>36</value>
   </data>
-  <metadata name="timer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <data name="timer.TrayLocation" type="System.Drawing.Point, System.Drawing">
     <value>17, 17</value>
-  </metadata>
-  <metadata name="$this.Language" type="System.Globalization.CultureInfo, System.Private.CoreLib, Culture=neutral, PublicKeyToken=7cec85d7bea7798e">
+  </data>
+  <assembly alias="System.Private.CoreLib" name="System.Private.CoreLib, Culture=neutral, PublicKeyToken=7cec85d7bea7798e" />
+  <data name="$this.Language" type="System.Globalization.CultureInfo, System.Private.CoreLib">
     <value>tr</value>
-  </metadata>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  </data>
+  <data name="$this.Localizable" type="System.Boolean, mscorlib">
     <value>True</value>
-  </metadata>
+  </data>
 </root>
