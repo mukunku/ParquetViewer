@@ -35,17 +35,9 @@ namespace ParquetViewer.Controls
             }
         }
 
-        #region Right-click context menu
         public Image? CopyToClipboardIcon { get; set; } = null;
         public Image? CopyAsWhereIcon { get; set; } = null;
         public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
-
-        public string CopyToClipboardText { get; set; } = "Copy";
-        public string CopyToClipboardWithHeadersText { get; set; } = "Copy with headers";
-        public string CopyAsWhereConditionText { get; set; } = "Copy as WHERE...";
-        #endregion
-
-        public string ScientificFormattingText { get; set; } = "Scientific";
 
         private readonly HashSet<int> clickableColumnIndexes = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
@@ -218,19 +210,19 @@ namespace ParquetViewer.Controls
                 {
                     if (_contextMenu is null)
                     {
-                        var copy = new ToolStripMenuItem(this.CopyToClipboardText, this.CopyToClipboardIcon);
+                        var copy = new ToolStripMenuItem(Resources.Strings.CopyToClipboardText, this.CopyToClipboardIcon);
                         copy.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(false);
                         };
 
-                        var copyWithHeaders = new ToolStripMenuItem(this.CopyToClipboardWithHeadersText);
+                        var copyWithHeaders = new ToolStripMenuItem(Resources.Strings.CopyToClipboardWithHeadersText);
                         copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(true);
                         };
 
-                        var copyAsWhere = new ToolStripMenuItem(this.CopyAsWhereConditionText, this.CopyAsWhereIcon);
+                        var copyAsWhere = new ToolStripMenuItem(Resources.Strings.CopyAsWhereConditionText, this.CopyAsWhereIcon);
                         copyAsWhere.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboardAsWhereCondition();
@@ -1083,7 +1075,7 @@ namespace ParquetViewer.Controls
                 if (!floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                     displayFormat = default;
 
-                var scientificNotationMenuItem = new ToolStripMenuItem(this.ScientificFormattingText)
+                var scientificNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalScientificFormatting)
                 { Checked = displayFormat == FloatDisplayFormat.Scientific };
                 scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
@@ -1099,7 +1091,7 @@ namespace ParquetViewer.Controls
                 };
                 columnHeaderContextMenu.Items.Add(scientificNotationMenuItem);
 
-                var decimalNotationMenuItem = new ToolStripMenuItem("Decimal")
+                var decimalNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalFormatting)
                 { Checked = displayFormat == FloatDisplayFormat.Decimal };
                 decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {

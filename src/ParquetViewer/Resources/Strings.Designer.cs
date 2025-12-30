@@ -133,6 +133,15 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Decimal.
+        /// </summary>
+        internal static string DecimalFormatting {
+            get {
+                return ResourceManager.GetString("DecimalFormatting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scientific.
         /// </summary>
         internal static string DecimalScientificFormatting {

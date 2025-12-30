@@ -79,15 +79,11 @@ namespace ParquetViewer.Controls
             dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
             mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            mainGridView.CopyAsWhereConditionText = "Copy as WHERE...";
             mainGridView.CopyAsWhereIcon = null;
             mainGridView.CopyToClipboardIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyToClipboardIcon");
-            mainGridView.CopyToClipboardText = "Copy";
-            mainGridView.CopyToClipboardWithHeadersText = "Copy with headers";
             mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Name = "mainGridView";
             mainGridView.ReadOnly = true;
-            mainGridView.ScientificFormattingText = "Scientific";
             mainGridView.ShowCellToolTips = false;
             mainGridView.ShowCopyAsWhereContextMenuItem = false;
             // 

@@ -120,15 +120,6 @@ namespace ParquetViewer.Controls
             var yOverflow = this.Top + this.Height - Screen.FromControl(this).WorkingArea.Height;
             if (yOverflow > 0)
                 this.Top -= yOverflow;
-
-            //Localization
-            if (this.mainGridView is not null)
-            {
-                this.mainGridView.CopyToClipboardText = Resources.Strings.CopyToClipboardText;
-                this.mainGridView.CopyToClipboardWithHeadersText = Resources.Strings.CopyToClipboardWithHeadersText;
-                this.mainGridView.CopyAsWhereConditionText = Resources.Strings.CopyAsWhereConditionText;
-                this.mainGridView.ScientificFormattingText = Resources.Strings.DecimalScientificFormatting;
-            }
         }
 
         private void TakeMeBackLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

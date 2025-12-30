@@ -182,12 +182,6 @@ namespace ParquetViewer
 
             //Ask the user if they want to enable dark mode (only if their system is in dark mode)
             Program.AskUserIfTheyWantToSwitchToDarkMode();
-
-            //Localization
-            this.mainGridView.CopyToClipboardText = Resources.Strings.CopyToClipboardText;
-            this.mainGridView.CopyToClipboardWithHeadersText = Resources.Strings.CopyToClipboardWithHeadersText;
-            this.mainGridView.CopyAsWhereConditionText = Resources.Strings.CopyAsWhereConditionText;
-            this.mainGridView.ScientificFormattingText = Resources.Strings.DecimalScientificFormatting;
         }
 
         private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)

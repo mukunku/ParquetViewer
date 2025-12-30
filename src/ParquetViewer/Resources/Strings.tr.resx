@@ -263,4 +263,7 @@ Onun yerine sonuçlari {2} dosyasına aktarmak ister misiniz?</value>
   <data name="ImageSavedToDiskTitle" xml:space="preserve">
     <value>Kayıt tamamlandı</value>
   </data>
+  <data name="DecimalFormatting" xml:space="preserve">
+    <value>Desimal</value>
+  </data>
 </root>

@@ -304,4 +304,8 @@ Would you like to switch to a {2} file instead?</value>
     <value>Save complete</value>
     <comment>Shown when an image is successfully saved to disk from the quick peek form</comment>
   </data>
+  <data name="DecimalFormatting" xml:space="preserve">
+    <value>Decimal</value>
+    <comment>When the user right-clicks on a decimal column header this is the text shown for the decimal formatting option.</comment>
+  </data>
 </root>
