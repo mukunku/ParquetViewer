@@ -191,7 +191,7 @@ IN KONTROLÜ:
 BIRDEN FAZLA KOŞUL: 
     WHERE (field_1 = 0 AND field_2 &lt;&gt; 'value') OR field_3 IS NULL
 
-Daha fazla bilgi için 'Hakkında → Kullanıcı Kılavuzu' una goz atın.</value>
+Daha fazla bilgi için: 'Hakkında → Kullanıcı Kılavuzu'</value>
   </data>
   <data name="QuerySyntaxHelpTitle" xml:space="preserve">
     <value>Sorgu Filtresi Söz Dizim Örnekleri</value>
