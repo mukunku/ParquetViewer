@@ -1,6 +1,7 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Helpers;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 
@@ -52,6 +53,8 @@ namespace ParquetViewer
                 }
             }
             catch (Exception) { /*Swallow Exception*/ }
+
+            CultureInfo.CurrentUICulture = new CultureInfo("tr-TR");
 
             //Enable HighDpi mode
             Application.EnableVisualStyles();

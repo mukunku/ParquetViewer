@@ -3,14 +3,21 @@ using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.Net.Http;
 using System.Windows.Forms;
 
 namespace ParquetViewer
 {
     public partial class CustomDateFormatInputForm : FormBase
     {
-        public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
+        private const string EN_US_CULTURE = "en-us";
 
+        private static bool? _hasInternationalDateFormatDocsUrl = null;
+
+        public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
+        private string _dateFormatDocsUrl = string.Format(Constants.DateFormatDocsURLFormat, EN_US_CULTURE);
+        
         public CustomDateFormatInputForm()
         {
             InitializeComponent();
@@ -23,7 +30,7 @@ namespace ParquetViewer
 
         public void dateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(new ProcessStartInfo(Constants.DateFormatDocsURL) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(_dateFormatDocsUrl) { UseShellExecute = true });
         }
 
         private void cancelButton_Clicked(object sender, EventArgs e)
@@ -49,15 +56,44 @@ namespace ParquetViewer
             }
             catch (Exception)
             {
-                this.livePreviewTextBox.Text = "invalid date format";
+                this.livePreviewTextBox.Text = Resources.Strings.InvalidDateFormatErrorText;
                 this.saveDateFormatButton.Enabled = false;
             }
         }
 
-        private void CustomDateFormatInputForm_Load(object sender, EventArgs e)
+        private async void CustomDateFormatInputForm_Load(object sender, EventArgs e)
         {
             this.timer.Enabled = true;
             this.saveDateFormatButton.Enabled = false; //always start disabled
+
+            if (!EN_US_CULTURE.Equals(CultureInfo.CurrentUICulture))
+            {
+                //Check if we can take the user to the help page in their own language
+                var url = string.Format(Constants.DateFormatDocsURLFormat, CultureInfo.CurrentUICulture);
+
+                if (_hasInternationalDateFormatDocsUrl == true)
+                {
+                    this._dateFormatDocsUrl = url;
+                }
+                else if (_hasInternationalDateFormatDocsUrl is null)
+                {
+                    using var httpClient = new HttpClient();
+                    using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        this._dateFormatDocsUrl = url;
+                        _hasInternationalDateFormatDocsUrl = true;
+                    }
+                    else
+                    {
+                        _hasInternationalDateFormatDocsUrl = false;
+                    }
+                }
+                else
+                {
+                    //We already know the international URL is invalid, so do nothing
+                }
+            }
         }
 
         //This timer exists to deal with visual bugs
@@ -82,7 +118,10 @@ namespace ParquetViewer
             }
             else
             {
-                MessageBox.Show("Invalid date format. Please refer to the documentation for valid date format specifiers.", "Invalid Date Format", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    Resources.Errors.InvalidDateFormatErrorMessage, 
+                    Resources.Errors.InvalidDateFormatErrorTitle, 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

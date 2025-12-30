@@ -1,0 +1,466 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="recordsToLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>803, 0</value>
+  </data>
+  <data name="recordsToLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 35</value>
+  </data>
+  <data name="recordsToLabel.Text" xml:space="preserve">
+    <value>Kayıt Sayısı:</value>
+  </data>
+  <data name="showRecordsFromLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>679, 0</value>
+  </data>
+  <data name="showRecordsFromLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 35</value>
+  </data>
+  <data name="showRecordsFromLabel.Text" xml:space="preserve">
+    <value>Kayıt Atla:</value>
+  </data>
+  <data name="offsetTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>733, 6</value>
+  </data>
+  <data name="runQueryButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>473, 3</value>
+  </data>
+  <data name="runQueryButton.Text" xml:space="preserve">
+    <value>İşle</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="searchFilterLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="searchFilterLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 1</value>
+  </data>
+  <data name="searchFilterLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 32</value>
+  </data>
+  <data name="searchFilterLabel.Text" xml:space="preserve">
+    <value>Sorgu Filtresi (?):</value>
+  </data>
+  <data name="searchFilterTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>346, 23</value>
+  </data>
+  <data name="clearFilterButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>590, 3</value>
+  </data>
+  <data name="clearFilterButton.Text" xml:space="preserve">
+    <value>Temizle</value>
+  </data>
+  <data name="mainGridView.CopyAsWhereIcon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAArBJREFUWEftV0trE2EUHYdYU6i0K8FFf4BNpfSR52SaacEsEoR0EcSCuKmthUBM
+        axuMFM2yy0C0ZFEQiXQXoRRjKdpFHyCiaUbS+MhScCEu/AGTW+7opN9888gMIrrIgQPJvXfOOd8jA2GY
+        /x3NF8w52GQAXjIA2xQ3GcA+/QyNvvt9sH64HnKmndCT7Qk5kg6IrEUA6/SsDGnn4o+WSZmB73u34bjy
+        GsRqBapiTWatsg9fDx/IfWVW2mLf0Fq2oZhWxQ8giqJl4rwShtbUQ6qUCunuAArQ4nZoNYAhUODbQUYj
+        bIU/dyOWA5juQOtMy0749K4ER+Kxxgx5JH6Extun0NxmVZeT1rQFUsgS8dz3BwEaD20FsLQDpmxkf5mS
+        tBHAEBojI3YCdAJ0AjSyINXTG7OziQ1BCMumsHOhbYBwOGratxUAVy3V79Q8niAEgxPA85Mgvb/+itZU
+        gDPIoSG3cQiNkQ7lOfIIvmTA5RqWxb1eXiNeKBTOKuYKR0f9mjkZtJkeW7O/AzQ/3wuR4qResVi8TJsH
+        AiF9cwRtpkecI40SieScIs5xp+Lp9MpV2hyPS+nrgjbTY3NvcIoWJplK3Z1CrZERn6qO32k/DZr1pfO0
+        oR5xljZGzs8nL8Xj1x7hXSDrXm+blesBtrTGJKVdV4GcDwYnIZ9fe0YaezycfeM/hc93unq699cxNuYH
+        n28c8vnHN6anb8oBBgaGzYN0LXSZD1gE/rwE4YqshZ9nZuZuKTvhdgeMPeJP4sZNi+D5CYjF1Dr0BcXd
+        IfstdC936zcsguMEcLu5A7qOoEP4/TovIceiQ1u0CBSNRmOmz2tDjKvnF58vlFUFi0CxQEAwNVeAu0SG
+        UDV7M71ygV1mYbW8yrNLLGRKGehf6TcUx7daLpdr+8eUBGF+hu79M5wASJeVh83fAlwAAAAASUVORK5C
+        YII=
+</value>
+  </data>
+  <data name="mainGridView.CopyToClipboardIcon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAAw9JREFUWEftVs1PE0EU7x9AgvGmBsO+mW6d3e6WphjxiwIS/wRuHPSiR/4Cs+3y
+        UZVvotGTN24EjCa6uzTY8FksRCySKPHgQf8DuI6+tdM0UygtNOiBX/Ky2Xlv3vx25rfzXiBwhioQS+Ua
+        meXN6JaT1ZLu0mHGLGdDs9P35PknhmmnuyJT29wc3eSRyTyPTG5Llufm+CduDK9zc3SDh/vdh3KOE8Gw
+        F7pbnn/luuXsGkPp9ojtdZSaMeS06/3zffpghocfr/hkNHv+gZzn2IiOZa8bIznO7PQb2SfQmvSi4Sdr
+        nCXcfZ/ExOf6kjgK/m5M5rmWdObMQbfXnNjyj6ZmErFYrJEQMgMAWULIEhooSkZpuvAOLl/yxBildINS
+        el/Mi9jpu9GX3zmzXAffw8l0D+6IOb5VmyY0TesKhUJcVVWOz4MMfcFgUMT4yVufrTdpAx84s7yfLXb6
+        RiS5qLOEN22MfPTFWzUJQkgnJqaUbgeDwfZQKNRRajgGAH2EEIwRZPxtvjqYVVnC5dEXuxyPIJxa9kXp
+        P5+ucSPpGfJ6ZSgshMkXZJ8ApTSKOwAA+0gC4wWJ2HDuipZwN1nSyTHLWdYsN6NZzh6KWE+875RzlUEQ
+        UBRlUfYJlJCcU1W1VxyXICEDLyn/rkh5t2RfGURyFJrsExAxAODiu6qqPUVNAJSdNUs6K3UlIHRCCMmr
+        qnqTMaYTQqZlYQowy1utKwHGWHfpn1IQbdEK+igKru4E2traziuK8hbvAgBYI4SsUkqXASADAHtIAHdJ
+        xNedQCXgvII+ioudKgFK6co/JYDHcUbgvyCANUOM6Za7iJ3TKRJQebC5+Vp06sdF03a6tIS3g10Ss50i
+        qUNRDwJ4MamBgGJO7TyKvfrFzbG/vWTLgBuX48tQLwK0oUELT3zp0RLeN6yOmuXMxlJeoxxfhmqqYSUc
+        pIGaUFJqD+0HKgGJ43zG2G3ZVxVKKx3+SrUaIWSn0CUdbwcA4A5+QaWesJKJeZTSowV3EOLx+DlK6evS
+        SletYXyhW54FgKMFd4Y/+A3rSyMPm3Pf6gAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="loadAllRowsButton.ToolTip" xml:space="preserve">
+    <value>Tüm kayıtları yükle (Ctrl+E)</value>
+  </data>
+  <data name="newToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAENSURBVDhPrZHbSgJRGEZ9KX2HfI18I9ELkS5KCREMDBSN
+        VLRA0xDREQ+FTJai47mm8TDOF7NlhulHNwO14LvarHXxb4fjv4jnW6CLZRqIpKoI3Zbw3HwDdX6hC6cI
+        RnNwuT38yE1WoJ6JL5RC+rFxiAji8Uj0rkY9E+9lksnGqMu4TlSoZ7JT9yxihKjLuIoXqcfQNA2yssVo
+        KrOA8+z8eOAiVqAuY7NVMVsqEIdLfiAQyVAX6l7DSt5gIH2hI874AX84TX0o6x2k+Td6HwvUuxI/oD9a
+        0Q+3+FyjP1qh1ZuiLAztB6yHe+nPUWuP8VB9tx+wHk54naBUH+D+SbQXMP771LgB/dHOqPsnfgDYzPbD
+        7s5C8AAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="newToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>234, 22</value>
+  </data>
+  <data name="newToolStripMenuItem.Text" xml:space="preserve">
+    <value>Yeni</value>
+  </data>
+  <data name="openToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJGSURBVDhPxZJdSJNhGIa/gw46ssiKQiiwPPBkEBRRHYQU
+        USiKZRYkaULNHyqMhTl/2tR0c3Nz6le6rG26pk4ryyjsRyoUiZimjjRTs6KwFDNDJf+ucAN1KdVZN9wH
+        L89zX8/zvryC8I9SGmxcUFvIFu38XvuromSiRyjdYHOdI2WFCB/73lBt1S9yR8uTP04Ki88lJDYPYba5
+        q83M+HCVyz+HbEwOmLBbculofbok5FCcjpAYA0HSAoSqUh1jQ+Ue4en+IiadCZRfV1NWnIWpMB1jXhpX
+        tHIKVIme0AqzhrGv5rnwTH8RdMnBKV3SiwA3SlT8+GycC9dVa1x+YM+h1qbidlkWdlMGNqMSi3iRa4YU
+        inVyRE2SG1ZmzGLkfb5r7d4GBTXlOqZ7ldCX6el3SuhJhk4ZvI6ntTIc61U9gknM4Hu3Gj5ouVORS9ND
+        rbtp4eqvIsERxlRjIOOPAnhbKkEmDXVfpcSg4FuHkr7GVGpsWmZ6FNAe4w62RoPjKFNNwYzX72Pk/i4G
+        q7egjPXDIsrdgCJdKoNtSdy0amh+robOBGg/Cc0RzLwIZeLZAUbrdjNUs5UvFf44Lq3kWKDv/EOKOXLa
+        69O4Zc2B7jRoiYSXh5loCGL0cQDDtdsZsEv4ZN6MU+uNQrqJ07HH5wH52YlUWdQ478bh0AtzbtIuo161
+        nHvpK6hMWYMp0YfL5zYSsXD6rPSZ59ErTpGdFEXymSOcjQ7mRPheDu7fwZ6dErZJ/PD39WHD+tWsXeXF
+        Om+vJX/n/9MvF8beaWm1d4MAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="openToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>234, 22</value>
+  </data>
+  <data name="openToolStripMenuItem.Text" xml:space="preserve">
+    <value>Dosya Aç</value>
+  </data>
+  <data name="openFolderToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>234, 22</value>
+  </data>
+  <data name="openFolderToolStripMenuItem.Text" xml:space="preserve">
+    <value>Klasör Aç</value>
+  </data>
+  <data name="openFolderToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Klasördeki tüm parquet dosyaları aynı veri şemasına sahip olmalıdır</value>
+  </data>
+  <data name="toolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 6</value>
+  </data>
+  <data name="saveAsToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAAidJREFUOE+tkt9Lk2EUx99/wftugi66rakxnIvp4C3XUFYNw4ro1xtplqbLNEmx
+        Mo32phtoU5w6abXaiE008geYIiWiTCUrM1e0xKGm2EQw+MZ5pPdhu9hFdOBcfj7nOd/nCML/qN6eKKgD
+        /g34vOt46l5FZ0cELY5F2G3fIVtDuF87j+qqT6gof4/SkmlcuxqEIiBwcACwNW4hUW1ubcOQO4gTuS9Z
+        KwLvizUmqK/7Gc8oRXBkdRMHTa+gUkkwH/dwgfvJChNUV/2I51j9hb+E15BsDKD85gKOmrq4wNm2xAQ3
+        LJ/j2Rh4ai6CvaIXxUWzyMl2ckFzU5gJCq9MJ4RHg2Hs0rkhSeMwGh1c0NjwjQmki+MJ4YGxr0hK68DJ
+        U2+QlWXnggf1C+jvA3p7gDPn3sF8eoSlTYHRzvRsmrwDD+GY+TVEUeaCOzVz6A4APi/Q5foN2foLtfeW
+        WagUGO1ckB9U4CM5fuj1dVxwq2IWnmdAu3MbdlsUhryimDadtSDvcuUOnO2H/rAHOl0NF1hKZ9DuBBoe
+        RdlkggRBQLJGxMTHJczML0MquYtMg4/BmgwXtNpKLqCzdDyG8mwSEHyp7CE+hFYQWlzH9dsyUnQuaDI6
+        kZLeCk1aGRcU5E9Ctm4weI/eg937RTzvHkagbxT9Q2MYeTuBQ0YzVNo2pKa3Yp+6GWp1MRdQXTg/zM6T
+        LoyOhP6ZvorSpsBoZ5pKTfCB1MJYwb/WH060OMXnlEl9AAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="saveAsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Sonuçları Kaydet</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 6</value>
+  </data>
+  <data name="exitToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>234, 22</value>
+  </data>
+  <data name="exitToolStripMenuItem.Text" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>51, 20</value>
+  </data>
+  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
+    <value>Dosya</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAAxVJREFUWEfVV1mrjWEYPWQWmed5ynCQUiSFMg8hF4aSeTgnrGNMxswJIZRcK1wp
+        SqFcGG6cdXBQboyLMl3wE7R4Pk7fxd7fae8jnlrtvb/9vvtd7zOtZ5eU/EsGymgPaiGopaCWBPx++Aaq
+        pKLyF4puZc9eJwR84EFQU0FNi9dFoPYERntd0a3s6ZuEwIo4aA2o+hWPPvjZWFB3Qd0ENRBUa1D9QQ3I
+        AK9rB6peTuIpAjtAPQA1EtRmUC9AnYvwGNdBfQL1MQO87gaoTlkJrAY1GdR5UC9B3Y8QbAXVFFQjUFNA
+        rasFHMrGWQnY9fNATQB11skHqh+o40EgvbU4trb6VULASXYG1IHAflAnQa3KG8dCLQj4EMe5B6juga7h
+        +vSW4loQGBWuP1QDpyI0f8UDTsL5oJqBagmqRZTSsXiW3lY8CwIrQU1MDopnbaI5mUBDUONALY+SzQev
+        c0LnD2EOAm0jFK6CDlHXX0F9yQCvuwWqc1YCzvY0AXvgMKjm4Dt/7ghqCKjSDPA6N6H8+ROHLY7DpoOa
+        BWpmuNGJmLuZFGo13O1GZEVM4E5YikqVoKruCTQP8ZkUoUjQLb5PbyuOlf+R4wXhbodiWcwCm0DtjPdD
+        vW591dv0TxRmNbTAVWAFnJMkDqhBoYAPQyHdG3qC6pUBXtcqr/dScuyavxci5Kb0GNRlUH1D26+C+gDq
+        fQZ43bXayLHLcAaoi3HjJ6C2gNoIqklUwuyQ56yYG3vTx/6xlBx7DPNMcCW0wU3kaJ224tVPXiYEnPEX
+        QO2LUHg8sxz7JvXrjIAtCPgQ37gPqN4BJ1JuFxZq5c9/DyRuncnN9wbcGV0V7hE/u+G6yjfpnyjMUjPh
+        elCDawwlw0KMXIrOjTol4DI8EUOJb+tbV4CqBnUk1NBzoivBXskHrxsBqkHOEKYakSvB/wPc+S6BegRq
+        exAygdugvoP6lgFedwdUl6wEHAIPELtBfY7x3DdwLrgMnaRuSNaLrHBDy11Ba6t/a4E94KbjZrQL1JiY
+        60//LTl2/zYBAyFE20CNj+/T2/5v+wEn/rziAX3j2AAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Text" xml:space="preserve">
+    <value>Alan Ekle/Çıkar</value>
+  </data>
+  <data name="defaultToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 22</value>
+  </data>
+  <data name="defaultToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Yerel tarih formatı</value>
+  </data>
+  <data name="iSO8601ToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 22</value>
+  </data>
+  <data name="customDateFormatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 22</value>
+  </data>
+  <data name="customDateFormatToolStripMenuItem.Text" xml:space="preserve">
+    <value>Özel...</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAAMZJREFUWEftkMEKAkEMQwf07s3//0pPioI4siRNLd2Mp32Qy762WWaMA81ljPH8
+        pMvcP6OosC3u/MSu/eveA5390+bJ8OnxezVqPwSHsgPVZPvEPRnC79Vk+wQO/DpQSbZP4MDqEDiwOgQO
+        rA4hhRnZI4UZ2SOFGdkTiRvE4aKeN5GY31Y4QgozskcKM7InEpWn7DoiEpVDXUdIYUb2SGFG9kSi8pRd
+        R0SicqjrCCnMyB4pzMgeKczInin+kQeWT3BwVQ6+vACQfnpPxBPj1gAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Text" xml:space="preserve">
+    <value>Tarih Formatı</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Hep Tüm Kayitları Yükle</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Yeni dosya açarken ParquetViewer dosyadaki tüm kayıtları yükler</value>
+  </data>
+  <data name="darkModeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="darkModeToolStripMenuItem.Text" xml:space="preserve">
+    <value>Gece Modu</value>
+  </data>
+  <data name="editToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 20</value>
+  </data>
+  <data name="editToolStripMenuItem.Text" xml:space="preserve">
+    <value>Düzen</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAArBJREFUWEftV0trE2EUHYdYU6i0K8FFf4BNpfSR52SaacEsEoR0EcSCuKmthUBM
+        axuMFM2yy0C0ZFEQiXQXoRRjKdpFHyCiaUbS+MhScCEu/AGTW+7opN9888gMIrrIgQPJvXfOOd8jA2GY
+        /x3NF8w52GQAXjIA2xQ3GcA+/QyNvvt9sH64HnKmndCT7Qk5kg6IrEUA6/SsDGnn4o+WSZmB73u34bjy
+        GsRqBapiTWatsg9fDx/IfWVW2mLf0Fq2oZhWxQ8giqJl4rwShtbUQ6qUCunuAArQ4nZoNYAhUODbQUYj
+        bIU/dyOWA5juQOtMy0749K4ER+Kxxgx5JH6Extun0NxmVZeT1rQFUsgS8dz3BwEaD20FsLQDpmxkf5mS
+        tBHAEBojI3YCdAJ0AjSyINXTG7OziQ1BCMumsHOhbYBwOGratxUAVy3V79Q8niAEgxPA85Mgvb/+itZU
+        gDPIoSG3cQiNkQ7lOfIIvmTA5RqWxb1eXiNeKBTOKuYKR0f9mjkZtJkeW7O/AzQ/3wuR4qResVi8TJsH
+        AiF9cwRtpkecI40SieScIs5xp+Lp9MpV2hyPS+nrgjbTY3NvcIoWJplK3Z1CrZERn6qO32k/DZr1pfO0
+        oR5xljZGzs8nL8Xj1x7hXSDrXm+blesBtrTGJKVdV4GcDwYnIZ9fe0YaezycfeM/hc93unq699cxNuYH
+        n28c8vnHN6anb8oBBgaGzYN0LXSZD1gE/rwE4YqshZ9nZuZuKTvhdgeMPeJP4sZNi+D5CYjF1Dr0BcXd
+        IfstdC936zcsguMEcLu5A7qOoEP4/TovIceiQ1u0CBSNRmOmz2tDjKvnF58vlFUFi0CxQEAwNVeAu0SG
+        UDV7M71ygV1mYbW8yrNLLGRKGehf6TcUx7daLpdr+8eUBGF+hu79M5wASJeVh83fAlwAAAAASUVORK5C
+        YII=
+</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>251, 22</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Text" xml:space="preserve">
+    <value>SQL Create Table Sorgusu Oluştur</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Tablo şeması yüklenen alanları içerecektir</value>
+  </data>
+  <data name="metadataViewerToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>251, 22</value>
+  </data>
+  <data name="metadataViewerToolStripMenuItem.Text" xml:space="preserve">
+    <value>Metadata Önizleyicisi</value>
+  </data>
+  <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 20</value>
+  </data>
+  <data name="toolsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Araçlar</value>
+  </data>
+  <data name="userGuideToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="userGuideToolStripMenuItem.Text" xml:space="preserve">
+    <value>Kullanıcı Kılavuzu</value>
+  </data>
+  <data name="shareAnonymousUsageDataToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="shareAnonymousUsageDataToolStripMenuItem.Text" xml:space="preserve">
+    <value>Kullanım Verisi Paylaş</value>
+  </data>
+  <data name="shareAnonymousUsageDataToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Gizlilik politikası için Hakkında sayfasına bakınız</value>
+  </data>
+  <data name="aboutToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="aboutToolStripMenuItem.Text" xml:space="preserve">
+    <value>Hakkında</value>
+  </data>
+  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 20</value>
+  </data>
+  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
+    <value>Yardım</value>
+  </data>
+  <data name="showingRecordCountStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 17</value>
+  </data>
+  <data name="showingRecordCountStatusBarLabel.Text" xml:space="preserve">
+    <value>Gösterilen:</value>
+  </data>
+  <data name="recordsTextStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>40, 17</value>
+  </data>
+  <data name="recordsTextStatusBarLabel.Text" xml:space="preserve">
+    <value>Sonuç</value>
+  </data>
+  <data name="springStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>673, 17</value>
+  </data>
+  <data name="showingStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>59, 17</value>
+  </data>
+  <data name="showingStatusBarLabel.Text" xml:space="preserve">
+    <value>Yüklenen:</value>
+  </data>
+  <data name="outOfStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 17</value>
+  </data>
+  <data name="outOfStatusBarLabel.Text" xml:space="preserve">
+    <value>Toplam:</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Yeni Parquet Dosyası</value>
+  </data>
+</root>

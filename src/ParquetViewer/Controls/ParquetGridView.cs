@@ -34,9 +34,17 @@ namespace ParquetViewer.Controls
             }
         }
 
+        #region Right-click context menu
         public Image? CopyToClipboardIcon { get; set; } = null;
         public Image? CopyAsWhereIcon { get; set; } = null;
         public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
+
+        public string CopyToClipboardText { get; set; } = "Copy";
+        public string CopyToClipboardWithHeadersText { get; set; } = "Copy with headers";
+        public string CopyAsWhereConditionText { get; set; } = "Copy as WHERE...";
+        #endregion
+
+        public string ScientificFormattingText { get; set; } = "Scientific";
 
         private readonly HashSet<int> clickableColumnIndexes = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
@@ -209,19 +217,19 @@ namespace ParquetViewer.Controls
                 {
                     if (_contextMenu is null)
                     {
-                        var copy = new ToolStripMenuItem("Copy", this.CopyToClipboardIcon);
+                        var copy = new ToolStripMenuItem(this.CopyToClipboardText, this.CopyToClipboardIcon);
                         copy.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(false);
                         };
 
-                        var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
+                        var copyWithHeaders = new ToolStripMenuItem(this.CopyToClipboardWithHeadersText);
                         copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(true);
                         };
 
-                        var copyAsWhere = new ToolStripMenuItem("Copy as WHERE...", this.CopyAsWhereIcon);
+                        var copyAsWhere = new ToolStripMenuItem(this.CopyAsWhereConditionText, this.CopyAsWhereIcon);
                         copyAsWhere.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboardAsWhereCondition();
@@ -1059,7 +1067,7 @@ namespace ParquetViewer.Controls
                 if (!floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                     displayFormat = default;
 
-                var scientificNotationMenuItem = new ToolStripMenuItem("Scientific")
+                var scientificNotationMenuItem = new ToolStripMenuItem(this.ScientificFormattingText)
                 { Checked = displayFormat == FloatDisplayFormat.Scientific };
                 scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
@@ -1253,10 +1261,8 @@ namespace ParquetViewer.Controls
             }
         }
 
-        protected override void Dispose(bool disposing)
+        public void DisposeAudioCells()
         {
-            //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
-            //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
             foreach (var audioColumn in this.Columns.Cast<DataGridViewColumn>()
                 .Where(column => column.CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell)))
             {
@@ -1265,6 +1271,13 @@ namespace ParquetViewer.Controls
                     row.Cells[audioColumn.Index].Dispose();
                 }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
+            //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
+            this.DisposeAudioCells();
 
             base.Dispose(disposing);
         }

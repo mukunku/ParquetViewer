@@ -118,23 +118,242 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="mainGridView.CopyAsWhereIcon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>944, 444</value>
+  </data>
+  <data name="&gt;&gt;exitToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Always Load All Records</value>
+  </data>
+  <data name="&gt;&gt;showingStatusBarLabel.Name" xml:space="preserve">
+    <value>showingStatusBarLabel</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="runQueryButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="mainTableLayoutPanel.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="recordsToLabel" Row="0" RowSpan="1" Column="8" ColumnSpan="1" /&gt;&lt;Control Name="recordCountTextBox" Row="0" RowSpan="1" Column="9" ColumnSpan="1" /&gt;&lt;Control Name="showRecordsFromLabel" Row="0" RowSpan="1" Column="6" ColumnSpan="1" /&gt;&lt;Control Name="offsetTextBox" Row="0" RowSpan="1" Column="7" ColumnSpan="1" /&gt;&lt;Control Name="runQueryButton" Row="0" RowSpan="1" Column="4" ColumnSpan="1" /&gt;&lt;Control Name="searchFilterLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="searchFilterTextBox" Row="0" RowSpan="1" Column="2" ColumnSpan="2" /&gt;&lt;Control Name="clearFilterButton" Row="0" RowSpan="1" Column="5" ColumnSpan="1" /&gt;&lt;Control Name="mainGridView" Row="1" RowSpan="2" Column="0" ColumnSpan="11" /&gt;&lt;Control Name="loadAllRowsButton" Row="0" RowSpan="1" Column="10" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,80,Absolute,35,Absolute,93,Percent,100,Absolute,117,Absolute,93,Absolute,50,Absolute,70,Absolute,55,Absolute,70,Absolute,20" /&gt;&lt;Rows Styles="Absolute,35,Absolute,35,Percent,100,Absolute,23" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;aboutToolStripMenuItem.Name" xml:space="preserve">
+    <value>aboutToolStripMenuItem</value>
+  </data>
+  <data name="openToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="outOfStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 17</value>
+  </data>
+  <data name="&gt;&gt;openToolStripMenuItem.Name" xml:space="preserve">
+    <value>openToolStripMenuItem</value>
+  </data>
+  <data name="saveAsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 22</value>
+  </data>
+  <data name="mainTableLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>944, 420</value>
+  </data>
+  <data name="mainTableLayoutPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <data name="aboutToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 22</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="saveAsToolStripMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;mainTableLayoutPanel.Name" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="mainMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>944, 24</value>
+  </data>
+  <data name="searchFilterLabel.Text" xml:space="preserve">
+    <value>Filter Query (?):</value>
+  </data>
+  <data name="&gt;&gt;saveAsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="searchFilterLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 16</value>
+  </data>
+  <data name="&gt;&gt;alwaysLoadAllRecordsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="recordsToLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="&gt;&gt;aboutToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>37, 20</value>
+  </data>
+  <data name="mainStatusStrip.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAArBJREFUWEftV0trE2EUHYdYU6i0K8FFf4BNpfSR52SaacEsEoR0EcSCuKmthUBM
-        axuMFM2yy0C0ZFEQiXQXoRRjKdpFHyCiaUbS+MhScCEu/AGTW+7opN9888gMIrrIgQPJvXfOOd8jA2GY
-        /x3NF8w52GQAXjIA2xQ3GcA+/QyNvvt9sH64HnKmndCT7Qk5kg6IrEUA6/SsDGnn4o+WSZmB73u34bjy
-        GsRqBapiTWatsg9fDx/IfWVW2mLf0Fq2oZhWxQ8giqJl4rwShtbUQ6qUCunuAArQ4nZoNYAhUODbQUYj
-        bIU/dyOWA5juQOtMy0749K4ER+Kxxgx5JH6Extun0NxmVZeT1rQFUsgS8dz3BwEaD20FsLQDpmxkf5mS
-        tBHAEBojI3YCdAJ0AjSyINXTG7OziQ1BCMumsHOhbYBwOGratxUAVy3V79Q8niAEgxPA85Mgvb/+itZU
-        gDPIoSG3cQiNkQ7lOfIIvmTA5RqWxb1eXiNeKBTOKuYKR0f9mjkZtJkeW7O/AzQ/3wuR4qResVi8TJsH
-        AiF9cwRtpkecI40SieScIs5xp+Lp9MpV2hyPS+nrgjbTY3NvcIoWJplK3Z1CrZERn6qO32k/DZr1pfO0
-        oR5xljZGzs8nL8Xj1x7hXSDrXm+blesBtrTGJKVdV4GcDwYnIZ9fe0YaezycfeM/hc93unq699cxNuYH
-        n28c8vnHN6anb8oBBgaGzYN0LXSZD1gE/rwE4YqshZ9nZuZuKTvhdgeMPeJP4sZNi+D5CYjF1Dr0BcXd
-        IfstdC936zcsguMEcLu5A7qOoEP4/TovIceiQ1u0CBSNRmOmz2tDjKvnF58vlFUFi0CxQEAwNVeAu0SG
-        UDV7M71ygV1mYbW8yrNLLGRKGehf6TcUx7daLpdr+8eUBGF+hu79M5wASJeVh83fAlwAAAAASUVORK5C
-        YII=
+        vAAADrwBlbxySQAAAMZJREFUWEftkMEKAkEMQwf07s3//0pPioI4siRNLd2Mp32Qy762WWaMA81ljPH8
+        pMvcP6OosC3u/MSu/eveA5390+bJ8OnxezVqPwSHsgPVZPvEPRnC79Vk+wQO/DpQSbZP4MDqEDiwOgQO
+        rA4hhRnZI4UZ2SOFGdkTiRvE4aKeN5GY31Y4QgozskcKM7InEpWn7DoiEpVDXUdIYUb2SGFG9kSi8pRd
+        R0SicqjrCCnMyB4pzMgeKczInin+kQeWT3BwVQ6+vACQfnpPxBPj1gAAAABJRU5ErkJggg==
 </value>
+  </data>
+  <data name="&gt;&gt;recordCountStatusBarLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;alwaysLoadAllRecordsToolStripMenuItem.Name" xml:space="preserve">
+    <value>alwaysLoadAllRecordsToolStripMenuItem</value>
+  </data>
+  <data name="offsetTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="runQueryButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="mainGridView.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <data name="runQueryButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>458, 3</value>
+  </data>
+  <data name="&gt;&gt;recordsToLabel.Name" xml:space="preserve">
+    <value>recordsToLabel</value>
+  </data>
+  <data name="darkModeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="metadataViewerToolStripMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;recordCountTextBox.Type" xml:space="preserve">
+    <value>ParquetViewer.Controls.DelayedOnChangedTextBox, ParquetViewer, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;loadAllRowsButtonTooltip.Name" xml:space="preserve">
+    <value>loadAllRowsButtonTooltip</value>
+  </data>
+  <data name="&gt;&gt;searchFilterLabel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="recordsTextStatusBarLabel.Text" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="&gt;&gt;newToolStripMenuItem.Name" xml:space="preserve">
+    <value>newToolStripMenuItem</value>
+  </data>
+  <data name="mainGridView.RowHeadersWidth" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="iSO8601ToolStripMenuItem.Text" xml:space="preserve">
+    <value>ISO 8601</value>
+  </data>
+  <data name="openFolderToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>All parquet files in the folder must have the same schema</value>
+  </data>
+  <data name="exitToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 22</value>
+  </data>
+  <data name="araçlarToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>251, 22</value>
+  </data>
+  <data name="saveAsToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAAidJREFUOE+tkt9Lk2EUx99/wftugi66rakxnIvp4C3XUFYNw4ro1xtplqbLNEmx
+        Mo32phtoU5w6abXaiE008geYIiWiTCUrM1e0xKGm2EQw+MZ5pPdhu9hFdOBcfj7nOd/nCML/qN6eKKgD
+        /g34vOt46l5FZ0cELY5F2G3fIVtDuF87j+qqT6gof4/SkmlcuxqEIiBwcACwNW4hUW1ubcOQO4gTuS9Z
+        KwLvizUmqK/7Gc8oRXBkdRMHTa+gUkkwH/dwgfvJChNUV/2I51j9hb+E15BsDKD85gKOmrq4wNm2xAQ3
+        LJ/j2Rh4ai6CvaIXxUWzyMl2ckFzU5gJCq9MJ4RHg2Hs0rkhSeMwGh1c0NjwjQmki+MJ4YGxr0hK68DJ
+        U2+QlWXnggf1C+jvA3p7gDPn3sF8eoSlTYHRzvRsmrwDD+GY+TVEUeaCOzVz6A4APi/Q5foN2foLtfeW
+        WagUGO1ckB9U4CM5fuj1dVxwq2IWnmdAu3MbdlsUhryimDadtSDvcuUOnO2H/rAHOl0NF1hKZ9DuBBoe
+        RdlkggRBQLJGxMTHJczML0MquYtMg4/BmgwXtNpKLqCzdDyG8mwSEHyp7CE+hFYQWlzH9dsyUnQuaDI6
+        kZLeCk1aGRcU5E9Ctm4weI/eg937RTzvHkagbxT9Q2MYeTuBQ0YzVNo2pKa3Yp+6GWp1MRdQXTg/zM6T
+        LoyOhP6ZvorSpsBoZ5pKTfCB1MJYwb/WH060OMXnlEl9AAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="&gt;&gt;exitToolStripMenuItem.Name" xml:space="preserve">
+    <value>exitToolStripMenuItem</value>
+  </data>
+  <data name="springStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>692, 17</value>
+  </data>
+  <data name="&gt;&gt;exportFileDialog.Name" xml:space="preserve">
+    <value>exportFileDialog</value>
+  </data>
+  <data name="clearFilterButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="searchFilterTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>119, 6</value>
+  </data>
+  <data name="offsetTextBox.TextAlign" type="System.Windows.Forms.HorizontalAlignment, System.Windows.Forms">
+    <value>Right</value>
+  </data>
+  <data name="mainGridView.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 38</value>
+  </data>
+  <data name="showRecordsFromLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="&gt;&gt;showingRecordCountStatusBarLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;openFolderToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;openParquetFileDialog.Name" xml:space="preserve">
+    <value>openParquetFileDialog</value>
+  </data>
+  <data name="&gt;&gt;offsetTextBox.Type" xml:space="preserve">
+    <value>ParquetViewer.Controls.DelayedOnChangedTextBox, ParquetViewer, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="openParquetFileDialog.Filter" xml:space="preserve">
+    <value>Parquet Files|*.parquet;*.snappy;*.gz;*.gzip</value>
+  </data>
+  <data name="searchFilterTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <data name="openToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+O</value>
+  </data>
+  <data name="recordCountStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 17</value>
+  </data>
+  <data name="&gt;&gt;offsetTextBox.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="openFolderToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Shift+O</value>
+  </data>
+  <data name="totalRowCountStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 17</value>
+  </data>
+  <data name="saveAsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Save Results As</value>
+  </data>
+  <data name="actualShownRecordCountLabel.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 9pt, style=Bold</value>
+  </data>
+  <data name="showRecordsFromLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="customDateFormatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>125, 22</value>
+  </data>
+  <data name="&gt;&gt;openToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="mainGridView.CopyToClipboardIcon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -155,56 +374,702 @@
         SletYXyhW54FgKMFd4Y/+A3rSyMPm3Pf6gAAAABJRU5ErkJggg==
 </value>
   </data>
-  <metadata name="loadAllRowsButtonTooltip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="openParquetFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>208, 17</value>
-  </metadata>
-  <metadata name="mainMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>382, 17</value>
-  </metadata>
-  <data name="newToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="mainStatusStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>944, 22</value>
+  </data>
+  <data name="metadataViewerToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="toolsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="metadataViewerToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+M</value>
+  </data>
+  <data name="newToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+N</value>
+  </data>
+  <data name="searchFilterLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="&gt;&gt;araçlarToolStripMenuItem.Name" xml:space="preserve">
+    <value>araçlarToolStripMenuItem</value>
+  </data>
+  <data name="mainGridView.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="runQueryButton.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>BottomRight</value>
+  </data>
+  <data name="mainGridView.Size" type="System.Drawing.Size, System.Drawing">
+    <value>936, 356</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="&gt;&gt;runQueryButton.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;outOfStatusBarLabel.Name" xml:space="preserve">
+    <value>outOfStatusBarLabel</value>
+  </data>
+  <data name="&gt;&gt;showRecordsFromLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;actualShownRecordCountLabel.Name" xml:space="preserve">
+    <value>actualShownRecordCountLabel</value>
+  </data>
+  <data name="clearFilterButton.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>New Parquet File</value>
+  </data>
+  <data name="runQueryButton.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt, style=Bold</value>
+  </data>
+  <data name="recordCountTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 23</value>
+  </data>
+  <data name="loadAllRowsButton.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Center</value>
+  </data>
+  <data name="exportFileDialog.Filter" xml:space="preserve">
+    <value>CSV files|*.csv</value>
+  </data>
+  <data name="openToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 22</value>
+  </data>
+  <data name="&gt;&gt;iSO8601ToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="exportFileDialog.Title" xml:space="preserve">
+    <value>Choose Save Location</value>
+  </data>
+  <data name="&gt;&gt;openFolderToolStripMenuItem.Name" xml:space="preserve">
+    <value>openFolderToolStripMenuItem</value>
+  </data>
+  <data name="saveAsToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Shift+S</value>
+  </data>
+  <data name="runQueryButton.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="showingRecordCountStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 17</value>
+  </data>
+  <data name="loadAllRowsButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>926, 9</value>
+  </data>
+  <data name="&gt;&gt;runQueryButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="newToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="&gt;&gt;editToolStripMenuItem.Name" xml:space="preserve">
+    <value>editToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;saveAsToolStripMenuItem.Name" xml:space="preserve">
+    <value>saveAsToolStripMenuItem</value>
+  </data>
+  <data name="loadAllRowsButton.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;darkModeToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;newToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mainStatusStrip.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;shareAnonymousUsageDataToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;changeFieldsMenuStripButton.Name" xml:space="preserve">
+    <value>changeFieldsMenuStripButton</value>
+  </data>
+  <data name="&gt;&gt;defaultToolStripMenuItem.Name" xml:space="preserve">
+    <value>defaultToolStripMenuItem</value>
+  </data>
+  <data name="shareAnonymousUsageDataToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 22</value>
+  </data>
+  <data name="mainStatusStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 422</value>
+  </data>
+  <data name="clearFilterButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>85, 29</value>
+  </data>
+  <data name="mainMenuStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="openToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Open File</value>
+  </data>
+  <data name="searchFilterLabel.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt, style=Underline</value>
+  </data>
+  <data name="mainGridView.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;showRecordsFromLabel.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;darkModeToolStripMenuItem.Name" xml:space="preserve">
+    <value>darkModeToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;getSQLCreateTableScriptToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="loadAllRowsButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Flat</value>
+  </data>
+  <data name="userGuideToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 22</value>
+  </data>
+  <data name="searchFilterTextBox.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="clearFilterButton.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;recordsTextStatusBarLabel.Name" xml:space="preserve">
+    <value>recordsTextStatusBarLabel</value>
+  </data>
+  <data name="&gt;&gt;springStatusBarLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="mainTableLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="saveAsToolStripMenuItem.AutoSize" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="searchFilterTextBox.PlaceholderText" xml:space="preserve">
+    <value>WHERE </value>
+  </data>
+  <data name="&gt;&gt;fileToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="offsetTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <data name="&gt;&gt;customDateFormatToolStripMenuItem.Name" xml:space="preserve">
+    <value>customDateFormatToolStripMenuItem</value>
+  </data>
+  <data name="searchFilterTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="&gt;&gt;searchFilterLabel.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="recordsTextStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 17</value>
+  </data>
+  <data name="searchFilterTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>331, 23</value>
+  </data>
+  <data name="clearFilterButton.Text" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator.Name" xml:space="preserve">
+    <value>toolStripSeparator</value>
+  </data>
+  <data name="loadAllRowsButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>13, 16</value>
+  </data>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>7, 15</value>
+  </data>
+  <data name="mainTableLayoutPanel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;mainGridView.Type" xml:space="preserve">
+    <value>ParquetViewer.Controls.ParquetGridView, ParquetViewer, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="mainGridView.CopyAsWhereIcon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAENSURBVDhPrZHbSgJRGEZ9KX2HfI18I9ELkS5KCREMDBSN
-        VLRA0xDREQ+FTJai47mm8TDOF7NlhulHNwO14LvarHXxb4fjv4jnW6CLZRqIpKoI3Zbw3HwDdX6hC6cI
-        RnNwuT38yE1WoJ6JL5RC+rFxiAji8Uj0rkY9E+9lksnGqMu4TlSoZ7JT9yxihKjLuIoXqcfQNA2yssVo
-        KrOA8+z8eOAiVqAuY7NVMVsqEIdLfiAQyVAX6l7DSt5gIH2hI874AX84TX0o6x2k+Td6HwvUuxI/oD9a
-        0Q+3+FyjP1qh1ZuiLAztB6yHe+nPUWuP8VB9tx+wHk54naBUH+D+SbQXMP771LgB/dHOqPsnfgDYzPbD
-        7s5C8AAAAABJRU5ErkJggg==
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAArBJREFUWEftV0trE2EUHYdYU6i0K8FFf4BNpfSR52SaacEsEoR0EcSCuKmthUBM
+        axuMFM2yy0C0ZFEQiXQXoRRjKdpFHyCiaUbS+MhScCEu/AGTW+7opN9888gMIrrIgQPJvXfOOd8jA2GY
+        /x3NF8w52GQAXjIA2xQ3GcA+/QyNvvt9sH64HnKmndCT7Qk5kg6IrEUA6/SsDGnn4o+WSZmB73u34bjy
+        GsRqBapiTWatsg9fDx/IfWVW2mLf0Fq2oZhWxQ8giqJl4rwShtbUQ6qUCunuAArQ4nZoNYAhUODbQUYj
+        bIU/dyOWA5juQOtMy0749K4ER+Kxxgx5JH6Extun0NxmVZeT1rQFUsgS8dz3BwEaD20FsLQDpmxkf5mS
+        tBHAEBojI3YCdAJ0AjSyINXTG7OziQ1BCMumsHOhbYBwOGratxUAVy3V79Q8niAEgxPA85Mgvb/+itZU
+        gDPIoSG3cQiNkQ7lOfIIvmTA5RqWxb1eXiNeKBTOKuYKR0f9mjkZtJkeW7O/AzQ/3wuR4qResVi8TJsH
+        AiF9cwRtpkecI40SieScIs5xp+Lp9MpV2hyPS+nrgjbTY3NvcIoWJplK3Z1CrZERn6qO32k/DZr1pfO0
+        oR5xljZGzs8nL8Xj1x7hXSDrXm+blesBtrTGJKVdV4GcDwYnIZ9fe0YaezycfeM/hc93unq699cxNuYH
+        n28c8vnHN6anb8oBBgaGzYN0LXSZD1gE/rwE4YqshZ9nZuZuKTvhdgeMPeJP4sZNi+D5CYjF1Dr0BcXd
+        IfstdC936zcsguMEcLu5A7qOoEP4/TovIceiQ1u0CBSNRmOmz2tDjKvnF58vlFUFi0CxQEAwNVeAu0SG
+        UDV7M71ygV1mYbW8yrNLLGRKGehf6TcUx7daLpdr+8eUBGF+hu79M5wASJeVh83fAlwAAAAASUVORK5C
+        YII=
 </value>
+  </data>
+  <data name="outOfStatusBarLabel.Text" xml:space="preserve">
+    <value>Out of:</value>
+  </data>
+  <data name="mainGridView.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;clearFilterButton.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;editToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="defaultToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>Local date format</value>
+  </data>
+  <data name="mainStatusStrip.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 0, 16, 0</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAArBJREFUWEftV0trE2EUHYdYU6i0K8FFf4BNpfSR52SaacEsEoR0EcSCuKmthUBM
+        axuMFM2yy0C0ZFEQiXQXoRRjKdpFHyCiaUbS+MhScCEu/AGTW+7opN9888gMIrrIgQPJvXfOOd8jA2GY
+        /x3NF8w52GQAXjIA2xQ3GcA+/QyNvvt9sH64HnKmndCT7Qk5kg6IrEUA6/SsDGnn4o+WSZmB73u34bjy
+        GsRqBapiTWatsg9fDx/IfWVW2mLf0Fq2oZhWxQ8giqJl4rwShtbUQ6qUCunuAArQ4nZoNYAhUODbQUYj
+        bIU/dyOWA5juQOtMy0749K4ER+Kxxgx5JH6Extun0NxmVZeT1rQFUsgS8dz3BwEaD20FsLQDpmxkf5mS
+        tBHAEBojI3YCdAJ0AjSyINXTG7OziQ1BCMumsHOhbYBwOGratxUAVy3V79Q8niAEgxPA85Mgvb/+itZU
+        gDPIoSG3cQiNkQ7lOfIIvmTA5RqWxb1eXiNeKBTOKuYKR0f9mjkZtJkeW7O/AzQ/3wuR4qResVi8TJsH
+        AiF9cwRtpkecI40SieScIs5xp+Lp9MpV2hyPS+nrgjbTY3NvcIoWJplK3Z1CrZERn6qO32k/DZr1pfO0
+        oR5xljZGzs8nL8Xj1x7hXSDrXm+blesBtrTGJKVdV4GcDwYnIZ9fe0YaezycfeM/hc93unq699cxNuYH
+        n28c8vnHN6anb8oBBgaGzYN0LXSZD1gE/rwE4YqshZ9nZuZuKTvhdgeMPeJP4sZNi+D5CYjF1Dr0BcXd
+        IfstdC936zcsguMEcLu5A7qOoEP4/TovIceiQ1u0CBSNRmOmz2tDjKvnF58vlFUFi0CxQEAwNVeAu0SG
+        UDV7M71ygV1mYbW8yrNLLGRKGehf6TcUx7daLpdr+8eUBGF+hu79M5wASJeVh83fAlwAAAAASUVORK5C
+        YII=
+</value>
+  </data>
+  <data name="searchFilterTextBox.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <data name="mainStatusStrip.Text" xml:space="preserve">
+    <value>statusStrip1</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="mainTableLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 24</value>
+  </data>
+  <data name="defaultToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>125, 22</value>
+  </data>
+  <data name="&gt;&gt;userGuideToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;springStatusBarLabel.Name" xml:space="preserve">
+    <value>springStatusBarLabel</value>
+  </data>
+  <data name="recordCountStatusBarLabel.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 9pt, style=Bold</value>
+  </data>
+  <data name="newToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;New</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>When opening a new file ParquetViewer will load all records</value>
+  </data>
+  <data name="recordCountTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;File</value>
+  </data>
+  <data name="&gt;&gt;recordsToLabel.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;outOfStatusBarLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="defaultToolStripMenuItem.Text" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 20</value>
+  </data>
+  <data name="&gt;&gt;searchFilterLabel.Name" xml:space="preserve">
+    <value>searchFilterLabel</value>
+  </data>
+  <data name="mainMenuStrip.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;shareAnonymousUsageDataToolStripMenuItem.Name" xml:space="preserve">
+    <value>shareAnonymousUsageDataToolStripMenuItem</value>
+  </data>
+  <data name="showingStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 17</value>
+  </data>
+  <data name="totalRowCountStatusBarLabel.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 9pt, style=Bold</value>
+  </data>
+  <data name="$this.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="runQueryButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 29</value>
+  </data>
+  <data name="&gt;&gt;metadataViewerToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="openFolderToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 22</value>
+  </data>
+  <data name="showRecordsFromLabel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="shareAnonymousUsageDataToolStripMenuItem.Text" xml:space="preserve">
+    <value>Share Usage Data</value>
+  </data>
+  <data name="showRecordsFromLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>664, 0</value>
+  </data>
+  <data name="shareAnonymousUsageDataToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>See About page for link to privacy policy</value>
+  </data>
+  <data name="showRecordsFromLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 35</value>
+  </data>
+  <data name="&gt;&gt;clearFilterButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;metadataViewerToolStripMenuItem.Name" xml:space="preserve">
+    <value>metadataViewerToolStripMenuItem</value>
+  </data>
+  <data name="searchFilterLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Text" xml:space="preserve">
+    <value>Date Format</value>
+  </data>
+  <data name="recordsToLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 35</value>
+  </data>
+  <data name="showRecordsFromLabel.Text" xml:space="preserve">
+    <value>Record Offset:</value>
+  </data>
+  <data name="&gt;&gt;mainStatusStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.StatusStrip, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="newToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 22</value>
+  </data>
+  <data name="loadAllRowsButton.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 8.25pt</value>
+  </data>
+  <data name="&gt;&gt;searchFilterTextBox.Name" xml:space="preserve">
+    <value>searchFilterTextBox</value>
+  </data>
+  <data name="runQueryButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="toolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 6</value>
+  </data>
+  <data name="&gt;&gt;mainTableLayoutPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;openParquetFileDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.OpenFileDialog, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="showingStatusBarLabel.Text" xml:space="preserve">
+    <value>Loaded:</value>
+  </data>
+  <data name="&gt;&gt;loadAllRowsButton.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;offsetTextBox.Name" xml:space="preserve">
+    <value>offsetTextBox</value>
+  </data>
+  <data name="openFolderToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Open Folder</value>
+  </data>
+  <data name="customDateFormatToolStripMenuItem.Text" xml:space="preserve">
+    <value>Custom...</value>
+  </data>
+  <data name="&gt;&gt;helpToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="recordCountTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <data name="loadAllRowsButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 5, 0</value>
+  </data>
+  <data name="&gt;&gt;openFolderDialog.Name" xml:space="preserve">
+    <value>openFolderDialog</value>
+  </data>
+  <data name="runQueryButton.Text" xml:space="preserve">
+    <value>&amp;Execute</value>
+  </data>
+  <data name="recordCountStatusBarLabel.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;toolsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;clearFilterButton.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;openFolderDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FolderBrowserDialog, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="recordCountTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>858, 6</value>
+  </data>
+  <data name="runQueryButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
+    <value>ImageBeforeText</value>
+  </data>
+  <data name="&gt;&gt;actualShownRecordCountLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;recordsTextStatusBarLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="mainTableLayoutPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="iSO8601ToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>yyyy-MM-ddTHH:mm:ss.FFFFFFF</value>
+  </data>
+  <data name="&gt;&gt;fileToolStripMenuItem.Name" xml:space="preserve">
+    <value>fileToolStripMenuItem</value>
+  </data>
+  <data name="loadAllRowsButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="clearFilterButton.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="offsetTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 23</value>
+  </data>
+  <data name="mainMenuStrip.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>7, 2, 0, 2</value>
+  </data>
+  <data name="&gt;&gt;clearFilterButton.Name" xml:space="preserve">
+    <value>clearFilterButton</value>
+  </data>
+  <data name="metadataViewerToolStripMenuItem.Text" xml:space="preserve">
+    <value>Metadata Viewer</value>
+  </data>
+  <data name="&gt;&gt;recordsToLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;recordCountTextBox.Name" xml:space="preserve">
+    <value>recordCountTextBox</value>
+  </data>
+  <data name="searchFilterLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
+  </data>
+  <data name="&gt;&gt;changeFieldsMenuStripButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showRecordsFromLabel.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="aboutToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;About...</value>
+  </data>
+  <data name="&gt;&gt;exportFileDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SaveFileDialog, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;runQueryButton.Name" xml:space="preserve">
+    <value>runQueryButton</value>
+  </data>
+  <data name="searchFilterLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 9</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>ParquetViewer.Controls.FormBase, ParquetViewer, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="offsetTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>728, 6</value>
+  </data>
+  <data name="openFolderDialog.Description" xml:space="preserve">
+    <value>Select a folder with parquet files</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;mainGridView.Name" xml:space="preserve">
+    <value>mainGridView</value>
+  </data>
+  <data name="&gt;&gt;showingRecordCountStatusBarLabel.Name" xml:space="preserve">
+    <value>showingRecordCountStatusBarLabel</value>
+  </data>
+  <data name="&gt;&gt;mainGridView.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 6</value>
+  </data>
+  <data name="&gt;&gt;mainStatusStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="clearFilterButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 3, 4, 3</value>
+  </data>
+  <data name="&gt;&gt;showRecordsFromLabel.Name" xml:space="preserve">
+    <value>showRecordsFromLabel</value>
+  </data>
+  <data name="&gt;&gt;getSQLCreateTableScriptToolStripMenuItem.Name" xml:space="preserve">
+    <value>getSQLCreateTableScriptToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;searchFilterTextBox.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="runQueryButton.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>BottomCenter</value>
+  </data>
+  <data name="&gt;&gt;recordCountTextBox.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="recordsToLabel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;searchFilterLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;totalRowCountStatusBarLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="totalRowCountStatusBarLabel.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="editToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 20</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Text" xml:space="preserve">
+    <value>Add/Remove &amp;Fields</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.Name" xml:space="preserve">
+    <value>mainMenuStrip</value>
+  </data>
+  <data name="recordsToLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>798, 0</value>
+  </data>
+  <data name="&gt;&gt;searchFilterTextBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="showRecordsFromLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 4, 0</value>
+  </data>
+  <data name="mainTableLayoutPanel.ColumnCount" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;araçlarToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;defaultToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="offsetTextBox.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="runQueryButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 3</value>
+  </data>
+  <data name="&gt;&gt;mainStatusStrip.Name" xml:space="preserve">
+    <value>mainStatusStrip</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+F</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="&gt;&gt;recordCountStatusBarLabel.Name" xml:space="preserve">
+    <value>recordCountStatusBarLabel</value>
+  </data>
+  <data name="showingRecordCountStatusBarLabel.Text" xml:space="preserve">
+    <value>Showing:</value>
+  </data>
+  <data name="&gt;&gt;mainGridView.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;loadAllRowsButton.Name" xml:space="preserve">
+    <value>loadAllRowsButton</value>
+  </data>
+  <data name="recordCountTextBox.TextAlign" type="System.Windows.Forms.HorizontalAlignment, System.Windows.Forms">
+    <value>Right</value>
+  </data>
+  <data name="userGuideToolStripMenuItem.Text" xml:space="preserve">
+    <value>User Guide</value>
+  </data>
+  <data name="loadAllRowsButton.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="recordsToLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;loadAllRowsButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;recordCountTextBox.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>791, 200</value>
   </data>
   <data name="openToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJGSURBVDhPxZJdSJNhGIa/gw46ssiKQiiwPPBkEBRRHYQU
-        USiKZRYkaULNHyqMhTl/2tR0c3Nz6le6rG26pk4ryyjsRyoUiZimjjRTs6KwFDNDJf+ucAN1KdVZN9wH
-        L89zX8/zvryC8I9SGmxcUFvIFu38XvuromSiRyjdYHOdI2WFCB/73lBt1S9yR8uTP04Ki88lJDYPYba5
-        q83M+HCVyz+HbEwOmLBbculofbok5FCcjpAYA0HSAoSqUh1jQ+Ue4en+IiadCZRfV1NWnIWpMB1jXhpX
-        tHIKVIme0AqzhrGv5rnwTH8RdMnBKV3SiwA3SlT8+GycC9dVa1x+YM+h1qbidlkWdlMGNqMSi3iRa4YU
-        inVyRE2SG1ZmzGLkfb5r7d4GBTXlOqZ7ldCX6el3SuhJhk4ZvI6ntTIc61U9gknM4Hu3Gj5ouVORS9ND
-        rbtp4eqvIsERxlRjIOOPAnhbKkEmDXVfpcSg4FuHkr7GVGpsWmZ6FNAe4w62RoPjKFNNwYzX72Pk/i4G
-        q7egjPXDIsrdgCJdKoNtSdy0amh+robOBGg/Cc0RzLwIZeLZAUbrdjNUs5UvFf44Lq3kWKDv/EOKOXLa
-        69O4Zc2B7jRoiYSXh5loCGL0cQDDtdsZsEv4ZN6MU+uNQrqJ07HH5wH52YlUWdQ478bh0AtzbtIuo161
-        nHvpK6hMWYMp0YfL5zYSsXD6rPSZ59ErTpGdFEXymSOcjQ7mRPheDu7fwZ6dErZJ/PD39WHD+tWsXeXF
-        Om+vJX/n/9MvF8beaWm1d4MAAAAASUVORK5CYII=
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vQAADr0BR/uQrQAAAkZJREFUOE/Fkl1Ik2EYhr+DDjqyyIpCKLA88GQQFFEdhBRRKIplFiRpQs0fKoyF
+        OX/a1HRzc3PqV7qsbbqmTivLKOxHKhSJmKaONFOzorAUM0Ml/65wA3Up1Vk33Acvz3Nfz/O+vILwj1Ia
+        bFxQW8gW7fxe+6uiZKJHKN1gc50jZYUIH/veUG3VL3JHy5M/TgqLzyUkNg9htrmrzcz4cJXLP4dsTA6Y
+        sFty6Wh9uiTkUJyOkBgDQdIChKpSHWND5R7h6f4iJp0JlF9XU1achakwHWNeGle0cgpUiZ7QCrOGsa/m
+        ufBMfxF0ycEpXdKLADdKVPz4bJwL11VrXH5gz6HWpuJ2WRZ2UwY2oxKLeJFrhhSKdXJETZIbVmbMYuR9
+        vmvt3gYFNeU6pnuV0Jfp6XdK6EmGThm8jqe1MhzrVT2CSczge7caPmi5U5FL00Otu2nh6q8iwRHGVGMg
+        448CeFsqQSYNdV+lxKDgW4eSvsZUamxaZnoU0B7jDrZGg+MoU03BjNfvY+T+Lgart6CM9cMiyt2AIl0q
+        g21J3LRqaH6uhs4EaD8JzRHMvAhl4tkBRut2M1SzlS8V/jgureRYoO/8Q4o5ctrr07hlzYHuNGiJhJeH
+        mWgIYvRxAMO12xmwS/hk3oxT641CuonTscfnAfnZiVRZ1DjvxuHQC3Nu0i6jXrWce+krqExZgynRh8vn
+        NhKxcPqs9Jnn0StOkZ0URfKZI5yNDuZE+F4O7t/Bnp0Stkn88Pf1YcP61axd5cU6b68lf+f/0y8Xxt5p
+        abV3gwAAAABJRU5ErkJggg==
 </value>
   </data>
-  <data name="saveAsToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAAidJREFUOE+tkt9Lk2EUx99/wftugi66rakxnIvp4C3XUFYNw4ro1xtplqbLNEmx
-        Mo32phtoU5w6abXaiE008geYIiWiTCUrM1e0xKGm2EQw+MZ5pPdhu9hFdOBcfj7nOd/nCML/qN6eKKgD
-        /g34vOt46l5FZ0cELY5F2G3fIVtDuF87j+qqT6gof4/SkmlcuxqEIiBwcACwNW4hUW1ubcOQO4gTuS9Z
-        KwLvizUmqK/7Gc8oRXBkdRMHTa+gUkkwH/dwgfvJChNUV/2I51j9hb+E15BsDKD85gKOmrq4wNm2xAQ3
-        LJ/j2Rh4ai6CvaIXxUWzyMl2ckFzU5gJCq9MJ4RHg2Hs0rkhSeMwGh1c0NjwjQmki+MJ4YGxr0hK68DJ
-        U2+QlWXnggf1C+jvA3p7gDPn3sF8eoSlTYHRzvRsmrwDD+GY+TVEUeaCOzVz6A4APi/Q5foN2foLtfeW
-        WagUGO1ckB9U4CM5fuj1dVxwq2IWnmdAu3MbdlsUhryimDadtSDvcuUOnO2H/rAHOl0NF1hKZ9DuBBoe
-        RdlkggRBQLJGxMTHJczML0MquYtMg4/BmgwXtNpKLqCzdDyG8mwSEHyp7CE+hFYQWlzH9dsyUnQuaDI6
-        kZLeCk1aGRcU5E9Ctm4weI/eg937RTzvHkagbxT9Q2MYeTuBQ0YzVNo2pKa3Yp+6GWp1MRdQXTg/zM6T
-        LoyOhP6ZvorSpsBoZ5pKTfCB1MJYwb/WH060OMXnlEl9AAAAAElFTkSuQmCC
-</value>
+  <data name="&gt;&gt;mainTableLayoutPanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;changeDateFormatToolStripMenuItem.Name" xml:space="preserve">
+    <value>changeDateFormatToolStripMenuItem</value>
+  </data>
+  <data name="searchFilterLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>The schema will match the fields you've loaded</value>
+  </data>
+  <data name="recordsToLabel.Text" xml:space="preserve">
+    <value>Record Count:</value>
+  </data>
+  <data name="&gt;&gt;helpToolStripMenuItem.Name" xml:space="preserve">
+    <value>helpToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator.Type" xml:space="preserve">
+    <value>ParquetViewer.Controls.ThemableToolStripSeperator, ParquetViewer, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="recordsToLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="&gt;&gt;searchFilterTextBox.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;recordsToLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="mainStatusStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
   <data name="changeFieldsMenuStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -225,40 +1090,159 @@
         60//LTl2/zYBAyFE20CNj+/T2/5v+wEn/rziAX3j2AAAAABJRU5ErkJggg==
 </value>
   </data>
-  <data name="changeDateFormatToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+  <data name="recordCountTextBox.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;runQueryButton.Parent" xml:space="preserve">
+    <value>mainTableLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;loadAllRowsButton.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="clearFilterButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>575, 3</value>
+  </data>
+  <data name="&gt;&gt;loadAllRowsButtonTooltip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>MainForm</value>
+  </data>
+  <data name="&gt;&gt;customDateFormatToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="exitToolStripMenuItem.Text" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="actualShownRecordCountLabel.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="iSO8601ToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>125, 22</value>
+  </data>
+  <data name="loadAllRowsButton.ToolTip" xml:space="preserve">
+    <value>Load all records (Ctrl+E)</value>
+  </data>
+  <data name="mainTableLayoutPanel.RowCount" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;totalRowCountStatusBarLabel.Name" xml:space="preserve">
+    <value>totalRowCountStatusBarLabel</value>
+  </data>
+  <data name="searchFilterLabel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="mainMenuStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;toolsToolStripMenuItem.Name" xml:space="preserve">
+    <value>toolsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>ParquetViewer.Controls.ThemableToolStripSeperator, ParquetViewer, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;offsetTextBox.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="mainMenuStrip.Text" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Help</value>
+  </data>
+  <data name="getSQLCreateTableScriptToolStripMenuItem.Text" xml:space="preserve">
+    <value>Get SQL Create Table Script</value>
+  </data>
+  <data name="clearFilterButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;userGuideToolStripMenuItem.Name" xml:space="preserve">
+    <value>userGuideToolStripMenuItem</value>
+  </data>
+  <data name="showRecordsFromLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="offsetTextBox.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="actualShownRecordCountLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 17</value>
+  </data>
+  <data name="runQueryButton.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
+  </data>
+  <data name="recordsToLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
+  </data>
+  <data name="&gt;&gt;showingStatusBarLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripStatusLabel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;iSO8601ToolStripMenuItem.Name" xml:space="preserve">
+    <value>iSO8601ToolStripMenuItem</value>
+  </data>
+  <data name="searchFilterLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="&gt;&gt;mainTableLayoutPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="exitToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+W</value>
+  </data>
+  <data name="editToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Edit</value>
+  </data>
+  <data name="darkModeToolStripMenuItem.Text" xml:space="preserve">
+    <value>Dark Mode</value>
+  </data>
+  <data name="&gt;&gt;changeDateFormatToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="recordCountTextBox.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="newToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
-        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAAMZJREFUWEftkMEKAkEMQwf07s3//0pPioI4siRNLd2Mp32Qy762WWaMA81ljPH8
-        pMvcP6OosC3u/MSu/eveA5390+bJ8OnxezVqPwSHsgPVZPvEPRnC79Vk+wQO/DpQSbZP4MDqEDiwOgQO
-        rA4hhRnZI4UZ2SOFGdkTiRvE4aKeN5GY31Y4QgozskcKM7InEpWn7DoiEpVDXUdIYUb2SGFG9kSi8pRd
-        R0SicqjrCCnMyB4pzMgeKczInin+kQeWT3BwVQ6+vACQfnpPxBPj1gAAAABJRU5ErkJggg==
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vQAADr0BR/uQrQAAAQ1JREFUOE+tkdtKAlEYRn0pfYd8jXwj0QuRLkoJEQwMFI1UtEDTENERD4VMlqLj
+        uabxMM4Xs2WG6Uc3A7Xgu9qsdfFvh+O/iOdboItlGoikqgjdlvDcfAN1fqELpwhGc3C5PfzITVagnokv
+        lEL6sXGICOLxSPSuRj0T72WSycaoy7hOVKhnslP3LGKEqMu4ihepx9A0DbKyxWgqs4Dz7Px44CJWoC5j
+        s1UxWyoQh0t+IBDJUBfqXsNK3mAgfaEjzvgBfzhNfSjrHaT5N3ofC9S7Ej+gP1rRD7f4XKM/WqHVm6Is
+        DO0HrId76c9Ra4/xUH23H7AeTnidoFQf4P5JtBcw/vvUuAH90c6o+yd+ANjM9sPuzkLwAAAAAElFTkSu
+        QmCC
 </value>
   </data>
-  <data name="getSQLCreateTableScriptToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAArBJREFUWEftV0trE2EUHYdYU6i0K8FFf4BNpfSR52SaacEsEoR0EcSCuKmthUBM
-        axuMFM2yy0C0ZFEQiXQXoRRjKdpFHyCiaUbS+MhScCEu/AGTW+7opN9888gMIrrIgQPJvXfOOd8jA2GY
-        /x3NF8w52GQAXjIA2xQ3GcA+/QyNvvt9sH64HnKmndCT7Qk5kg6IrEUA6/SsDGnn4o+WSZmB73u34bjy
-        GsRqBapiTWatsg9fDx/IfWVW2mLf0Fq2oZhWxQ8giqJl4rwShtbUQ6qUCunuAArQ4nZoNYAhUODbQUYj
-        bIU/dyOWA5juQOtMy0749K4ER+Kxxgx5JH6Extun0NxmVZeT1rQFUsgS8dz3BwEaD20FsLQDpmxkf5mS
-        tBHAEBojI3YCdAJ0AjSyINXTG7OziQ1BCMumsHOhbYBwOGratxUAVy3V79Q8niAEgxPA85Mgvb/+itZU
-        gDPIoSG3cQiNkQ7lOfIIvmTA5RqWxb1eXiNeKBTOKuYKR0f9mjkZtJkeW7O/AzQ/3wuR4qResVi8TJsH
-        AiF9cwRtpkecI40SieScIs5xp+Lp9MpV2hyPS+nrgjbTY3NvcIoWJplK3Z1CrZERn6qO32k/DZr1pfO0
-        oR5xljZGzs8nL8Xj1x7hXSDrXm+blesBtrTGJKVdV4GcDwYnIZ9fe0YaezycfeM/hc93unq699cxNuYH
-        n28c8vnHN6anb8oBBgaGzYN0LXSZD1gE/rwE4YqshZ9nZuZuKTvhdgeMPeJP4sZNi+D5CYjF1Dr0BcXd
-        IfstdC936zcsguMEcLu5A7qOoEP4/TovIceiQ1u0CBSNRmOmz2tDjKvnF58vlFUFi0CxQEAwNVeAu0SG
-        UDV7M71ygV1mYbW8yrNLLGRKGehf6TcUx7daLpdr+8eUBGF+hu79M5wASJeVh83fAlwAAAAASUVORK5C
-        YII=
-</value>
-  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <metadata name="mainStatusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>518, 17</value>
   </metadata>
-  <metadata name="exportFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>655, 17</value>
+  <metadata name="mainMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>382, 17</value>
+  </metadata>
+  <metadata name="loadAllRowsButtonTooltip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
   <metadata name="openFolderDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>795, 17</value>
+  </metadata>
+  <metadata name="openParquetFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>208, 17</value>
+  </metadata>
+  <metadata name="$this.Language" type="System.Globalization.CultureInfo, System.Private.CoreLib, Culture=neutral, PublicKeyToken=7cec85d7bea7798e">
+    <value>tr</value>
+  </metadata>
+  <metadata name="exportFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>655, 17</value>
   </metadata>
 </root>
