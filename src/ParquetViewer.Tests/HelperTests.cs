@@ -37,6 +37,7 @@ namespace ParquetViewer.Tests
             ""processorCount"": {Environment.ProcessorCount},
             ""isDefaultParquetViewer"": {AboutBox.IsDefaultViewerForParquetFiles.ToString().ToLower()},
             ""darkMode"": {AppSettings.DarkMode.ToString().ToLower()},
+            ""cultureInfo"": ""{AppSettings.UserSelectedCulture ?? CultureInfo.CurrentUICulture}"",
             ""selfContainedExecutable"": {(isSelfContainedExecutable ? "true" : "false")}
         }},
         ""event_properties"": {{
@@ -54,7 +55,6 @@ namespace ParquetViewer.Tests
             _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
             {
                 string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
-
                 if (Regex.Replace(requestJsonBody, "\\s", string.Empty)
                     .Equals(Regex.Replace(expectedRequestJson, "\\s", string.Empty)))
                     return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
