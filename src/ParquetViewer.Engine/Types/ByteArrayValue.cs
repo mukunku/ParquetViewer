@@ -297,8 +297,8 @@ namespace ParquetViewer.Engine.Types
         /// <returns>Binary data in hexadecimal representation</returns>
         public string ToStringTruncated(int desiredLength)
         {
-            var maxBytesToRender = HexStringLengthToByteCount(desiredLength);
-            if (Data.Length < maxBytesToRender)
+            var maxBytesToRender = Math.Max(2, HexStringLengthToByteCount(desiredLength));
+            if (Data.Length <= maxBytesToRender)
                 return BitConverter.ToString(Data);
 
             return BitConverter.ToString(Data, 0, maxBytesToRender / 2) + "[...]"

@@ -1,5 +1,6 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Controls;
+using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using RichardSzalay.MockHttp;
 using System.Globalization;
@@ -282,6 +283,18 @@ namespace ParquetViewer.Tests
                 ("Value", typeof(double), new object[] { 1.23e20 })
             });
             Assert.AreEqual("Value = '1.23E+20'", query);
+        }
+
+        [TestMethod]
+        public void ByteArrayValue_IsCorrectlyTruncated()
+        {
+            var byteArrayValue = new ByteArrayValue("test", [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10]);
+            Assert.AreEqual("01[...]10", byteArrayValue.ToStringTruncated(1));
+            Assert.AreEqual("01[...]10", byteArrayValue.ToStringTruncated(2));
+            Assert.AreEqual("01-02[...]09-10", byteArrayValue.ToStringTruncated(11));
+            Assert.AreEqual("01-02-03-04[...]07-08-09-10", byteArrayValue.ToStringTruncated(28));
+            Assert.AreEqual("01-02-03-04-05-06-07-08-09-10", byteArrayValue.ToStringTruncated(29));
+            Assert.AreEqual("01-02-03-04-05-06-07-08-09-10", byteArrayValue.ToString());
         }
     }
 }
