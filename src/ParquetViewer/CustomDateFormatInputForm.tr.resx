@@ -215,7 +215,7 @@
     <value>Zaman değerindeki saniyenin on milyonda biri</value>
   </data>
   <data name="dateFormatDocsLinkLabel.Text" xml:space="preserve">
-    <value>Tüm format karakterleri için buraya tıklayın</value>
+    <value>Tüm format dizeleri için buraya tıklayın</value>
   </data>
   <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 353</value>
@@ -275,7 +275,7 @@
     <value>308, 115</value>
   </data>
   <data name="label38.Text" xml:space="preserve">
-    <value>Format karakteri</value>
+    <value>Format dizesi</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>Ayın günü 1'den 31'e.</value>

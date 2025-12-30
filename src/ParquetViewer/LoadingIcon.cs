@@ -23,7 +23,7 @@ namespace ParquetViewer
         public event EventHandler? OnShow;
         public event EventHandler? OnHide;
 
-        public LoadingIcon(Form form, string message, string cancellingMessage, long loadingBarMax = 0)
+        public LoadingIcon(Form form, string message, long loadingBarMax = 0)
         {
             ArgumentNullException.ThrowIfNull(form);
 
@@ -67,7 +67,7 @@ namespace ParquetViewer
                 if (buttonSender is Button button)
                 {
                     button.Enabled = false;
-                    button.Text = cancellingMessage;
+                    button.Text = Resources.Strings.CancelInitiatedLabelText;
                 }
             };
             this._panel.Controls.Add(this._cancelButton);

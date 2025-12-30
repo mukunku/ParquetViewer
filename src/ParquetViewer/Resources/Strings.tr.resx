@@ -272,4 +272,7 @@ Onun yerine sonuçlari {2} dosyasına aktarmak ister misiniz?</value>
   <data name="LanguageChangeConfirmationMessage" xml:space="preserve">
     <value>Dili değiştirmek için uygulamanın yeniden başlatılmasi gerekiyor. Devam etmek ister misiniz?</value>
   </data>
+  <data name="DotNetDateFormatHelpUrl" xml:space="preserve">
+    <value>https://docs.microsoft.com/tr-tr/dotnet/standard/base-types/custom-date-and-time-format-strings</value>
+  </data>
 </root>

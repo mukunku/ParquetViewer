@@ -136,7 +136,7 @@
     <value>Birşey ters gitti</value>
   </data>
   <data name="InvalidDateFormatErrorMessage" xml:space="preserve">
-    <value>Geçersiz tarih formatı. Geçerli format karakterleri için lütfen dökümantasyona bakın.</value>
+    <value>Geçersiz tarih formatı. Geçerli format dizeleri için lütfen dökümantasyona bakın.</value>
   </data>
   <data name="InvalidDateFormatErrorTitle" xml:space="preserve">
     <value>Geçersiz Tarih Formatı</value>

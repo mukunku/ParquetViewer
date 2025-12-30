@@ -169,6 +169,15 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings.
+        /// </summary>
+        internal static string DotNetDateFormatHelpUrl {
+            get {
+                return ResourceManager.GetString("DotNetDateFormatHelpUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export has been cancelled.
         /// </summary>
         internal static string ExportCancelledMessage {

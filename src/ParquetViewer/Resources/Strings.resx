@@ -316,4 +316,8 @@ Would you like to switch to a {2} file instead?</value>
     <value>Changing the language requires an app restart. Would you like to continue?</value>
     <comment>Shown when the user clicks on a different UI language from the help menu</comment>
   </data>
+  <data name="DotNetDateFormatHelpUrl" xml:space="preserve">
+    <value>https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings</value>
+    <comment>This is the link that the user will be taken to if they click on the link label at the bottom of the custom date format configuration screen.</comment>
+  </data>
 </root>

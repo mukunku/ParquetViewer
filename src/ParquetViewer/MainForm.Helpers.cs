@@ -20,9 +20,9 @@ namespace ParquetViewer
 {
     public partial class MainForm
     {
-        public LoadingIcon ShowLoadingIcon(string message, string cancellingMessage, long loadingBarMax = 0)
+        public LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
         {
-            var loadingIcon = new LoadingIcon(this, message, cancellingMessage, loadingBarMax);
+            var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
             loadingIcon.OnShow += (object? sender, EventArgs e) =>
             {
                 this.mainTableLayoutPanel.Enabled = false;
@@ -69,7 +69,7 @@ namespace ParquetViewer
                         FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
 
                         var stopWatch = Stopwatch.StartNew();
-                        loadingIcon = this.ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, Resources.Strings.CancelInitiatedLabelText, this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
+                        loadingIcon = this.ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
                         if (selectedFileType == FileType.CSV)
                         {
                             await WriteDataToCSVFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);

@@ -297,7 +297,7 @@ namespace ParquetViewer
                 }
 
                 long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine!.RecordCount - this.CurrentOffset);
-                loadingIcon = this.ShowLoadingIcon(Resources.Strings.LoadingDataLabelText, Resources.Strings.CancelInitiatedLabelText, cellCount);
+                loadingIcon = this.ShowLoadingIcon(Resources.Strings.LoadingDataLabelText, cellCount);
 
                 var intermediateResult = await Task.Run(async () =>
                 {
