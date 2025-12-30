@@ -159,9 +159,6 @@
   <data name="NoFieldsFoundErrorTitle" xml:space="preserve">
     <value>Alan bulunamadı</value>
   </data>
-  <data name="NoFieldsSelectedErrorMessage" xml:space="preserve">
-    <value>Hiç alan seçilmedi</value>
-  </data>
   <data name="NoThriftMetadataAvailableErrorMessage" xml:space="preserve">
     <value>Thrift metadata bulunamadı</value>
   </data>
@@ -243,5 +240,8 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
   </data>
   <data name="UnexpectedAssemblyVersionErrorFormat" xml:space="preserve">
     <value>Beklenmedik bir program sürümü ile karşılaşıldı: {0}</value>
+  </data>
+  <data name="CopyToClipboardErrorTitle" xml:space="preserve">
+    <value>Panoya kopyalama başarısız oldu</value>
   </data>
 </root>

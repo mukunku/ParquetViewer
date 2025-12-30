@@ -100,8 +100,7 @@ namespace ParquetViewer
             set
             {
                 this.currentOffset = value;
-                if (this.IsAnyFileOpen)
-                    LoadFileToGridview();
+                LoadFileToGridview();
             }
         }
 
@@ -114,9 +113,7 @@ namespace ParquetViewer
             set
             {
                 this.currentMaxRowCount = value;
-
-                if (this.IsAnyFileOpen)
-                    LoadFileToGridview();
+                LoadFileToGridview();
             }
         }
 
@@ -248,7 +245,7 @@ namespace ParquetViewer
             {
                 schema = this._openParquetEngine.Schema;
             }
-            catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) 
+            catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required"))
             { /*swallow: This exception is thrown from Parquet.Net when the schema has no fields*/ }
             catch (Exception ex)
             {
@@ -292,8 +289,8 @@ namespace ParquetViewer
                 if (!this.IsAnyFileOpen)
                     return;
 
-                if (this.SelectedFields is null)
-                    throw new FileLoadException(Resources.Errors.NoFieldsSelectedErrorMessage);
+                if (this.SelectedFields is null || this.SelectedFields.Count == 0)
+                    return;
 
                 if (!File.Exists(this.OpenFileOrFolderPath) && !Directory.Exists(this.OpenFileOrFolderPath))
                 {
@@ -321,7 +318,7 @@ namespace ParquetViewer
 
                 var finalResult = await Task.Run(() => intermediateResult.Invoke(showIndexingProgress), loadingIcon.CancellationToken);
                 indexTime = stopwatch.Elapsed - loadTime;
-                
+
                 this.recordCountStatusBarLabel.Text = string.Format(Resources.Strings.LoadedRecordCountRangeFormat, this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
                 this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey]!.ToString();
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();

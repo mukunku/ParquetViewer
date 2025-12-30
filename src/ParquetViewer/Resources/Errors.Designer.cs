@@ -97,6 +97,15 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy to clipboard failed.
+        /// </summary>
+        internal static string CopyToClipboardErrorTitle {
+            get {
+                return ResourceManager.GetString("CopyToClipboardErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Field `{0}` with type DECIMAL({1}, {2}) contains values outside ParquetViewer&apos;s supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0).
         /// </summary>
         internal static string DecimalValueTooLargeErrorMessageFormat {
@@ -266,15 +275,6 @@ namespace ParquetViewer.Resources {
         internal static string NoFieldsFoundErrorTitle {
             get {
                 return ResourceManager.GetString("NoFieldsFoundErrorTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No fields selected.
-        /// </summary>
-        internal static string NoFieldsSelectedErrorMessage {
-            get {
-                return ResourceManager.GetString("NoFieldsSelectedErrorMessage", resourceCulture);
             }
         }
         

@@ -173,10 +173,6 @@
     <value>No fields found</value>
     <comment>Shown when the parquet file contains no fields</comment>
   </data>
-  <data name="NoFieldsSelectedErrorMessage" xml:space="preserve">
-    <value>No fields selected</value>
-    <comment>Thrown in the unlikely scenario where the user was able to attempt to load a file without selecting any fields to load</comment>
-  </data>
   <data name="NoThriftMetadataAvailableErrorMessage" xml:space="preserve">
     <value>No Thrift metadata available</value>
     <comment>Fallback error just in case something goes catastrophically wrong while fetching metadata</comment>
@@ -282,5 +278,9 @@ If you think the file is valid please consider opening an issue in the GitHub re
   <data name="UnexpectedAssemblyVersionErrorFormat" xml:space="preserve">
     <value>An unexpected assembly version was encountered: {0}</value>
     <comment>Thrown in the rare case the executable has a non semantic version number</comment>
+  </data>
+  <data name="CopyToClipboardErrorTitle" xml:space="preserve">
+    <value>Copy to clipboard failed</value>
+    <comment>Shown when copying to the clipboard fails</comment>
   </data>
 </root>
