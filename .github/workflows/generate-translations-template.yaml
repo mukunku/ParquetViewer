@@ -1,4 +1,4 @@
-name: Test and Publish
+name: Update translation template
 
 on:
  pull_request:
@@ -94,7 +94,7 @@ jobs:
           # Replace 'path/to/your/generated.csv' with the path to the file your script generates
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add path/to/your/generated.csv
+          git add ".github/ISSUE_TEMPLATE/translation_template.csv"
           # The following command exits with 0 if there are no changes, and 1 if there are.
           # This will cause the step to fail if there are no changes, which is what we want.
           git diff --staged --quiet && exit 0 || git commit -m "Auto-generated file update"
