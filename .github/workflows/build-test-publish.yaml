@@ -109,10 +109,14 @@ jobs:
           replacement-text: 'private const string AMPLITUDE_API_KEY = "${{ secrets.AMPLITUDE_API_KEY }}";'
 
       - name: Build & Publish Regular Release
-        run: dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release  -f net8.0-windows --nologo -o publish -r win-x64 --self-contained false
-
+        run: |
+            dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release  -f net8.0-windows --nologo -o publish -r win-x64 --self-contained false
+            Get-Item "./publish/ParquetViewer.exe" | Select-Object Name, Length
+            
       - name: Build & Publish SelfContained Release
-        run: dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release_SelfContained  -f net8.0-windows --nologo -o publish_selfcontained -r win-x64 --self-contained true
+        run: |
+            dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release_SelfContained  -f net8.0-windows --nologo -o publish_selfcontained -r win-x64 --self-contained true
+            Get-Item "./publish_selfcontained/ParquetViewer.exe" | Select-Object Name, Length
 
       - name: Prepare executables for upload
         run: |
