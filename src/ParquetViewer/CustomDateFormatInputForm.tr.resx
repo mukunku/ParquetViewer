@@ -117,84 +117,39 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label45.Text" xml:space="preserve">
-    <value>AM/PM belirteci.</value>
+  <data name="livePreviewTextBox.PlaceholderText" xml:space="preserve">
+    <value>👈🏽 Önizleme için yazmaya başlayın</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="label38.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 3</value>
+  <data name="label56.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 17</value>
   </data>
-  <data name="label24.Size" type="System.Drawing.Size, System.Drawing">
-    <value>110, 15</value>
-  </data>
-  <data name="label36.Text" xml:space="preserve">
-    <value>Saat, 24-saatlik dilim 00'dan 23'e.</value>
-  </data>
-  <data name="dateFormatDocsLinkLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>142, 565</value>
-  </data>
-  <data name="label39.Text" xml:space="preserve">
-    <value>Açıklama</value>
-  </data>
-  <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
-    <value>77, 430</value>
-  </data>
-  <data name="label27.Size" type="System.Drawing.Size, System.Drawing">
-    <value>88, 15</value>
-  </data>
-  <data name="label38.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 30</value>
-  </data>
-  <data name="label39.Size" type="System.Drawing.Size, System.Drawing">
-    <value>57, 15</value>
-  </data>
-  <data name="label40.Text" xml:space="preserve">
-    <value>Örnekler</value>
-  </data>
-  <data name="label9.Text" xml:space="preserve">
-    <value>Ayın günü 01'den 31'e.</value>
-  </data>
-  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 255</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 17</value>
-  </data>
-  <data name="label30.Text" xml:space="preserve">
-    <value>Saat, 12-saatlik dilimler 01'den 12'ye.</value>
-  </data>
-  <data name="label46.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 528</value>
-  </data>
-  <data name="label12.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 15</value>
-  </data>
-  <data name="label40.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 10</value>
+  <data name="label56.Text" xml:space="preserve">
+    <value>Canlı önizleme:</value>
   </data>
   <data name="label33.Size" type="System.Drawing.Size, System.Drawing">
     <value>162, 15</value>
   </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>Saniye, 0'dan 59'a.</value>
+  <data name="label33.Text" xml:space="preserve">
+    <value>Yıl, dört basamaklı sayı olarak</value>
+  </data>
+  <data name="label34.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 213</value>
+  </data>
+  <data name="label27.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 15</value>
+  </data>
+  <data name="label27.Text" xml:space="preserve">
+    <value>Yıl, 00'dan 99'a.</value>
   </data>
   <data name="label28.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 178</value>
   </data>
-  <data name="saveDateFormatButton.Text" xml:space="preserve">
-    <value>                   Kaydet</value>
+  <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 15</value>
   </data>
-  <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 318</value>
-  </data>
-  <data name="label33.Text" xml:space="preserve">
-    <value>Yıl, dört basamaklı sayı olarak</value>
-  </data>
-  <data name="label56.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 17</value>
-  </data>
-  <data name="label49.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 458</value>
+  <data name="label21.Text" xml:space="preserve">
+    <value>Ay, 01'den 12'ye</value>
   </data>
   <data name="label22.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 150</value>
@@ -202,118 +157,163 @@
   <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
     <value>89, 15</value>
   </data>
-  <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 73</value>
-  </data>
-  <data name="label18.Text" xml:space="preserve">
-    <value>Dakika, 0'dan 59'a.</value>
-  </data>
-  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
-    <value>127, 15</value>
-  </data>
-  <data name="label54.Text" xml:space="preserve">
-    <value>Zaman değerindeki saniyenin on milyonda biri</value>
-  </data>
-  <data name="dateFormatDocsLinkLabel.Text" xml:space="preserve">
-    <value>Tüm format dizeleri için buraya tıklayın</value>
-  </data>
-  <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 353</value>
-  </data>
   <data name="label15.Text" xml:space="preserve">
     <value>Ay, 1'den 12'ye.</value>
-  </data>
-  <data name="label12.Text" xml:space="preserve">
-    <value>Saniye, 00'dan 59'a.</value>
-  </data>
-  <data name="label27.Text" xml:space="preserve">
-    <value>Yıl, 00'dan 99'a.</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>ParquetViewer - Tarih Formatı Ayarı</value>
-  </data>
-  <data name="label56.Text" xml:space="preserve">
-    <value>Canlı önizleme:</value>
-  </data>
-  <data name="label37.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 423</value>
-  </data>
-  <data name="label21.Text" xml:space="preserve">
-    <value>Ay, 01'den 12'ye</value>
-  </data>
-  <data name="label30.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 15</value>
-  </data>
-  <data name="label30.Location" type="System.Drawing.Point, System.Drawing">
-    <value>77, 395</value>
-  </data>
-  <data name="livePreviewTextBox.PlaceholderText" xml:space="preserve">
-    <value>👈🏽 Önizleme için yazmaya başlayın</value>
-  </data>
-  <data name="dateFormatDocsLinkLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 15</value>
-  </data>
-  <data name="label54.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 30</value>
-  </data>
-  <data name="label34.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 213</value>
-  </data>
-  <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 290</value>
-  </data>
-  <data name="label31.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 388</value>
-  </data>
-  <data name="label24.Text" xml:space="preserve">
-    <value>Dakika, 00'dan 59'a.</value>
-  </data>
-  <data name="label48.Text" xml:space="preserve">
-    <value>Zamanlı tarihlerdeki milisaniye değeri</value>
   </data>
   <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 115</value>
   </data>
-  <data name="label38.Text" xml:space="preserve">
-    <value>Format dizesi</value>
+  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
+    <value>127, 15</value>
   </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>Ayın günü 1'den 31'e.</value>
+  <data name="label9.Text" xml:space="preserve">
+    <value>Ayın günü 01'den 31'e.</value>
   </data>
-  <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
-    <value>104, 15</value>
-  </data>
-  <data name="label55.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 493</value>
-  </data>
-  <data name="label21.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 15</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>Dilediğiniz tarih formatını girin:</value>
+  <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 73</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 15</value>
   </data>
-  <data name="label45.Size" type="System.Drawing.Size, System.Drawing">
-    <value>97, 15</value>
+  <data name="label3.Text" xml:space="preserve">
+    <value>Ayın günü 1'den 31'e.</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 38</value>
   </data>
-  <data name="label48.Size" type="System.Drawing.Size, System.Drawing">
-    <value>204, 15</value>
+  <data name="label38.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 3</value>
   </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>103, 15</value>
+  <data name="label38.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 30</value>
   </data>
-  <data name="desiredDateFormatTextBox.PlaceholderText" xml:space="preserve">
-    <value>Örnek: yyyy-MM-dd hh:mm:ss tt</value>
+  <data name="label38.Text" xml:space="preserve">
+    <value>Format dizesi</value>
+  </data>
+  <data name="label39.Size" type="System.Drawing.Size, System.Drawing">
+    <value>57, 15</value>
+  </data>
+  <data name="label39.Text" xml:space="preserve">
+    <value>Açıklama</value>
+  </data>
+  <data name="label40.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 10</value>
   </data>
   <data name="label40.Size" type="System.Drawing.Size, System.Drawing">
     <value>57, 15</value>
   </data>
+  <data name="label40.Text" xml:space="preserve">
+    <value>Örnekler</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 15</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>Saniye, 0'dan 59'a.</value>
+  </data>
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 255</value>
+  </data>
+  <data name="label12.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 15</value>
+  </data>
+  <data name="label12.Text" xml:space="preserve">
+    <value>Saniye, 00'dan 59'a.</value>
+  </data>
+  <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 290</value>
+  </data>
+  <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
+    <value>104, 15</value>
+  </data>
+  <data name="label18.Text" xml:space="preserve">
+    <value>Dakika, 0'dan 59'a.</value>
+  </data>
+  <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 318</value>
+  </data>
+  <data name="label24.Size" type="System.Drawing.Size, System.Drawing">
+    <value>110, 15</value>
+  </data>
+  <data name="label24.Text" xml:space="preserve">
+    <value>Dakika, 00'dan 59'a.</value>
+  </data>
+  <data name="label25.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 353</value>
+  </data>
+  <data name="label30.Location" type="System.Drawing.Point, System.Drawing">
+    <value>77, 395</value>
+  </data>
+  <data name="label30.Size" type="System.Drawing.Size, System.Drawing">
+    <value>199, 15</value>
+  </data>
+  <data name="label30.Text" xml:space="preserve">
+    <value>Saat, 12-saatlik dilimler 01'den 12'ye.</value>
+  </data>
+  <data name="label31.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 388</value>
+  </data>
+  <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
+    <value>77, 430</value>
+  </data>
   <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 15</value>
+  </data>
+  <data name="label36.Text" xml:space="preserve">
+    <value>Saat, 24-saatlik dilim 00'dan 23'e.</value>
+  </data>
+  <data name="label37.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 423</value>
+  </data>
+  <data name="label48.Size" type="System.Drawing.Size, System.Drawing">
+    <value>204, 15</value>
+  </data>
+  <data name="label48.Text" xml:space="preserve">
+    <value>Zamanlı tarihlerdeki milisaniye değeri</value>
+  </data>
+  <data name="label49.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 458</value>
+  </data>
+  <data name="label54.Size" type="System.Drawing.Size, System.Drawing">
+    <value>182, 30</value>
+  </data>
+  <data name="label54.Text" xml:space="preserve">
+    <value>Zaman değerindeki saniyenin on milyonda biri</value>
+  </data>
+  <data name="label55.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 493</value>
+  </data>
+  <data name="label45.Size" type="System.Drawing.Size, System.Drawing">
+    <value>97, 15</value>
+  </data>
+  <data name="label45.Text" xml:space="preserve">
+    <value>AM/PM belirteci.</value>
+  </data>
+  <data name="label46.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 528</value>
+  </data>
+  <data name="dateFormatDocsLinkLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>142, 565</value>
+  </data>
+  <data name="dateFormatDocsLinkLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 15</value>
+  </data>
+  <data name="dateFormatDocsLinkLabel.Text" xml:space="preserve">
+    <value>Tüm format dizeleri için buraya tıklayın</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 17</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>Dilediğiniz tarih formatını girin:</value>
+  </data>
+  <data name="desiredDateFormatTextBox.PlaceholderText" xml:space="preserve">
+    <value>Örnek: yyyy-MM-dd hh:mm:ss tt</value>
+  </data>
+  <data name="saveDateFormatButton.Text" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>ParquetViewer - Tarih Formatı Ayarı</value>
   </data>
 </root>

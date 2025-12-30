@@ -1848,6 +1848,9 @@
   <data name="saveDateFormatButton.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="saveDateFormatButton.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
   <data name="saveDateFormatButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 69</value>
   </data>
@@ -1864,7 +1867,10 @@
     <value>5</value>
   </data>
   <data name="saveDateFormatButton.Text" xml:space="preserve">
-    <value>                Save</value>
+    <value>Save</value>
+  </data>
+  <data name="saveDateFormatButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
+    <value>ImageBeforeText</value>
   </data>
   <data name="&gt;&gt;saveDateFormatButton.Name" xml:space="preserve">
     <value>saveDateFormatButton</value>
