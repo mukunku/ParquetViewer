@@ -275,4 +275,12 @@ If you think the file is valid please consider opening an issue in the GitHub re
     <value>Copy to clipboard failed</value>
     <comment>Shown when the user right-click's on too many cells and selects the Copy as WHERE... option</comment>
   </data>
+  <data name="InvalidQueryErrorMessage" xml:space="preserve">
+    <value>The query doesn't seem to be valid. Please try again.</value>
+    <comment>Thrown when an invalid query is executed</comment>
+  </data>
+  <data name="UnexpectedAssemblyVersionErrorFormat" xml:space="preserve">
+    <value>An unexpected assembly version was encountered: {0}</value>
+    <comment>Thrown in the rare case the executable has a non semantic version number</comment>
+  </data>
 </root>

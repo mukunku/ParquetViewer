@@ -238,4 +238,10 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
   <data name="CopyAsWhereTooLargeErrorTitle" xml:space="preserve">
     <value>Panoya kopyalama başarısız oldu</value>
   </data>
+  <data name="InvalidQueryErrorMessage" xml:space="preserve">
+    <value>Sorgu geçerli gözükmüyor.</value>
+  </data>
+  <data name="UnexpectedAssemblyVersionErrorFormat" xml:space="preserve">
+    <value>Beklenmedik bir program sürümü ile karşılaşıldı: {0}</value>
+  </data>
 </root>

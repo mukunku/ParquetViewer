@@ -178,6 +178,15 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The query doesn&apos;t seem to be valid. Please try again..
+        /// </summary>
+        internal static string InvalidQueryErrorMessage {
+            get {
+                return ResourceManager.GetString("InvalidQueryErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid Query.
         /// </summary>
         internal static string InvalidQueryErrorTitle {
@@ -369,6 +378,15 @@ namespace ParquetViewer.Resources {
         internal static string TooManyColumnsXlsxErrorMessageFormat {
             get {
                 return ResourceManager.GetString("TooManyColumnsXlsxErrorMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected assembly version was encountered: {0}.
+        /// </summary>
+        internal static string UnexpectedAssemblyVersionErrorFormat {
+            get {
+                return ResourceManager.GetString("UnexpectedAssemblyVersionErrorFormat", resourceCulture);
             }
         }
         
