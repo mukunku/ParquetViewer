@@ -153,6 +153,16 @@ namespace ParquetViewer.Resources {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap localization_icon {
+            get {
+                object obj = ResourceManager.GetObject("localization_icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap next_blue {
             get {
                 object obj = ResourceManager.GetObject("next-blue", resourceCulture);

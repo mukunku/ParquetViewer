@@ -252,6 +252,24 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing the language requires an app restart. Would you like to continue?.
+        /// </summary>
+        internal static string LanguageChangeConfirmationMessage {
+            get {
+                return ResourceManager.GetString("LanguageChangeConfirmationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restart ParquetViewer?.
+        /// </summary>
+        internal static string LanguageChangeConfirmationTitle {
+            get {
+                return ResourceManager.GetString("LanguageChangeConfirmationTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} to {1}.
         /// </summary>
         internal static string LoadedRecordCountRangeFormat {

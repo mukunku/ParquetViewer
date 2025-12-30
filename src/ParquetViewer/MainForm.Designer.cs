@@ -35,7 +35,7 @@ namespace ParquetViewer
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             mainTableLayoutPanel = new TableLayoutPanel();
             recordsToLabel = new Label();
             recordCountTextBox = new DelayedOnChangedTextBox();
@@ -71,6 +71,9 @@ namespace ParquetViewer
             helpToolStripMenuItem = new ToolStripMenuItem();
             userGuideToolStripMenuItem = new ToolStripMenuItem();
             shareAnonymousUsageDataToolStripMenuItem = new ToolStripMenuItem();
+            languageToolStripMenuItem = new ToolStripMenuItem();
+            englishToolStripMenuItem = new ToolStripMenuItem();
+            turkishToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             showingRecordCountStatusBarLabel = new ToolStripStatusLabel();
             actualShownRecordCountLabel = new ToolStripStatusLabel();
@@ -183,14 +186,14 @@ namespace ParquetViewer
             mainGridView.AllowUserToOrderColumns = true;
             mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
             mainGridView.CopyAsWhereIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyAsWhereIcon");
@@ -350,7 +353,7 @@ namespace ParquetViewer
             // helpToolStripMenuItem
             // 
             resources.ApplyResources(helpToolStripMenuItem, "helpToolStripMenuItem");
-            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { userGuideToolStripMenuItem, shareAnonymousUsageDataToolStripMenuItem, aboutToolStripMenuItem });
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { userGuideToolStripMenuItem, shareAnonymousUsageDataToolStripMenuItem, languageToolStripMenuItem, aboutToolStripMenuItem });
             helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             // 
             // userGuideToolStripMenuItem
@@ -366,6 +369,27 @@ namespace ParquetViewer
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
             shareAnonymousUsageDataToolStripMenuItem.CheckedChanged += shareAnonymousUsageDataToolStripMenuItem_CheckedChanged;
             shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
+            // 
+            // languageToolStripMenuItem
+            // 
+            resources.ApplyResources(languageToolStripMenuItem, "languageToolStripMenuItem");
+            languageToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { englishToolStripMenuItem, turkishToolStripMenuItem });
+            languageToolStripMenuItem.Image = Resources.Icons.localization_icon;
+            languageToolStripMenuItem.Name = "languageToolStripMenuItem";
+            // 
+            // englishToolStripMenuItem
+            // 
+            resources.ApplyResources(englishToolStripMenuItem, "englishToolStripMenuItem");
+            englishToolStripMenuItem.Name = "englishToolStripMenuItem";
+            englishToolStripMenuItem.Tag = "en-US";
+            englishToolStripMenuItem.Click += languageToolStripMenuItem_Click;
+            // 
+            // turkishToolStripMenuItem
+            // 
+            resources.ApplyResources(turkishToolStripMenuItem, "turkishToolStripMenuItem");
+            turkishToolStripMenuItem.Name = "turkishToolStripMenuItem";
+            turkishToolStripMenuItem.Tag = "tr-TR";
+            turkishToolStripMenuItem.Click += languageToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
@@ -513,6 +537,9 @@ namespace ParquetViewer
         private ToolTip loadAllRowsButtonTooltip;
         private ToolStripMenuItem customDateFormatToolStripMenuItem;
         private ToolStripMenuItem darkModeToolStripMenuItem;
+        private ToolStripMenuItem languageToolStripMenuItem;
+        private ToolStripMenuItem englishToolStripMenuItem;
+        private ToolStripMenuItem turkishToolStripMenuItem;
     }
 }
 

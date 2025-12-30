@@ -1,9 +1,11 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
+using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -249,6 +251,41 @@ namespace ParquetViewer
                 //the context menu won't go away until you click on it.
                 this.mainGridView.CloseContextMenu();
             }
+        }
+
+        private void languageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (sender is not ToolStripItem toolStripItem)
+            {
+                return;
+            }
+
+            var targetCulture = toolStripItem.Tag?.ToString();
+            if (string.IsNullOrWhiteSpace(targetCulture))
+            {
+                targetCulture = "en-US"; //our default culture
+            }
+
+            if (!UtilityMethods.TryParseCultureInfo(targetCulture, out CultureInfo? newCultureInfo))
+            {
+                return; //invalid culture
+            }
+
+            if (newCultureInfo.Equals(CultureInfo.CurrentUICulture))
+            {
+                return; //no change
+            }
+
+            if (MessageBox.Show(this,
+                Resources.Strings.LanguageChangeConfirmationMessage,
+                Resources.Strings.LanguageChangeConfirmationTitle,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return; //user cancelled
+            }
+
+            AppSettings.UserSelectedCulture = newCultureInfo;
+            UtilityMethods.RestartApplication();
         }
     }
 }

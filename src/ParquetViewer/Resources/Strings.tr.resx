@@ -266,4 +266,10 @@ Onun yerine sonuçlari {2} dosyasına aktarmak ister misiniz?</value>
   <data name="DecimalFormatting" xml:space="preserve">
     <value>Desimal</value>
   </data>
+  <data name="LanguageChangeConfirmationTitle" xml:space="preserve">
+    <value>ParquetViewer'ı yeniden başlat?</value>
+  </data>
+  <data name="LanguageChangeConfirmationMessage" xml:space="preserve">
+    <value>Dili değiştirmek için uygulamanın yeniden başlatılmasi gerekiyor. Devam etmek ister misiniz?</value>
+  </data>
 </root>

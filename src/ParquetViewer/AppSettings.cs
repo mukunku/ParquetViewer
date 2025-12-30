@@ -3,6 +3,7 @@ using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace ParquetViewer
 {
@@ -18,6 +19,7 @@ namespace ParquetViewer
         private const string OpenedFileCountKey = "OpenedFileCount";
         private const string CustomDateFormatKey = "CustomDateFormat";
         private const string DarkModeKey = "DarkMode";
+        private const string UserSelectedCultureKey = "UserSelectedCulture";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -103,6 +105,14 @@ namespace ParquetViewer
         }
 
         public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;
+
+        public static CultureInfo? UserSelectedCulture
+        {
+            get => ReadRegistryValue(UserSelectedCultureKey, out string? value) ?
+                (UtilityMethods.TryParseCultureInfo(value, out CultureInfo? cultureInfo) ? cultureInfo : null) 
+                : null;
+            set => SetRegistryValue(UserSelectedCultureKey, value?.ToString() ?? string.Empty);
+        }
 
         private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)
         {

@@ -15,64 +15,72 @@ namespace ParquetViewer
         [STAThread]
         private static int Main(string[] args)
         {
-            string? fileToOpen = null;
-            try
+            if (IsFileAssociationMode(args))
             {
-                if (args?.Length > 0)
-                {
-                    if (AboutBox.PERFORM_FILE_ASSOCIATION.Equals(args[0]))
-                    {
-                        try
-                        {
-                            if (args.Length > 1 && bool.TryParse(args[1], out bool associate))
-                            {
-                                try
-                                {
-                                    AboutBox.ToggleFileAssociation(associate);
-                                    return 0;
-                                }
-                                catch
-                                {
-                                    return 1;
-                                }
-                            }
-                            else
-                            {
-                                return 2; //no true/false flag passed
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            return 3;
-                        }
-                    }
-                    else if (File.Exists(args[0]))
-                    {
-                        fileToOpen = args[0];
-                    }
-                }
+                return AttemptFileAssociation(args);
             }
-            catch (Exception) { /*Swallow Exception*/ }
 
-            CultureInfo.CurrentUICulture = new CultureInfo("tr-TR");
+            //Set language
+            if (AppSettings.UserSelectedCulture is not null)
+            {
+                CultureInfo.CurrentUICulture = AppSettings.UserSelectedCulture;
+            }
 
             //Enable HighDpi mode
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            //Form must be created after calling SetCompatibleTextRenderingDefault();
-            Form mainForm;
-            bool isOpeningFile = !string.IsNullOrWhiteSpace(fileToOpen);
-            if (isOpeningFile)
-                mainForm = new MainForm(fileToOpen!);
-            else
-                mainForm = new MainForm();
-
-            RouteUnhandledExceptions();
+            //Prepare main form
+            string? pathToOpen = GetPathToOpen(args);
+            var mainForm = new MainForm(pathToOpen); //Form must be created after calling SetCompatibleTextRenderingDefault();
             AppSettings.DarkMode = AppSettings.DarkMode; // Trigger Theming
 
+            RouteUnhandledExceptions();
+            
             Application.Run(mainForm);
             return 0;
+        }
+
+        private static bool IsFileAssociationMode(string[] args)
+            => args?.Length > 0 && AboutBox.PERFORM_FILE_ASSOCIATION.Equals(args[0]);
+
+        private static int AttemptFileAssociation(string[] args)
+        {
+            try
+            {
+                if (args.Length > 1 && bool.TryParse(args[1], out bool associate))
+                {
+                    try
+                    {
+                        AboutBox.ToggleFileAssociation(associate);
+                        return 0;
+                    }
+                    catch
+                    {
+                        return 1;
+                    }
+                }
+                else
+                {
+                    return 2; //no true/false flag passed
+                }
+            }
+            catch (Exception)
+            {
+                return 3;
+            }
+        }
+
+        private static string? GetPathToOpen(string[] args)
+        {
+            if (args is null || args.Length == 0)
+                return null;
+            else if (File.Exists(args[0]))
+                return args[0];
+            else if (Directory.Exists(args[0]))
+                return args[0];
+            else
+                return null;
         }
 
         /// <summary>
@@ -196,7 +204,7 @@ namespace ParquetViewer
 
         public static void AskUserIfTheyWantToSwitchToDarkMode()
         {
-            if (!AppSettings.DarkMode 
+            if (!AppSettings.DarkMode
                 && (AppSettings.OpenedFileCount == 30 || AppSettings.OpenedFileCount == 300) /*I'm just throwing out random numbers at this point*/
                 && (Env.AppsUseDarkTheme == true || Env.SystemUsesDarkTheme == true))
             {

@@ -156,15 +156,18 @@ namespace ParquetViewer
             this.iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO8601DateTimeFormat;
         }
 
-        public MainForm(string fileToOpenPath) : this()
+        public MainForm(string? fileToOpenPath) : this()
         {
-            //The code below will be executed after the default constructor => this()
-            this.fileToLoadOnLaunch = fileToOpenPath;
+            if (fileToOpenPath is not null)
+            {
+                //The code below will be executed after the default constructor => this()
+                this.fileToLoadOnLaunch = fileToOpenPath;
+            }
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
+            //Open existing file on first load. Usually this means user double-clicked a parquet file with this utility as the default program.
             if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
             {
                 await this.OpenNewFileOrFolder(this.fileToLoadOnLaunch);
@@ -175,6 +178,7 @@ namespace ParquetViewer
             this.alwaysLoadAllRecordsToolStripMenuItem.Checked = AppSettings.AlwaysLoadAllRecords;
             this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
             this.RefreshExperimentalFeatureToolStrips();
+            this.SetLanguageCheckmark();
 
             //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
             Program.GetUserConsentToGatherAnalytics();
@@ -470,6 +474,23 @@ namespace ParquetViewer
             string placeholder = ParquetGridView.GenerateFilterQuery(simpleColumn.ColumnName, simpleColumn.DataType, sampleSimpleValue);
             if (placeholder.Length < 100) //Only set the placeholder query if it's reasonably short
                 this.searchFilterTextBox.PlaceholderText = $"WHERE {placeholder}";
+        }
+
+
+        private void SetLanguageCheckmark()
+        {
+            if (AppSettings.UserSelectedCulture is not null)
+            {
+                this.languageToolStripMenuItem.DropDownItems.OfType<ToolStripMenuItem>().ToList().ForEach(languageToolStripItem =>
+                {
+                    languageToolStripItem.Checked = languageToolStripItem.Tag?.ToString() == AppSettings.UserSelectedCulture.ToString();
+                });
+            }
+            else
+            {
+                //We default to English
+                this.englishToolStripMenuItem.Checked = true;
+            }
         }
     }
 }
