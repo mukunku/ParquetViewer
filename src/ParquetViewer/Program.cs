@@ -105,7 +105,7 @@ namespace ParquetViewer
         private static void ExceptionHandler(Exception ex)
         {
             ExceptionEvent.FireAndForget(ex);
-            MessageBox.Show($"Something went wrong (CTRL+C to copy):{Environment.NewLine}{ex}", ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"{Resources.Errors.GenericErrorMessage} {Resources.Errors.CopyErrorMessageText}:{Environment.NewLine}{ex}", ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         /// <summary>

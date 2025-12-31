@@ -244,4 +244,7 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
   <data name="CopyToClipboardErrorTitle" xml:space="preserve">
     <value>Panoya kopyalama başarısız oldu</value>
   </data>
+  <data name="CopyErrorMessageText" xml:space="preserve">
+    <value>(Kopyalamak için CTRL+C)</value>
+  </data>
 </root>

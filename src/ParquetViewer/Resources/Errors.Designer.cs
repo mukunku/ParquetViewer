@@ -79,6 +79,15 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (CTRL+C to copy).
+        /// </summary>
+        internal static string CopyErrorMessageText {
+            get {
+                return ResourceManager.GetString("CopyErrorMessageText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to copy metadata to your clipboard. Save to a file instead?.
         /// </summary>
         internal static string CopyRawMetadataFailedErrorMessage {
