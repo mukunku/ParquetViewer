@@ -113,8 +113,8 @@ namespace ParquetViewer
         /// </summary>
         /// <remarks>
         /// TODO: Should we postpone asking analytics consent if this is also if we're also asking for .parquet file association?
-        ///     It would be annoying if we ask to become the user's default parquet viewer then also ask if we can gather
-        ///     analytics back-to-back. But chances of that happening are slim so maybe we don't need to worry about it?
+        ///   It would be annoying if we ask to become the user's default parquet viewer then also ask if we can gather
+        ///   analytics back-to-back. But chances of that happening are slim so maybe we don't need to worry about it?
         /// </remarks>
         public static void GetUserConsentToGatherAnalytics()
         {
