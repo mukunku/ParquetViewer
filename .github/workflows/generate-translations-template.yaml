@@ -91,7 +91,6 @@ jobs:
 
       - name: Commit and push if there are changes
         run: |
-          # Replace 'path/to/your/generated.csv' with the path to the file your script generates
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add ".github/ISSUE_TEMPLATE/translation_template.csv"

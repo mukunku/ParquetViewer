@@ -127,14 +127,14 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="recordsToLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>803, 0</value>
+    <value>800, 0</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="recordsToLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 0, 4, 0</value>
   </data>
   <data name="recordsToLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 35</value>
+    <value>50, 35</value>
   </data>
   <data name="recordsToLabel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -191,13 +191,13 @@
     <value>Left, Right</value>
   </data>
   <data name="showRecordsFromLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>679, 0</value>
+    <value>668, 0</value>
   </data>
   <data name="showRecordsFromLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 4, 0</value>
   </data>
   <data name="showRecordsFromLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 35</value>
+    <value>54, 35</value>
   </data>
   <data name="showRecordsFromLabel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -224,7 +224,7 @@
     <value>Left, Right</value>
   </data>
   <data name="offsetTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>733, 6</value>
+    <value>730, 6</value>
   </data>
   <data name="offsetTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 3, 4, 3</value>
@@ -263,7 +263,7 @@
     <value>BottomCenter</value>
   </data>
   <data name="runQueryButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>473, 3</value>
+    <value>462, 3</value>
   </data>
   <data name="runQueryButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 3, 4, 3</value>
@@ -347,7 +347,7 @@
     <value>WHERE </value>
   </data>
   <data name="searchFilterTextBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>354, 23</value>
+    <value>343, 23</value>
   </data>
   <data name="searchFilterTextBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -374,7 +374,7 @@
     <value>Microsoft Sans Serif, 9.75pt</value>
   </data>
   <data name="clearFilterButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>590, 3</value>
+    <value>579, 3</value>
   </data>
   <data name="clearFilterButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 3, 4, 3</value>
@@ -543,7 +543,7 @@
     <value>1</value>
   </data>
   <data name="mainTableLayoutPanel.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="recordsToLabel" Row="0" RowSpan="1" Column="8" ColumnSpan="1" /&gt;&lt;Control Name="recordCountTextBox" Row="0" RowSpan="1" Column="9" ColumnSpan="1" /&gt;&lt;Control Name="showRecordsFromLabel" Row="0" RowSpan="1" Column="6" ColumnSpan="1" /&gt;&lt;Control Name="offsetTextBox" Row="0" RowSpan="1" Column="7" ColumnSpan="1" /&gt;&lt;Control Name="runQueryButton" Row="0" RowSpan="1" Column="4" ColumnSpan="1" /&gt;&lt;Control Name="searchFilterLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="searchFilterTextBox" Row="0" RowSpan="1" Column="2" ColumnSpan="2" /&gt;&lt;Control Name="clearFilterButton" Row="0" RowSpan="1" Column="5" ColumnSpan="1" /&gt;&lt;Control Name="mainGridView" Row="1" RowSpan="2" Column="0" ColumnSpan="11" /&gt;&lt;Control Name="loadAllRowsButton" Row="0" RowSpan="1" Column="10" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,74,Absolute,35,Absolute,93,Percent,100,Absolute,117,Absolute,93,Absolute,50,Absolute,70,Absolute,55,Absolute,70,Absolute,20" /&gt;&lt;Rows Styles="Absolute,35,Absolute,35,Percent,100,Absolute,23" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="recordsToLabel" Row="0" RowSpan="1" Column="8" ColumnSpan="1" /&gt;&lt;Control Name="recordCountTextBox" Row="0" RowSpan="1" Column="9" ColumnSpan="1" /&gt;&lt;Control Name="showRecordsFromLabel" Row="0" RowSpan="1" Column="6" ColumnSpan="1" /&gt;&lt;Control Name="offsetTextBox" Row="0" RowSpan="1" Column="7" ColumnSpan="1" /&gt;&lt;Control Name="runQueryButton" Row="0" RowSpan="1" Column="4" ColumnSpan="1" /&gt;&lt;Control Name="searchFilterLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="searchFilterTextBox" Row="0" RowSpan="1" Column="2" ColumnSpan="2" /&gt;&lt;Control Name="clearFilterButton" Row="0" RowSpan="1" Column="5" ColumnSpan="1" /&gt;&lt;Control Name="mainGridView" Row="1" RowSpan="2" Column="0" ColumnSpan="11" /&gt;&lt;Control Name="loadAllRowsButton" Row="0" RowSpan="1" Column="10" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Absolute,74,Absolute,35,Absolute,93,Percent,100,Absolute,117,Absolute,93,Absolute,58,Absolute,70,Absolute,58,Absolute,70,Absolute,20" /&gt;&lt;Rows Styles="Absolute,35,Absolute,35,Percent,100,Absolute,23" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="openParquetFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>208, 17</value>
