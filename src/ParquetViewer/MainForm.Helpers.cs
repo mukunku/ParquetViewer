@@ -389,11 +389,16 @@ namespace ParquetViewer
                                 }
                             };
 
-                    const int MAX_ROWS_PER_ROWGROUP = 100_000; //Without batching we sometimes get OverflowException: Array dimensions exceeded supported range from Parquet.NET
+                    const int MAX_ROWS_PER_ROWGROUP = 100_000; //Without batching we sometimes get "OverflowException: Array dimensions exceeded supported range" from Parquet.NET
                     var batchIndex = 0;
                     var isLastBatch = false;
                     while (!isLastBatch)
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
+
                         using var rowGroup = parquetWriter.CreateRowGroup();
                         foreach (var dataField in parquetSchema.DataFields)
                         {
