@@ -244,4 +244,11 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
   <data name="CopyToClipboardErrorTitle" xml:space="preserve">
     <value>Panoya kopyalama başarısız oldu</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ColumnNotFoundErrorMessage" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="UnsupportedExportFieldType" xml:space="preserve">
+    <value>List, Map, ve Struct tipli alanlar şu anda desteklenmiyor.</value>
+  </data>
 </root>

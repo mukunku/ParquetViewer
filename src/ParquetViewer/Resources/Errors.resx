@@ -283,4 +283,12 @@ If you think the file is valid please consider opening an issue in the GitHub re
     <value>Copy to clipboard failed</value>
     <comment>Shown when copying to the clipboard fails</comment>
   </data>
+  <data name="ColumnNotFoundErrorMessage" xml:space="preserve">
+    <value>Column '{0}' does not exist in the datatable</value>
+    <comment>Rare error message shown when trying to export data to a file but the requested column doesn't exist in the grid.</comment>
+  </data>
+  <data name="UnsupportedExportFieldType" xml:space="preserve">
+    <value>List, Map, and Struct types are currently not supported.</value>
+    <comment>Unlikely error message shown when the user tries to export field types we don't support for the current file format.</comment>
+  </data>
 </root>

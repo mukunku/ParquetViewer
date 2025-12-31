@@ -61,6 +61,15 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Column &apos;{0}&apos; does not exist in the datatable.
+        /// </summary>
+        internal static string ColumnNotFoundErrorMessage {
+            get {
+                return ResourceManager.GetString("ColumnNotFoundErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The selected data is too large. Please select less cells..
         /// </summary>
         internal static string CopyAsWhereTooLargeErrorMessage {
@@ -409,6 +418,15 @@ namespace ParquetViewer.Resources {
         internal static string UnknownFieldTypeErrorMessage {
             get {
                 return ResourceManager.GetString("UnknownFieldTypeErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List, Map, and Struct types are currently not supported..
+        /// </summary>
+        internal static string UnsupportedExportFieldType {
+            get {
+                return ResourceManager.GetString("UnsupportedExportFieldType", resourceCulture);
             }
         }
         

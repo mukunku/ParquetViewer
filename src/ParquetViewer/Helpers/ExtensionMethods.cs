@@ -117,7 +117,7 @@ namespace ParquetViewer.Helpers
             ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
 
             if (!dataTable.Columns.Contains(columnName))
-                throw new ArgumentException($"Column '{columnName}' does not exist in the datatable");
+                throw new ArgumentException(string.Format(Resources.Errors.ColumnNotFoundErrorMessage, columnName));
 
             var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
             var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
@@ -136,7 +136,7 @@ namespace ParquetViewer.Helpers
                 else if (value is ByteArrayValue byteArray)
                     value = byteArray.Data;
                 else if (value is ListValue || value is MapValue || value is StructValue)
-                    throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
+                    throw new NotSupportedException(Resources.Errors.UnsupportedExportFieldType);
 
                 values.SetValue(value, index++);
 
