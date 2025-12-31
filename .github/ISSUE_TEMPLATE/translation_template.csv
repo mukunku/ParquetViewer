@@ -142,6 +142,12 @@ Sorun devam ederse lütfen projenin GitHub repo'suna bildirmeyi düşünün: Yar
 {0}",""
 "Errors.resx","UnknownFieldTypeErrorMessage","Fallback error message for a field type that isn't supported","Unknown field type","Bilinmeyen alan tipi",""
 "Errors.resx","UnsupportedExportTypeFormat","Fallback error that is thrown if the user tries to export to a file extension we don't recognize.","Unsupported export type: '{0}'","Desteklenmeyen dosya tipi: '{0}'",""
+"Strings.resx","AnalyticsConsentPromptMessage","Message box text that is shown when asking the user if we can gather analytics data","Would you like to share anonymous usage data to help make ParquetViewer better?
+
+You can always change this setting later from the Help menu.","Anonim kullanım istatistikleri paylaşarak ParquetViewer'a destek olmak ister miydiniz?
+
+Tercihinizi Yardım menüsunden her zaman değiştirebilirsiniz.",""
+"Strings.resx","AnalyticsConsentPromptTitle","Message box title that is shown when asking the user if we can gather analytics data","Share Anonymous Usage Data?","Anonim Kullanım Verisi Toplansın mı?",""
 "Strings.resx","CancelButtonText","Text to be shown on cancel buttons","Cancel","İptal Et",""
 "Strings.resx","CancelInitiatedLabelText","Text to be shown between the time a user initiates a cancel operation and when it completes.","Cancelling...","İptal ediliyor...",""
 "Strings.resx","CantGoBackLinkButtonText","Text shown when the quick peek window's link to go back to the source cell is clicked but the source cell no longer exists","can't go back","geri gidilemiyor",""
@@ -150,6 +156,12 @@ Sorun devam ederse lütfen projenin GitHub repo'suna bildirmeyi düşünün: Yar
 "Strings.resx","CopyToClipboardWithHeadersText","Text shown for copying with headers in the right-click context menu","Copy with headers","Başlıklarla kopyala",""
 "Strings.resx","CreateTableScriptCopiedToClipboardMessage","Shown when the user clicks the tool to generate the SQL CREATE TABLE script for the open parquet file(s)","Create table script copied to clipboard!","Create table sorgusu panoya kopyalandı!",""
 "Strings.resx","CreateTableScriptFailedWithNoFieldsMessage","Shown if the user somehow tries to generate sql create table script without having any fields loaded","Please select some fields first to get the SQL script","SQL sorgusunu yaratmak için lütfen önce birkaç alan seçin",""
+"Strings.resx","DarkModePromptMessage","Message box text shown to the user asking if they'd like to switch to dark mode","Would you like to use ParquetViewer in Dark Mode?
+
+You can always toggle this on/off from the Edit menu.","ParquetViewer'ı Gece Modunda kullanmak ister misiniz?
+
+Tercihinizi Düzen menüsünden istediğiniz zaman değiştirebilirsiniz.",""
+"Strings.resx","DarkModePromptTitle","Message box title shown to the user asking if they'd like to switch to dark mode","Switch to Dark Mode?","Gece Moduna Geçilsin mi?",""
 "Strings.resx","DecimalFormatting","When the user right-clicks on a decimal column header this is the text shown for the decimal formatting option.","Decimal","Desimal",""
 "Strings.resx","DecimalScientificFormatting","When the user right-clicks on a decimal column header this is the text shown for the scientific formatting option.","Scientific","Bilimsel",""
 "Strings.resx","DeselectAllCheckmarkTextFormat","Shown in the field selection dialog to bulk deselect checkmarks","Deselect All (Count: {0})","Seçimleri Kaldır (Sayı: {0})",""
@@ -164,6 +176,26 @@ File size: {0} MB","Sonuçlar başarıyla kaydedildi!
 
 Dosya boyutu: {0} MB",""
 "Strings.resx","ExportSuccessfulTitle","Shown after a successful file export","Success","Aktarma başarılı",""
+"Strings.resx","FileExtensionAssociationCancelledMessage","Shown when the user clicks the X button on the UAC prompt AFTER we ask them if they'd like to associate ParquetViewer with parquet files","File association cancelled. If you change your mind and would like to change .parquet file association visit the Help → About page.","Uzantı ilişkilendirmesi iptal edildi. Fikrinizi değiştirirseniz Yardım → Hakkında sayfasından bu işlemi tekrar gerçekleştirebilirsiniz.",""
+"Strings.resx","FileExtensionAssociationCancelledTitle","Shown when the user clicks the X button on the UAC prompt AFTER we ask them if they'd like to associate ParquetViewer with parquet files","File association cancelled","Uzantı ilişkilendirmesi iptal edildi",""
+"Strings.resx","FileExtensionAssociationFailedMessageFormat","Shown when file association fails AFTER we ask the user if they'd like to associate ParquetViewer with parquet files","Something went wrong (Error code: {0}).
+
+You can try again from the Help → About page.","Birşey ters gitti (Hata kodu: {0}).
+
+Bu işlemi Yardım → Hakkında sayfasından tekrar deneyebilirsiniz.",""
+"Strings.resx","FileExtensionAssociationFailedTitle","Shown when file association fails AFTER we ask the user if they'd like to associate ParquetViewer with parquet files","File association failed","Uzantı ilişkilendirmesi başarısız oldu",""
+"Strings.resx","FileExtensionAssociationPromptMessageFormat","Message box text shown when we ask the user if they'd like to associate .parquet files with ParquetViewer","Would you like to associate ParquetViewer with .parquet files?
+
+Executable path: {0}
+
+You can also toggle this setting from the Help → About page.","ParquetViewer'ı .parquet dosyaları için varsayılan uygulama olarak ilişkilendirmek ister miydiniz?
+
+Uygulama konumu: {0}
+
+Bu ayarı Yardim → Hakkinda sayfasında da yapabilirsiniz.",""
+"Strings.resx","FileExtensionAssociationPromptTitle","Message box title shown when we ask the user if they'd like to associate .parquet files with ParquetViewer","ParquetViewer file association request","ParquetViewer varsayılan uygulama isteği",""
+"Strings.resx","FileExtensionAssociationSucceededMessage","Shown when file association succeeds AFTER we ask the user if they'd like to associate ParquetViewer with parquet files","Success! ParquetViewer is now your default application for .parquet files.","Uzantı ilişkilendirmesi başarılı oldu! ParquetViewer .parquet dosyaları için varsayılan uygulamanız olarak ayarlanmıştır.",""
+"Strings.resx","FileExtensionAssociationSucceededTitle","Shown when file association succeeds AFTER we ask the user if they'd like to associate ParquetViewer with parquet files","File association succeeded","Uzantı ilişkilendirmesi başarılı",""
 "Strings.resx","ImageSavedToDiskMessage","Shown when an image is successfully saved to disk from the quick peek form","Image saved to {0}","Görüntü kaydedildi: {0}",""
 "Strings.resx","ImageSavedToDiskTitle","Shown when an image is successfully saved to disk from the quick peek form","Save complete","Kayıt tamamlandı",""
 "Strings.resx","IndexingDataLabelText","Text shown while data is being indexed","Indexing","Dizinleniyor",""
