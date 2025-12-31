@@ -84,6 +84,7 @@
 "QuickPeekForm.resx","takeMeBackLinkLabel.Text",,"<<< back","<<< geri",""
 "Errors.resx","CopyAsWhereTooLargeErrorMessage","Shown when the user right-click's on too many cells and selects the Copy as WHERE... option","The selected data is too large. Please select less cells.","Çok fazla veri seçili. Lütfen daha az hücre seçin.",""
 "Errors.resx","CopyAsWhereTooLargeErrorTitle","Shown when the user right-click's on too many cells and selects the Copy as WHERE... option","Copy to clipboard failed","Panoya kopyalama başarısız oldu",""
+"Errors.resx","CopyErrorMessageText","Shown in the messagebox for unhandled exceptions to teach users how to copy the error text","(CTRL+C to copy)","(Kopyalamak için CTRL+C)",""
 "Errors.resx","CopyRawMetadataFailedErrorMessage","Shown when the copy to clipboard operation fails. The text should prompt the user if they'd like to save the data to a file instead.","Failed to copy metadata to your clipboard. Save to a file instead?","Metadayı panoya kopyalarken bir hata oluştu. Veriyi dosyaya kaydetmek ister miydiniz?",""
 "Errors.resx","CopyRawMetadataFailedErrorTitle","Shown when the copy to clipboard operation fails. ","Copy error","Kopyalama hatası",""
 "Errors.resx","CopyToClipboardErrorTitle","Shown when copying to the clipboard fails","Copy to clipboard failed","Panoya kopyalama başarısız oldu",""
