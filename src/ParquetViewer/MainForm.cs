@@ -39,6 +39,7 @@ namespace ParquetViewer
                 this.recordCountStatusBarLabel.Text = "0";
                 this.totalRowCountStatusBarLabel.Text = "0";
                 this.actualShownRecordCountLabel.Text = "0";
+                this.mainGridView.DisposeAudioCells();
                 this.MainDataSource?.Dispose();
                 this.MainDataSource = null;
                 this.loadAllRowsButton.Enabled = false;
@@ -55,8 +56,8 @@ namespace ParquetViewer
                 }
                 else
                 {
-                    this.Text = string.Concat(
-                        File.Exists(this._openFileOrFolderPath) ? $"File: " : "Folder: ",
+                    this.Text = string.Format(
+                        File.Exists(this._openFileOrFolderPath) ? Resources.Strings.MainWindowOpenFileTitleFormat : Resources.Strings.MainWindowOpenFolderTitleFormat,
                         this._openFileOrFolderPath);
                     this.changeFieldsMenuStripButton.Enabled = true;
                     this.saveAsToolStripMenuItem.Enabled = true;
@@ -99,8 +100,7 @@ namespace ParquetViewer
             set
             {
                 this.currentOffset = value;
-                if (this.IsAnyFileOpen)
-                    LoadFileToGridview();
+                LoadFileToGridview();
             }
         }
 
@@ -113,9 +113,7 @@ namespace ParquetViewer
             set
             {
                 this.currentMaxRowCount = value;
-
-                if (this.IsAnyFileOpen)
-                    LoadFileToGridview();
+                LoadFileToGridview();
             }
         }
 
@@ -145,6 +143,7 @@ namespace ParquetViewer
 
         public MainForm()
         {
+            this.ForeColor = System.Drawing.Color.Red;
             InitializeComponent();
             this.DefaultFormTitle = this.Text;
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
@@ -153,19 +152,22 @@ namespace ParquetViewer
             this.OpenFileOrFolderPath = null;
 
             //Have to set these here because it gets deleted from the .Designer.cs file for some reason
-            this.metadataViewerToolStripMenuItem.Image = Properties.Resources.text_file_icon.ToBitmap();
+            this.metadataViewerToolStripMenuItem.Image = Resources.Icons.text_file_icon_16x16.ToBitmap();
             this.iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO8601DateTimeFormat;
         }
 
-        public MainForm(string fileToOpenPath) : this()
+        public MainForm(string? fileToOpenPath) : this()
         {
-            //The code below will be executed after the default constructor => this()
-            this.fileToLoadOnLaunch = fileToOpenPath;
+            if (fileToOpenPath is not null)
+            {
+                //The code below will be executed after the default constructor => this()
+                this.fileToLoadOnLaunch = fileToOpenPath;
+            }
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            //Open existing file on first load (Usually this means user "double clicked" a parquet file with this utility as the default program).
+            //Open existing file on first load. Usually this means user double-clicked a parquet file with this utility as the default program.
             if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
             {
                 await this.OpenNewFileOrFolder(this.fileToLoadOnLaunch);
@@ -176,6 +178,7 @@ namespace ParquetViewer
             this.alwaysLoadAllRecordsToolStripMenuItem.Checked = AppSettings.AlwaysLoadAllRecords;
             this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
             this.RefreshExperimentalFeatureToolStrips();
+            this.SetLanguageCheckmark();
 
             //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
             Program.GetUserConsentToGatherAnalytics();
@@ -240,10 +243,11 @@ namespace ParquetViewer
             {
                 schema = this._openParquetEngine.Schema;
             }
-            catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required")) { /*swallow*/ }
+            catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required"))
+            { /*swallow: This exception is thrown from Parquet.Net when the schema has no fields*/ }
             catch (Exception ex)
             {
-                throw new Parquet.ParquetException("Could not read parquet schema.", ex);
+                throw new Parquet.ParquetException(Resources.Errors.ParquetSchemaReadErrorMessage, ex);
             }
 
             var fields = schema?.Fields;
@@ -268,7 +272,7 @@ namespace ParquetViewer
             }
             else
             {
-                ShowError("The selected file/folder doesn't have any fields", "No fields found");
+                ShowError(Resources.Errors.NoFieldsFoundErrorMessage, Resources.Errors.NoFieldsFoundErrorTitle);
                 return null;
             }
         }
@@ -283,17 +287,17 @@ namespace ParquetViewer
                 if (!this.IsAnyFileOpen)
                     return;
 
-                if (this.SelectedFields is null)
-                    throw new FileLoadException("No fields selected");
+                if (this.SelectedFields is null || this.SelectedFields.Count == 0)
+                    return;
 
                 if (!File.Exists(this.OpenFileOrFolderPath) && !Directory.Exists(this.OpenFileOrFolderPath))
                 {
-                    ShowError($"The specified file/folder no longer exists: {this.OpenFileOrFolderPath}{Environment.NewLine}Please try opening a new file or folder");
+                    ShowError(string.Format(Resources.Errors.OpenFileNoLongerExistsErrorMessageFormat, this.OpenFileOrFolderPath + Environment.NewLine));
                     return;
                 }
 
                 long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine!.RecordCount - this.CurrentOffset);
-                loadingIcon = this.ShowLoadingIcon("Loading Data", cellCount);
+                loadingIcon = this.ShowLoadingIcon(Resources.Strings.LoadingDataLabelText, cellCount);
 
                 var intermediateResult = await Task.Run(async () =>
                 {
@@ -306,14 +310,14 @@ namespace ParquetViewer
                 {
                     //Don't bother showing the indexing step if the data load was really fast because we know 
                     //indexing will be instantaneous. It looks better this way in my opinion.
-                    loadingIcon.Reset("Indexing");
+                    loadingIcon.Reset(Resources.Strings.IndexingDataLabelText);
                     showIndexingProgress = true;
                 }
 
                 var finalResult = await Task.Run(() => intermediateResult.Invoke(showIndexingProgress), loadingIcon.CancellationToken);
                 indexTime = stopwatch.Elapsed - loadTime;
 
-                this.recordCountStatusBarLabel.Text = string.Format("{0} to {1}", this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
+                this.recordCountStatusBarLabel.Text = string.Format(Resources.Strings.LoadedRecordCountRangeFormat, this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
                 this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetEngine.TotalRecordCountExtendedPropertyKey]!.ToString();
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
@@ -470,6 +474,23 @@ namespace ParquetViewer
             string placeholder = ParquetGridView.GenerateFilterQuery(simpleColumn.ColumnName, simpleColumn.DataType, sampleSimpleValue);
             if (placeholder.Length < 100) //Only set the placeholder query if it's reasonably short
                 this.searchFilterTextBox.PlaceholderText = $"WHERE {placeholder}";
+        }
+
+
+        private void SetLanguageCheckmark()
+        {
+            if (AppSettings.UserSelectedCulture is not null)
+            {
+                this.languageToolStripMenuItem.DropDownItems.OfType<ToolStripMenuItem>().ToList().ForEach(languageToolStripItem =>
+                {
+                    languageToolStripItem.Checked = languageToolStripItem.Tag?.ToString() == AppSettings.UserSelectedCulture.ToString();
+                });
+            }
+            else
+            {
+                //We default to English
+                this.englishToolStripMenuItem.Checked = true;
+            }
         }
     }
 }

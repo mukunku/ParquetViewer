@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LoadedRecordCountRangeFormat" xml:space="preserve">
+    <value>{0} - {1}</value>
+  </data>
+  <data name="LoadingDataLabelText" xml:space="preserve">
+    <value>Veri Yükleniyor</value>
+  </data>
+  <data name="CancelInitiatedLabelText" xml:space="preserve">
+    <value>İptal ediliyor...</value>
+  </data>
+  <data name="ExportingDataLabelText" xml:space="preserve">
+    <value>Veri Aktarılıyor</value>
+  </data>
+  <data name="IndexingDataLabelText" xml:space="preserve">
+    <value>Dizinleniyor</value>
+  </data>
+  <data name="PrivacyPolicyLabelText" xml:space="preserve">
+    <value>Gizlilik politikası</value>
+  </data>
+  <data name="InvalidDateFormatErrorText" xml:space="preserve">
+    <value>geçersiz tarih formatı</value>
+  </data>
+  <data name="TooManyFieldsErrorFormat" xml:space="preserve">
+    <value>Desteklenmeyen sayıda alan: {0}</value>
+  </data>
+  <data name="UnsupportedFieldCountTextFormat" xml:space="preserve">
+    <value>Desteklenmeyen: {0}</value>
+  </data>
+  <data name="SelectAllCheckmarkTextFormat" xml:space="preserve">
+    <value>Hepsini Seç (Sayı: {0})</value>
+  </data>
+  <data name="DeselectAllCheckmarkTextFormat" xml:space="preserve">
+    <value>Seçimleri Kaldır (Sayı: {0})</value>
+  </data>
+  <data name="UnsupportedFieldText" xml:space="preserve">
+    <value>(Desteklenmiyor)</value>
+  </data>
+  <data name="ThriftMetadataCopiedToClipboardMessage" xml:space="preserve">
+    <value>Ham Thrift metadatası panoya kopyalandı.</value>
+  </data>
+  <data name="SaveRawMetadataToFileDialogTitle" xml:space="preserve">
+    <value>Ham metadatayı kaydet</value>
+  </data>
+  <data name="MetadataSuccessfullyExportedToFileMessageFormat" xml:space="preserve">
+    <value>Metadata başarıyla kaydedildi: {0}</value>
+  </data>
+  <data name="MetadataSuccessfullyExportedToFileMessageTitle" xml:space="preserve">
+    <value>Kayıt başarılı</value>
+  </data>
+  <data name="MainWindowOpenFileTitleFormat" xml:space="preserve">
+    <value>Dosya: {0}</value>
+  </data>
+  <data name="MainWindowOpenFolderTitleFormat" xml:space="preserve">
+    <value>Klasör: {0}</value>
+  </data>
+  <data name="QuerySyntaxHelpText" xml:space="preserve">
+    <value>NULL KONTROLÜ: 
+    WHERE field_name IS NULL
+    WHERE field_name IS NOT NULL
+TARİH ve ZAMAN:   
+    WHERE field_name &gt;= #2000-12-31#
+    WHERE field_name = #2000-01-13 01:00:00#
+SAYISAL:
+    WHERE field_name &lt;= 123.4
+    WHERE (field1 * field2) / 100 &gt; 0.1
+METİN:
+    WHERE field_name LIKE '%value%' 
+    WHERE field_name = 'equals value'
+    WHERE field_name &lt;&gt; 'not equals'
+IN KONTROLÜ:
+    WHERE field_name IN (value1, value2)
+    WHERE field_name NOT IN (value3, value4)
+BIRDEN FAZLA KOŞUL: 
+    WHERE (field_1 = 0 AND field_2 &lt;&gt; 'value') OR field_3 IS NULL
+
+Daha fazla bilgi için: 'Hakkında → Kullanıcı Kılavuzu'</value>
+  </data>
+  <data name="QuerySyntaxHelpTitle" xml:space="preserve">
+    <value>Sorgu Filtresi Söz Dizim Örnekleri</value>
+  </data>
+  <data name="RecordsToBeExportedTitleFormat" xml:space="preserve">
+    <value>{0} kayıt kaydedilecektir</value>
+  </data>
+  <data name="ExportCancelledMessage" xml:space="preserve">
+    <value>Dosyaya kayıt işlemi iptal edilmiştir</value>
+  </data>
+  <data name="ExportCancelledTitle" xml:space="preserve">
+    <value>Aktarma İptal Edildi</value>
+  </data>
+  <data name="ExportSuccessfulMessageFormat" xml:space="preserve">
+    <value>Sonuçlar başarıyla kaydedildi!
+
+Dosya boyutu: {0} MB</value>
+  </data>
+  <data name="ExportSuccessfulTitle" xml:space="preserve">
+    <value>Aktarma başarılı</value>
+  </data>
+  <data name="SwitchFromXlsToXlsxMessageFormat" xml:space="preserve">
+    <value>{1} dosyaları hücre başına maksimum {0} karakter desteklemektedir. 
+
+Onun yerine sonuçlari {2} dosyasına aktarmak ister misiniz?</value>
+  </data>
+  <data name="SwitchFromXlsToXlsxMessageTitle" xml:space="preserve">
+    <value>Fazla uzun veri - Dosya tipi değiştirilsin mi?</value>
+  </data>
+  <data name="CreateTableScriptCopiedToClipboardMessage" xml:space="preserve">
+    <value>Create table sorgusu panoya kopyalandı!</value>
+  </data>
+  <data name="CreateTableScriptFailedWithNoFieldsMessage" xml:space="preserve">
+    <value>SQL sorgusunu yaratmak için lütfen önce birkaç alan seçin</value>
+  </data>
+  <data name="CopyToClipboardText" xml:space="preserve">
+    <value>Kopyala</value>
+  </data>
+  <data name="CancelButtonText" xml:space="preserve">
+    <value>İptal Et</value>
+  </data>
+  <data name="CopyToClipboardWithHeadersText" xml:space="preserve">
+    <value>Başlıklarla kopyala</value>
+  </data>
+  <data name="CopyAsWhereConditionText" xml:space="preserve">
+    <value>WHERE olarak kopyala</value>
+  </data>
+  <data name="DecimalScientificFormatting" xml:space="preserve">
+    <value>Bilimsel</value>
+  </data>
+  <data name="DimensionsText" xml:space="preserve">
+    <value>Boyutlar</value>
+  </data>
+  <data name="TypeText" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="SaveImageToFileButtonTextFormat" xml:space="preserve">
+    <value>{0} olarak Kaydet</value>
+  </data>
+  <data name="CantGoBackLinkButtonText" xml:space="preserve">
+    <value>geri gidilemiyor</value>
+  </data>
+  <data name="SaveImageAsButtonText" xml:space="preserve">
+    <value>Resmi {0} olarak kaydet</value>
+  </data>
+  <data name="ImageSavedToDiskMessage" xml:space="preserve">
+    <value>Görüntü kaydedildi: {0}</value>
+  </data>
+  <data name="ImageSavedToDiskTitle" xml:space="preserve">
+    <value>Kayıt tamamlandı</value>
+  </data>
+  <data name="DecimalFormatting" xml:space="preserve">
+    <value>Desimal</value>
+  </data>
+  <data name="LanguageChangeConfirmationTitle" xml:space="preserve">
+    <value>ParquetViewer'ı yeniden başlat?</value>
+  </data>
+  <data name="LanguageChangeConfirmationMessage" xml:space="preserve">
+    <value>Dili değiştirmek için uygulamanın yeniden başlatılmasi gerekiyor. Devam etmek ister misiniz?</value>
+  </data>
+  <data name="DotNetDateFormatHelpUrl" xml:space="preserve">
+    <value>https://docs.microsoft.com/tr-tr/dotnet/standard/base-types/custom-date-and-time-format-strings</value>
+  </data>
+</root>

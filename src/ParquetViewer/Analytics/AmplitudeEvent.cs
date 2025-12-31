@@ -38,6 +38,7 @@ namespace ParquetViewer.Analytics
             Environment.ProcessorCount,
             IsDefaultParquetViewer = AboutBox.IsDefaultViewerForParquetFiles,
             AppSettings.DarkMode,
+            CultureInfo = (AppSettings.UserSelectedCulture ?? CultureInfo.CurrentUICulture).ToString(),
 #if RELEASE_SELFCONTAINED
             SelfContainedExecutable = true,
 #else

@@ -1,10 +1,11 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
-using ParquetViewer.Properties;
+using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -88,26 +89,7 @@ namespace ParquetViewer
 
         private void searchFilterLabel_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(@"NULL CHECK: 
-    WHERE field_name IS NULL
-    WHERE field_name IS NOT NULL
-DATETIME:   
-    WHERE field_name >= #2000-12-31#
-    WHERE field_name = #2000-01-13 01:00:00#
-NUMERIC:
-    WHERE field_name <= 123.4
-    WHERE (field1 * field2) / 100 > 0.1
-STRING:
-    WHERE field_name LIKE '%value%' 
-    WHERE field_name = 'equals value'
-    WHERE field_name <> 'not equals'
-IN CHECK:
-    WHERE field_name IN (value1, value2)
-    WHERE field_name NOT IN (value3, value4)
-MULTIPLE CONDITIONS: 
-    WHERE (field_1 = 0 AND field_2 <> 'value') OR field_3 IS NULL
-
-Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Examples");
+            MessageBox.Show(Resources.Strings.QuerySyntaxHelpText, Resources.Strings.QuerySyntaxHelpTitle);
         }
 
         private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
@@ -151,11 +133,11 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
 
                 if (loadAllRecordsButton.Enabled)
                 {
-                    loadAllRecordsButton.Image = Resources.next_blue;
+                    loadAllRecordsButton.Image = Resources.Icons.next_blue;
                 }
                 else
                 {
-                    loadAllRecordsButton.Image = Resources.next_disabled;
+                    loadAllRecordsButton.Image = Resources.Icons.next_disabled;
                 }
             }
         }
@@ -235,7 +217,7 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
             catch (InvalidQueryException ex)
             {
                 MessageBox.Show(ex.Message + Environment.NewLine + Environment.NewLine + ex.InnerException?.Message,
-                    "Invalid Query", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Resources.Errors.InvalidQueryErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             catch (Exception)
             {
@@ -269,6 +251,41 @@ Checkout 'Help → User Guide' for more information.", "Filter Query Syntax Exam
                 //the context menu won't go away until you click on it.
                 this.mainGridView.CloseContextMenu();
             }
+        }
+
+        private void languageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (sender is not ToolStripItem toolStripItem)
+            {
+                return;
+            }
+
+            var targetCulture = toolStripItem.Tag?.ToString();
+            if (string.IsNullOrWhiteSpace(targetCulture))
+            {
+                targetCulture = "en-US"; //our default culture
+            }
+
+            if (!UtilityMethods.TryParseCultureInfo(targetCulture, out CultureInfo? newCultureInfo))
+            {
+                return; //invalid culture
+            }
+
+            if (newCultureInfo.Equals(CultureInfo.CurrentUICulture))
+            {
+                return; //no change
+            }
+
+            if (MessageBox.Show(this,
+                Resources.Strings.LanguageChangeConfirmationMessage,
+                Resources.Strings.LanguageChangeConfirmationTitle,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return; //user cancelled
+            }
+
+            AppSettings.UserSelectedCulture = newCultureInfo;
+            UtilityMethods.RestartApplication();
         }
     }
 }

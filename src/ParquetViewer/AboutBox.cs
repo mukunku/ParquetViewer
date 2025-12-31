@@ -37,13 +37,11 @@ namespace ParquetViewer
         public AboutBox()
         {
             InitializeComponent();
-            this.Text = string.Format("About {0}", AssemblyTitle);
+            this.Text = string.Format(this.Text, AssemblyTitle);
             this.labelProductName.Text = AssemblyProduct;
-            this.labelVersion.Text = string.Format("Version {0}{1}", AssemblyVersion, _isSelfContainedExe ? " SC" : string.Empty);
+            this.labelVersion.Text = string.Format(this.labelVersion.Text, AssemblyVersion, _isSelfContainedExe ? " SC" : string.Empty);
             this.labelCopyright.Text = AssemblyCopyright;
-            this.labelCompanyName.Text = AssemblyCompany;
-            this.textBoxDescription.Text = AssemblyDescription;
-            this.newVersionLabel.Text = string.Empty;
+            this.textBoxDescription.Text = AssemblyDescription.Replace($"Privacy policy:", $"{Resources.Strings.PrivacyPolicyLabelText}:"); //HACK: to translate privacy policy text
             this.newVersionLabel.Image = null;
 
             if (!AmplitudeEvent.HasApiKey)
@@ -170,9 +168,10 @@ namespace ParquetViewer
                 }
                 else if (success == false)
                 {
-                    MessageBox.Show(this, $"Something went wrong (Error code: {exitCode}). " +
-                        $"Try running ParquetViewer as administrator and try again.",
-                        "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, 
+                        string.Format(Resources.Errors.FileAssociationFailedErrorMessageFormat, exitCode), 
+                        Resources.Errors.FileAssociationFailedErrorTitle, 
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                     SetCheckboxSilent(!associateFileExtensionCheckBox.Checked);
                 }
                 else
@@ -199,16 +198,18 @@ namespace ParquetViewer
 
             try
             {
+                this.newVersionLabel.Visible = false;
                 var latestRelease = await Env.FetchLatestRelease();
+                this.newVersionLabel.Text = string.Format(this.newVersionLabel.Text, latestRelease.Version);
+                this.newVersionLabel.Visible = true;
+
                 if (latestRelease.Version > Env.AssemblyVersion)
                 {
-                    this.newVersionLabel.Text = $"(Latest: {latestRelease.Version.ToString()})";
                     this.newVersionLabel.Tag = latestRelease.Url;
-                    this.newVersionLabel.Image = Properties.Resources.external_link_icon;
+                    this.newVersionLabel.Image = Resources.Icons.external_link_icon;
                 }
                 else if (latestRelease.Version == Env.AssemblyVersion)
-                {
-                    this.newVersionLabel.Text = $"(Latest: {latestRelease.Version.ToString()})";
+                {   
                     this.newVersionLabel.Enabled = false;
                 }
             }
@@ -217,6 +218,7 @@ namespace ParquetViewer
                 ExceptionEvent.FireAndForget(ex);
                 this.newVersionLabel.Text = string.Empty;
                 this.newVersionLabel.Tag = null;
+                this.newVersionLabel.Enabled = false;
             }
         }
 

@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -46,8 +48,8 @@ namespace ParquetViewer.Helpers
         };
 
         public static string GetExtension(this FileType fileType)
-            => Enum.IsDefined(fileType) 
-            ? $".{fileType.ToString().ToLowerInvariant()}" 
+            => Enum.IsDefined(fileType)
+            ? $".{fileType.ToString().ToLowerInvariant()}"
             : throw new ArgumentOutOfRangeException(nameof(fileType));
 
         public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
@@ -167,9 +169,9 @@ namespace ParquetViewer.Helpers
         //Source: https://stackoverflow.com/a/7574615/1458738
         public static string Left(this string value, int maxLength, string? truncateSuffix = null)
         {
-            if (string.IsNullOrEmpty(value)) 
+            if (string.IsNullOrEmpty(value))
                 return value;
-            
+
             maxLength = Math.Abs(maxLength);
             return value.Length <= maxLength ? value : (value.Substring(0, maxLength) + truncateSuffix);
         }

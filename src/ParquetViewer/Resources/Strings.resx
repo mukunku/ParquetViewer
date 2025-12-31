@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LoadedRecordCountRangeFormat" xml:space="preserve">
+    <value>{0} to {1}</value>
+    <comment>This is the value shown in the bottom right status bar once records are loaded from a parquet file. Example: "0 to 1000"</comment>
+  </data>
+  <data name="LoadingDataLabelText" xml:space="preserve">
+    <value>Loading Data</value>
+    <comment>Text shown when data is being loaded from a parquet file</comment>
+  </data>
+  <data name="CancelInitiatedLabelText" xml:space="preserve">
+    <value>Cancelling...</value>
+    <comment>Text to be shown between the time a user initiates a cancel operation and when it completes.</comment>
+  </data>
+  <data name="ExportingDataLabelText" xml:space="preserve">
+    <value>Exporting Data</value>
+    <comment>Text shown while data is being exported to a file</comment>
+  </data>
+  <data name="IndexingDataLabelText" xml:space="preserve">
+    <value>Indexing</value>
+    <comment>Text shown while data is being indexed</comment>
+  </data>
+  <data name="PrivacyPolicyLabelText" xml:space="preserve">
+    <value>Privacy policy</value>
+    <comment>Title to be shown before the privacy policy</comment>
+  </data>
+  <data name="InvalidDateFormatErrorText" xml:space="preserve">
+    <value>invalid date format</value>
+    <comment>Text shown in the custom date format preview textbox when an invalid format is specified</comment>
+  </data>
+  <data name="TooManyFieldsErrorFormat" xml:space="preserve">
+    <value>Too many fields: {0}</value>
+    <comment>Shown on the Field Selection Dialog when there are too many fields to filter by</comment>
+  </data>
+  <data name="UnsupportedFieldCountTextFormat" xml:space="preserve">
+    <value>Unsupported: {0}</value>
+    <comment>Shown in the field selection dialog to indicate how many fields are unsupported by ParquetViewer</comment>
+  </data>
+  <data name="SelectAllCheckmarkTextFormat" xml:space="preserve">
+    <value>Select All (Count: {0})</value>
+    <comment>Shown in the field selection dialog to bulk select checkmarks</comment>
+  </data>
+  <data name="DeselectAllCheckmarkTextFormat" xml:space="preserve">
+    <value>Deselect All (Count: {0})</value>
+    <comment>Shown in the field selection dialog to bulk deselect checkmarks</comment>
+  </data>
+  <data name="UnsupportedFieldText" xml:space="preserve">
+    <value>(Unsupported)</value>
+    <comment>Shown in the field selection dialog next to field names to indicate the field is not supported for viewing with ParquetViewer</comment>
+  </data>
+  <data name="ThriftMetadataCopiedToClipboardMessage" xml:space="preserve">
+    <value>Raw Thrift metadata copied to clipboard.</value>
+    <comment>Shown when the user clicks the Copy Raw Thrift Metadata button</comment>
+  </data>
+  <data name="SaveRawMetadataToFileDialogTitle" xml:space="preserve">
+    <value>Save raw metadata</value>
+    <comment>Shown when falling back to saving the raw thrift metadata to a file instead of the clipboard</comment>
+  </data>
+  <data name="MetadataSuccessfullyExportedToFileMessageFormat" xml:space="preserve">
+    <value>Metadata successfully exported to: {0}</value>
+    <comment>Shown when raw thrift metadata is successfully exported to a file</comment>
+  </data>
+  <data name="MetadataSuccessfullyExportedToFileMessageTitle" xml:space="preserve">
+    <value>Export complete</value>
+    <comment>Shown when raw thrift metadata is successfully exported to a file</comment>
+  </data>
+  <data name="MainWindowOpenFileTitleFormat" xml:space="preserve">
+    <value>File: {0}</value>
+    <comment>Title format string when a new file is opened</comment>
+  </data>
+  <data name="MainWindowOpenFolderTitleFormat" xml:space="preserve">
+    <value>Folder: {0}</value>
+    <comment>Title format string when a new folder is opened</comment>
+  </data>
+  <data name="QuerySyntaxHelpText" xml:space="preserve">
+    <value>NULL CHECK: 
+    WHERE field_name IS NULL
+    WHERE field_name IS NOT NULL
+DATETIME:   
+    WHERE field_name &gt;= #2000-12-31#
+    WHERE field_name = #2000-01-13 01:00:00#
+NUMERIC:
+    WHERE field_name &lt;= 123.4
+    WHERE (field1 * field2) / 100 &gt; 0.1
+STRING:
+    WHERE field_name LIKE '%value%' 
+    WHERE field_name = 'equals value'
+    WHERE field_name &lt;&gt; 'not equals'
+IN CHECK:
+    WHERE field_name IN (value1, value2)
+    WHERE field_name NOT IN (value3, value4)
+MULTIPLE CONDITIONS: 
+    WHERE (field_1 = 0 AND field_2 &lt;&gt; 'value') OR field_3 IS NULL
+
+Checkout 'Help → User Guide' for more information.</value>
+    <comment>Shown when the user clicks on the Filter Query (?): link button</comment>
+  </data>
+  <data name="QuerySyntaxHelpTitle" xml:space="preserve">
+    <value>Filter Query Syntax Examples</value>
+    <comment>Shown when the user clicks on the Filter Query (?): link button</comment>
+  </data>
+  <data name="RecordsToBeExportedTitleFormat" xml:space="preserve">
+    <value>{0} records will be exported</value>
+    <comment>Title shown on the save file dialog when the user is exporting data</comment>
+  </data>
+  <data name="ExportCancelledMessage" xml:space="preserve">
+    <value>Export has been cancelled</value>
+    <comment>Shown when the user cancels the export operation before it completes</comment>
+  </data>
+  <data name="ExportCancelledTitle" xml:space="preserve">
+    <value>Export Cancelled</value>
+    <comment>Shown when the user cancels the export operation before it completes</comment>
+  </data>
+  <data name="ExportSuccessfulMessageFormat" xml:space="preserve">
+    <value>Export successful!
+
+File size: {0} MB</value>
+    <comment>Shown after a successful file export</comment>
+  </data>
+  <data name="ExportSuccessfulTitle" xml:space="preserve">
+    <value>Success</value>
+    <comment>Shown after a successful file export</comment>
+  </data>
+  <data name="SwitchFromXlsToXlsxMessageFormat" xml:space="preserve">
+    <value>Maximum {0} characters per cell are supported for {1} files.
+
+Would you like to switch to a {2} file instead?</value>
+    <comment>Shown when the user tries to export data to an xls file with too many characters in a single cell. The text should prompt the user if they want to switch to xlsx instead which supports more data in a single cell</comment>
+  </data>
+  <data name="SwitchFromXlsToXlsxMessageTitle" xml:space="preserve">
+    <value>Data too large - Switch export type?</value>
+    <comment>Shown when the user tries to export data to an xls file with too many characters in a single cell. The text should prompt the user if they want to switch to xlsx instead which supports more data in a single cell</comment>
+  </data>
+  <data name="CreateTableScriptCopiedToClipboardMessage" xml:space="preserve">
+    <value>Create table script copied to clipboard!</value>
+    <comment>Shown when the user clicks the tool to generate the SQL CREATE TABLE script for the open parquet file(s)</comment>
+  </data>
+  <data name="CreateTableScriptFailedWithNoFieldsMessage" xml:space="preserve">
+    <value>Please select some fields first to get the SQL script</value>
+    <comment>Shown if the user somehow tries to generate sql create table script without having any fields loaded</comment>
+  </data>
+  <data name="CopyToClipboardText" xml:space="preserve">
+    <value>Copy</value>
+    <comment>Text shown for copying in the right-click context menu</comment>
+  </data>
+  <data name="CancelButtonText" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Text to be shown on cancel buttons</comment>
+  </data>
+  <data name="CopyToClipboardWithHeadersText" xml:space="preserve">
+    <value>Copy with headers</value>
+    <comment>Text shown for copying with headers in the right-click context menu</comment>
+  </data>
+  <data name="CopyAsWhereConditionText" xml:space="preserve">
+    <value>Copy as WHERE...</value>
+    <comment>Text shown for creating a where condition based on the current selection in the right-click context menu</comment>
+  </data>
+  <data name="DecimalScientificFormatting" xml:space="preserve">
+    <value>Scientific</value>
+    <comment>When the user right-clicks on a decimal column header this is the text shown for the scientific formatting option.</comment>
+  </data>
+  <data name="DimensionsText" xml:space="preserve">
+    <value>Dimensions</value>
+    <comment>Shown in the title bar of quick peek windows for image previews</comment>
+  </data>
+  <data name="TypeText" xml:space="preserve">
+    <value>Type</value>
+    <comment>Shown in the title bar of quick peek windows for image previews</comment>
+  </data>
+  <data name="SaveImageToFileButtonTextFormat" xml:space="preserve">
+    <value>Save as {0}</value>
+    <comment>Text template for the button to save an image preview to disk</comment>
+  </data>
+  <data name="CantGoBackLinkButtonText" xml:space="preserve">
+    <value>can't go back</value>
+    <comment>Text shown when the quick peek window's link to go back to the source cell is clicked but the source cell no longer exists</comment>
+  </data>
+  <data name="SaveImageAsButtonText" xml:space="preserve">
+    <value>Save image as {0}</value>
+    <comment>Shown on the save image to file button in the quick peek form</comment>
+  </data>
+  <data name="ImageSavedToDiskMessage" xml:space="preserve">
+    <value>Image saved to {0}</value>
+    <comment>Shown when an image is successfully saved to disk from the quick peek form</comment>
+  </data>
+  <data name="ImageSavedToDiskTitle" xml:space="preserve">
+    <value>Save complete</value>
+    <comment>Shown when an image is successfully saved to disk from the quick peek form</comment>
+  </data>
+  <data name="DecimalFormatting" xml:space="preserve">
+    <value>Decimal</value>
+    <comment>When the user right-clicks on a decimal column header this is the text shown for the decimal formatting option.</comment>
+  </data>
+  <data name="LanguageChangeConfirmationTitle" xml:space="preserve">
+    <value>Restart ParquetViewer?</value>
+    <comment>Shown when the user clicks on a different UI language from the help menu</comment>
+  </data>
+  <data name="LanguageChangeConfirmationMessage" xml:space="preserve">
+    <value>Changing the language requires an app restart. Would you like to continue?</value>
+    <comment>Shown when the user clicks on a different UI language from the help menu</comment>
+  </data>
+  <data name="DotNetDateFormatHelpUrl" xml:space="preserve">
+    <value>https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings</value>
+    <comment>This is the link that the user will be taken to if they click on the link label at the bottom of the custom date format configuration screen.</comment>
+  </data>
+</root>

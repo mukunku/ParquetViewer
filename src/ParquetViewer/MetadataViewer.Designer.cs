@@ -29,77 +29,57 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MetadataViewer));
             tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             tabControl = new System.Windows.Forms.TabControl();
             loadingTab = new System.Windows.Forms.TabPage();
             closeButton = new System.Windows.Forms.Button();
             copyRawThriftMetadataButton = new System.Windows.Forms.Button();
             mainBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            copyRawMetadataToolTip = new System.Windows.Forms.ToolTip(components);
+            copyRawMetadataButtonToolTip = new System.Windows.Forms.ToolTip(components);
             tableLayoutPanel.SuspendLayout();
             tabControl.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel
             // 
-            tableLayoutPanel.ColumnCount = 2;
-            tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 66.6666641F));
-            tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.3333321F));
+            resources.ApplyResources(tableLayoutPanel, "tableLayoutPanel");
             tableLayoutPanel.Controls.Add(tabControl, 0, 0);
             tableLayoutPanel.Controls.Add(closeButton, 1, 1);
             tableLayoutPanel.Controls.Add(copyRawThriftMetadataButton, 0, 1);
-            tableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            tableLayoutPanel.Location = new System.Drawing.Point(0, 0);
-            tableLayoutPanel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             tableLayoutPanel.Name = "tableLayoutPanel";
-            tableLayoutPanel.RowCount = 2;
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            tableLayoutPanel.Size = new System.Drawing.Size(584, 583);
-            tableLayoutPanel.TabIndex = 1;
+            copyRawMetadataButtonToolTip.SetToolTip(tableLayoutPanel, resources.GetString("tableLayoutPanel.ToolTip"));
             // 
             // tabControl
             // 
-            tabControl.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            resources.ApplyResources(tabControl, "tabControl");
             tableLayoutPanel.SetColumnSpan(tabControl, 2);
             tabControl.Controls.Add(loadingTab);
-            tabControl.Location = new System.Drawing.Point(4, 3);
-            tabControl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new System.Drawing.Size(576, 542);
-            tabControl.TabIndex = 0;
+            copyRawMetadataButtonToolTip.SetToolTip(tabControl, resources.GetString("tabControl.ToolTip"));
             tabControl.SelectedIndexChanged += TabControl_SelectedIndexChanged;
             // 
             // loadingTab
             // 
+            resources.ApplyResources(loadingTab, "loadingTab");
             loadingTab.BackColor = System.Drawing.Color.LightGray;
-            loadingTab.Location = new System.Drawing.Point(4, 24);
-            loadingTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             loadingTab.Name = "loadingTab";
-            loadingTab.Size = new System.Drawing.Size(568, 514);
-            loadingTab.TabIndex = 0;
-            loadingTab.Text = "Loading...";
+            copyRawMetadataButtonToolTip.SetToolTip(loadingTab, resources.GetString("loadingTab.ToolTip"));
             // 
             // closeButton
             // 
-            closeButton.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            closeButton.Location = new System.Drawing.Point(452, 551);
-            closeButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            resources.ApplyResources(closeButton, "closeButton");
             closeButton.Name = "closeButton";
-            closeButton.Size = new System.Drawing.Size(128, 29);
-            closeButton.TabIndex = 1;
-            closeButton.Text = "Close";
+            copyRawMetadataButtonToolTip.SetToolTip(closeButton, resources.GetString("closeButton.ToolTip"));
             closeButton.UseVisualStyleBackColor = true;
             closeButton.Click += CloseButton_Click;
             // 
             // copyRawThriftMetadataButton
             // 
-            copyRawThriftMetadataButton.Location = new System.Drawing.Point(3, 551);
+            resources.ApplyResources(copyRawThriftMetadataButton, "copyRawThriftMetadataButton");
             copyRawThriftMetadataButton.Name = "copyRawThriftMetadataButton";
-            copyRawThriftMetadataButton.Size = new System.Drawing.Size(148, 29);
-            copyRawThriftMetadataButton.TabIndex = 2;
-            copyRawThriftMetadataButton.Text = "Copy Raw Metadata";
+            copyRawMetadataButtonToolTip.SetToolTip(copyRawThriftMetadataButton, resources.GetString("copyRawThriftMetadataButton.ToolTip"));
             copyRawThriftMetadataButton.UseVisualStyleBackColor = true;
             copyRawThriftMetadataButton.Click += copyRawThriftMetadataButton_Click;
             // 
@@ -110,15 +90,12 @@
             // 
             // MetadataViewer
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            resources.ApplyResources(this, "$this");
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(584, 583);
             Controls.Add(tableLayoutPanel);
             KeyPreview = true;
-            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             Name = "MetadataViewer";
-            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            Text = "Parquet Metadata Viewer";
+            copyRawMetadataButtonToolTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             Load += MetadataViewer_Load;
             KeyUp += MetadataViewer_KeyUp;
             tableLayoutPanel.ResumeLayout(false);
@@ -133,6 +110,6 @@
         private System.Windows.Forms.TabPage loadingTab;
         private System.ComponentModel.BackgroundWorker mainBackgroundWorker;
         private System.Windows.Forms.Button copyRawThriftMetadataButton;
-        private System.Windows.Forms.ToolTip copyRawMetadataToolTip;
+        private System.Windows.Forms.ToolTip copyRawMetadataButtonToolTip;
     }
 }

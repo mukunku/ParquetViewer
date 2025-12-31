@@ -13,7 +13,6 @@ namespace ParquetViewer
     public partial class FieldsToLoadForm : FormBase
     {
         private const string SelectAllCheckboxName = "checkbox_selectallfields";
-        private const string UnsupportedFieldText = "(Unsupported)";
         private const int DynamicFieldCheckboxYIncrement = 30;
         private const int MaxNumberOfFieldsWeCanRender = 5000;
 
@@ -59,7 +58,7 @@ namespace ParquetViewer
                 if (availableFields.Count > MaxNumberOfFieldsWeCanRender)
                 {
                     this.showSelectedFieldsRadioButton.Enabled = false;
-                    this.filterColumnsTextbox.PlaceholderText = $"Too many fields: {availableFields.Count}";
+                    this.filterColumnsTextbox.PlaceholderText = string.Format(Resources.Strings.TooManyFieldsErrorFormat, availableFields.Count);
                     return;
                 }
 
@@ -84,10 +83,10 @@ namespace ParquetViewer
                         var totalFieldCount = availableFields.Count;
                         var supportedFieldCount = availableFields.Where(IsSupportedFieldType).Count();
                         var unsupportedFieldCount = totalFieldCount - supportedFieldCount;
-                        var unsupportedFieldsText = unsupportedFieldCount > 0 ? $" - Unsupported: {unsupportedFieldCount}" : string.Empty;
+                        var unsupportedFieldsText = unsupportedFieldCount > 0 ? $" - {string.Format(Resources.Strings.UnsupportedFieldCountTextFormat, unsupportedFieldCount)}" : string.Empty;
 
-                        string selectAllCheckBoxText = $"Select All (Count: {supportedFieldCount}{unsupportedFieldsText})";
-                        string deselectAllCheckBoxText = $"Deselect All (Count: {supportedFieldCount}{unsupportedFieldsText})";
+                        string selectAllCheckBoxText = string.Format(Resources.Strings.SelectAllCheckmarkTextFormat, supportedFieldCount + unsupportedFieldsText);
+                        string deselectAllCheckBoxText = string.Format(Resources.Strings.DeselectAllCheckmarkTextFormat, supportedFieldCount + unsupportedFieldsText);
                         var selectAllCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                         {
                             Name = SelectAllCheckboxName,
@@ -132,7 +131,7 @@ namespace ParquetViewer
                     var fieldCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                     {
                         Name = string.Concat("checkbox_", field.Name),
-                        Text = string.Concat(field.Name, isUnsupportedFieldType ? $" {UnsupportedFieldText}" : string.Empty),
+                        Text = string.Concat(field.Name, isUnsupportedFieldType ? $" {Resources.Strings.UnsupportedFieldText}" : string.Empty),
                         Tag = field.Name,
                         Checked = preSelectedFields?.Contains(field.Name) == true,
                         Location = new Point(locationX, locationY),
@@ -198,7 +197,7 @@ namespace ParquetViewer
             }
             catch (Exception ex)
             {
-                this.ShowError(ex, "Something went wrong while generating the field list.", true);
+                this.ShowError(ex, Resources.Errors.FieldListGenerationError, true);
             }
             finally
             {
@@ -239,7 +238,7 @@ namespace ParquetViewer
                 //We don't support lists of maps
                 if (lf.Item.SchemaType == SchemaType.Map)
                 {
-                    unsupportedReason = $"Lists of {lf.Item.SchemaType.ToString()}s are currently unsupported";
+                    unsupportedReason = string.Format(Resources.Errors.NestedListOfTypeNotSupportedMessageFormat, SchemaType.List.ToString(), lf.Item.SchemaType.ToString());
                     return false;
                 }
 
@@ -251,12 +250,12 @@ namespace ParquetViewer
             {
                 if (mf.Key.SchemaType != SchemaType.Data)
                 {
-                    unsupportedReason = $"Maps of {mf.Key.SchemaType}s are currently unsupported";
+                    unsupportedReason = string.Format(Resources.Errors.NestedListOfTypeNotSupportedMessageFormat, SchemaType.Map.ToString(), mf.Key.SchemaType.ToString());
                     return false;
                 }
                 else if (mf.Value.SchemaType != SchemaType.Data)
                 {
-                    unsupportedReason = $"Maps of {mf.Value.SchemaType}s are currently unsupported";
+                    unsupportedReason = string.Format(Resources.Errors.NestedListOfTypeNotSupportedMessageFormat, SchemaType.Map.ToString(), mf.Value.SchemaType.ToString());
                     return false;
                 }
 
@@ -270,8 +269,8 @@ namespace ParquetViewer
                 {
                     if (!IsSupportedFieldType(structField, out unsupportedReason))
                     {
-                        unsupportedReason = $"Struct `{field.Name}` contains unsupported field: `{structField.Name}`{Environment.NewLine}" +
-                            $"{unsupportedReason}";
+                        unsupportedReason = string.Format(Resources.Errors.StructWithUnsupportedFieldErrorMessageFormat, field.Name, structField.Name) 
+                            + Environment.NewLine + unsupportedReason;
                         return false;
                     }
                 }
@@ -280,7 +279,7 @@ namespace ParquetViewer
                 return true;
             }
 
-            unsupportedReason = "Unknown field type";
+            unsupportedReason = Resources.Errors.UnknownFieldTypeErrorMessage;
             return false;
         }
 
@@ -328,7 +327,11 @@ namespace ParquetViewer
                 }
                 else
                 {
-                    MessageBox.Show("Please select at least 1 field", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(this,
+                        Resources.Errors.SelectAtLeastOneFieldErrorMessage, 
+                        Resources.Errors.SelectAtLeastOneFieldErrorTitle, 
+                        MessageBoxButtons.OK, 
+                        MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -337,13 +340,13 @@ namespace ParquetViewer
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Concat("Something went wrong:", Environment.NewLine, ex.ToString()), ex.Message);
+                MessageBox.Show(string.Concat($"{Resources.Errors.GenericErrorMessage}:", Environment.NewLine, ex.ToString()), ex.Message);
             }
         }
 
         private void ShowError(Exception ex, string? customMessage = null, bool showStackTrace = true)
         {
-            MessageBox.Show(string.Concat(customMessage ?? "Something went wrong:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(string.Concat(customMessage ?? $"{Resources.Errors.GenericErrorMessage}:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void filterColumnsTextbox_TextChanged(object sender, EventArgs e)

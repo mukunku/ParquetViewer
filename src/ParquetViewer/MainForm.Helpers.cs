@@ -51,7 +51,7 @@ namespace ParquetViewer
             {
                 if (this.MainDataSource?.DefaultView.Count > 0)
                 {
-                    this.exportFileDialog.Title = string.Format("{0} records will be exported", this.MainDataSource.DefaultView.Count);
+                    this.exportFileDialog.Title = string.Format(Resources.Strings.RecordsToBeExportedTitleFormat, this.MainDataSource.DefaultView.Count);
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
@@ -69,7 +69,7 @@ namespace ParquetViewer
                         FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
 
                         var stopWatch = Stopwatch.StartNew();
-                        loadingIcon = this.ShowLoadingIcon("Exporting Data", this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
+                        loadingIcon = this.ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
                         if (selectedFileType == FileType.CSV)
                         {
                             await WriteDataToCSVFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
@@ -79,9 +79,10 @@ namespace ParquetViewer
                             const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
                             if (this.MainDataSource!.Columns.Count > MAX_XLS_COLUMN_COUNT)
                             {
-                                MessageBox.Show($"the .xls file format supports a maximum of {MAX_XLS_COLUMN_COUNT} columns.{Environment.NewLine}{Environment.NewLine}" +
-                                    $"Please try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
-                                    "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show(this,
+                                    string.Format(Resources.Errors.TooManyColumnsXlsErrorMessageFormat, MAX_XLS_COLUMN_COUNT, this.MainDataSource.Columns.Count),
+                                    Resources.Errors.TooManyColumnsErrorTitle,
+                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                                 return;
                             }
@@ -93,9 +94,10 @@ namespace ParquetViewer
                             const int MAX_XLSX_COLUMN_COUNT = 16384; //.xlsx format has a hard limit on 16384 columns
                             if (this.MainDataSource!.Columns.Count > MAX_XLSX_COLUMN_COUNT)
                             {
-                                MessageBox.Show($"the .xlsx file format supports a maximum of {MAX_XLSX_COLUMN_COUNT} columns.{Environment.NewLine}{Environment.NewLine}" +
-                                    $"Please try another file format or reduce the amount of columns you are exporting. Your columns: {this.MainDataSource.Columns.Count}",
-                                    "Too many columns", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show(this,
+                                    string.Format(Resources.Errors.TooManyColumnsXlsxErrorMessageFormat, MAX_XLSX_COLUMN_COUNT, this.MainDataSource.Columns.Count),
+                                    Resources.Errors.TooManyColumnsErrorTitle, 
+                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                                 return;
                             }
@@ -112,20 +114,29 @@ namespace ParquetViewer
                         }
                         else
                         {
-                            throw new Exception(string.Format("Unsupported export type: '{0}'", fileExtension));
+                            throw new Exception(string.Format(Resources.Errors.UnsupportedExportType, fileExtension));
                         }
 
                         if (loadingIcon.CancellationToken.IsCancellationRequested)
                         {
                             CleanupFile(filePath);
-                            MessageBox.Show("Export has been cancelled", "Export Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show(Resources.Strings.ExportCancelledMessage, Resources.Strings.ExportCancelledTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
                         {
                             long fileSizeInBytes = new FileInfo(filePath).Length;
-                            FileExportEvent.FireAndForget(selectedFileType.Value, fileSizeInBytes,
-                                this.mainGridView.RowCount, this.mainGridView.ColumnCount, stopWatch.ElapsedMilliseconds);
-                            MessageBox.Show($"Export successful!{Environment.NewLine}{Environment.NewLine}File size: {Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)} MB", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            FileExportEvent.FireAndForget(
+                                selectedFileType.Value, 
+                                fileSizeInBytes,
+                                this.mainGridView.RowCount, 
+                                this.mainGridView.ColumnCount, 
+                                stopWatch.ElapsedMilliseconds);
+
+                            MessageBox.Show(this,
+                                string.Format(Resources.Strings.ExportSuccessfulMessageFormat, Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
+                                Resources.Strings.ExportSuccessfulTitle, 
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }
@@ -133,14 +144,16 @@ namespace ParquetViewer
             catch (IOException ex)
             {
                 CleanupFile(filePath);
-                ShowError(ex.Message, "File export failed");
+                ShowError(ex.Message, Resources.Errors.ExportFailedErrorTitle);
             }
             catch (XlsCellLengthException ex)
             {
                 CleanupFile(filePath);
-                if (MessageBox.Show($"Maximum {ex.MaxLength} characters per cell are supported for {ex.FileType.GetExtension()} files. " +
-                    Environment.NewLine + Environment.NewLine + $"Would you like to switch to a {FileType.XLSX.GetExtension()} file instead?",
-                    "Data too large - Switch export type?", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
+                
+                if (MessageBox.Show(this,
+                    string.Format(Resources.Strings.SwitchFromXlsToXlsxMessageFormat, ex.MaxLength, ex.FileType.GetExtension(), FileType.XLSX.GetExtension()),
+                    Resources.Strings.SwitchFromXlsToXlsxMessageTitle, 
+                    MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
                 {
                     rerunType = FileType.XLSX;
                 }
@@ -175,7 +188,7 @@ namespace ParquetViewer
         {
             const int MAX_XLSX_SHEET_NAME_LENGTH = 31;
             var sheetName = Path.GetFileNameWithoutExtension(this.OpenFileOrFolderPath) ?? "Sheet1";
-            
+
             //sanitize sheet name
             sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
 
@@ -395,7 +408,7 @@ namespace ParquetViewer
         private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("No valid Parquet files found in folder. Invalid Parquet files:");
+            sb.AppendLine(Resources.Errors.NoValidParquetFilesFoundErrorMessage);
             foreach (var skippedFile in ex.SkippedFiles)
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
@@ -406,7 +419,7 @@ namespace ParquetViewer
         private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Some files could not be loaded. Invalid Parquet files:");
+            sb.AppendLine(Resources.Errors.SomeInvalidParquetFilesFoundErrorMessage);
             foreach (var skippedFile in ex.SkippedFiles)
             {
                 sb.AppendLine($"-{skippedFile.FileName}");
@@ -416,9 +429,7 @@ namespace ParquetViewer
 
         private static void HandleFileReadException(FileReadException ex)
         {
-            ShowError($"Could not load parquet file.{Environment.NewLine}{Environment.NewLine}" +
-                $"If the problem persists please consider opening a bug ticket in the project repo: Help → About{Environment.NewLine}{Environment.NewLine}" +
-                $"{ex}");
+            ShowError(string.Format(Resources.Errors.UnexpectedFileReadErrorMessageFormat, ex));
         }
 
         private static void HandleFileNotFoundException(FileNotFoundException ex)
@@ -429,13 +440,15 @@ namespace ParquetViewer
         private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Multiple schemas detected. ");
+            sb.Append(Resources.Errors.MultipleSchemasDetectedErrorMessage);
+            sb.AppendLine(" ");
 
-            int schemaIndex = 1;
+            var schemaIndex = 1;
             const int topCount = 5;
+            const int maxSchemasLimit = 10; //prevent a giant textbox from appearing
             foreach (var schema in ex.Schemas)
             {
-                sb.AppendLine($"SCHEMA-{schemaIndex++} FIELDS (TOP 5):");
+                sb.AppendLine(string.Format(Resources.Errors.MultipleSchemasDetectedEntriesErrorMessageFormat, schemaIndex++));
                 for (var i = 0; i < topCount; i++)
                 {
                     if (i == schema.Fields.Count)
@@ -443,21 +456,30 @@ namespace ParquetViewer
 
                     sb.AppendLine($"  {schema.Fields.ElementAt(i).Name}");
                 }
+
+                if (schemaIndex > maxSchemasLimit)
+                {
+                    sb.AppendLine("...");
+                    break;
+                }
             }
             ShowError(sb.ToString());
         }
 
         private static void HandleMalformedFieldException(MalformedFieldException ex)
         {
-            ShowError($"{ex.Message}{Environment.NewLine}{Environment.NewLine}" +
-                $"If you think the file is valid please consider opening an issue in the GitHub repo. See: Help → About");
+            ShowError(string.Format(Resources.Errors.MalformedFieldErrorMessageFormat, ex.Message));
         }
 
-        private static void HandleDecimalOverflowException(DecimalOverflowException ex)
-            => ShowError($"Field `{ex.FieldName}` with type DECIMAL({ex.Precision}, {ex.Scale}) contains values outside ParquetViewer's supported range between " +
-                $"DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, {DecimalOverflowException.MAX_DECIMAL_SCALE}) and DECIMAL({DecimalOverflowException.MAX_DECIMAL_PRECISION}, 0)",
-                "Decimal value too large");
+        private static void HandleDecimalOverflowException(DecimalOverflowException ex)            
+            => ShowError(string.Format(Resources.Errors.DecimalValueTooLargeErrorMessageFormat,
+                    ex.FieldName,
+                    ex.Precision,
+                    ex.Scale,
+                    DecimalOverflowException.MAX_DECIMAL_PRECISION,
+                    DecimalOverflowException.MAX_DECIMAL_SCALE),
+                Resources.Errors.DecimalValueTooLargeErrorTitle);
 
-        private static void ShowError(string message, string title = "Something went wrong") => MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        private static void ShowError(string message, string? title = null) => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }

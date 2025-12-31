@@ -117,54 +117,131 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="calendar_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\calendar_icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="CopyRawMetadataFailedErrorMessage" xml:space="preserve">
+    <value>Metadayı panoya kopyalarken bir hata oluştu. Veriyi dosyaya kaydetmek ister miydiniz?</value>
   </data>
-  <data name="exclamation_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\exclamation_icon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="CopyRawMetadataFailedErrorTitle" xml:space="preserve">
+    <value>Kopyalama hatası</value>
   </data>
-  <data name="hourglass" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\hourglass.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="FieldListGenerationError" xml:space="preserve">
+    <value>Alan listesi oluşturulurken bir hata oldu.</value>
   </data>
-  <data name="plus_minus_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\plus_minus_icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="FileAssociationFailedErrorMessageFormat" xml:space="preserve">
+    <value>Birşey ters gitti (Hata kodu: {0}). ParquetViewer'ı yönetici olarak çaliştırıp tekrar deneyin.</value>
   </data>
-  <data name="sql_server_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\sqlserver.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="FileAssociationFailedErrorTitle" xml:space="preserve">
+    <value>Uzanti ilişkilendirmesi başarısız oldu</value>
   </data>
-  <data name="text_file_icon_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\text_file_icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="GenericErrorMessage" xml:space="preserve">
+    <value>Birşey ters gitti</value>
   </data>
-  <data name="parquet_icon_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\parquet_icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="InvalidDateFormatErrorMessage" xml:space="preserve">
+    <value>Geçersiz tarih formatı. Geçerli format dizeleri için lütfen dökümantasyona bakın.</value>
   </data>
-  <data name="exclamation_icon_yellow" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\exclamation_icon_yellow.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="InvalidDateFormatErrorTitle" xml:space="preserve">
+    <value>Geçersiz Tarih Formatı</value>
   </data>
-  <data name="list_icon_32x32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\list.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="InvalidQueryErrorTitle" xml:space="preserve">
+    <value>Geçersiz Sorgu</value>
   </data>
-  <data name="external-link-icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\external-link-icon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="MetadataReadErrorMessage" xml:space="preserve">
+    <value>Dosyanın metadatasını okurken bir hata oluştu.</value>
   </data>
-  <data name="coffee" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\coffee.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="MetadataReadErrorTitle" xml:space="preserve">
+    <value>Metadata Hatası</value>
   </data>
-  <data name="next-disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\next-disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="NestedListOfTypeNotSupportedMessageFormat" xml:space="preserve">
+    <value>{1} içeren {0} alanlar şu anda desteklenmiyor</value>
   </data>
-  <data name="next-blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\next-blue.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="NoFieldsFoundErrorMessage" xml:space="preserve">
+    <value>Seçilen dosya/klasör hiç alan içermiyor.</value>
   </data>
-  <!-- <assembly alias="System.Drawing" name="System.Drawing" /> -->
-  <data name="save-icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\save-btn.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="NoFieldsFoundErrorTitle" xml:space="preserve">
+    <value>Alan bulunamadı</value>
   </data>
-  <data name="copy_clipboard_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\copy_clipboard_icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="NoThriftMetadataAvailableErrorMessage" xml:space="preserve">
+    <value>Thrift metadata bulunamadı</value>
   </data>
-  <data name="help_icon_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\help.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="OpenFileNoLongerExistsErrorMessageFormat" xml:space="preserve">
+    <value>Belirtilen dosya/klasör artık bulunamıyor: {0}Lütfen başka bir dosya veya klasör açın.</value>
+  </data>
+  <data name="ParquetSchemaReadErrorMessage" xml:space="preserve">
+    <value>Parquet şeması okunamadı.</value>
+  </data>
+  <data name="SelectAtLeastOneFieldErrorMessage" xml:space="preserve">
+    <value>En az bir alan seçin</value>
+  </data>
+  <data name="SelectAtLeastOneFieldErrorTitle" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="StructWithUnsupportedFieldErrorMessageFormat" xml:space="preserve">
+    <value>Struct `{0}` desteklenmeyen bir alan içeriyor: `{1}`</value>
+  </data>
+  <data name="TooManyColumnsXlsErrorMessageFormat" xml:space="preserve">
+    <value>.xls dosya formatı en fazla {0} sütun desteklemektedir.
+
+Lütfen farklı bir dosya tipi seçin veya kaydetmeye çalıştığınız alan sayısını azaltın. Alan sayınız: {1} </value>
+  </data>
+  <data name="TooManyColumnsErrorTitle" xml:space="preserve">
+    <value>Çok fazla sütun</value>
+  </data>
+  <data name="TooManyColumnsXlsxErrorMessageFormat" xml:space="preserve">
+    <value>.xlsx dosya formatı en fazla {0} sütun desteklemektedir.
+
+Lütfen farklı bir dosya tipi seçin veya kaydetmeye çalıştığınız alan sayısını azaltın. Alan sayınız: {1} </value>
+  </data>
+  <data name="UnknownFieldTypeErrorMessage" xml:space="preserve">
+    <value>Bilinmeyen alan tipi</value>
+  </data>
+  <data name="UnsupportedExportType" xml:space="preserve">
+    <value>Desteklenmeyen dosya tipi: '{0}'</value>
+  </data>
+  <data name="ExportFailedErrorTitle" xml:space="preserve">
+    <value>Dosyaya aktarım başarısız oldu</value>
+  </data>
+  <data name="NoValidParquetFilesFoundErrorMessage" xml:space="preserve">
+    <value>Geçerli parquet dosyası bulunamadı. Bulunan geçersiz dosyalar:</value>
+  </data>
+  <data name="SomeInvalidParquetFilesFoundErrorMessage" xml:space="preserve">
+    <value>Bazı parquet dosyaları yüklenemedi. Bulunan geçersiz dosyalar:</value>
+  </data>
+  <data name="UnexpectedFileReadErrorMessageFormat" xml:space="preserve">
+    <value>Parquet dosyası okunamadı.
+
+Sorun devam ederse lütfen projenin GitHub repo'suna bildirmeyi düşünün: Yardım → Hakkında
+
+{0}</value>
+  </data>
+  <data name="MultipleSchemasDetectedErrorMessage" xml:space="preserve">
+    <value>Birden fazla şema bulundu.</value>
+  </data>
+  <data name="MalformedFieldErrorMessageFormat" xml:space="preserve">
+    <value>{0}
+
+Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin GitHub repo'sunda sorunu bildirin: Yardım → Hakkında</value>
+  </data>
+  <data name="DecimalValueTooLargeErrorTitle" xml:space="preserve">
+    <value>Decimal değeri çok büyük</value>
+  </data>
+  <data name="DecimalValueTooLargeErrorMessageFormat" xml:space="preserve">
+    <value>DECIMAL({1}, {2}) tipli alan `{0}` ParquetViewer'ın desteklediği aralığın dışında bulunuyor: DECIMAL({3}, {4}) ve DECIMAL({3}, 0)</value>
+  </data>
+  <data name="MultipleSchemasDetectedEntriesErrorMessageFormat" xml:space="preserve">
+    <value>ŞEMA-{0} ALANLARI (TOP 5):</value>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorMessage" xml:space="preserve">
+    <value>Çok fazla veri seçili. Lütfen daha az hücre seçin.</value>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorTitle" xml:space="preserve">
+    <value>Panoya kopyalama başarısız oldu</value>
+  </data>
+  <data name="InvalidQueryErrorMessage" xml:space="preserve">
+    <value>Sorgu geçerli gözükmüyor.</value>
+  </data>
+  <data name="UnexpectedAssemblyVersionErrorFormat" xml:space="preserve">
+    <value>Beklenmedik bir program sürümü ile karşılaşıldı: {0}</value>
+  </data>
+  <data name="CopyToClipboardErrorTitle" xml:space="preserve">
+    <value>Panoya kopyalama başarısız oldu</value>
   </data>
 </root>

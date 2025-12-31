@@ -1,0 +1,286 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CopyRawMetadataFailedErrorMessage" xml:space="preserve">
+    <value>Failed to copy metadata to your clipboard. Save to a file instead?</value>
+    <comment>Shown when the copy to clipboard operation fails. The text should prompt the user if they'd like to save the data to a file instead.</comment>
+  </data>
+  <data name="CopyRawMetadataFailedErrorTitle" xml:space="preserve">
+    <value>Copy error</value>
+    <comment>Shown when the copy to clipboard operation fails. </comment>
+  </data>
+  <data name="FieldListGenerationError" xml:space="preserve">
+    <value>Something went wrong while generating the field list.</value>
+    <comment>Generic error shown when the field list in the field selection dialog cannot be rendered for some reason</comment>
+  </data>
+  <data name="FileAssociationFailedErrorMessageFormat" xml:space="preserve">
+    <value>Something went wrong (Error code: {0}). Try running ParquetViewer as administrator and try again. </value>
+    <comment>Shown when file association fails in the Help page</comment>
+  </data>
+  <data name="FileAssociationFailedErrorTitle" xml:space="preserve">
+    <value>File association failed</value>
+    <comment>Shown when file association fails in the Help page</comment>
+  </data>
+  <data name="GenericErrorMessage" xml:space="preserve">
+    <value>Something went wrong</value>
+    <comment>Generic message preceding an actual error message</comment>
+  </data>
+  <data name="InvalidDateFormatErrorMessage" xml:space="preserve">
+    <value>Invalid date format. Please refer to the documentation for valid date format specifiers.</value>
+    <comment>Shown in the custom date format dialog when the user tries to save an invalid date</comment>
+  </data>
+  <data name="InvalidDateFormatErrorTitle" xml:space="preserve">
+    <value>Invalid Date Format</value>
+    <comment>Shown in the custom date format dialog when the user tries to save an invalid date</comment>
+  </data>
+  <data name="InvalidQueryErrorTitle" xml:space="preserve">
+    <value>Invalid Query</value>
+    <comment>Shown when the user inputs an invalid filter query and clicks Execute</comment>
+  </data>
+  <data name="MetadataReadErrorMessage" xml:space="preserve">
+    <value>Something went wrong while reading the file's metadata.</value>
+    <comment>Shown if the metadata viewer fails to read the metadata of a file</comment>
+  </data>
+  <data name="MetadataReadErrorTitle" xml:space="preserve">
+    <value>Metadata Error</value>
+    <comment>Shown if the metadata viewer fails to read the metadata of a file</comment>
+  </data>
+  <data name="NestedListOfTypeNotSupportedMessageFormat" xml:space="preserve">
+    <value>{0} of {1}s are currently unsupported</value>
+    <comment>Tooltip text shown in the field selection dialog when hovering the cursor over an unsupported field. Example: "Lists of Maps are...", "Map of Structs...", "Struct of Lists"..., etc.</comment>
+  </data>
+  <data name="NoFieldsFoundErrorMessage" xml:space="preserve">
+    <value>The selected file/folder doesn't have any fields.</value>
+    <comment>Shown when the parquet file contains no fields</comment>
+  </data>
+  <data name="NoFieldsFoundErrorTitle" xml:space="preserve">
+    <value>No fields found</value>
+    <comment>Shown when the parquet file contains no fields</comment>
+  </data>
+  <data name="NoThriftMetadataAvailableErrorMessage" xml:space="preserve">
+    <value>No Thrift metadata available</value>
+    <comment>Fallback error just in case something goes catastrophically wrong while fetching metadata</comment>
+  </data>
+  <data name="OpenFileNoLongerExistsErrorMessageFormat" xml:space="preserve">
+    <value>The specified file/folder no longer exists: {0}Please try opening a new file or folder.</value>
+    <comment>Shown in the unlikely event where the open file(s) were somehow deleted</comment>
+  </data>
+  <data name="ParquetSchemaReadErrorMessage" xml:space="preserve">
+    <value>Could not read parquet schema.</value>
+    <comment>Generic error shown when ParquetViewer is unable to read the schema of a parquet file</comment>
+  </data>
+  <data name="SelectAtLeastOneFieldErrorMessage" xml:space="preserve">
+    <value>Please select at least one field</value>
+    <comment>Shown when the user tries to close the field selection dialog without selecting any fields</comment>
+  </data>
+  <data name="SelectAtLeastOneFieldErrorTitle" xml:space="preserve">
+    <value>Error</value>
+    <comment>Shown when the user tries to close the field selection dialog without selecting any fields</comment>
+  </data>
+  <data name="StructWithUnsupportedFieldErrorMessageFormat" xml:space="preserve">
+    <value>Struct `{0}` contains unsupported field: `{1}`</value>
+    <comment>Tooltip text shown in the field selection dialog when hovering the cursor over an unsupported struct field</comment>
+  </data>
+  <data name="TooManyColumnsXlsErrorMessageFormat" xml:space="preserve">
+    <value>The .xls file format supports a maximum of {0} columns.
+
+Please try another file format or reduce the amount of columns you are exporting. Your columns: {1}</value>
+    <comment>Shown when the user tries to export data to an xls file that has too many columns</comment>
+  </data>
+  <data name="TooManyColumnsErrorTitle" xml:space="preserve">
+    <value>Too many columns</value>
+    <comment>Shown when the user tries to export data to an xls file that has too many columns</comment>
+  </data>
+  <data name="TooManyColumnsXlsxErrorMessageFormat" xml:space="preserve">
+    <value>The .xlsx file format supports a maximum of {0} columns.
+
+Please try another file format or reduce the amount of columns you are exporting. Your columns: {1}</value>
+    <comment>Shown when the user tries to export data to an xlsx file that has too many columns</comment>
+  </data>
+  <data name="UnknownFieldTypeErrorMessage" xml:space="preserve">
+    <value>Unknown field type</value>
+    <comment>Fallback error message for a field type that isn't supported</comment>
+  </data>
+  <data name="UnsupportedExportType" xml:space="preserve">
+    <value>Unsupported export type: '{0}'</value>
+    <comment>Fallback error that is thrown if the user tries to export to a file extension we don't recognize.</comment>
+  </data>
+  <data name="ExportFailedErrorTitle" xml:space="preserve">
+    <value>File export failed</value>
+    <comment>Shown when an exception is encountered during a file export</comment>
+  </data>
+  <data name="NoValidParquetFilesFoundErrorMessage" xml:space="preserve">
+    <value>No valid parquet files found in folder. Invalid parquet files:</value>
+    <comment>Shown when the user tries to open a folder and all found parquet files are invalid</comment>
+  </data>
+  <data name="SomeInvalidParquetFilesFoundErrorMessage" xml:space="preserve">
+    <value>Some files could not be loaded. Invalid Parquet files:</value>
+    <comment>Shown when the user tries to open a folder and some of the found parquet files are invalid</comment>
+  </data>
+  <data name="UnexpectedFileReadErrorMessageFormat" xml:space="preserve">
+    <value>Could not load parquet file.
+
+If the problem persists please consider opening a bug ticket in the project repo: Help → About
+
+{0}</value>
+    <comment>Shown when we can't open a parquet file and we don't know why.</comment>
+  </data>
+  <data name="MultipleSchemasDetectedErrorMessage" xml:space="preserve">
+    <value>Multiple schemas detected.</value>
+    <comment>Shown when the user tries to open a folder containing parquet files with different schemas</comment>
+  </data>
+  <data name="MalformedFieldErrorMessageFormat" xml:space="preserve">
+    <value>{0}
+
+If you think the file is valid please consider opening an issue in the GitHub repo. See: Help → About</value>
+    <comment>Shown to users when ParquetViewer fails to read a specific field. It should prompt the user to open a bug ticket if they believe the file is valid</comment>
+  </data>
+  <data name="DecimalValueTooLargeErrorTitle" xml:space="preserve">
+    <value>Decimal value too large</value>
+    <comment>Shown when a field contains decimal values outside the supported range for .NET</comment>
+  </data>
+  <data name="DecimalValueTooLargeErrorMessageFormat" xml:space="preserve">
+    <value>Field `{0}` with type DECIMAL({1}, {2}) contains values outside ParquetViewer's supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0)</value>
+    <comment>Shown when a field contains decimal values outside the supported range for .NET</comment>
+  </data>
+  <data name="MultipleSchemasDetectedEntriesErrorMessageFormat" xml:space="preserve">
+    <value>SCHEMA-{0} FIELDS (TOP 5):</value>
+    <comment>Shown when the user tries to open a folder containing parquet files with different schemas</comment>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorMessage" xml:space="preserve">
+    <value>The selected data is too large. Please select less cells.</value>
+    <comment>Shown when the user right-click's on too many cells and selects the Copy as WHERE... option</comment>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorTitle" xml:space="preserve">
+    <value>Copy to clipboard failed</value>
+    <comment>Shown when the user right-click's on too many cells and selects the Copy as WHERE... option</comment>
+  </data>
+  <data name="InvalidQueryErrorMessage" xml:space="preserve">
+    <value>The query doesn't seem to be valid. Please try again.</value>
+    <comment>Thrown when an invalid query is executed</comment>
+  </data>
+  <data name="UnexpectedAssemblyVersionErrorFormat" xml:space="preserve">
+    <value>An unexpected assembly version was encountered: {0}</value>
+    <comment>Thrown in the rare case the executable has a non semantic version number</comment>
+  </data>
+  <data name="CopyToClipboardErrorTitle" xml:space="preserve">
+    <value>Copy to clipboard failed</value>
+    <comment>Shown when copying to the clipboard fails</comment>
+  </data>
+</root>

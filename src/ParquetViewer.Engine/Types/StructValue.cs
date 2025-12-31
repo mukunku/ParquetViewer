@@ -19,11 +19,11 @@ namespace ParquetViewer.Engine.Types
             Data = data ?? throw new ArgumentNullException(nameof(data));
         }
 
-        public override string ToString() => ToJSON();
+        public override string ToString() => ToJSON(out _);
 
-        public string ToStringTruncated(int desiredLength) => ToJSON(desiredLength);
+        public string ToStringTruncated(int desiredLength) => ToJSON(out _, desiredLength);
 
-        private string ToJSON(int? desiredLength = null)
+        private string ToJSON(out bool success, int? desiredLength = null)
         {
             try
             {
@@ -59,11 +59,13 @@ namespace ParquetViewer.Engine.Types
                 {
                     json += "[...]";
                 }
+                success = true;
                 return json;
             }
             catch (Exception ex)
             {
-                return $"Error while deserializing field '{Name}': {Environment.NewLine}{Environment.NewLine}{ex}";
+                success = false;
+                return $"Error while serializing Struct field '{Name}': {Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
 
@@ -94,8 +96,11 @@ namespace ParquetViewer.Engine.Types
             }
             else if (value is StructValue @struct)
             {
-                //Structs already generate JSON on .ToString()
-                jsonWriter.WriteRawValue(@struct.ToString());
+                var json = @struct.ToJSON(out var success);
+                if (success)
+                    jsonWriter.WriteRawValue(json);
+                else
+                    jsonWriter.WriteStringValue(json);
             }
             else if (value is MapValue map)
             {

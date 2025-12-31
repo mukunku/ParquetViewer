@@ -246,7 +246,7 @@ namespace ParquetViewer.Engine
                                 {
                                     lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
 
-                                    var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
+                                    var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("Column value missing during pivot");
                                     #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
                                     if (columnValue is StructValue structValue && structValue.IsList)
                                     {
