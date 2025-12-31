@@ -36,7 +36,7 @@ namespace ParquetViewer
             AppSettings.DarkMode = AppSettings.DarkMode; // Trigger Theming
 
             RouteUnhandledExceptions();
-            
+
             Application.Run(mainForm);
             return 0;
         }
@@ -136,9 +136,10 @@ namespace ParquetViewer
                 else if (AppSettings.ConsentLastAskedOnVersion != new SemanticVersion(0, 0, 0, DateTime.Now.Day))
                 {
                     AppSettings.ConsentLastAskedOnVersion = Env.AssemblyVersion;
-                    if (MessageBox.Show($"Would you like to share anonymous usage data to help make ParquetViewer better?" +
-                        $"{Environment.NewLine}{Environment.NewLine}You can always change this setting later from the Help menu.",
-                        "Share Anonymous Usage Data?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    if (MessageBox.Show(
+                        Resources.Strings.AnalyticsConsentPromptMessage,
+                        Resources.Strings.AnalyticsConsentPromptTitle,
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         //We got consent! Start gathering some data..
                         AppSettings.AnalyticsDataGatheringConsent = true;
@@ -158,29 +159,34 @@ namespace ParquetViewer
         {
             if (AppSettings.OpenedFileCount == 8 && !AboutBox.IsDefaultViewerForParquetFiles)
             {
-                if (MessageBox.Show($"Would you like to associate ParquetViewer with .parquet files?{Environment.NewLine}{Environment.NewLine}" +
-                        $"Executable path: {System.Windows.Forms.Application.ExecutablePath}{Environment.NewLine}{Environment.NewLine}" +
-                        $"You can also toggle this setting from the Help → About page.",
-                        "ParquetViewer file association request", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show(
+                        Resources.Strings.FileExtensionAssociationPromptMessageFormat.Format(Application.ExecutablePath),
+                        Resources.Strings.FileExtensionAssociationPromptTitle,
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     if (!User.IsAdministrator)
                     {
                         bool? success = AboutBox.RunElevatedExeForFileAssociation(true, out int? exitCode);
                         if (success is null)
                         {
-                            MessageBox.Show("File association cancelled. If you change your mind and would like to change .parquet file association visit the Help → About page.",
-                                "File association cancelled", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            MessageBox.Show(
+                                Resources.Strings.FileExtensionAssociationCancelledMessage,
+                                Resources.Strings.FileExtensionAssociationCancelledTitle,
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         }
                         else if (success == false)
                         {
-                            MessageBox.Show($"Something went wrong (Error code: {exitCode}).{Environment.NewLine}{Environment.NewLine}" +
-                                $"You can try again from the Help → About page.",
-                                "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show(
+                                Resources.Strings.FileExtensionAssociationFailedMessageFormat.Format(exitCode),
+                                Resources.Strings.FileExtensionAssociationFailedTitle,
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                         else
                         {
-                            MessageBox.Show("Success! ParquetViewer is now your default application for .parquet files.",
-                                "File association succeeded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show(
+                                Resources.Strings.FileExtensionAssociationSucceededMessage,
+                                Resources.Strings.FileExtensionAssociationSucceededTitle,
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                     else
@@ -188,14 +194,17 @@ namespace ParquetViewer
                         try
                         {
                             AboutBox.ToggleFileAssociation(true);
-                            MessageBox.Show("Success! ParquetViewer is now your default application for .parquet files.",
-                                "File association succeeded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show(
+                                Resources.Strings.FileExtensionAssociationSucceededMessage,
+                                Resources.Strings.FileExtensionAssociationSucceededTitle,
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"Something went wrong (Error message: {ex.Message}).{Environment.NewLine}{Environment.NewLine}" +
-                                $"You can try again from the Help → About page.",
-                                "File association failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show(
+                                Resources.Strings.FileExtensionAssociationFailedMessageFormat.Format(ex.Message),
+                                Resources.Strings.FileExtensionAssociationFailedTitle,
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                 }
@@ -208,9 +217,10 @@ namespace ParquetViewer
                 && (AppSettings.OpenedFileCount == 30 || AppSettings.OpenedFileCount == 300) /*I'm just throwing out random numbers at this point*/
                 && (Env.AppsUseDarkTheme == true || Env.SystemUsesDarkTheme == true))
             {
-                if (MessageBox.Show($"Would you like to use ParquetViewer in Dark Mode?{Environment.NewLine}{Environment.NewLine}" +
-                        $"You can always toggle this on/off from the Edit menu.",
-                        "Switch to Dark Mode?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show(
+                    Resources.Strings.DarkModePromptMessage,
+                    Resources.Strings.DarkModePromptTitle,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     AppSettings.DarkMode = true;
                 }

@@ -320,4 +320,62 @@ Would you like to switch to a {2} file instead?</value>
     <value>https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings</value>
     <comment>This is the link that the user will be taken to if they click on the link label at the bottom of the custom date format configuration screen.</comment>
   </data>
+  <data name="AnalyticsConsentPromptMessage" xml:space="preserve">
+    <value>Would you like to share anonymous usage data to help make ParquetViewer better?
+
+You can always change this setting later from the Help menu.</value>
+    <comment>Message box text that is shown when asking the user if we can gather analytics data</comment>
+  </data>
+  <data name="AnalyticsConsentPromptTitle" xml:space="preserve">
+    <value>Share Anonymous Usage Data?</value>
+    <comment>Message box title that is shown when asking the user if we can gather analytics data</comment>
+  </data>
+  <data name="FileExtensionAssociationPromptMessageFormat" xml:space="preserve">
+    <value>Would you like to associate ParquetViewer with .parquet files?
+
+Executable path: {0}
+
+You can also toggle this setting from the Help → About page.</value>
+    <comment>Message box text shown when we ask the user if they'd like to associate .parquet files with ParquetViewer</comment>
+  </data>
+  <data name="FileExtensionAssociationPromptTitle" xml:space="preserve">
+    <value>ParquetViewer file association request</value>
+    <comment>Message box title shown when we ask the user if they'd like to associate .parquet files with ParquetViewer</comment>
+  </data>
+  <data name="FileExtensionAssociationCancelledMessage" xml:space="preserve">
+    <value>File association cancelled. If you change your mind and would like to change .parquet file association visit the Help → About page.</value>
+    <comment>Shown when the user clicks the X button on the UAC prompt AFTER we ask them if they'd like to associate ParquetViewer with parquet files</comment>
+  </data>
+  <data name="FileExtensionAssociationCancelledTitle" xml:space="preserve">
+    <value>File association cancelled</value>
+    <comment>Shown when the user clicks the X button on the UAC prompt AFTER we ask them if they'd like to associate ParquetViewer with parquet files</comment>
+  </data>
+  <data name="FileExtensionAssociationFailedMessageFormat" xml:space="preserve">
+    <value>Something went wrong (Error code: {0}).
+
+You can try again from the Help → About page.</value>
+    <comment>Shown when file association fails AFTER we ask the user if they'd like to associate ParquetViewer with parquet files</comment>
+  </data>
+  <data name="FileExtensionAssociationFailedTitle" xml:space="preserve">
+    <value>File association failed</value>
+    <comment>Shown when file association fails AFTER we ask the user if they'd like to associate ParquetViewer with parquet files</comment>
+  </data>
+  <data name="FileExtensionAssociationSucceededMessage" xml:space="preserve">
+    <value>Success! ParquetViewer is now your default application for .parquet files.</value>
+    <comment>Shown when file association succeeds AFTER we ask the user if they'd like to associate ParquetViewer with parquet files</comment>
+  </data>
+  <data name="FileExtensionAssociationSucceededTitle" xml:space="preserve">
+    <value>File association succeeded</value>
+    <comment>Shown when file association succeeds AFTER we ask the user if they'd like to associate ParquetViewer with parquet files</comment>
+  </data>
+  <data name="DarkModePromptMessage" xml:space="preserve">
+    <value>Would you like to use ParquetViewer in Dark Mode?
+
+You can always toggle this on/off from the Edit menu.</value>
+    <comment>Message box text shown to the user asking if they'd like to switch to dark mode</comment>
+  </data>
+  <data name="DarkModePromptTitle" xml:space="preserve">
+    <value>Switch to Dark Mode?</value>
+    <comment>Message box title shown to the user asking if they'd like to switch to dark mode</comment>
+  </data>
 </root>

@@ -275,4 +275,50 @@ Onun yerine sonuçlari {2} dosyasına aktarmak ister misiniz?</value>
   <data name="DotNetDateFormatHelpUrl" xml:space="preserve">
     <value>https://docs.microsoft.com/tr-tr/dotnet/standard/base-types/custom-date-and-time-format-strings</value>
   </data>
+  <data name="AnalyticsConsentPromptMessage" xml:space="preserve">
+    <value>Anonim kullanım istatistikleri paylaşarak ParquetViewer'a destek olmak ister miydiniz?
+
+Tercihinizi Yardım menüsunden her zaman değiştirebilirsiniz.</value>
+  </data>
+  <data name="AnalyticsConsentPromptTitle" xml:space="preserve">
+    <value>Anonim Kullanım Verisi Toplansın mı?</value>
+  </data>
+  <data name="FileExtensionAssociationPromptMessageFormat" xml:space="preserve">
+    <value>ParquetViewer'ı .parquet dosyaları için varsayılan uygulama olarak ilişkilendirmek ister miydiniz?
+
+Uygulama konumu: {0}
+
+Bu ayarı Yardim → Hakkinda sayfasında da yapabilirsiniz.</value>
+  </data>
+  <data name="FileExtensionAssociationPromptTitle" xml:space="preserve">
+    <value>ParquetViewer varsayılan uygulama isteği</value>
+  </data>
+  <data name="FileExtensionAssociationCancelledMessage" xml:space="preserve">
+    <value>Uzantı ilişkilendirmesi iptal edildi. Fikrinizi değiştirirseniz Yardım → Hakkında sayfasından bu işlemi tekrar gerçekleştirebilirsiniz.</value>
+  </data>
+  <data name="FileExtensionAssociationCancelledTitle" xml:space="preserve">
+    <value>Uzantı ilişkilendirmesi iptal edildi</value>
+  </data>
+  <data name="FileExtensionAssociationFailedMessageFormat" xml:space="preserve">
+    <value>Birşey ters gitti (Hata kodu: {0}).
+
+Bu işlemi Yardım → Hakkında sayfasından tekrar deneyebilirsiniz.</value>
+  </data>
+  <data name="FileExtensionAssociationFailedTitle" xml:space="preserve">
+    <value>Uzantı ilişkilendirmesi başarısız oldu</value>
+  </data>
+  <data name="FileExtensionAssociationSucceededMessage" xml:space="preserve">
+    <value>Uzantı ilişkilendirmesi başarılı oldu! ParquetViewer .parquet dosyaları için varsayılan uygulamanız olarak ayarlanmıştır.</value>
+  </data>
+  <data name="FileExtensionAssociationSucceededTitle" xml:space="preserve">
+    <value>Uzantı ilişkilendirmesi başarılı</value>
+  </data>
+  <data name="DarkModePromptMessage" xml:space="preserve">
+    <value>ParquetViewer'ı Gece Modunda kullanmak ister misiniz?
+
+Tercihinizi Düzen menüsünden istediğiniz zaman değiştirebilirsiniz.</value>
+  </data>
+  <data name="DarkModePromptTitle" xml:space="preserve">
+    <value>Gece Moduna Geçilsin mi?</value>
+  </data>
 </root>

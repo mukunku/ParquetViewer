@@ -61,6 +61,26 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Would you like to share anonymous usage data to help make ParquetViewer better?
+        ///
+        ///You can always change this setting later from the Help menu..
+        /// </summary>
+        internal static string AnalyticsConsentPromptMessage {
+            get {
+                return ResourceManager.GetString("AnalyticsConsentPromptMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Share Anonymous Usage Data?.
+        /// </summary>
+        internal static string AnalyticsConsentPromptTitle {
+            get {
+                return ResourceManager.GetString("AnalyticsConsentPromptTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         internal static string CancelButtonText {
@@ -129,6 +149,26 @@ namespace ParquetViewer.Resources {
         internal static string CreateTableScriptFailedWithNoFieldsMessage {
             get {
                 return ResourceManager.GetString("CreateTableScriptFailedWithNoFieldsMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to use ParquetViewer in Dark Mode?
+        ///
+        ///You can always toggle this on/off from the Edit menu..
+        /// </summary>
+        internal static string DarkModePromptMessage {
+            get {
+                return ResourceManager.GetString("DarkModePromptMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switch to Dark Mode?.
+        /// </summary>
+        internal static string DarkModePromptTitle {
+            get {
+                return ResourceManager.GetString("DarkModePromptTitle", resourceCulture);
             }
         }
         
@@ -221,6 +261,84 @@ namespace ParquetViewer.Resources {
         internal static string ExportSuccessfulTitle {
             get {
                 return ResourceManager.GetString("ExportSuccessfulTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File association cancelled. If you change your mind and would like to change .parquet file association visit the Help → About page..
+        /// </summary>
+        internal static string FileExtensionAssociationCancelledMessage {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationCancelledMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File association cancelled.
+        /// </summary>
+        internal static string FileExtensionAssociationCancelledTitle {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationCancelledTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Something went wrong (Error code: {0}).
+        ///
+        ///You can try again from the Help → About page..
+        /// </summary>
+        internal static string FileExtensionAssociationFailedMessageFormat {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationFailedMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File association failed.
+        /// </summary>
+        internal static string FileExtensionAssociationFailedTitle {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationFailedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to associate ParquetViewer with .parquet files?
+        ///
+        ///Executable path: {0}
+        ///
+        ///You can also toggle this setting from the Help → About page..
+        /// </summary>
+        internal static string FileExtensionAssociationPromptMessageFormat {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationPromptMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ParquetViewer file association request.
+        /// </summary>
+        internal static string FileExtensionAssociationPromptTitle {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationPromptTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Success! ParquetViewer is now your default application for .parquet files..
+        /// </summary>
+        internal static string FileExtensionAssociationSucceededMessage {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationSucceededMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File association succeeded.
+        /// </summary>
+        internal static string FileExtensionAssociationSucceededTitle {
+            get {
+                return ResourceManager.GetString("FileExtensionAssociationSucceededTitle", resourceCulture);
             }
         }
         
