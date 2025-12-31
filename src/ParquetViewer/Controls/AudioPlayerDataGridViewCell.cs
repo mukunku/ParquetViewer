@@ -4,7 +4,6 @@ using NAudio.Wave;
 using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
-using ParquetViewer.Properties;
 using System;
 using System.Drawing;
 using System.IO;
@@ -367,7 +366,7 @@ namespace ParquetViewer.Controls
                 return;
 
             var menu = new ContextMenuStrip();
-            menu.Items.Add($"Save as {this._audioFormat.ToString()}", Resources.save_icon, async (s, a) =>
+            menu.Items.Add($"Save as {this._audioFormat.ToString()}", Resources.Icons.save_icon, async (s, a) =>
             {
                 using var saveFileDialog = new SaveFileDialog
                 {

@@ -48,7 +48,8 @@ namespace ParquetViewer.Engine
                 using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
                 {
                     if (groupReader.RowCount > int.MaxValue)
-                        throw new ArgumentOutOfRangeException(string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
+                        throw new ArgumentOutOfRangeException(
+                            string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
 
                     int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
                     totalRecordCountSoFar += (int)groupReader.RowCount;
@@ -246,7 +247,7 @@ namespace ParquetViewer.Engine
                                 {
                                     lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
 
-                                    var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("This should never happen");
+                                    var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("Column value missing during pivot");
                                     #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
                                     if (columnValue is StructValue structValue && structValue.IsList)
                                     {
@@ -330,7 +331,7 @@ namespace ParquetViewer.Engine
             var valueField = keyValueField.GetMapValueField();
 
             if (keyField.Children.Any() || valueField.Children.Any())
-                throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested map types are not supported");
+                throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested Map types are not supported");
 
             int rowIndex = rowBeginIndex;
 

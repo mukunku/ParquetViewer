@@ -34,8 +34,8 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             mainTableLayoutPanel = new TableLayoutPanel();
             recordsToLabel = new Label();
             recordCountTextBox = new DelayedOnChangedTextBox();
@@ -71,6 +71,9 @@ namespace ParquetViewer
             helpToolStripMenuItem = new ToolStripMenuItem();
             userGuideToolStripMenuItem = new ToolStripMenuItem();
             shareAnonymousUsageDataToolStripMenuItem = new ToolStripMenuItem();
+            languageToolStripMenuItem = new ToolStripMenuItem();
+            englishToolStripMenuItem = new ToolStripMenuItem();
+            turkishToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             showingRecordCountStatusBarLabel = new ToolStripStatusLabel();
             actualShownRecordCountLabel = new ToolStripStatusLabel();
@@ -92,18 +95,7 @@ namespace ParquetViewer
             // 
             // mainTableLayoutPanel
             // 
-            mainTableLayoutPanel.ColumnCount = 11;
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 35F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 93F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 117F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 93F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 58F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 58F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            resources.ApplyResources(mainTableLayoutPanel, "mainTableLayoutPanel");
             mainTableLayoutPanel.Controls.Add(recordsToLabel, 8, 0);
             mainTableLayoutPanel.Controls.Add(recordCountTextBox, 9, 0);
             mainTableLayoutPanel.Controls.Add(showRecordsFromLabel, 6, 0);
@@ -114,129 +106,66 @@ namespace ParquetViewer
             mainTableLayoutPanel.Controls.Add(clearFilterButton, 5, 0);
             mainTableLayoutPanel.Controls.Add(mainGridView, 0, 1);
             mainTableLayoutPanel.Controls.Add(loadAllRowsButton, 10, 0);
-            mainTableLayoutPanel.Dock = DockStyle.Fill;
-            mainTableLayoutPanel.Location = new System.Drawing.Point(0, 24);
-            mainTableLayoutPanel.Margin = new Padding(4, 3, 4, 3);
             mainTableLayoutPanel.Name = "mainTableLayoutPanel";
-            mainTableLayoutPanel.RowCount = 4;
-            mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-            mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-            mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 23F));
-            mainTableLayoutPanel.Size = new System.Drawing.Size(944, 420);
-            mainTableLayoutPanel.TabIndex = 0;
             // 
             // recordsToLabel
             // 
-            recordsToLabel.Anchor = AnchorStyles.Right;
-            recordsToLabel.Location = new System.Drawing.Point(804, 0);
-            recordsToLabel.Margin = new Padding(4, 0, 4, 0);
+            resources.ApplyResources(recordsToLabel, "recordsToLabel");
             recordsToLabel.Name = "recordsToLabel";
-            recordsToLabel.Size = new System.Drawing.Size(46, 35);
-            recordsToLabel.TabIndex = 3;
-            recordsToLabel.Text = "Record Count:";
-            recordsToLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // recordCountTextBox
             // 
-            recordCountTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            resources.ApplyResources(recordCountTextBox, "recordCountTextBox");
             recordCountTextBox.DelayedTextChangedTimeout = 1000;
-            recordCountTextBox.Location = new System.Drawing.Point(858, 6);
-            recordCountTextBox.Margin = new Padding(4, 3, 4, 3);
             recordCountTextBox.Name = "recordCountTextBox";
-            recordCountTextBox.Size = new System.Drawing.Size(62, 23);
-            recordCountTextBox.TabIndex = 5;
-            recordCountTextBox.TextAlign = HorizontalAlignment.Right;
             recordCountTextBox.DelayedTextChanged += recordsToTextBox_TextChanged;
             recordCountTextBox.KeyPress += recordsToTextBox_KeyPress;
             // 
             // showRecordsFromLabel
             // 
-            showRecordsFromLabel.Anchor = AnchorStyles.Right;
-            showRecordsFromLabel.Location = new System.Drawing.Point(677, 0);
-            showRecordsFromLabel.Margin = new Padding(0, 0, 4, 0);
+            resources.ApplyResources(showRecordsFromLabel, "showRecordsFromLabel");
             showRecordsFromLabel.Name = "showRecordsFromLabel";
-            showRecordsFromLabel.Size = new System.Drawing.Size(45, 35);
-            showRecordsFromLabel.TabIndex = 1;
-            showRecordsFromLabel.Text = "Record Offset:";
-            showRecordsFromLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // offsetTextBox
             // 
-            offsetTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            resources.ApplyResources(offsetTextBox, "offsetTextBox");
             offsetTextBox.DelayedTextChangedTimeout = 1000;
-            offsetTextBox.Location = new System.Drawing.Point(730, 6);
-            offsetTextBox.Margin = new Padding(4, 3, 4, 3);
             offsetTextBox.Name = "offsetTextBox";
-            offsetTextBox.Size = new System.Drawing.Size(62, 23);
-            offsetTextBox.TabIndex = 4;
-            offsetTextBox.TextAlign = HorizontalAlignment.Right;
             offsetTextBox.DelayedTextChanged += offsetTextBox_TextChanged;
             offsetTextBox.KeyPress += offsetTextBox_KeyPress;
             // 
             // runQueryButton
             // 
-            runQueryButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            runQueryButton.FlatStyle = FlatStyle.Popup;
-            runQueryButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold);
+            resources.ApplyResources(runQueryButton, "runQueryButton");
             runQueryButton.ForeColor = System.Drawing.Color.DarkRed;
-            runQueryButton.Image = Properties.Resources.exclamation_icon;
-            runQueryButton.ImageAlign = System.Drawing.ContentAlignment.BottomCenter;
-            runQueryButton.Location = new System.Drawing.Point(462, 3);
-            runQueryButton.Margin = new Padding(4, 3, 4, 3);
+            runQueryButton.Image = Resources.Icons.exclamation_icon;
             runQueryButton.Name = "runQueryButton";
-            runQueryButton.Padding = new Padding(0, 0, 0, 3);
-            runQueryButton.Size = new System.Drawing.Size(109, 29);
-            runQueryButton.TabIndex = 2;
-            runQueryButton.Text = "&Execute";
-            runQueryButton.TextAlign = System.Drawing.ContentAlignment.BottomRight;
-            runQueryButton.TextImageRelation = TextImageRelation.ImageBeforeText;
             runQueryButton.UseVisualStyleBackColor = true;
             runQueryButton.Click += runQueryButton_Click;
             // 
             // searchFilterLabel
             // 
-            searchFilterLabel.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            searchFilterLabel.AutoSize = true;
+            resources.ApplyResources(searchFilterLabel, "searchFilterLabel");
             mainTableLayoutPanel.SetColumnSpan(searchFilterLabel, 2);
-            searchFilterLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Underline);
             searchFilterLabel.LinkColor = System.Drawing.Color.Navy;
-            searchFilterLabel.Location = new System.Drawing.Point(4, 9);
-            searchFilterLabel.Margin = new Padding(4, 0, 4, 0);
             searchFilterLabel.Name = "searchFilterLabel";
-            searchFilterLabel.Size = new System.Drawing.Size(97, 16);
-            searchFilterLabel.TabIndex = 8;
             searchFilterLabel.TabStop = true;
-            searchFilterLabel.Text = "Filter Query (?):";
-            searchFilterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             searchFilterLabel.LinkClicked += searchFilterLabel_Click;
             // 
             // searchFilterTextBox
             // 
-            searchFilterTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            resources.ApplyResources(searchFilterTextBox, "searchFilterTextBox");
             mainTableLayoutPanel.SetColumnSpan(searchFilterTextBox, 2);
-            searchFilterTextBox.Location = new System.Drawing.Point(109, 6);
-            searchFilterTextBox.Margin = new Padding(4, 3, 4, 3);
             searchFilterTextBox.Name = "searchFilterTextBox";
-            searchFilterTextBox.PlaceholderText = "WHERE ";
-            searchFilterTextBox.Size = new System.Drawing.Size(345, 23);
-            searchFilterTextBox.TabIndex = 1;
             searchFilterTextBox.Enter += searchFilterTextBox_Enter;
             searchFilterTextBox.KeyPress += searchFilterTextBox_KeyPress;
             searchFilterTextBox.Leave += searchFilterTextBox_Leave;
             // 
             // clearFilterButton
             // 
-            clearFilterButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            clearFilterButton.FlatStyle = FlatStyle.Popup;
-            clearFilterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F);
+            resources.ApplyResources(clearFilterButton, "clearFilterButton");
             clearFilterButton.ForeColor = System.Drawing.Color.Black;
-            clearFilterButton.Location = new System.Drawing.Point(579, 3);
-            clearFilterButton.Margin = new Padding(4, 3, 4, 3);
             clearFilterButton.Name = "clearFilterButton";
-            clearFilterButton.Size = new System.Drawing.Size(85, 29);
-            clearFilterButton.TabIndex = 3;
-            clearFilterButton.Text = "Clear";
             clearFilterButton.UseVisualStyleBackColor = true;
             clearFilterButton.Click += clearFilterButton_Click;
             // 
@@ -245,7 +174,7 @@ namespace ParquetViewer
             mainGridView.AllowUserToAddRows = false;
             mainGridView.AllowUserToDeleteRows = false;
             mainGridView.AllowUserToOrderColumns = true;
-            mainGridView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            resources.ApplyResources(mainGridView, "mainGridView");
             mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
@@ -261,167 +190,120 @@ namespace ParquetViewer
             mainGridView.CopyAsWhereIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyAsWhereIcon");
             mainGridView.CopyToClipboardIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyToClipboardIcon");
             mainGridView.EnableHeadersVisualStyles = false;
-            mainGridView.Location = new System.Drawing.Point(4, 38);
-            mainGridView.Margin = new Padding(4, 3, 4, 3);
             mainGridView.Name = "mainGridView";
             mainGridView.ReadOnly = true;
-            mainGridView.RowHeadersWidth = 24;
             mainTableLayoutPanel.SetRowSpan(mainGridView, 2);
             mainGridView.ShowCellToolTips = false;
             mainGridView.ShowCopyAsWhereContextMenuItem = true;
-            mainGridView.Size = new System.Drawing.Size(936, 356);
-            mainGridView.TabIndex = 7;
             mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
             // 
             // loadAllRowsButton
             // 
-            loadAllRowsButton.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            loadAllRowsButton.BackgroundImageLayout = ImageLayout.Center;
+            resources.ApplyResources(loadAllRowsButton, "loadAllRowsButton");
             loadAllRowsButton.Cursor = Cursors.Hand;
-            loadAllRowsButton.Enabled = false;
             loadAllRowsButton.FlatAppearance.BorderSize = 0;
             loadAllRowsButton.FlatAppearance.MouseOverBackColor = System.Drawing.SystemColors.Control;
-            loadAllRowsButton.FlatStyle = FlatStyle.Flat;
-            loadAllRowsButton.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            loadAllRowsButton.Image = Properties.Resources.next_blue;
-            loadAllRowsButton.Location = new System.Drawing.Point(926, 9);
-            loadAllRowsButton.Margin = new Padding(2, 0, 5, 0);
+            loadAllRowsButton.Image = Resources.Icons.next_blue;
             loadAllRowsButton.Name = "loadAllRowsButton";
-            loadAllRowsButton.Size = new System.Drawing.Size(13, 16);
-            loadAllRowsButton.TabIndex = 6;
-            loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, "Load all records (Ctrl+E)");
+            loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, resources.GetString("loadAllRowsButton.ToolTip"));
             loadAllRowsButton.UseVisualStyleBackColor = true;
             loadAllRowsButton.EnabledChanged += loadAllRowsButton_EnabledChanged;
             loadAllRowsButton.Click += loadAllRowsButton_Click;
             // 
             // openParquetFileDialog
             // 
-            openParquetFileDialog.Filter = "Parquet Files|*.parquet;*.snappy;*.gz;*.gzip";
+            resources.ApplyResources(openParquetFileDialog, "openParquetFileDialog");
             // 
             // mainMenuStrip
             // 
             mainMenuStrip.BackColor = System.Drawing.SystemColors.Control;
             mainMenuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, toolsToolStripMenuItem, helpToolStripMenuItem });
-            mainMenuStrip.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(mainMenuStrip, "mainMenuStrip");
             mainMenuStrip.Name = "mainMenuStrip";
-            mainMenuStrip.Padding = new Padding(7, 2, 0, 2);
-            mainMenuStrip.Size = new System.Drawing.Size(944, 24);
-            mainMenuStrip.TabIndex = 1;
-            mainMenuStrip.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
             fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, openToolStripMenuItem, openFolderToolStripMenuItem, toolStripSeparator, saveAsToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            fileToolStripMenuItem.Text = "&File";
+            resources.ApplyResources(fileToolStripMenuItem, "fileToolStripMenuItem");
             // 
             // newToolStripMenuItem
             // 
-            newToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("newToolStripMenuItem.Image");
-            newToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(newToolStripMenuItem, "newToolStripMenuItem");
             newToolStripMenuItem.Name = "newToolStripMenuItem";
-            newToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.N;
-            newToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            newToolStripMenuItem.Text = "&New";
             newToolStripMenuItem.Click += newToolStripMenuItem_Click;
             // 
             // openToolStripMenuItem
             // 
-            openToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("openToolStripMenuItem.Image");
-            openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(openToolStripMenuItem, "openToolStripMenuItem");
             openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.O;
-            openToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            openToolStripMenuItem.Text = "&Open File";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
             // openFolderToolStripMenuItem
             // 
             openFolderToolStripMenuItem.Name = "openFolderToolStripMenuItem";
-            openFolderToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.O;
-            openFolderToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            openFolderToolStripMenuItem.Text = "&Open Folder";
-            openFolderToolStripMenuItem.ToolTipText = "All parquet files in the folder must have the same schema";
+            resources.ApplyResources(openFolderToolStripMenuItem, "openFolderToolStripMenuItem");
             openFolderToolStripMenuItem.Click += openFolderToolStripMenuItem_Click;
             // 
             // toolStripSeparator
             // 
             toolStripSeparator.Name = "toolStripSeparator";
-            toolStripSeparator.Size = new System.Drawing.Size(223, 6);
+            resources.ApplyResources(toolStripSeparator, "toolStripSeparator");
             // 
             // saveAsToolStripMenuItem
             // 
-            saveAsToolStripMenuItem.AutoSize = false;
-            saveAsToolStripMenuItem.Enabled = false;
-            saveAsToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("saveAsToolStripMenuItem.Image");
+            resources.ApplyResources(saveAsToolStripMenuItem, "saveAsToolStripMenuItem");
             saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            saveAsToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.S;
-            saveAsToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            saveAsToolStripMenuItem.Text = "Save Results As";
             saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new System.Drawing.Size(223, 6);
+            resources.ApplyResources(toolStripSeparator1, "toolStripSeparator1");
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.W;
-            exitToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
-            exitToolStripMenuItem.Text = "Exit";
+            resources.ApplyResources(exitToolStripMenuItem, "exitToolStripMenuItem");
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // editToolStripMenuItem
             // 
             editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem, darkModeToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
-            editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
-            editToolStripMenuItem.Text = "&Edit";
+            resources.ApplyResources(editToolStripMenuItem, "editToolStripMenuItem");
             // 
             // changeFieldsMenuStripButton
             // 
-            changeFieldsMenuStripButton.Image = (System.Drawing.Image)resources.GetObject("changeFieldsMenuStripButton.Image");
+            resources.ApplyResources(changeFieldsMenuStripButton, "changeFieldsMenuStripButton");
             changeFieldsMenuStripButton.Name = "changeFieldsMenuStripButton";
-            changeFieldsMenuStripButton.ShortcutKeys = Keys.Control | Keys.F;
-            changeFieldsMenuStripButton.Size = new System.Drawing.Size(217, 22);
-            changeFieldsMenuStripButton.Text = "Add/Remove &Fields";
             changeFieldsMenuStripButton.Click += changeFieldsMenuStripButton_Click;
             // 
             // changeDateFormatToolStripMenuItem
             // 
             changeDateFormatToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultToolStripMenuItem, iSO8601ToolStripMenuItem, customDateFormatToolStripMenuItem });
-            changeDateFormatToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("changeDateFormatToolStripMenuItem.Image");
+            resources.ApplyResources(changeDateFormatToolStripMenuItem, "changeDateFormatToolStripMenuItem");
             changeDateFormatToolStripMenuItem.Name = "changeDateFormatToolStripMenuItem";
-            changeDateFormatToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            changeDateFormatToolStripMenuItem.Text = "Date Format";
             // 
             // defaultToolStripMenuItem
             // 
             defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-            defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            resources.ApplyResources(defaultToolStripMenuItem, "defaultToolStripMenuItem");
             defaultToolStripMenuItem.Tag = "0";
-            defaultToolStripMenuItem.Text = "Default";
-            defaultToolStripMenuItem.ToolTipText = "Local date format";
             defaultToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // iSO8601ToolStripMenuItem
             // 
             iSO8601ToolStripMenuItem.Name = "iSO8601ToolStripMenuItem";
-            iSO8601ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            resources.ApplyResources(iSO8601ToolStripMenuItem, "iSO8601ToolStripMenuItem");
             iSO8601ToolStripMenuItem.Tag = "2";
-            iSO8601ToolStripMenuItem.Text = "ISO 8601";
-            iSO8601ToolStripMenuItem.ToolTipText = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
             iSO8601ToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // customDateFormatToolStripMenuItem
             // 
             customDateFormatToolStripMenuItem.Name = "customDateFormatToolStripMenuItem";
-            customDateFormatToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            resources.ApplyResources(customDateFormatToolStripMenuItem, "customDateFormatToolStripMenuItem");
             customDateFormatToolStripMenuItem.Tag = "6";
-            customDateFormatToolStripMenuItem.Text = "Custom...";
             customDateFormatToolStripMenuItem.Click += DateFormatMenuItem_Click;
             // 
             // alwaysLoadAllRecordsToolStripMenuItem
@@ -429,168 +311,153 @@ namespace ParquetViewer
             alwaysLoadAllRecordsToolStripMenuItem.Checked = true;
             alwaysLoadAllRecordsToolStripMenuItem.CheckState = CheckState.Checked;
             alwaysLoadAllRecordsToolStripMenuItem.Name = "alwaysLoadAllRecordsToolStripMenuItem";
-            alwaysLoadAllRecordsToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            alwaysLoadAllRecordsToolStripMenuItem.Text = "Always Load All Records";
-            alwaysLoadAllRecordsToolStripMenuItem.ToolTipText = "When opening a new file ParquetViewer will load all records";
+            resources.ApplyResources(alwaysLoadAllRecordsToolStripMenuItem, "alwaysLoadAllRecordsToolStripMenuItem");
             alwaysLoadAllRecordsToolStripMenuItem.Click += alwaysLoadAllRecordsToolStripMenuItem_Click;
             // 
             // darkModeToolStripMenuItem
             // 
             darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
-            darkModeToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            darkModeToolStripMenuItem.Text = "Dark Mode";
+            resources.ApplyResources(darkModeToolStripMenuItem, "darkModeToolStripMenuItem");
             darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem
             // 
             toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { getSQLCreateTableScriptToolStripMenuItem, metadataViewerToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
-            toolsToolStripMenuItem.Text = "Tools";
+            resources.ApplyResources(toolsToolStripMenuItem, "toolsToolStripMenuItem");
             // 
             // getSQLCreateTableScriptToolStripMenuItem
             // 
-            getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
-            getSQLCreateTableScriptToolStripMenuItem.Image = (System.Drawing.Image)resources.GetObject("getSQLCreateTableScriptToolStripMenuItem.Image");
+            resources.ApplyResources(getSQLCreateTableScriptToolStripMenuItem, "getSQLCreateTableScriptToolStripMenuItem");
             getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
-            getSQLCreateTableScriptToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            getSQLCreateTableScriptToolStripMenuItem.Text = "Get SQL Create Table Script";
-            getSQLCreateTableScriptToolStripMenuItem.ToolTipText = "The schema will match the fields you've loaded";
             getSQLCreateTableScriptToolStripMenuItem.Click += GetSQLCreateTableScriptToolStripMenuItem_Click;
             getSQLCreateTableScriptToolStripMenuItem.MouseEnter += GetSQLCreateTableScriptToolStripMenuItem_MouseEnter;
             // 
             // metadataViewerToolStripMenuItem
             // 
-            metadataViewerToolStripMenuItem.Enabled = false;
+            resources.ApplyResources(metadataViewerToolStripMenuItem, "metadataViewerToolStripMenuItem");
             metadataViewerToolStripMenuItem.Name = "metadataViewerToolStripMenuItem";
-            metadataViewerToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.M;
-            metadataViewerToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
-            metadataViewerToolStripMenuItem.Text = "Metadata Viewer";
             metadataViewerToolStripMenuItem.Click += MetadataViewerToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
-            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { userGuideToolStripMenuItem, shareAnonymousUsageDataToolStripMenuItem, aboutToolStripMenuItem });
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { userGuideToolStripMenuItem, shareAnonymousUsageDataToolStripMenuItem, languageToolStripMenuItem, aboutToolStripMenuItem });
             helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            helpToolStripMenuItem.Text = "&Help";
+            resources.ApplyResources(helpToolStripMenuItem, "helpToolStripMenuItem");
             // 
             // userGuideToolStripMenuItem
             // 
-            userGuideToolStripMenuItem.Image = Properties.Resources.external_link_icon;
+            userGuideToolStripMenuItem.Image = Resources.Icons.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
-            userGuideToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
-            userGuideToolStripMenuItem.Text = "User Guide";
+            resources.ApplyResources(userGuideToolStripMenuItem, "userGuideToolStripMenuItem");
             userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
             // 
             // shareAnonymousUsageDataToolStripMenuItem
             // 
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
-            shareAnonymousUsageDataToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
-            shareAnonymousUsageDataToolStripMenuItem.Text = "Share Usage Data";
-            shareAnonymousUsageDataToolStripMenuItem.ToolTipText = "See About page for link to privacy policy";
+            resources.ApplyResources(shareAnonymousUsageDataToolStripMenuItem, "shareAnonymousUsageDataToolStripMenuItem");
             shareAnonymousUsageDataToolStripMenuItem.CheckedChanged += shareAnonymousUsageDataToolStripMenuItem_CheckedChanged;
             shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
+            // 
+            // languageToolStripMenuItem
+            // 
+            languageToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { englishToolStripMenuItem, turkishToolStripMenuItem });
+            languageToolStripMenuItem.Image = Resources.Icons.localization_icon;
+            languageToolStripMenuItem.Name = "languageToolStripMenuItem";
+            resources.ApplyResources(languageToolStripMenuItem, "languageToolStripMenuItem");
+            // 
+            // englishToolStripMenuItem
+            // 
+            englishToolStripMenuItem.Name = "englishToolStripMenuItem";
+            resources.ApplyResources(englishToolStripMenuItem, "englishToolStripMenuItem");
+            englishToolStripMenuItem.Tag = "en-US";
+            englishToolStripMenuItem.Click += languageToolStripMenuItem_Click;
+            // 
+            // turkishToolStripMenuItem
+            // 
+            turkishToolStripMenuItem.Name = "turkishToolStripMenuItem";
+            resources.ApplyResources(turkishToolStripMenuItem, "turkishToolStripMenuItem");
+            turkishToolStripMenuItem.Tag = "tr-TR";
+            turkishToolStripMenuItem.Click += languageToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
-            aboutToolStripMenuItem.Text = "&About...";
+            resources.ApplyResources(aboutToolStripMenuItem, "aboutToolStripMenuItem");
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
             // showingRecordCountStatusBarLabel
             // 
             showingRecordCountStatusBarLabel.Name = "showingRecordCountStatusBarLabel";
-            showingRecordCountStatusBarLabel.Size = new System.Drawing.Size(56, 17);
-            showingRecordCountStatusBarLabel.Text = "Showing:";
+            resources.ApplyResources(showingRecordCountStatusBarLabel, "showingRecordCountStatusBarLabel");
             // 
             // actualShownRecordCountLabel
             // 
-            actualShownRecordCountLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            resources.ApplyResources(actualShownRecordCountLabel, "actualShownRecordCountLabel");
             actualShownRecordCountLabel.Name = "actualShownRecordCountLabel";
-            actualShownRecordCountLabel.Size = new System.Drawing.Size(14, 17);
-            actualShownRecordCountLabel.Text = "0";
             // 
             // recordsTextStatusBarLabel
             // 
             recordsTextStatusBarLabel.Name = "recordsTextStatusBarLabel";
-            recordsTextStatusBarLabel.Size = new System.Drawing.Size(44, 17);
-            recordsTextStatusBarLabel.Text = "Results";
+            resources.ApplyResources(recordsTextStatusBarLabel, "recordsTextStatusBarLabel");
             // 
             // springStatusBarLabel
             // 
             springStatusBarLabel.Name = "springStatusBarLabel";
-            springStatusBarLabel.Size = new System.Drawing.Size(692, 17);
+            resources.ApplyResources(springStatusBarLabel, "springStatusBarLabel");
             springStatusBarLabel.Spring = true;
             // 
             // showingStatusBarLabel
             // 
             showingStatusBarLabel.Name = "showingStatusBarLabel";
-            showingStatusBarLabel.Size = new System.Drawing.Size(49, 17);
-            showingStatusBarLabel.Text = "Loaded:";
+            resources.ApplyResources(showingStatusBarLabel, "showingStatusBarLabel");
             showingStatusBarLabel.Click += showingStatusBarLabel_Click;
             // 
             // recordCountStatusBarLabel
             // 
-            recordCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            resources.ApplyResources(recordCountStatusBarLabel, "recordCountStatusBarLabel");
             recordCountStatusBarLabel.Name = "recordCountStatusBarLabel";
-            recordCountStatusBarLabel.Size = new System.Drawing.Size(14, 17);
-            recordCountStatusBarLabel.Text = "0";
             // 
             // outOfStatusBarLabel
             // 
             outOfStatusBarLabel.Name = "outOfStatusBarLabel";
-            outOfStatusBarLabel.Size = new System.Drawing.Size(44, 17);
-            outOfStatusBarLabel.Text = "Out of:";
+            resources.ApplyResources(outOfStatusBarLabel, "outOfStatusBarLabel");
             // 
             // totalRowCountStatusBarLabel
             // 
-            totalRowCountStatusBarLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            resources.ApplyResources(totalRowCountStatusBarLabel, "totalRowCountStatusBarLabel");
             totalRowCountStatusBarLabel.Name = "totalRowCountStatusBarLabel";
-            totalRowCountStatusBarLabel.Size = new System.Drawing.Size(14, 17);
-            totalRowCountStatusBarLabel.Text = "0";
             // 
             // mainStatusStrip
             // 
             mainStatusStrip.Items.AddRange(new ToolStripItem[] { showingRecordCountStatusBarLabel, actualShownRecordCountLabel, recordsTextStatusBarLabel, springStatusBarLabel, showingStatusBarLabel, recordCountStatusBarLabel, outOfStatusBarLabel, totalRowCountStatusBarLabel });
-            mainStatusStrip.Location = new System.Drawing.Point(0, 422);
+            resources.ApplyResources(mainStatusStrip, "mainStatusStrip");
             mainStatusStrip.Name = "mainStatusStrip";
-            mainStatusStrip.Padding = new Padding(1, 0, 16, 0);
             mainStatusStrip.ShowItemToolTips = true;
-            mainStatusStrip.Size = new System.Drawing.Size(944, 22);
-            mainStatusStrip.TabIndex = 2;
-            mainStatusStrip.Text = "statusStrip1";
             // 
             // exportFileDialog
             // 
             exportFileDialog.DefaultExt = "csv";
-            exportFileDialog.Filter = "CSV files|*.csv";
+            resources.ApplyResources(exportFileDialog, "exportFileDialog");
             exportFileDialog.RestoreDirectory = true;
-            exportFileDialog.Title = "Choose Save Location";
             // 
             // openFolderDialog
             // 
-            openFolderDialog.Description = "Select a folder with parquet files";
+            resources.ApplyResources(openFolderDialog, "openFolderDialog");
             openFolderDialog.ShowNewFolderButton = false;
             // 
             // MainForm
             // 
             AllowDrop = true;
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            resources.ApplyResources(this, "$this");
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(944, 444);
             Controls.Add(mainStatusStrip);
             Controls.Add(mainTableLayoutPanel);
             Controls.Add(mainMenuStrip);
-            ForeColor = System.Drawing.Color.FromArgb(240, 246, 252);
-            Icon = Properties.Resources.parquet_icon_32x32;
+            Icon = Resources.Icons.parquet_icon_32x32;
             KeyPreview = true;
             MainMenuStrip = mainMenuStrip;
-            Margin = new Padding(4, 3, 4, 3);
-            MinimumSize = new System.Drawing.Size(791, 200);
             Name = "MainForm";
-            Text = "New Parquet File";
             Load += MainForm_Load;
             DragDrop += MainForm_DragDrop;
             DragEnter += MainForm_DragEnter;
@@ -657,6 +524,9 @@ namespace ParquetViewer
         private ToolTip loadAllRowsButtonTooltip;
         private ToolStripMenuItem customDateFormatToolStripMenuItem;
         private ToolStripMenuItem darkModeToolStripMenuItem;
+        private ToolStripMenuItem languageToolStripMenuItem;
+        private ToolStripMenuItem englishToolStripMenuItem;
+        private ToolStripMenuItem turkishToolStripMenuItem;
     }
 }
 

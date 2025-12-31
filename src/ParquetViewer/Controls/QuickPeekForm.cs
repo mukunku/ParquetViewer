@@ -95,19 +95,19 @@ namespace ParquetViewer.Controls
             }
             else if (this.mainPictureBox is not null)
             {
-                this.Text += $" (Dimensions: {this.mainPictureBox.Image.PhysicalDimension.Width} x {this.mainPictureBox.Image.PhysicalDimension.Height})";
-                this.Text += $" (Type: {this.mainPictureBox.Image.RawFormat})";
+                this.Text += $" ({Resources.Strings.DimensionsText}: {this.mainPictureBox.Image.PhysicalDimension.Width} x {this.mainPictureBox.Image.PhysicalDimension.Height})";
+                this.Text += $" ({Resources.Strings.TypeText}: {this.mainPictureBox.Image.RawFormat})";
 
                 this.Width = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Width / 1.8), this.mainPictureBox.Image.Width), 400);
                 this.Height = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Height / 1.8), this.mainPictureBox.Image.Height), 400);
 
                 this.Size = this.mainPictureBox.RenderedSize() + new Size(0, 80);
 
-                this.saveImageToFileButton.Text = $"Save as {this.mainPictureBox.Image.RawFormat}";
+                this.saveImageToFileButton.Text = Resources.Strings.SaveImageToFileButtonTextFormat.Format(this.mainPictureBox.Image.RawFormat);
             }
             else
             {
-                throw new ApplicationException("This should never happen");
+                throw new ApplicationException("QuickPeek form was not created correctly");
             }
 
             this.Location = new Point(Cursor.Position.X + 5, Cursor.Position.Y);
@@ -130,7 +130,7 @@ namespace ParquetViewer.Controls
 
         public void DisableTakeMeBackLink()
         {
-            this.takeMeBackLinkLabel.Text = "<<< can't go back";
+            this.takeMeBackLinkLabel.Text = $"<<< {Resources.Strings.CantGoBackLinkButtonText}";
         }
 
         private void CloseWindowButton_Click(object sender, EventArgs e)
@@ -143,7 +143,7 @@ namespace ParquetViewer.Controls
             using var saveFileDialog = new SaveFileDialog
             {
                 Filter = $"{this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
-                Title = $"Save image as {this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()}"
+                Title = Resources.Strings.SaveImageAsButtonText.Format(this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant())
             };
 
             saveFileDialog.ShowDialog();
@@ -153,7 +153,10 @@ namespace ParquetViewer.Controls
                 var bitmap = new Bitmap(this.mainPictureBox.Image);
                 bitmap.Save(saveFileDialog.FileName, this.mainPictureBox.Image.RawFormat);
 
-                MessageBox.Show($"Image saved to {saveFileDialog.FileName}", "Save complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this,
+                    Resources.Strings.ImageSavedToDiskMessage.Format(saveFileDialog.FileName), 
+                    Resources.Strings.ImageSavedToDiskTitle, 
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
