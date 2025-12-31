@@ -131,7 +131,7 @@
     <value>162, 15</value>
   </data>
   <data name="label33.Text" xml:space="preserve">
-    <value>Yıl, dört basamaklı sayı olarak</value>
+    <value>Yıl, dört basamaklı sayı olarak.</value>
   </data>
   <data name="label34.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 213</value>
@@ -269,7 +269,7 @@
     <value>204, 15</value>
   </data>
   <data name="label48.Text" xml:space="preserve">
-    <value>Zamanlı tarihlerdeki milisaniye değeri</value>
+    <value>Zamanlı tarihlerdeki milisaniye değeri.</value>
   </data>
   <data name="label49.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 458</value>
@@ -278,7 +278,7 @@
     <value>182, 30</value>
   </data>
   <data name="label54.Text" xml:space="preserve">
-    <value>Zaman değerindeki saniyenin on milyonda biri</value>
+    <value>Zaman değerindeki saniyenin on milyonda biri.</value>
   </data>
   <data name="label55.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 493</value>

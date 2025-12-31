@@ -51,7 +51,7 @@ namespace ParquetViewer
             {
                 if (this.MainDataSource?.DefaultView.Count > 0)
                 {
-                    this.exportFileDialog.Title = string.Format(Resources.Strings.RecordsToBeExportedTitleFormat, this.MainDataSource.DefaultView.Count);
+                    this.exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(this.MainDataSource.DefaultView.Count);
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
@@ -80,7 +80,7 @@ namespace ParquetViewer
                             if (this.MainDataSource!.Columns.Count > MAX_XLS_COLUMN_COUNT)
                             {
                                 MessageBox.Show(this,
-                                    string.Format(Resources.Errors.TooManyColumnsXlsErrorMessageFormat, MAX_XLS_COLUMN_COUNT, this.MainDataSource.Columns.Count),
+                                    Resources.Errors.TooManyColumnsXlsErrorMessageFormat.Format(MAX_XLS_COLUMN_COUNT, this.MainDataSource.Columns.Count),
                                     Resources.Errors.TooManyColumnsErrorTitle,
                                     MessageBoxButtons.OK, MessageBoxIcon.Error);
 
@@ -95,7 +95,7 @@ namespace ParquetViewer
                             if (this.MainDataSource!.Columns.Count > MAX_XLSX_COLUMN_COUNT)
                             {
                                 MessageBox.Show(this,
-                                    string.Format(Resources.Errors.TooManyColumnsXlsxErrorMessageFormat, MAX_XLSX_COLUMN_COUNT, this.MainDataSource.Columns.Count),
+                                    Resources.Errors.TooManyColumnsXlsxErrorMessageFormat.Format(MAX_XLSX_COLUMN_COUNT, this.MainDataSource.Columns.Count),
                                     Resources.Errors.TooManyColumnsErrorTitle, 
                                     MessageBoxButtons.OK, MessageBoxIcon.Error);
 
@@ -114,7 +114,7 @@ namespace ParquetViewer
                         }
                         else
                         {
-                            throw new Exception(string.Format(Resources.Errors.UnsupportedExportType, fileExtension));
+                            throw new Exception(string.Format(Resources.Errors.UnsupportedExportTypeFormat, fileExtension));
                         }
 
                         if (loadingIcon.CancellationToken.IsCancellationRequested)
@@ -134,7 +134,7 @@ namespace ParquetViewer
                                 stopWatch.ElapsedMilliseconds);
 
                             MessageBox.Show(this,
-                                string.Format(Resources.Strings.ExportSuccessfulMessageFormat, Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
+                                Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
                                 Resources.Strings.ExportSuccessfulTitle, 
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
@@ -151,7 +151,7 @@ namespace ParquetViewer
                 CleanupFile(filePath);
                 
                 if (MessageBox.Show(this,
-                    string.Format(Resources.Strings.SwitchFromXlsToXlsxMessageFormat, ex.MaxLength, ex.FileType.GetExtension(), FileType.XLSX.GetExtension()),
+                    Resources.Strings.SwitchFromXlsToXlsxMessageFormat.Format(ex.MaxLength, ex.FileType.GetExtension(), FileType.XLSX.GetExtension()),
                     Resources.Strings.SwitchFromXlsToXlsxMessageTitle, 
                     MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
                 {
@@ -437,7 +437,7 @@ namespace ParquetViewer
 
         private static void HandleFileReadException(FileReadException ex)
         {
-            ShowError(string.Format(Resources.Errors.UnexpectedFileReadErrorMessageFormat, ex));
+            ShowError(Resources.Errors.UnexpectedFileReadErrorMessageFormat.Format(ex));
         }
 
         private static void HandleFileNotFoundException(FileNotFoundException ex)
@@ -456,7 +456,7 @@ namespace ParquetViewer
             const int maxSchemasLimit = 10; //prevent a giant textbox from appearing
             foreach (var schema in ex.Schemas)
             {
-                sb.AppendLine(string.Format(Resources.Errors.MultipleSchemasDetectedEntriesErrorMessageFormat, schemaIndex++));
+                sb.AppendLine(Resources.Errors.MultipleSchemasDetectedEntriesErrorMessageFormat.Format(schemaIndex++));
                 for (var i = 0; i < topCount; i++)
                 {
                     if (i == schema.Fields.Count)
@@ -476,11 +476,12 @@ namespace ParquetViewer
 
         private static void HandleMalformedFieldException(MalformedFieldException ex)
         {
-            ShowError(string.Format(Resources.Errors.MalformedFieldErrorMessageFormat, ex.Message));
+            ShowError(Resources.Errors.MalformedFieldErrorMessageFormat.Format(ex.Message));
         }
 
         private static void HandleDecimalOverflowException(DecimalOverflowException ex)            
-            => ShowError(string.Format(Resources.Errors.DecimalValueTooLargeErrorMessageFormat,
+            => ShowError(
+                Resources.Errors.DecimalValueTooLargeErrorMessageFormat.Format(
                     ex.FieldName,
                     ex.Precision,
                     ex.Scale,
@@ -488,6 +489,7 @@ namespace ParquetViewer
                     DecimalOverflowException.MAX_DECIMAL_SCALE),
                 Resources.Errors.DecimalValueTooLargeErrorTitle);
 
-        private static void ShowError(string message, string? title = null) => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        private static void ShowError(string message, string? title = null) 
+            => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }

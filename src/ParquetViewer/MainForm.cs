@@ -292,7 +292,7 @@ namespace ParquetViewer
 
                 if (!File.Exists(this.OpenFileOrFolderPath) && !Directory.Exists(this.OpenFileOrFolderPath))
                 {
-                    ShowError(string.Format(Resources.Errors.OpenFileNoLongerExistsErrorMessageFormat, this.OpenFileOrFolderPath + Environment.NewLine));
+                    ShowError(Resources.Errors.OpenFileNoLongerExistsErrorMessageFormat.Format(this.OpenFileOrFolderPath + Environment.NewLine));
                     return;
                 }
 

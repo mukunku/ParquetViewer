@@ -103,7 +103,7 @@ namespace ParquetViewer.Controls
 
                 this.Size = this.mainPictureBox.RenderedSize() + new Size(0, 80);
 
-                this.saveImageToFileButton.Text = string.Format(Resources.Strings.SaveImageToFileButtonTextFormat, this.mainPictureBox.Image.RawFormat);
+                this.saveImageToFileButton.Text = Resources.Strings.SaveImageToFileButtonTextFormat.Format(this.mainPictureBox.Image.RawFormat);
             }
             else
             {
@@ -143,7 +143,7 @@ namespace ParquetViewer.Controls
             using var saveFileDialog = new SaveFileDialog
             {
                 Filter = $"{this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
-                Title = string.Format(Resources.Strings.SaveImageAsButtonText, this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant())
+                Title = Resources.Strings.SaveImageAsButtonText.Format(this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant())
             };
 
             saveFileDialog.ShowDialog();
@@ -154,7 +154,7 @@ namespace ParquetViewer.Controls
                 bitmap.Save(saveFileDialog.FileName, this.mainPictureBox.Image.RawFormat);
 
                 MessageBox.Show(this,
-                    string.Format(Resources.Strings.ImageSavedToDiskMessage, saveFileDialog.FileName), 
+                    Resources.Strings.ImageSavedToDiskMessage.Format(saveFileDialog.FileName), 
                     Resources.Strings.ImageSavedToDiskTitle, 
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

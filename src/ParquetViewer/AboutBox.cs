@@ -37,9 +37,9 @@ namespace ParquetViewer
         public AboutBox()
         {
             InitializeComponent();
-            this.Text = string.Format(this.Text, AssemblyTitle);
+            this.Text = this.Text.Format(AssemblyTitle);
             this.labelProductName.Text = AssemblyProduct;
-            this.labelVersion.Text = string.Format(this.labelVersion.Text, AssemblyVersion, _isSelfContainedExe ? " SC" : string.Empty);
+            this.labelVersion.Text = this.labelVersion.Text.Format(AssemblyVersion, _isSelfContainedExe ? " SC" : string.Empty);
             this.labelCopyright.Text = AssemblyCopyright;
             this.textBoxDescription.Text = AssemblyDescription.Replace($"Privacy policy:", $"{Resources.Strings.PrivacyPolicyLabelText}:"); //HACK: to translate privacy policy text
             this.newVersionLabel.Image = null;
@@ -169,7 +169,7 @@ namespace ParquetViewer
                 else if (success == false)
                 {
                     MessageBox.Show(this, 
-                        string.Format(Resources.Errors.FileAssociationFailedErrorMessageFormat, exitCode), 
+                        Resources.Errors.FileAssociationFailedErrorMessageFormat.Format(exitCode), 
                         Resources.Errors.FileAssociationFailedErrorTitle, 
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     SetCheckboxSilent(!associateFileExtensionCheckBox.Checked);
@@ -200,7 +200,7 @@ namespace ParquetViewer
             {
                 this.newVersionLabel.Visible = false;
                 var latestRelease = await Env.FetchLatestRelease();
-                this.newVersionLabel.Text = string.Format(this.newVersionLabel.Text, latestRelease.Version);
+                this.newVersionLabel.Text = this.newVersionLabel.Text.Format(latestRelease.Version);
                 this.newVersionLabel.Visible = true;
 
                 if (latestRelease.Version > Env.AssemblyVersion)

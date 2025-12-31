@@ -58,7 +58,7 @@ namespace ParquetViewer
                 if (availableFields.Count > MaxNumberOfFieldsWeCanRender)
                 {
                     this.showSelectedFieldsRadioButton.Enabled = false;
-                    this.filterColumnsTextbox.PlaceholderText = string.Format(Resources.Strings.TooManyFieldsErrorFormat, availableFields.Count);
+                    this.filterColumnsTextbox.PlaceholderText = Resources.Strings.TooManyFieldsErrorFormat.Format(availableFields.Count);
                     return;
                 }
 
@@ -83,10 +83,10 @@ namespace ParquetViewer
                         var totalFieldCount = availableFields.Count;
                         var supportedFieldCount = availableFields.Where(IsSupportedFieldType).Count();
                         var unsupportedFieldCount = totalFieldCount - supportedFieldCount;
-                        var unsupportedFieldsText = unsupportedFieldCount > 0 ? $" - {string.Format(Resources.Strings.UnsupportedFieldCountTextFormat, unsupportedFieldCount)}" : string.Empty;
+                        var unsupportedFieldsText = unsupportedFieldCount > 0 ? $" - {Resources.Strings.UnsupportedFieldCountTextFormat.Format(unsupportedFieldCount)}" : string.Empty;
 
-                        string selectAllCheckBoxText = string.Format(Resources.Strings.SelectAllCheckmarkTextFormat, supportedFieldCount + unsupportedFieldsText);
-                        string deselectAllCheckBoxText = string.Format(Resources.Strings.DeselectAllCheckmarkTextFormat, supportedFieldCount + unsupportedFieldsText);
+                        string selectAllCheckBoxText = Resources.Strings.SelectAllCheckmarkTextFormat.Format(supportedFieldCount + unsupportedFieldsText);
+                        string deselectAllCheckBoxText = Resources.Strings.DeselectAllCheckmarkTextFormat.Format(supportedFieldCount + unsupportedFieldsText);
                         var selectAllCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                         {
                             Name = SelectAllCheckboxName,
@@ -238,7 +238,7 @@ namespace ParquetViewer
                 //We don't support lists of maps
                 if (lf.Item.SchemaType == SchemaType.Map)
                 {
-                    unsupportedReason = string.Format(Resources.Errors.NestedListOfTypeNotSupportedMessageFormat, SchemaType.List.ToString(), lf.Item.SchemaType.ToString());
+                    unsupportedReason = Resources.Errors.NestedListOfTypeNotSupportedMessageFormat.Format(SchemaType.List.ToString(), lf.Item.SchemaType.ToString());
                     return false;
                 }
 
@@ -250,12 +250,12 @@ namespace ParquetViewer
             {
                 if (mf.Key.SchemaType != SchemaType.Data)
                 {
-                    unsupportedReason = string.Format(Resources.Errors.NestedListOfTypeNotSupportedMessageFormat, SchemaType.Map.ToString(), mf.Key.SchemaType.ToString());
+                    unsupportedReason = Resources.Errors.NestedListOfTypeNotSupportedMessageFormat.Format(SchemaType.Map.ToString(), mf.Key.SchemaType.ToString());
                     return false;
                 }
                 else if (mf.Value.SchemaType != SchemaType.Data)
                 {
-                    unsupportedReason = string.Format(Resources.Errors.NestedListOfTypeNotSupportedMessageFormat, SchemaType.Map.ToString(), mf.Value.SchemaType.ToString());
+                    unsupportedReason = Resources.Errors.NestedListOfTypeNotSupportedMessageFormat.Format(SchemaType.Map.ToString(), mf.Value.SchemaType.ToString());
                     return false;
                 }
 
@@ -269,7 +269,7 @@ namespace ParquetViewer
                 {
                     if (!IsSupportedFieldType(structField, out unsupportedReason))
                     {
-                        unsupportedReason = string.Format(Resources.Errors.StructWithUnsupportedFieldErrorMessageFormat, field.Name, structField.Name) 
+                        unsupportedReason = Resources.Errors.StructWithUnsupportedFieldErrorMessageFormat.Format(field.Name, structField.Name) 
                             + Environment.NewLine + unsupportedReason;
                         return false;
                     }
@@ -393,8 +393,8 @@ namespace ParquetViewer
 
         private void SetSelectedFieldCount()
         {
-            this.showSelectedFieldsRadioButton.Text = string.Format(_selectedFieldsOnlyLabelTemplate, this.PreSelectedFields?.Count
-                ?? this.AvailableFields.Count);
+            this.showSelectedFieldsRadioButton.Text = this._selectedFieldsOnlyLabelTemplate
+                .Format(this.PreSelectedFields?.Count ?? this.AvailableFields.Count);
         }
 
         private Color _disabledTextColor;

@@ -157,7 +157,7 @@ namespace ParquetViewer
                         writer.Write(rawJson);
 
                         MessageBox.Show(this,
-                            string.Format(Resources.Strings.MetadataSuccessfullyExportedToFileMessageFormat, saveFileDialog.FileName),
+                            Resources.Strings.MetadataSuccessfullyExportedToFileMessageFormat.Format(saveFileDialog.FileName),
                             Resources.Strings.MetadataSuccessfullyExportedToFileMessageTitle, 
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }

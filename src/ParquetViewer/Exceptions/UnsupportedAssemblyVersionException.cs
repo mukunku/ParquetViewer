@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Helpers;
 using System;
 
 namespace ParquetViewer.Exceptions
@@ -6,7 +7,7 @@ namespace ParquetViewer.Exceptions
     internal class UnsupportedAssemblyVersionException : Exception
     {
         public UnsupportedAssemblyVersionException(string unsupportedAssemblyVersion, Exception? ex = null) 
-            : base(string.Format(Resources.Errors.UnexpectedAssemblyVersionErrorFormat, unsupportedAssemblyVersion), ex) { }
+            : base(Resources.Errors.UnexpectedAssemblyVersionErrorFormat.Format(unsupportedAssemblyVersion), ex) { }
 
         public static void Record(string unsupportedAssemblyVersion) => ExceptionEvent.FireAndForget(new UnsupportedAssemblyVersionException(unsupportedAssemblyVersion));
     }
