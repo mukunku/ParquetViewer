@@ -389,19 +389,27 @@ namespace ParquetViewer
                                 }
                             };
 
-                    using var rowGroup = parquetWriter.CreateRowGroup();
-                    foreach (var dataField in parquetSchema.DataFields)
+                    const int MAX_ROWS_PER_ROWGROUP = 100_000; //Without batching we sometimes get OverflowException: Array dimensions exceeded supported range from Parquet.NET
+                    var batchIndex = 0;
+                    var isLastBatch = false;
+                    while (!isLastBatch)
                     {
-                        if (cancellationToken.IsCancellationRequested)
+                        using var rowGroup = parquetWriter.CreateRowGroup();
+                        foreach (var dataField in parquetSchema.DataFields)
                         {
-                            break;
-                        }
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
 
-                        var type = dataField.IsNullable ? dataField.ClrType.GetNullableVersion() : dataField.ClrType;
-                        var values = this.MainDataSource.GetColumnValues(type, dataField.Name);
-                        var dataColumn = new Parquet.Data.DataColumn(dataField, values);
-                        await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
-                        progress.Report(values.Length); //No way to report progress for each row, so do it by column
+                            var type = dataField.IsNullable ? dataField.ClrType.GetNullableVersion() : dataField.ClrType;
+                            var values = this.MainDataSource.GetColumnValues(type, dataField.Name, batchIndex * MAX_ROWS_PER_ROWGROUP, MAX_ROWS_PER_ROWGROUP);
+                            var dataColumn = new Parquet.Data.DataColumn(dataField, values);
+                            await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
+                            progress.Report(values.Length); //No way to report progress for each row, so do it by column
+                            isLastBatch = values.Length < MAX_ROWS_PER_ROWGROUP;
+                        }
+                        batchIndex++;
                     }
                 }, cancellationToken);
 

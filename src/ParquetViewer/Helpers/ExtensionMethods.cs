@@ -109,17 +109,28 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static System.Array GetColumnValues(this DataTable dataTable, Type type, string columnName)
+        public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName, int skipCount, int fetchCount)
         {
             ArgumentNullException.ThrowIfNull(dataTable);
+            ArgumentNullException.ThrowIfNull(type);
+            ArgumentOutOfRangeException.ThrowIfLessThan(skipCount, 0);
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
 
             if (!dataTable.Columns.Contains(columnName))
                 throw new ArgumentException($"Column '{columnName}' does not exist in the datatable");
 
-            var values = System.Array.CreateInstance(type, dataTable.Rows.Count);
-            for (var i = 0; i < dataTable.Rows.Count; i++)
+            var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
+            var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
+            var values = Array.CreateInstance(type, recordCountToRead);
+            var index = 0;
+            foreach(DataRow row in dataTable.Rows)
             {
-                var value = dataTable.Rows[i][columnName];
+                if (skipCount-- > 0)
+                {
+                    continue;
+                }
+
+                var value = row[columnName];
                 if (value == DBNull.Value)
                     value = null;
                 else if (value is ByteArrayValue byteArray)
@@ -127,8 +138,14 @@ namespace ParquetViewer.Helpers
                 else if (value is ListValue || value is MapValue || value is StructValue)
                     throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
 
-                values.SetValue(value, i);
+                values.SetValue(value, index++);
+
+                if (--fetchCount <= 0)
+                {
+                    break;
+                }
             }
+
             return values;
         }
 
