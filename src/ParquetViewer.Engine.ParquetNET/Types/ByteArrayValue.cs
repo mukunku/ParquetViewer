@@ -283,11 +283,12 @@ namespace ParquetViewer.Engine.ParquetNET.Types
         /// <returns>Binary data in hexadecimal representation</returns>
         public string ToStringTruncated(int desiredLength)
         {
-            if (Data.Length < HexStringLengthToByteCount(desiredLength))
+            var maxBytesToRender = Math.Max(2, HexStringLengthToByteCount(desiredLength));
+            if (Data.Length <= maxBytesToRender)
                 return BitConverter.ToString(Data);
 
-            return BitConverter.ToString(Data, 0, desiredLength / 2) + "[...]"
-            + BitConverter.ToString(Data, Data.Length - (desiredLength / 2));
+            return BitConverter.ToString(Data, 0, maxBytesToRender / 2) + "[...]"
+            + BitConverter.ToString(Data, Data.Length - (maxBytesToRender / 2));
         }
 
         public int CompareTo(IByteArrayValue? other) => this.CompareTo((object?)other);

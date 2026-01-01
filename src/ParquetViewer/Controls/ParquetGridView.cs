@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -100,10 +101,11 @@ namespace ParquetViewer.Controls
                         var cellValue = this[column.Index, i].Value;
                         if (cellValue != DBNull.Value)
                         {
-                            var isImage = ((IByteArrayValue)cellValue).ToImage(out _);
+                            var isImage = ((IByteArrayValue)cellValue).ToImage(out var image);
                             if (isImage)
                             {
                                 column.DefaultCellStyle = GetHyperlinkCellStyle(column);
+                                image?.Dispose();
                             }
                             break;
                         }
@@ -212,19 +214,19 @@ namespace ParquetViewer.Controls
                 {
                     if (_contextMenu is null)
                     {
-                        var copy = new ToolStripMenuItem("Copy", this.CopyToClipboardIcon);
+                        var copy = new ToolStripMenuItem(Resources.Strings.CopyToClipboardText, this.CopyToClipboardIcon);
                         copy.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(false);
                         };
 
-                        var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
+                        var copyWithHeaders = new ToolStripMenuItem(Resources.Strings.CopyToClipboardWithHeadersText);
                         copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(true);
                         };
 
-                        var copyAsWhere = new ToolStripMenuItem("Copy as WHERE...", this.CopyAsWhereIcon);
+                        var copyAsWhere = new ToolStripMenuItem(Resources.Strings.CopyAsWhereConditionText, this.CopyAsWhereIcon);
                         copyAsWhere.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboardAsWhereCondition();
@@ -241,6 +243,26 @@ namespace ParquetViewer.Controls
                     }
 
                     _contextMenu.Show(this, new Point(e.X, e.Y));
+                }
+            }
+            else if (e.Button == MouseButtons.Middle)
+            {
+                //TODO: Add some kind of in-app notification to inform users of this useful shortcut
+                //Add a shortcut to open images easily when data conforms to the huggingface format
+                //https://huggingface.co/docs/hub/en/datasets-image#parquet-format
+                int rowIndex = this.HitTest(e.X, e.Y).RowIndex;
+                int columnIndex = this.HitTest(e.X, e.Y).ColumnIndex;
+
+                if (rowIndex >= 0 && columnIndex >= 0
+                    && this[columnIndex, rowIndex].Value is IStructValue structValue
+                    && structValue.IsHuggingFaceImageFormat(out var data))
+                {
+                    using var ms = new System.IO.MemoryStream(data);
+                    var image = Image.FromStream(ms); //quick peek form will dispose of this image when closed
+
+                    var uniqueCellTag = Guid.NewGuid();
+                    var quickPeekForm = new QuickPeekForm(this.Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
+                    ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
                 }
             }
 
@@ -334,11 +356,7 @@ namespace ParquetViewer.Controls
             {
                 dataType = QuickPeekEvent.DataTypeId.Struct;
 
-                var dt = structValue.Data.Table.Clone();
-                var row = dt.NewRow();
-                row.ItemArray = structValue.Data.ItemArray;
-                dt.Rows.Add(row);
-
+                var dt = structValue.ToDataTable();
                 quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
             else if (clickedCell.Value is IByteArrayValue byteArray && byteArray.ToImage(out var image))
@@ -352,6 +370,12 @@ namespace ParquetViewer.Controls
                 return;
             }
 
+            ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
+        }
+
+        private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell,
+            Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
+        {
             clickedCell.Tag = uniqueCellTag;
 
             quickPeekForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
@@ -390,15 +414,15 @@ namespace ParquetViewer.Controls
 
             quickPeekForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
             {
-                if (openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var quickPeekForm)
+                if (openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var quickPeekForm)
                     && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
                 {
-                    openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex));
+                    openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex));
                 }
             };
 
-            openQuickPeekForms.Remove((e.RowIndex, e.ColumnIndex)); //Remove any leftover value if the user navigated the file
-            openQuickPeekForms.Add((e.RowIndex, e.ColumnIndex), quickPeekForm);
+            openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex)); //Remove any leftover value if the user navigated the file
+            openQuickPeekForms.Add((clickedCell.RowIndex, clickedCell.ColumnIndex), quickPeekForm);
             quickPeekForm.Show(this.Parent ?? this);
             QuickPeekEvent.FireAndForget(dataType);
         }
@@ -410,6 +434,21 @@ namespace ParquetViewer.Controls
                 this.CopySelectionToClipboard(false);
                 e.Handled = true;
             }
+            //Fix a rare bug where the horizontal scroll won't move all the way to the right sometimes with keyboard shortcuts (#156)
+            else if (
+                e.KeyValue == (int)Keys.End ||
+                (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.Right))
+            )
+            {
+                //We don't set e.Handled = true here so the DGV can perform its own handling as well.
+                this.FirstDisplayedScrollingColumnIndex = this.Columns.Count - 1;
+                if (e.KeyValue == (int)Keys.End && e.Modifiers.HasFlag(Keys.Control))
+                {
+                    //Need to also scroll to vertical bottom in this case
+                    this.FirstDisplayedScrollingRowIndex = this.RowCount - 1;
+                }
+            }
+
             base.OnKeyDown(e);
         }
 
@@ -476,8 +515,8 @@ namespace ParquetViewer.Controls
             //In order to get full cell values into the clipboard during a copy to
             //clipboard operation we need to skip the truncation formatting below 
             var skipTruncation = this.isCopyingToClipboard
-                || e.FormattingApplied; //Also exit early if we already formatted the value above
-
+                || e.FormattingApplied //Also exit early if we already formatted the value above
+                || e.Value == DBNull.Value; //Also exit if null as there's nothing to format
             if (skipTruncation)
             {
                 return;
@@ -495,6 +534,11 @@ namespace ParquetViewer.Controls
             else if (cellValueType.ImplementsInterface<IStructValue>() && e.Value is IStructValue structValue)
             {
                 e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+                e.FormattingApplied = true;
+            }
+            else if (cellValueType.ImplementsInterface<IListValue>() && e.Value is IListValue listValue)
+            {
+                e.Value = listValue.ToString()!.Left(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL - 3, "...");
                 e.FormattingApplied = true;
             }
         }
@@ -688,6 +732,11 @@ namespace ParquetViewer.Controls
                     //Allow longer than preferred width if header is longer
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
+                else if (this.Columns[i].CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell))
+                {
+                    this.Columns[i].Width = Math.Min(Math.Max(240, newColumnSize), maxWidth);
+                    return;
+                }
                 else if (gridTable.Columns[i].DataType.ImplementsInterface<IByteArrayValue>()
                     && this.byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
                 {
@@ -752,7 +801,20 @@ namespace ParquetViewer.Controls
             }
             try
             {
-                Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+                var clipboardContent = this.GetClipboardContent();
+                if (clipboardContent is not null) //Not sure why it would ever be null but saw some exceptions in Amplitude so added this check here to be safe.
+                    Clipboard.SetDataObject(clipboardContent, true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+            }
+            catch (ExternalException ex) //This can happen if the user spams CTRL+C
+            {
+                MessageBox.Show(this,
+                    ex.Message,
+                    Resources.Errors.CopyToClipboardErrorTitle,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception)
+            {
+                throw;
             }
             finally
             {
@@ -844,8 +906,10 @@ namespace ParquetViewer.Controls
             }
             else
             {
-                MessageBox.Show("The selected data is too large. Please select less cells.",
-                    "Copy to clipboard failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    Resources.Errors.CopyAsWhereTooLargeErrorMessage,
+                    Resources.Errors.CopyAsWhereTooLargeErrorTitle, 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -962,7 +1026,8 @@ namespace ParquetViewer.Controls
         private void ShowDisplayFormatOptions(int columnIndex)
         {
             //If this is a byte array column, show available formatting options
-            if (this.Columns[columnIndex].ValueType.ImplementsInterface<IByteArrayValue>())
+            if (this.Columns[columnIndex].ValueType.ImplementsInterface<IByteArrayValue>()
+                && this.Columns[columnIndex].CellTemplate.GetType() != typeof(AudioPlayerDataGridViewCell))
             {
                 const int RECORDS_TO_INTERSECT_COUNT = 8;
 
@@ -1011,6 +1076,7 @@ namespace ParquetViewer.Controls
 
                     toolstripMenuItem.Checked = displayFormat == supportedFormat;
                 }
+
                 columnHeaderContextMenu.Show(Cursor.Position);
             }
             else if (this.Columns[columnIndex].ValueType == typeof(float) || this.Columns[columnIndex].ValueType == typeof(double))
@@ -1021,7 +1087,7 @@ namespace ParquetViewer.Controls
                 if (!floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                     displayFormat = default;
 
-                var scientificNotationMenuItem = new ToolStripMenuItem("Scientific")
+                var scientificNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalScientificFormatting)
                 { Checked = displayFormat == FloatDisplayFormat.Scientific };
                 scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
@@ -1037,7 +1103,7 @@ namespace ParquetViewer.Controls
                 };
                 columnHeaderContextMenu.Items.Add(scientificNotationMenuItem);
 
-                var decimalNotationMenuItem = new ToolStripMenuItem("Decimal")
+                var decimalNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalFormatting)
                 { Checked = displayFormat == FloatDisplayFormat.Decimal };
                 decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
@@ -1170,6 +1236,70 @@ namespace ParquetViewer.Controls
             {
                 return byteArrayValue.ToStringTruncated(desiredLength);
             }
+        }
+
+        protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
+        {
+            if (this.DataSource is not DataTable dataTable)
+                return;
+
+            //Check for audio data
+            foreach (DataGridViewColumn column in this.Columns)
+            {
+                if (column.ValueType == typeof(IByteArrayValue))
+                {
+                    var isAudioColumn = false;
+                    var tryCount = 0;
+                    for (var i = 0; i < dataTable.Rows.Count; i++)
+                    {
+                        if (tryCount > 1)
+                            break; //give up after checking a few non-null values
+
+                        var value = dataTable.Rows[i][column.Name];
+                        if (value == DBNull.Value)
+                            continue;
+
+                        byte[] data = ((IByteArrayValue)value).Data;
+                        if (AudioPlayerDataGridViewCell.IsAudio(data, out var _))
+                        {
+                            isAudioColumn = true;
+                            break;
+                        }
+                        tryCount++;
+                    }
+
+                    if (isAudioColumn)
+                    {
+                        //This is technically a hack as the column was created with AutoGenerateColumns = true
+                        //which means it's a DataGridViewTextBoxColumn. Changing the cell template to this causes
+                        //'System.ArgumentException' in System.Drawing.Common.dll at runtime. However these
+                        //exceptions "seem" to be innocuous so going to keep doing it this way for now.
+                        //Only other alternative is to stop using AutoGenerateColumns :/
+                        column.CellTemplate = new AudioPlayerDataGridViewCell();
+                    }
+                }
+            }
+        }
+
+        public void DisposeAudioCells()
+        {
+            foreach (var audioColumn in this.Columns.Cast<DataGridViewColumn>()
+                .Where(column => column.CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell)))
+            {
+                foreach (DataGridViewRow row in this.Rows)
+                {
+                    row.Cells[audioColumn.Index].Dispose();
+                }
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
+            //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
+            this.DisposeAudioCells();
+
+            base.Dispose(disposing);
         }
 
         private enum FloatDisplayFormat

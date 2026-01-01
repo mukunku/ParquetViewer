@@ -3,6 +3,8 @@ using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.Net.Http;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -10,7 +12,7 @@ namespace ParquetViewer
     public partial class CustomDateFormatInputForm : FormBase
     {
         public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
-
+        
         public CustomDateFormatInputForm()
         {
             InitializeComponent();
@@ -23,7 +25,7 @@ namespace ParquetViewer
 
         public void dateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(new ProcessStartInfo(Constants.DateFormatDocsURL) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(Resources.Strings.DotNetDateFormatHelpUrl) { UseShellExecute = true });
         }
 
         private void cancelButton_Clicked(object sender, EventArgs e)
@@ -49,7 +51,7 @@ namespace ParquetViewer
             }
             catch (Exception)
             {
-                this.livePreviewTextBox.Text = "invalid date format";
+                this.livePreviewTextBox.Text = Resources.Strings.InvalidDateFormatErrorText;
                 this.saveDateFormatButton.Enabled = false;
             }
         }
@@ -82,7 +84,10 @@ namespace ParquetViewer
             }
             else
             {
-                MessageBox.Show("Invalid date format. Please refer to the documentation for valid date format specifiers.", "Invalid Date Format", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    Resources.Errors.InvalidDateFormatErrorMessage, 
+                    Resources.Errors.InvalidDateFormatErrorTitle, 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

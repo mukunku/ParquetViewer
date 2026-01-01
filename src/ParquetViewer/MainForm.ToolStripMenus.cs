@@ -97,10 +97,10 @@ namespace ParquetViewer
 
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.SQLCreateTable);
                 Clipboard.SetText(sql);
-                MessageBox.Show(this, "Create table script copied to clipboard!", "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, Resources.Strings.CreateTableScriptCopiedToClipboardMessage, "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
-                MessageBox.Show(this, "Please select some fields first to get the SQL script", "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, Resources.Strings.CreateTableScriptFailedWithNoFieldsMessage, "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)

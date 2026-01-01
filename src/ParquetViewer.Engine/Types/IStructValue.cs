@@ -11,8 +11,10 @@ namespace ParquetViewer.Engine.Types
     {
         public string Name { get; }
 
-        public DataRow Data { get; }
+        public DataRowLite Data { get; }
 
         string ToStringTruncated(int desiredLength);
+
+        DataTable ToDataTable();
     }
 }

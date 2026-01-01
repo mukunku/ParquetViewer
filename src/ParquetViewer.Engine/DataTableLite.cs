@@ -1,11 +1,12 @@
 ﻿using ParquetViewer.Engine.Exceptions;
 using System.Data;
+using static ParquetViewer.Engine.DataTableLite;
 
-namespace ParquetViewer.Engine.ParquetNET
+namespace ParquetViewer.Engine
 {
-    internal class DataTableLite
+    public class DataTableLite
     {
-        internal record ColumnLite(string Name, Type Type, ParquetSchemaElement ParentSchema, int Ordinal);
+        public record ColumnLite(string Name, Type Type, IParquetSchemaElement ParentSchema, int Ordinal);
 
         private int _ordinal = 0;
         private readonly Dictionary<string, ColumnLite> _columns = new();
@@ -32,7 +33,7 @@ namespace ParquetViewer.Engine.ParquetNET
             this._rows = new(expectedRowCount);
         }
 
-        public ColumnLite AddColumn(string name, Type type, ParquetSchemaElement parent)
+        public ColumnLite AddColumn(string name, Type type, IParquetSchemaElement parent)
         {
             if (_rows.Count > 0)
             {
@@ -48,15 +49,6 @@ namespace ParquetViewer.Engine.ParquetNET
         {
             var row = new object[Columns.Count];
             _rows.Add(row);
-        }
-
-        public ColumnLite GetColumn(string name)
-        {
-            if (_columns.TryGetValue(name, out var value))
-            {
-                return value;
-            }
-            throw new KeyNotFoundException($"{nameof(name)}: {name}");
         }
 
         public DataTable ToDataTable(CancellationToken token, IProgress<int>? progress = null)
@@ -118,6 +110,79 @@ namespace ParquetViewer.Engine.ParquetNET
                     throw;
                 }
             }
+        }
+
+        //Gets a reference to the row data at the specified index
+        public DataRowLite GetRowAt(int index)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _rows.Count, nameof(index));
+
+            return new DataRowLite(_rows[index], _columns.Values, this);
+        }
+
+        public DataTableLite Clone()
+        {
+            var clone = new DataTableLite();
+            foreach (var column in this.Columns.Values)
+            {
+                clone.AddColumn(column.Name, column.Type, column.ParentSchema);
+            }
+            return clone;
+        }
+    }
+
+    public class DataRowLite
+    {
+        public Dictionary<string, ColumnLite> Columns { get; }
+        public object[] Row { get; }
+        public DataTableLite Table { get; }
+
+        public DataRowLite(object[] data, IEnumerable<ColumnLite> columns, DataTableLite table)
+        {
+            ArgumentNullException.ThrowIfNull(data);
+            ArgumentNullException.ThrowIfNull(columns);
+            ArgumentNullException.ThrowIfNull(table);
+
+            Table = table;
+            Row = data;
+            Columns = columns.ToDictionary(c => c.Name);
+            if (Row.Length != Columns.Count)
+            {
+                throw new ArgumentException($"Data length {data.Length} doesn't match number of columns {columns.Count()}", nameof(data));
+            }
+        }
+
+        public DataTable ToDataTable()
+        {
+            var dt = new DataTable();
+            foreach (var column in this.Columns)
+            {
+                dt.Columns.Add(new DataColumn(column.Key, column.Value.Type));
+            }
+            var row = dt.NewRow();
+            row.ItemArray = this.Row;
+            dt.Rows.Add(row);
+            return dt;
+        }
+
+        public object GetValue(string columnName)
+        {
+            if (!this.Columns.ContainsKey(columnName))
+            {
+                throw new IndexOutOfRangeException($"Column `{columnName}` not found");
+            }
+
+            var index = 0;
+            foreach (var column in this.Columns.Keys)
+            {
+                if (column.Equals(columnName))
+                {
+                    return this.Row[index];
+                }
+                index++;
+            }
+            throw new IndexOutOfRangeException($"Could not get value for column `{columnName}`");
         }
     }
 }

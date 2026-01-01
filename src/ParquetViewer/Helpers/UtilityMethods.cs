@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers
 {
@@ -61,6 +65,38 @@ namespace ParquetViewer.Helpers
             {
                 return false;
             }
+        }
+
+        public static bool TryParseCultureInfo(string? cultureString, [NotNullWhen(true)] out CultureInfo? cultureInfo)
+        {
+            if (string.IsNullOrWhiteSpace(cultureString))
+                throw new ArgumentNullException(nameof(cultureString));
+
+            try
+            {
+                cultureInfo = new CultureInfo(cultureString);
+                return true;
+            }
+            catch (CultureNotFoundException)
+            {
+                cultureInfo = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Starts a new ParquetViewer instance and terminates the current one.
+        /// </summary>
+        public static void RestartApplication()
+        {
+            //Start a new ParquetViewer instance
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.UseShellExecute = true; // Do not wait - make the process standalone
+            startInfo.FileName = Application.ExecutablePath;
+            Process.Start(startInfo);
+
+            //Terminate this instance
+            Application.Exit();
         }
 
         /// <summary>

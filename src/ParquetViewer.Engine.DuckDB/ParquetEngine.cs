@@ -149,13 +149,9 @@ namespace ParquetViewer.Engine.DuckDB
                 {
                     return new StructValue();
                 }
-                else if (value.GetType().IsPrimitive)
+                else //primitive value
                 {
                     return value;
-                }
-                else
-                {
-                    throw new UnsupportedFieldException($"Unsupported field type: {value.GetType().Name}");
                 }
             }
         }

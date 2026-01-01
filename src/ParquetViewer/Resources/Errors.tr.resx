@@ -1,0 +1,250 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CopyRawMetadataFailedErrorMessage" xml:space="preserve">
+    <value>Metadayı panoya kopyalarken bir hata oluştu. Veriyi dosyaya kaydetmek ister miydiniz?</value>
+  </data>
+  <data name="CopyRawMetadataFailedErrorTitle" xml:space="preserve">
+    <value>Kopyalama hatası</value>
+  </data>
+  <data name="FieldListGenerationError" xml:space="preserve">
+    <value>Alan listesi oluşturulurken bir hata oldu.</value>
+  </data>
+  <data name="FileAssociationFailedErrorMessageFormat" xml:space="preserve">
+    <value>Birşey ters gitti (Hata kodu: {0}). ParquetViewer'ı yönetici olarak çaliştırıp tekrar deneyin.</value>
+  </data>
+  <data name="FileAssociationFailedErrorTitle" xml:space="preserve">
+    <value>Uzanti ilişkilendirmesi başarısız oldu</value>
+  </data>
+  <data name="GenericErrorMessage" xml:space="preserve">
+    <value>Birşey ters gitti</value>
+  </data>
+  <data name="InvalidDateFormatErrorMessage" xml:space="preserve">
+    <value>Geçersiz tarih formatı. Geçerli format dizeleri için lütfen dökümantasyona bakın.</value>
+  </data>
+  <data name="InvalidDateFormatErrorTitle" xml:space="preserve">
+    <value>Geçersiz Tarih Formatı</value>
+  </data>
+  <data name="InvalidQueryErrorTitle" xml:space="preserve">
+    <value>Geçersiz Sorgu</value>
+  </data>
+  <data name="MetadataReadErrorMessage" xml:space="preserve">
+    <value>Dosyanın metadatasını okurken bir hata oluştu.</value>
+  </data>
+  <data name="MetadataReadErrorTitle" xml:space="preserve">
+    <value>Metadata Hatası</value>
+  </data>
+  <data name="NestedListOfTypeNotSupportedMessageFormat" xml:space="preserve">
+    <value>{1} içeren {0} alanlar şu anda desteklenmiyor</value>
+  </data>
+  <data name="NoFieldsFoundErrorMessage" xml:space="preserve">
+    <value>Seçilen dosya/klasör hiç alan içermiyor.</value>
+  </data>
+  <data name="NoFieldsFoundErrorTitle" xml:space="preserve">
+    <value>Alan bulunamadı</value>
+  </data>
+  <data name="NoThriftMetadataAvailableErrorMessage" xml:space="preserve">
+    <value>Thrift metadata bulunamadı</value>
+  </data>
+  <data name="OpenFileNoLongerExistsErrorMessageFormat" xml:space="preserve">
+    <value>Belirtilen dosya/klasör artık bulunamıyor: {0}Lütfen başka bir dosya veya klasör açın.</value>
+  </data>
+  <data name="ParquetSchemaReadErrorMessage" xml:space="preserve">
+    <value>Parquet şeması okunamadı.</value>
+  </data>
+  <data name="SelectAtLeastOneFieldErrorMessage" xml:space="preserve">
+    <value>En az bir alan seçin</value>
+  </data>
+  <data name="SelectAtLeastOneFieldErrorTitle" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="StructWithUnsupportedFieldErrorMessageFormat" xml:space="preserve">
+    <value>Struct `{0}` desteklenmeyen bir alan içeriyor: `{1}`</value>
+  </data>
+  <data name="TooManyColumnsXlsErrorMessageFormat" xml:space="preserve">
+    <value>.xls dosya formatı en fazla {0} sütun desteklemektedir.
+
+Lütfen farklı bir dosya tipi seçin veya kaydetmeye çalıştığınız alan sayısını azaltın. Alan sayınız: {1} </value>
+  </data>
+  <data name="TooManyColumnsErrorTitle" xml:space="preserve">
+    <value>Çok fazla sütun</value>
+  </data>
+  <data name="TooManyColumnsXlsxErrorMessageFormat" xml:space="preserve">
+    <value>.xlsx dosya formatı en fazla {0} sütun desteklemektedir.
+
+Lütfen farklı bir dosya tipi seçin veya kaydetmeye çalıştığınız alan sayısını azaltın. Alan sayınız: {1} </value>
+  </data>
+  <data name="UnknownFieldTypeErrorMessage" xml:space="preserve">
+    <value>Bilinmeyen alan tipi</value>
+  </data>
+  <data name="UnsupportedExportTypeFormat" xml:space="preserve">
+    <value>Desteklenmeyen dosya tipi: '{0}'</value>
+  </data>
+  <data name="ExportFailedErrorTitle" xml:space="preserve">
+    <value>Dosyaya aktarım başarısız oldu</value>
+  </data>
+  <data name="NoValidParquetFilesFoundErrorMessage" xml:space="preserve">
+    <value>Geçerli parquet dosyası bulunamadı. Bulunan geçersiz dosyalar:</value>
+  </data>
+  <data name="SomeInvalidParquetFilesFoundErrorMessage" xml:space="preserve">
+    <value>Bazı parquet dosyaları yüklenemedi. Bulunan geçersiz dosyalar:</value>
+  </data>
+  <data name="UnexpectedFileReadErrorMessageFormat" xml:space="preserve">
+    <value>Parquet dosyası okunamadı.
+
+Sorun devam ederse lütfen projenin GitHub repo'suna bildirmeyi düşünün: Yardım → Hakkında
+
+{0}</value>
+  </data>
+  <data name="MultipleSchemasDetectedErrorMessage" xml:space="preserve">
+    <value>Birden fazla şema bulundu.</value>
+  </data>
+  <data name="MalformedFieldErrorMessageFormat" xml:space="preserve">
+    <value>{0}
+
+Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin GitHub repo'sunda sorunu bildirin: Yardım → Hakkında</value>
+  </data>
+  <data name="DecimalValueTooLargeErrorTitle" xml:space="preserve">
+    <value>Decimal değeri çok büyük</value>
+  </data>
+  <data name="DecimalValueTooLargeErrorMessageFormat" xml:space="preserve">
+    <value>DECIMAL({1}, {2}) tipli alan `{0}` ParquetViewer'ın desteklediği aralığın dışında bulunuyor: DECIMAL({3}, {4}) ve DECIMAL({3}, 0)</value>
+  </data>
+  <data name="MultipleSchemasDetectedEntriesErrorMessageFormat" xml:space="preserve">
+    <value>ŞEMA-{0} ALANLARI (TOP 5):</value>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorMessage" xml:space="preserve">
+    <value>Çok fazla veri seçili. Lütfen daha az hücre seçin.</value>
+  </data>
+  <data name="CopyAsWhereTooLargeErrorTitle" xml:space="preserve">
+    <value>Panoya kopyalama başarısız oldu</value>
+  </data>
+  <data name="InvalidQueryErrorMessage" xml:space="preserve">
+    <value>Sorgu geçerli gözükmüyor.</value>
+  </data>
+  <data name="UnexpectedAssemblyVersionErrorFormat" xml:space="preserve">
+    <value>Beklenmedik bir program sürümü ile karşılaşıldı: {0}</value>
+  </data>
+  <data name="CopyToClipboardErrorTitle" xml:space="preserve">
+    <value>Panoya kopyalama başarısız oldu</value>
+  </data>
+  <data name="CopyErrorMessageText" xml:space="preserve">
+    <value>(Kopyalamak için CTRL+C)</value>
+  </data>
+</root>

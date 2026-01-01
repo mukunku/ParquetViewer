@@ -1,0 +1,100 @@
+name: Update translation template
+
+on:
+ pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: write
+
+jobs:
+  generate_and_commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Checkout the branch associated with the pull request
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Run PowerShell script
+        shell: pwsh
+        run: |
+            # Find all .resx files for Turkish (tr)
+            $turkishResxFiles = Get-ChildItem -Path . -Recurse -Filter "*.tr.resx"
+        
+            # Array to hold all combined translation entries
+            $combinedTranslations = @()
+
+            foreach ($turkishFile in $turkishResxFiles) {
+                Write-Host "Processing Turkish file: $($turkishFile.FullName)"
+          
+                # Determine the path for the corresponding default (English) .resx file
+                $englishFilePath = $turkishFile.FullName.Replace(".tr.resx", ".resx")
+
+                $turkishData = @{}
+                $englishData = @{}
+                $englishComments = @{}
+
+                # Parse the Turkish RESX file for string resources
+                [xml]$turkishContent = Get-Content -Path $turkishFile.FullName
+                $turkishContent.root.data | ForEach-Object {
+                if (-not $_.HasAttribute('type')) {
+                    $turkishData[$_.name] = $_.value
+                }
+                }
+
+                # Check for and parse the English RESX file for corresponding string resources
+                if (Test-Path $englishFilePath) {
+                Write-Host "Found English file: $englishFilePath"
+                [xml]$englishContent = Get-Content -Path $englishFilePath
+                $englishContent.root.data | ForEach-Object {
+                    if (-not $_.HasAttribute('type')) {
+                    $englishData[$_.name] = $_.value
+                    $englishComments[$_.name] = $_.comment
+                    }
+                }
+                } else {
+                Write-Warning "Could not find corresponding English file for $($turkishFile.Name)"
+                }
+
+                # Use only the keys found in the Turkish file as the source of truth
+                $turkishKeys = $turkishData.Keys | Sort-Object
+
+                foreach ($key in $turkishKeys) {
+                if (!$englishData[$key]) {
+                    # skip entries that have no english value
+                    continue;
+                }
+
+                $combinedEntry = [PSCustomObject]@{
+                    File         = $turkishFile.Name.Replace(".tr.resx", ".resx")
+                    Key          = $key
+                    Comment      = $englishComments[$key]
+                    EnglishValue = $englishData[$key]
+                    TurkishValue = $turkishData[$key]
+                    NewLanguageValue = ""
+                }
+                $combinedTranslations += $combinedEntry
+                }
+            }
+            
+            # Export the collected translations to a CSV file
+            $combinedTranslations | Export-Csv -Path ".github/ISSUE_TEMPLATE/translation_template.csv" -NoTypeInformation -Encoding UTF8
+            Write-Host "Successfully generated translation_report.csv with $($combinedTranslations.Count) entries."
+
+      - name: Commit and push if there are changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add ".github/ISSUE_TEMPLATE/translation_template.csv"
+          # The following command exits with 0 if there are no changes, and 1 if there are.
+          # This will cause the step to fail if there are no changes, which is what we want.
+          git diff --staged --quiet && exit 0 || git commit -m "Auto-generated file update"
+          git push

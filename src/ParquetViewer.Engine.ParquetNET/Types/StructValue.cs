@@ -1,6 +1,6 @@
 ﻿using ParquetViewer.Engine.Types;
 using System.Data;
-using System.Numerics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ParquetViewer.Engine.ParquetNET.Types
 {
@@ -8,19 +8,22 @@ namespace ParquetViewer.Engine.ParquetNET.Types
     {
         public string Name { get; }
 
-        public DataRow Data { get; }
+        public DataRowLite Data { get; }
 
-        public StructValue(string name, DataRow data)
+        internal bool IsList { get; set; }
+
+        //TODO: Add a public constructor?
+        internal StructValue(string name, DataRowLite data)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Data = data ?? throw new ArgumentNullException(nameof(data));
         }
 
-        public override string ToString() => ToJSON();
+        public override string ToString() => ToJSON(out _);
 
-        public string ToStringTruncated(int desiredLength) => ToJSON(desiredLength);
+        public string ToStringTruncated(int desiredLength) => ToJSON(out _, desiredLength);
 
-        private string ToJSON(int? desiredLength = null)
+        private string ToJSON(out bool success, int? desiredLength = null)
         {
             try
             {
@@ -29,14 +32,14 @@ namespace ParquetViewer.Engine.ParquetNET.Types
                 using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
                 {
                     jsonWriter.WriteStartObject();
-                    for (var i = 0; i < this.Data.Table.Columns.Count; i++)
+                    for (var i = 0; i < this.Data.Columns.Count; i++)
                     {
-                        string columnName = this.Data.Table.Columns[i].ColumnName
+                        string columnName = this.Data.Columns.Values.ElementAt(i).Name
                             //Remove the parent field name from columns when rendering the data as json in the gridview cell.
                             .Replace($"{this.Name}/", string.Empty);
                         jsonWriter.WritePropertyName(columnName);
 
-                        object value = this.Data[i];
+                        object value = this.Data.Row[i];
                         WriteValue(jsonWriter, value, desiredLength is not null);
 
                         if (desiredLength > 0 && jsonWriter.ApproximateStringLengthSoFar > desiredLength)
@@ -56,13 +59,17 @@ namespace ParquetViewer.Engine.ParquetNET.Types
                 {
                     json += "[...]";
                 }
+                success = true;
                 return json;
             }
             catch (Exception ex)
             {
-                return $"Error while deserializing field '{Name}': {Environment.NewLine}{Environment.NewLine}{ex}";
+                success = false;
+                return $"Error while serializing Struct field '{Name}': {Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
+
+        public DataTable ToDataTable() => this.Data.ToDataTable();
 
         public static void WriteValue(Utf8JsonWriterWithRunningLength jsonWriter, object value, bool truncateForDisplay)
         {
@@ -83,14 +90,17 @@ namespace ParquetViewer.Engine.ParquetNET.Types
             {
                 jsonWriter.WriteBooleanValue(@bool);
             }
-            else if (IsNumber(value.GetType()))
+            else if (value.GetType().IsNumber())
             {
                 jsonWriter.WriteNumberValue(Convert.ToDecimal(value));
             }
             else if (value is StructValue @struct)
             {
-                //Structs already generate JSON on .ToString()
-                jsonWriter.WriteRawValue(@struct.ToString());
+                var json = @struct.ToJSON(out var success);
+                if (success)
+                    jsonWriter.WriteRawValue(json);
+                else
+                    jsonWriter.WriteStringValue(json);
             }
             else if (value is MapValue map)
             {
@@ -108,8 +118,12 @@ namespace ParquetViewer.Engine.ParquetNET.Types
             }
             else if (value is ListValue list)
             {
-                //Hopefully lists also generate valid JSON on .ToString()
-                jsonWriter.WriteRawValue(list.ToString());
+                jsonWriter.WriteStartArray();
+                foreach (var item in list)
+                {
+                    WriteValue(jsonWriter, item, truncateForDisplay);
+                }
+                jsonWriter.WriteEndArray();
             }
             else if (value is ByteArrayValue byteArray /*&& truncateForDisplay //should use the entire byte array if 
                                                         * we're not truncating for display? Seems kind of unreasonable 
@@ -142,53 +156,37 @@ namespace ParquetViewer.Engine.ParquetNET.Types
             }
         }
 
-        /// <summary>
-        /// Returns true if the type is a number type.
-        /// </summary>
-        private static bool IsNumber(Type type) =>
-            Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
-
-        private IReadOnlyCollection<string>? _columnNames = null;
-        private IReadOnlyCollection<string> GetFieldNames() =>
-            _columnNames ??= GetColumns(Data).Select(c => c.ColumnName).ToList().AsReadOnly();
+        private IReadOnlyCollection<string> FieldNames => Data.Columns.Keys;
 
         /// <summary>
         /// Sorts by field names first, then by values
         /// </summary>
         public int CompareTo(StructValue? other)
         {
-            if (other?.Data is null || other.GetFieldNames().Count == 0)
+            if (other?.Data is null || other.FieldNames.Count == 0)
                 return 1;
 
-            if (Data is null || GetFieldNames().Count == 0)
+            if (Data is null || FieldNames.Count == 0)
                 return -1;
 
-            var otherColumnNames = string.Join("|", other.GetFieldNames());
-            var columnNames = string.Join("|", this.GetFieldNames());
+            var otherColumnNames = string.Join("|", other.FieldNames);
+            var columnNames = string.Join("|", this.FieldNames);
 
             int schemaComparison = columnNames.CompareTo(otherColumnNames);
             if (schemaComparison != 0)
                 return schemaComparison;
 
-            int fieldCount = GetFieldNames().Count;
+            int fieldCount = FieldNames.Count;
             for (var i = 0; i < fieldCount; i++)
             {
-                var otherValue = other.Data[i];
-                var value = Data[i];
+                var otherValue = other.Data.Row[i];
+                var value = Data.Row[i];
                 int comparison = Helpers.CompareTo(value, otherValue);
                 if (comparison != 0)
                     return comparison;
             }
 
             return 0; //Both structs appear equal
-        }
-
-        private static IEnumerable<DataColumn> GetColumns(DataRow dataRow)
-        {
-            foreach (DataColumn column in dataRow.Table.Columns)
-            {
-                yield return column;
-            }
         }
 
         public int CompareTo(object? obj)

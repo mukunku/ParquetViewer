@@ -31,7 +31,6 @@ namespace ParquetViewer
         private void MetadataViewer_Load(object sender, EventArgs e)
         {
             this.mainBackgroundWorker.RunWorkerAsync();
-            this.copyRawMetadataToolTip.SetToolTip(this.copyRawThriftMetadataButton, "Exports full, raw Thrift metadata to the clipboard.");
         }
 
         private void AddTab(string tabName, string text)
@@ -65,7 +64,7 @@ namespace ParquetViewer
                 metadataResult.Add((THRIFT_METADATA, json));
             }
             else
-                metadataResult.Add((THRIFT_METADATA, "No thrift metadata available"));
+                metadataResult.Add((THRIFT_METADATA, Resources.Errors.NoThriftMetadataAvailableErrorMessage));
 
             if (_parquetEngine.CustomMetadata != null)
             {
@@ -97,8 +96,10 @@ namespace ParquetViewer
         {
             if (e.Error != null)
             {
-                MessageBox.Show($"Something went wrong while reading the file's metadata: " +
-                    $"{Environment.NewLine}{e.Error}", "Metadata Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    Resources.Errors.MetadataReadErrorMessage + Environment.NewLine + e.Error,
+                    Resources.Errors.MetadataReadErrorTitle, 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
@@ -135,16 +136,19 @@ namespace ParquetViewer
             try
             {
                 Clipboard.SetText(rawJson);
-                MessageBox.Show("Raw Thrift metadata copied to clipboard.", "ParquetViewer");
+                MessageBox.Show(Resources.Strings.ThriftMetadataCopiedToClipboardMessage, "ParquetViewer");
             }
             catch (Exception)
             {
-                var selection = MessageBox.Show("Failed to copy metadata to your clipboard. Save to a file instead?", "Copy error", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                var selection = MessageBox.Show(this,
+                    Resources.Errors.CopyRawMetadataFailedErrorMessage, 
+                    Resources.Errors.CopyRawMetadataFailedErrorTitle, 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (selection == DialogResult.Yes)
                 {
                     using var saveFileDialog = new SaveFileDialog();
                     saveFileDialog.Filter = "JSON file|*.json";
-                    saveFileDialog.Title = "Save raw metadata";
+                    saveFileDialog.Title = Resources.Strings.SaveRawMetadataToFileDialogTitle;
                     saveFileDialog.ShowDialog();
 
                     if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
@@ -153,7 +157,10 @@ namespace ParquetViewer
                         using var writer = new StreamWriter(fileStream);
                         writer.Write(rawJson);
 
-                        MessageBox.Show($"Metadata successfully exported to: {saveFileDialog.FileName}", "Export complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(this,
+                            Resources.Strings.MetadataSuccessfullyExportedToFileMessageFormat.Format(saveFileDialog.FileName),
+                            Resources.Strings.MetadataSuccessfullyExportedToFileMessageTitle, 
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }

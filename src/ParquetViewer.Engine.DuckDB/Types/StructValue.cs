@@ -12,7 +12,7 @@ namespace ParquetViewer.Engine.DuckDB.Types
     {
         public string Name => throw new NotImplementedException();
 
-        public DataRow Data => throw new NotImplementedException();
+        public DataRowLite Data => throw new NotImplementedException();
 
         public int CompareTo(IStructValue? other)
         {
@@ -20,6 +20,11 @@ namespace ParquetViewer.Engine.DuckDB.Types
         }
 
         public int CompareTo(object? obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataTable ToDataTable()
         {
             throw new NotImplementedException();
         }

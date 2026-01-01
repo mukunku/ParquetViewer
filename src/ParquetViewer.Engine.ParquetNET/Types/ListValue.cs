@@ -9,6 +9,8 @@ namespace ParquetViewer.Engine.ParquetNET.Types
         public IList Data { get; }
         public Type Type { get; private set; }
 
+        public int Length => Data.Count;
+
         public ListValue(Array data)
         {
             Data = data ?? throw new ArgumentNullException(nameof(data));
@@ -29,8 +31,6 @@ namespace ParquetViewer.Engine.ParquetNET.Types
                 }
             }
         }
-
-        public int Length => Data.Count;
 
         public override string ToString()
         {
@@ -54,7 +54,6 @@ namespace ParquetViewer.Engine.ParquetNET.Types
                     isFirst = false;
                 }
             }
-
             sb.Append(']');
             return sb.ToString();
         }
