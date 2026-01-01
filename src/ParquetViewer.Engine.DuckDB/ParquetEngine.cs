@@ -1,5 +1,7 @@
 ﻿using DuckDB.NET.Data;
+using ParquetViewer.Engine.DuckDB.Types;
 using ParquetViewer.Engine.Exceptions;
+using System.Collections;
 using System.Data;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
@@ -23,7 +25,8 @@ namespace ParquetViewer.Engine.DuckDB
 
         public Dictionary<string, string> CustomMetadata => throw new NotImplementedException();
 
-        public IParquetMetadata Metadata { get; }
+        private ParquetMetadata _metadata;
+        public IParquetMetadata Metadata => _metadata;
 
         private List<DuckDBField> _fields;
 
@@ -31,7 +34,7 @@ namespace ParquetViewer.Engine.DuckDB
         {
             this._inMemoryDB = db;
             this.Path = path;
-            this.Metadata = metadata;
+            this._metadata = metadata;
             this._fields = fields;
             this.RecordCount = recordCount;
         }
@@ -50,7 +53,6 @@ namespace ParquetViewer.Engine.DuckDB
                 var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(db, parquetFilePath);
                 var fields = await DuckDBHelper.GetFields(db, parquetFilePath);
                 var fileMetadata = await DuckDBHelper.GetFileMetadata(db, parquetFilePath);
-                var parquetSchema = await DuckDBHelper.GetParquetSchema(db, parquetFilePath);
                 return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), fileMetadata.NumRows);
             }
             catch (Exception)
@@ -79,13 +81,32 @@ namespace ParquetViewer.Engine.DuckDB
             await foreach (var row in this._inMemoryDB.QueryAsync(query))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 var values = new object[row.FieldCount];
                 row.GetValues(values);
 
+                //Convert values to our types
+                for (var columnIndex = 0; columnIndex < row.FieldCount; columnIndex++)
+                {
+                    values[columnIndex] = ConvertValueTypeIfNeeded(values[columnIndex]);
+
+                    //if (values[columnIndex] != DBNull.Value 
+                    //    && result.Columns[columnIndex].DataType == typeof(ListValue))
+                    //{
+                    //    var list = (IList)values[columnIndex];
+                    //    if (!list.GetType().IsGenericType)
+                    //    {
+                    //        throw new UnsupportedFieldException($"Unsupported List field `{result.Columns[columnIndex].ColumnName}`");
+                    //    }
+                    //    var listType = list.GetType().GetGenericArguments()[0];
+
+                    //    values[columnIndex] = new ListValue(list, listType);
+                    //}
+                }
+
                 //supposedly this is the fastest way to load data into a datatable https://stackoverflow.com/a/17123914/1458738
                 result.LoadDataRow(values, false);
-                
+
                 progress?.Report(row.FieldCount);
             }
             result.EndLoadData();
@@ -99,6 +120,44 @@ namespace ParquetViewer.Engine.DuckDB
                 }
                 return result;
             };
+
+            object ConvertValueTypeIfNeeded(object value)
+            {
+                if (value == DBNull.Value)
+                    return value;
+
+                if (value is IList list)
+                {
+                    if (!list.GetType().IsGenericType)
+                    {
+                        throw new UnsupportedFieldException($"Unsupported List field");
+                    }
+                    var listType = list.GetType().GetGenericArguments()[0];
+                    if (!listType.IsPrimitive)
+                    {
+                        var newList = new ArrayList(list.Count);
+                        foreach (var item in list)
+                        {
+                            newList.Add(ConvertValueTypeIfNeeded(item));
+                        }
+                        list = newList;
+                    }
+
+                    return new ListValue(list, listType);
+                }
+                else if (value is Dictionary<string, object?> @struct)
+                {
+                    return new StructValue();
+                }
+                else if (value.GetType().IsPrimitive)
+                {
+                    return value;
+                }
+                else
+                {
+                    throw new UnsupportedFieldException($"Unsupported field type: {value.GetType().Name}");
+                }
+            }
         }
 
         private DataTable CreateEmptyDataTable(List<string> selectedFields)
@@ -109,7 +168,18 @@ namespace ParquetViewer.Engine.DuckDB
                 if (!selectedFields.Contains(field.Name))
                     continue;
 
-                dataTable.Columns.Add(new DataColumn(field.Name, field.Type));
+                if (field.Type == typeof(ValueTuple))
+                {
+                    dataTable.Columns.Add(new DataColumn(field.Name, typeof(StructValue)));
+                }
+                else if (field.Type == typeof(List<>))
+                {
+                    dataTable.Columns.Add(new DataColumn(field.Name, typeof(ListValue)));
+                }
+                else //Primitive type
+                {
+                    dataTable.Columns.Add(new DataColumn(field.Name, field.Type));
+                }
             }
             return dataTable;
         }

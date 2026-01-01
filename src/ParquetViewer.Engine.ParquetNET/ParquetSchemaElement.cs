@@ -173,25 +173,22 @@ namespace ParquetViewer.Engine.ParquetNET
         public bool BelongsToListOfStructsField => this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
         public int NumberOfListParents => NonSystemFieldParents.Count(field => field.FieldType == FieldTypeId.List);
 
-        public System.Type Type => throw new NotImplementedException();
+        IParquetSchemaElement.FieldTypeId Type => FieldType switch
+        {
+            FieldTypeId.Primitive => IParquetSchemaElement.FieldTypeId.Primitive,
+            FieldTypeId.List => IParquetSchemaElement.FieldTypeId.List,
+            FieldTypeId.Struct => IParquetSchemaElement.FieldTypeId.Struct,
+            FieldTypeId.Map => IParquetSchemaElement.FieldTypeId.Map,
+            _ => throw new ArgumentOutOfRangeException(nameof(FieldType))
+        };
+
+        public bool IsPrimitive => FieldType == FieldTypeId.Primitive;
+
+        ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.Cast<IParquetSchemaElement>().ToList();
 
         public int? TypeLength => throw new NotImplementedException();
 
         public string LogicalType => throw new NotImplementedException();
-
-        public string RepetitionType => throw new NotImplementedException();
-
-        public string ConvertedType => throw new NotImplementedException();
-
-        ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.Cast<IParquetSchemaElement>().ToList();
-
-        IParquetSchemaElement.RepetitionTypeId IParquetSchemaElement.RepetitionType => SchemaElement.RepetitionType switch
-        {
-            FieldRepetitionType.REQUIRED => IParquetSchemaElement.RepetitionTypeId.Required,
-            FieldRepetitionType.OPTIONAL => IParquetSchemaElement.RepetitionTypeId.Optional,
-            FieldRepetitionType.REPEATED => IParquetSchemaElement.RepetitionTypeId.Repeated,
-            _ => throw new ArgumentOutOfRangeException(nameof(SchemaElement.RepetitionType))
-        };
 
         private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
             => new InvalidOperationException($"Can't get {fieldType} node from '{this.Parent?._systemFieldType}' " +

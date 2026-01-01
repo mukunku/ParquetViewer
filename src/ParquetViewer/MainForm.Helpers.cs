@@ -53,7 +53,7 @@ namespace ParquetViewer
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
-                    if (this._openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.Type.IsPrimitive) == true)
+                    if (this._openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true)
                     {
                         this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
                     }

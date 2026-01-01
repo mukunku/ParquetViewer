@@ -3,18 +3,23 @@
     public interface IParquetSchemaElement
     {
         string Path { get; }
-        Type Type { get; }
-        int? TypeLength { get; }
-        string LogicalType { get; }
-        RepetitionTypeId RepetitionType { get; }
-        string ConvertedType { get; }
         ICollection<IParquetSchemaElement> Children { get; }
+
+        public bool IsPrimitive { get; }
 
         public enum RepetitionTypeId
         {
             Required,
             Optional,
             Repeated
+        }
+
+        public enum FieldTypeId
+        {
+            Primitive,
+            List,
+            Struct,
+            Map
         }
     }
 }
