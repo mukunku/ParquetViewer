@@ -346,7 +346,7 @@ namespace ParquetViewer
             => Task.Run(() =>
                 {
                     using var fs = new FileStream(path, FileMode.OpenOrCreate);
-                    using var jsonWriter = new Engine.ParquetNET.Utf8JsonWriterWithRunningLength(fs);
+                    using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
 
                     jsonWriter.WriteStartArray();
                     foreach (DataRowView row in dataTable.DefaultView)
@@ -363,7 +363,7 @@ namespace ParquetViewer
                             jsonWriter.WritePropertyName(columnName);
 
                             object? value = row.Row.ItemArray[i];
-                            Engine.ParquetNET.Types.StructValue.WriteValue(jsonWriter, value!, false);
+                            Engine.Helpers.WriteValue(jsonWriter, value!, false);
                             progress.Report(1);
                         }
                         jsonWriter.WriteEndObject();
@@ -475,10 +475,10 @@ namespace ParquetViewer
                 sb.AppendLine(Resources.Errors.MultipleSchemasDetectedEntriesErrorMessageFormat.Format(schemaIndex++));
                 for (var i = 0; i < topCount; i++)
                 {
-                    if (i == schema.Fields.Count)
+                    if (i == schema.Count)
                         break;
 
-                    sb.AppendLine($"  {schema.Fields.ElementAt(i)}");
+                    sb.AppendLine($"  {schema.ElementAt(i)}");
                 }
 
                 if (schemaIndex > maxSchemasLimit)

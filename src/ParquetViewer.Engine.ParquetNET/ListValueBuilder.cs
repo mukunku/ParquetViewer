@@ -1,7 +1,7 @@
-﻿using ParquetViewer.Engine.Types;
+﻿using ParquetViewer.Engine.ParquetNET.Types;
 using System.Collections;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
     public class ListValueBuilder
     {
@@ -155,9 +155,8 @@ namespace ParquetViewer.Engine
                 }
             }
 
-            throw new NotImplementedException();
-            //var type = hasChildArrays ? typeof(ListValue) : _type;
-            //return new ListValue(convertedArray, type);
+            var type = hasChildArrays ? typeof(ListValue) : _type;
+            return new ListValue(convertedArray, type);
         }
 
         private class LinkedArrayList : ArrayList

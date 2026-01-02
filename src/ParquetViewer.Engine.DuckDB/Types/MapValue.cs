@@ -1,41 +1,13 @@
-﻿using ParquetViewer.Engine.Types;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections;
 
 namespace ParquetViewer.Engine.DuckDB.Types
 {
-    internal class MapValue : IMapValue
+    public class MapValue : MapValueBase
     {
-        public ArrayList Keys => throw new NotImplementedException();
-
-        public Type KeyType => throw new NotImplementedException();
-
-        public ArrayList Values => throw new NotImplementedException();
-
-        public Type ValueType => throw new NotImplementedException();
-
-        public int CompareTo(IMapValue? other)
+        public MapValue(ArrayList keys, Type keyType, ArrayList values, Type valueType)
+            : base(keys, keyType, values, valueType)
         {
-            throw new NotImplementedException();
-        }
 
-        public int CompareTo(object? obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerator<(object Key, object Value)> GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }

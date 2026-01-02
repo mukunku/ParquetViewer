@@ -9,10 +9,10 @@ namespace ParquetViewer.Engine.DuckDB
     {
         internal record DuckDBField(string Name, DuckDBType DuckDBType, Type Type);
 
-        public static async Task<List<DuckDBField>> GetFields(DuckDBConnection db, string parquetFilePath)
+        public static async Task<List<DuckDBField>> GetFields(DuckDBHandle db)
         {
             var fields = new List<DuckDBField>();
-            await foreach (var row in db.QueryAsync($"DESCRIBE TABLE '{parquetFilePath}';"))
+            await foreach (var row in db.Connection.QueryAsync($"DESCRIBE TABLE '{db.ParquetFilePath}';"))
             {
                 var columnName = row.GetString(0);
                 var columnTypeName = row.GetString(1);
@@ -25,9 +25,9 @@ namespace ParquetViewer.Engine.DuckDB
 
         internal record DuckDBParquetMetadata(string CreatedBy, long NumRows, long NumRowGroups,
             long ParquetVersion, string? EncryptionAlgorithm, string? FooterSigningKeyMetadata);
-        public static async Task<DuckDBParquetMetadata> GetFileMetadata(DuckDBConnection db, string parquetFilePath)
+        public static async Task<DuckDBParquetMetadata> GetFileMetadata(DuckDBConnection db, string parquetPath)
         {
-            await foreach (var row in db.QueryAsync($"SELECT * FROM parquet_file_metadata('{parquetFilePath}');"))
+            await foreach (var row in db.QueryAsync($"SELECT * FROM parquet_file_metadata('{parquetPath}');"))
             {
                 var createdBy = row.GetString(1);
                 var numRows = row.GetInt64(2);
@@ -53,17 +53,13 @@ namespace ParquetViewer.Engine.DuckDB
         {
             // This mapping is based on https://duckdb.net/docs/type-mapping.html
             // It handles simple types and parameterized types by checking the start of the string.
+            if (duckDBTypeName.EndsWith("[]")) return (DuckDBType.List, typeof(List<>));
+
             if (duckDBTypeName.StartsWith("DECIMAL")) return (DuckDBType.Decimal, typeof(decimal));
             if (duckDBTypeName.StartsWith("VARCHAR")) return (DuckDBType.Varchar, typeof(string));
             if (duckDBTypeName.StartsWith("LIST")) return (DuckDBType.List, typeof(List<>));
             if (duckDBTypeName.StartsWith("MAP")) return (DuckDBType.Map, typeof(Dictionary<,>));
-            if (duckDBTypeName.StartsWith("STRUCT"))
-            {
-                if (duckDBTypeName.EndsWith("[]"))
-                    return (DuckDBType.Struct, typeof(List<>));
-                else
-                    return (DuckDBType.Struct, typeof(ValueTuple));
-            }
+            if (duckDBTypeName.StartsWith("STRUCT")) return (DuckDBType.Struct, typeof(ValueTuple));
             if (duckDBTypeName.StartsWith("ENUM")) return (DuckDBType.Enum, typeof(string));
             if (duckDBTypeName.StartsWith("TIMESTAMP")) return (DuckDBType.Timestamp, typeof(DateTime));
 
@@ -92,15 +88,14 @@ namespace ParquetViewer.Engine.DuckDB
         }
 
         //DuckDB flattens the schema so we need to rebuild it into a tree structure.
-        internal static async Task<ParquetSchemaElement> GetParquetSchemaTreeAsync(DuckDBConnection db, string parquetFilePath)
+        public static async Task<ParquetSchemaElement> GetParquetSchemaTreeAsync(DuckDBHandle db)
         {
-            //TODO: generate schema tree here. List field will be flattened in the output of parquet_schema, so we need to reconstruct the tree.
-            var enumerable = db.QueryAsync($"SELECT * FROM parquet_schema('{parquetFilePath}');");
+            var enumerable = db.Connection.QueryAsync($"SELECT * FROM parquet_schema('{db.ParquetFilePath}');");
             var enumerator = enumerable.GetAsyncEnumerator();
 
             if (!await enumerator.MoveNextAsync())
             {
-                throw new InvalidOperationException("Failed to retrieve Parquet schema.");
+                throw new InvalidDataException("Failed to retrieve Parquet schema.");
             }
 
             var rootNode = ParquetSchemaElement.FromRow(enumerator.Current);

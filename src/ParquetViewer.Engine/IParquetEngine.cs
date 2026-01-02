@@ -1,4 +1,6 @@
-﻿using System.Data;
+﻿using ParquetViewer.Engine.Types;
+using System.Data;
+using System.Numerics;
 
 namespace ParquetViewer.Engine
 {

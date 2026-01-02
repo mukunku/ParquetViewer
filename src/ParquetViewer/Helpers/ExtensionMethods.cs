@@ -98,12 +98,6 @@ namespace ParquetViewer.Helpers
         public static bool IsSimple(this Type type)
             => TypeDescriptor.GetConverter(type).CanConvertFrom(typeof(string));
 
-        /// <summary>
-        /// Returns true if the type is a number type.
-        /// </summary>
-        public static bool IsNumber(this Type type) =>
-            System.Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
-
         public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
         {
             if (Enum.IsDefined(typeof(T), value))

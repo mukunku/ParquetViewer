@@ -114,7 +114,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
             var skippedFiles = new Dictionary<string, Exception>();
             var fileGroups = new Dictionary<ParquetSchema, List<ParquetReader>>();
-            foreach (var file in ListParquetFiles(folderPath))
+            foreach (var file in Engine.Helpers.ListParquetFiles(folderPath))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -150,17 +150,16 @@ namespace ParquetViewer.Engine.ParquetNET
                 //We found more than one type of schema.
                 foreach (var fileGroupList in fileGroups.Values)
                 {
-                    EZDispose(fileGroupList);
+                    Engine.Helpers.EZDispose(fileGroupList);
                 }
 
-                //TODO: Fix this nasty mess
                 throw new MultipleSchemasFoundException(fileGroups.Keys.ToList()
-                    .Select(schema => new ParquetSchemaX(schema.Fields.Select(f => f.Name).ToList())).Cast<IParquetSchema>().ToList());
+                    .Select(schema => schema.Fields.Select(f => f.Name).ToList()).ToList());
             }
             else if (skippedFiles.Count > 0)
             {
                 //We found one schema but some files couldn't be read
-                EZDispose(fileGroups.Values.First());
+                Engine.Helpers.EZDispose(fileGroups.Values.First());
                 throw new SomeFilesSkippedException(skippedFiles);
             }
 
@@ -184,52 +183,6 @@ namespace ParquetViewer.Engine.ParquetNET
             }
         }
 
-        private static IEnumerable<string> ListParquetFiles(string folderPath)
-        {
-            var parquetFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)
-                .Where(file =>
-                        file.EndsWith(".parquet") ||
-                        file.EndsWith(".parquet.gzip") ||
-                        file.EndsWith(".parquet.gz")
-                );
-
-            if (!parquetFiles.Any())
-            {
-                //Check for extensionless files
-                parquetFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories);
-            }
-
-            return parquetFiles.OrderBy(filename => filename);
-        }
-
-        private static void EZDispose(IEnumerable<IDisposable> disposables)
-        {
-            if (disposables is null)
-            {
-                return;
-            }
-
-            foreach (var disposable in disposables)
-            {
-                try
-                {
-                    disposable?.Dispose();
-                }
-                catch { /* Swallow */ }
-            }
-        }
-
-        public void Dispose() => EZDispose(_parquetFiles);
-
-        private class ParquetSchemaX : IParquetSchema
-        {
-            public IReadOnlyList<string> Fields { get; }
-
-            public ParquetSchemaX(IReadOnlyList<string> fields)
-            {
-                ArgumentNullException.ThrowIfNull(fields, nameof(fields));
-                Fields = fields;
-            }
-        }
+        public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles);
     }
 }

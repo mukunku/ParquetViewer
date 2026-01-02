@@ -5,7 +5,16 @@
         string Path { get; }
         ICollection<IParquetSchemaElement> Children { get; }
 
-        public bool IsPrimitive { get; }
+        bool IsPrimitive { get; }
+
+        FieldTypeId FieldType { get; }
+
+        IParquetSchemaElement GetListField();
+        IParquetSchemaElement GetListItemField();
+        IParquetSchemaElement GetSingleOrByName(string name);
+        IParquetSchemaElement GetMapKeyValueField();
+        IParquetSchemaElement GetMapKeyField();
+        IParquetSchemaElement GetMapValueField();
 
         public enum RepetitionTypeId
         {

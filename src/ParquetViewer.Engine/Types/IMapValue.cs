@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections;
 
 namespace ParquetViewer.Engine.Types
 {
@@ -13,5 +8,7 @@ namespace ParquetViewer.Engine.Types
         public Type KeyType { get; }
         public ArrayList Values { get; }
         public Type ValueType { get; }
+        (object Key, object Value) GetMapValue(int index);
+        int Length { get; }
     }
 }

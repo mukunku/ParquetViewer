@@ -13,8 +13,12 @@ namespace ParquetViewer.Engine.Types
 
         public DataRowLite Data { get; }
 
+        IReadOnlyCollection<string> FieldNames { get; }
+
         string ToStringTruncated(int desiredLength);
 
         DataTable ToDataTable();
+
+        string ToJSON(out bool success, int? desiredLength = null);
     }
 }

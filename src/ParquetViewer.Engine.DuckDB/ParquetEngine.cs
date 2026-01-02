@@ -3,17 +3,14 @@ using ParquetViewer.Engine.DuckDB.Types;
 using ParquetViewer.Engine.Exceptions;
 using System.Collections;
 using System.Data;
-using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
 using static ParquetViewer.Engine.DuckDB.DuckDBHelper;
+using static ParquetViewer.Engine.IParquetSchemaElement;
 
 namespace ParquetViewer.Engine.DuckDB
 {
-    public class ParquetEngine : IParquetEngine, IDisposable
+    public class ParquetEngine : IParquetEngine
     {
-        private readonly DuckDBConnection _inMemoryDB;
-
-        private long? _recordCount;
+        private readonly List<DuckDBHandle> _dbs;
 
         public string Path { get; set; }
 
@@ -30,13 +27,67 @@ namespace ParquetViewer.Engine.DuckDB
 
         private List<DuckDBField> _fields;
 
-        private ParquetEngine(string path, DuckDBConnection db, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount)
+        private static int GetFieldsHashCode(List<DuckDBField> fields)
         {
-            this._inMemoryDB = db;
-            this.Path = path;
+            var hashCode = new HashCode();
+            foreach (var field in fields)
+            {
+                hashCode.Add(field.Name);
+                hashCode.Add(field.Type);
+                hashCode.Add(field.DuckDBType);
+            }
+            return hashCode.ToHashCode();
+        }
+
+        private ParquetEngine(string filePath, DuckDBHandle db, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount)
+        {
+            this._dbs = [db];
+            this.Path = filePath;
             this._metadata = metadata;
-            this._fields = fields;
+            this._fields = FilterOutFieldsThatDontExist(fields, this._metadata);
             this.RecordCount = recordCount;
+        }
+
+        private ParquetEngine(string folderPath, List<DuckDBHandle> dbs, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount)
+        {
+            this._dbs = dbs;
+            this.Path = folderPath;
+            this._metadata = metadata;
+            this._fields = FilterOutFieldsThatDontExist(fields, this._metadata);
+            this.RecordCount = recordCount;
+        }
+
+        /// <summary>
+        /// DuckDB sometimes returns field from the DESCRIBE TABLE query that don't actually exist in the Parquet file.
+        /// </summary>
+        /// <returns>Returns a new list with fields that actually exist in the parquet file.</returns>
+        private static List<DuckDBField> FilterOutFieldsThatDontExist(List<DuckDBField> fields, ParquetMetadata metadata)
+        {
+            var fieldsThatExist = new List<DuckDBField>();
+            foreach (var field in fields)
+            {
+                if (metadata.SchemaTree.Children.Cast<IParquetSchemaElement>().Any(f => f.Path == field.Name))
+                {
+                    fieldsThatExist.Add(field);
+                }
+            }
+            return fieldsThatExist;
+        }
+
+        public static Task<ParquetEngine> OpenFileOrFolderAsync(string parquetFilePath, CancellationToken cancellationToken)
+        {
+            if (File.Exists(parquetFilePath)) //Handles null
+            {
+                return OpenFileAsync(parquetFilePath, cancellationToken);
+            }
+            else if (Directory.Exists(parquetFilePath)) //Handles null
+            {
+                return OpenFolderAsync(parquetFilePath, cancellationToken);
+            }
+            else
+            {
+                throw new FileNotFoundException(parquetFilePath);
+            }
         }
 
         public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath, CancellationToken cancellationToken)
@@ -46,14 +97,12 @@ namespace ParquetViewer.Engine.DuckDB
                 throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
             }
 
-            var db = new DuckDBConnection("Data Source=:memory:");
+            var db = await DuckDBHandle.OpenAsync(parquetFilePath);
             try
             {
-                await db.OpenAsync();
-                var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(db, parquetFilePath);
-                var fields = await DuckDBHelper.GetFields(db, parquetFilePath);
-                var fileMetadata = await DuckDBHelper.GetFileMetadata(db, parquetFilePath);
-                return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), fileMetadata.NumRows);
+                var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(db);
+                var fields = await DuckDBHelper.GetFields(db);
+                return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), db.RecordCount);
             }
             catch (Exception)
             {
@@ -62,23 +111,125 @@ namespace ParquetViewer.Engine.DuckDB
             }
         }
 
+        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath, CancellationToken cancellationToken)
+        {
+            if (!Directory.Exists(folderPath)) //Handles null
+            {
+                throw new DirectoryNotFoundException($"Directory doesn't exist: {folderPath}");
+            }
+
+            var skippedFiles = new Dictionary<string, Exception>();
+            var fileGroups = new Dictionary<int, List<DuckDBHandle>>();
+            foreach (var file in Helpers.ListParquetFiles(folderPath))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                try
+                {
+                    var db = await DuckDBHandle.OpenAsync(file);
+                    var fileFields = await DuckDBHelper.GetFields(db);
+                    var fieldsHashCode = GetFieldsHashCode(fileFields);
+                    if (!fileGroups.ContainsKey(fieldsHashCode))
+                    {
+                        fileGroups.Add(fieldsHashCode, new List<DuckDBHandle>());
+                    }
+
+                    fileGroups[fieldsHashCode].Add(db);
+                }
+                catch (Exception ex)
+                {
+                    skippedFiles.Add(System.IO.Path.GetRelativePath(folderPath, file), ex);
+                }
+            }
+
+            if (fileGroups.Keys.Count == 0)
+            {
+                if (skippedFiles.Count == 0)
+                {
+                    throw new FileNotFoundException("Directory is empty");
+                }
+                else
+                {
+                    throw new AllFilesSkippedException(skippedFiles);
+                }
+            }
+            else if (fileGroups.Keys.Count > 1)
+            {
+                //We found more than one type of schema.
+                foreach (var fileGroupList in fileGroups.Values)
+                {
+                    Helpers.EZDispose(fileGroupList);
+                }
+
+                var fieldsByFile = new List<List<string>>();
+                foreach (var db in fileGroups.Values)
+                {
+                    var groupFields = await DuckDBHelper.GetFields(db.First());
+                    fieldsByFile.Add(groupFields.Select(f => f.Name).ToList());
+                }
+
+                throw new MultipleSchemasFoundException(fieldsByFile);
+            }
+            else if (skippedFiles.Count > 0)
+            {
+                //We found one schema but some files couldn't be read
+                Helpers.EZDispose(fileGroups.Values.First());
+                throw new SomeFilesSkippedException(skippedFiles);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            //We have only one schema across all files and are good to go
+            List<DuckDBHandle> dbs = fileGroups.Values.First();
+
+            var totalRecordCount = dbs.Sum(db => db.RecordCount);
+            var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(dbs.First());
+            var fields = await DuckDBHelper.GetFields(dbs.First());
+
+            return new ParquetEngine(folderPath, dbs, parquetMetadata, fields, totalRecordCount);
+        }
+
         public void Dispose()
         {
-            this._inMemoryDB.Dispose();
+            Helpers.EZDispose(this._dbs);
+        }
+
+        private async IAsyncEnumerable<DuckDBDataReader> QueryDataAsync(List<string> selectedFields, int offset, int recordCount)
+        {
+            var fields = string.Join(", ", selectedFields.Select(DuckDBHelper.MakeColumnSafe));
+            foreach (var db in this._dbs)
+            {
+                EnsureFileExists(db.ParquetFilePath);
+
+                if (recordCount <= 0)
+                    yield break;
+
+                if (offset >= db.RecordCount)
+                {
+                    offset -= db.RecordCount;
+                    continue;
+                }
+
+                var query = $"SELECT {fields} " +
+                    $"FROM '{db.ParquetFilePath}' " +
+                    $"LIMIT {recordCount} " +
+                    $"OFFSET {offset};";
+
+                offset = 0;
+                
+                await foreach (var row in db.Connection.QueryAsync(query))
+                {
+                    yield return row;
+                    recordCount--;
+                }
+            }
         }
 
         public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
-            EnsurePathExists();
-
-            var query = $"SELECT {string.Join(", ", selectedFields.Select(DuckDBHelper.MakeColumnSafe))} " +
-                $"FROM '{this.Path}' " +
-                $"LIMIT {recordCount} " +
-                $"OFFSET {offset};";
-
             var result = CreateEmptyDataTable(selectedFields);
             result.BeginLoadData();
-            await foreach (var row in this._inMemoryDB.QueryAsync(query))
+            await foreach (var row in this.QueryDataAsync(selectedFields, offset, recordCount))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -88,20 +239,9 @@ namespace ParquetViewer.Engine.DuckDB
                 //Convert values to our types
                 for (var columnIndex = 0; columnIndex < row.FieldCount; columnIndex++)
                 {
-                    values[columnIndex] = ConvertValueTypeIfNeeded(values[columnIndex]);
-
-                    //if (values[columnIndex] != DBNull.Value 
-                    //    && result.Columns[columnIndex].DataType == typeof(ListValue))
-                    //{
-                    //    var list = (IList)values[columnIndex];
-                    //    if (!list.GetType().IsGenericType)
-                    //    {
-                    //        throw new UnsupportedFieldException($"Unsupported List field `{result.Columns[columnIndex].ColumnName}`");
-                    //    }
-                    //    var listType = list.GetType().GetGenericArguments()[0];
-
-                    //    values[columnIndex] = new ListValue(list, listType);
-                    //}
+                    var fieldName = selectedFields.ElementAt(columnIndex);
+                    var parquetSchemaElement = (ParquetSchemaElement)this._metadata.SchemaTree.Children.First(f => f.Path == fieldName);
+                    values[columnIndex] = ConvertValueTypeIfNeeded(values[columnIndex], parquetSchemaElement);
                 }
 
                 //supposedly this is the fastest way to load data into a datatable https://stackoverflow.com/a/17123914/1458738
@@ -121,33 +261,115 @@ namespace ParquetViewer.Engine.DuckDB
                 return result;
             };
 
-            object ConvertValueTypeIfNeeded(object value)
+            object ConvertValueTypeIfNeeded(object? value, IParquetSchemaElement? parquetSchemaElement)
             {
-                if (value == DBNull.Value)
+                if (value is null)
+                    return DBNull.Value;
+
+                if (value == DBNull.Value || parquetSchemaElement is null)
                     return value;
 
-                if (value is IList list)
+                if (parquetSchemaElement.FieldType == FieldTypeId.List)
                 {
-                    if (!list.GetType().IsGenericType)
+                    var list = (IList)value;
+                    ParquetSchemaElement? listItemField = null;
+                    if (parquetSchemaElement.Children.Count > 0)
                     {
-                        throw new UnsupportedFieldException($"Unsupported List field");
+                        var listField = parquetSchemaElement.GetListField();
+                        if (listField.Children.Count == 0) //Assume 2-tier list variation (fixes: TWO_TIER_TEPEATED_LIST_FIELDS_TEST)
+                        {
+                            listItemField = (ParquetSchemaElement)listField;
+                        }
+                        else
+                        {
+                            listItemField = (ParquetSchemaElement)listField.GetListItemField();
+                        }
                     }
-                    var listType = list.GetType().GetGenericArguments()[0];
-                    if (!listType.IsPrimitive)
+                    else if (parquetSchemaElement.IsPrimitive) //2-tier list (fixes: TWO_TIER_TEPEATED_LIST_FIELDS_TEST)
                     {
-                        var newList = new ArrayList(list.Count);
+                        var newList2 = new ArrayList(list.Count);
                         foreach (var item in list)
                         {
-                            newList.Add(ConvertValueTypeIfNeeded(item));
+                            newList2.Add(item);
                         }
-                        list = newList;
+                        return new ListValue(newList2, ((ParquetSchemaElement)parquetSchemaElement).ClrType);
                     }
 
-                    return new ListValue(list, listType);
+                    var newList = new ArrayList(list.Count);
+                    foreach (var item in list)
+                    {
+                        newList.Add(ConvertValueTypeIfNeeded(item, listItemField));
+                    }
+
+                    return new ListValue(newList, listItemField!.ClrType!);
                 }
-                else if (value is Dictionary<string, object?> @struct)
+                else if (parquetSchemaElement.FieldType == FieldTypeId.Struct)
                 {
-                    return new StructValue();
+                    var @struct = (Dictionary<string, object?>)value;
+                    var dataTable = new DataTableLite(1);
+                    foreach (var fieldName in @struct.Keys)
+                    {
+                        var field = (ParquetSchemaElement)parquetSchemaElement.GetSingleOrByName(fieldName);
+                        if (field.FieldType == FieldTypeId.List)
+                        {
+                            dataTable.AddColumn(fieldName, typeof(ListValue), field);
+                        }
+                        else if (field.FieldType == FieldTypeId.Struct)
+                        {
+                            dataTable.AddColumn(fieldName, typeof(StructValue), field);
+                        }
+                        else if (field.FieldType == FieldTypeId.Map)
+                        {
+                            dataTable.AddColumn(fieldName, typeof(MapValue), field);
+                        }
+                        else //Primitive
+                        {
+                            dataTable.AddColumn(fieldName, field.ClrType, field);
+                        }
+                    }
+                    dataTable.NewRow();
+                    var fieldIndex = 0;
+                    foreach (var keyValuePair in @struct)
+                    {
+                        var field = (ParquetSchemaElement)parquetSchemaElement.GetSingleOrByName(keyValuePair.Key);
+                        dataTable.Rows[0][fieldIndex] = ConvertValueTypeIfNeeded(keyValuePair.Value ?? DBNull.Value, field);
+                        fieldIndex++;
+                    }
+
+                    return new StructValue(parquetSchemaElement.Path, dataTable.GetRowAt(0));
+                }
+                else if (parquetSchemaElement.FieldType == FieldTypeId.Map)
+                {
+                    var map = (IDictionary)value;
+                    var mapField = parquetSchemaElement.GetMapKeyValueField();
+                    var mapKeyField = mapField.GetMapKeyField();
+                    var mapValueField = mapField.GetMapValueField();
+
+                    var count = Math.Max(map.Keys.Count, map.Values.Count);
+                    var keys = new ArrayList(count);
+                    var values = new ArrayList(count);
+                    foreach ((object? key, object? value) pair in
+                        Helpers.PairEnumerables(map.Keys.Cast<object?>(), map.Values.Cast<object?>(), DBNull.Value))
+                    {
+                        keys.Add(ConvertValueTypeIfNeeded(pair.key, mapKeyField));
+                        values.Add(ConvertValueTypeIfNeeded(pair.value, mapValueField));
+                    }
+
+                    return new MapValue(keys, ((ParquetSchemaElement)mapKeyField).ClrType,
+                        values, ((ParquetSchemaElement)mapValueField).ClrType);
+                }
+                else if (parquetSchemaElement.FieldType == FieldTypeId.Primitive //2-tier list
+                    && ((ParquetSchemaElement)parquetSchemaElement).RepetitionType == RepetitionTypeId.Repeated)
+                {
+                    var list = (IList)value;
+
+                    var newList = new ArrayList(list.Count);
+                    foreach (var item in list)
+                    {
+                        newList.Add(ConvertValueTypeIfNeeded(item, null));
+                    }
+
+                    return new ListValue(newList, ((ParquetSchemaElement)parquetSchemaElement).ClrType);
                 }
                 else //primitive value
                 {
@@ -164,13 +386,20 @@ namespace ParquetViewer.Engine.DuckDB
                 if (!selectedFields.Contains(field.Name))
                     continue;
 
-                if (field.Type == typeof(ValueTuple))
+                //TODO: This should be GetByName()
+                var schemaField = this.Metadata.SchemaTree.GetSingleOrByName(field.Name);
+
+                if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.Struct)
                 {
                     dataTable.Columns.Add(new DataColumn(field.Name, typeof(StructValue)));
                 }
-                else if (field.Type == typeof(List<>))
+                else if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.List)
                 {
                     dataTable.Columns.Add(new DataColumn(field.Name, typeof(ListValue)));
+                }
+                else if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.Map)
+                {
+                    dataTable.Columns.Add(new DataColumn(field.Name, typeof(MapValue)));
                 }
                 else //Primitive type
                 {
@@ -180,13 +409,12 @@ namespace ParquetViewer.Engine.DuckDB
             return dataTable;
         }
 
-        private void EnsurePathExists()
+        private void EnsureFileExists(string filePath)
         {
-            if (!File.Exists(this.Path))
+            if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException($"Parquet file no longer exists at: {this.Path}");
             }
         }
-
     }
 }
