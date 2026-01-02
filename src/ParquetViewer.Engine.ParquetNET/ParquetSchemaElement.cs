@@ -183,10 +183,6 @@ namespace ParquetViewer.Engine.ParquetNET
 
         ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.Cast<IParquetSchemaElement>().ToList();
 
-        public int? TypeLength => throw new NotImplementedException();
-
-        public string LogicalType => throw new NotImplementedException();
-
         private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
             => new InvalidOperationException($"Can't get {fieldType} node from '{this.Parent?._systemFieldType}' " +
                     $"for `{this.Parent?.Path + '/' + this.Path}` with types '{this.Parent?.FieldType.ToString() + '/' + this.FieldType.ToString()}'");

@@ -77,8 +77,7 @@ namespace ParquetViewer.Engine.ParquetNET
             {
                 if (isEmptyProvider(range.Start.Value))
                 {
-                    throw new NotImplementedException();
-                    //return new ListValue([], _type);
+                    return new ListValue([], _type);
                 }
                 else
                 {

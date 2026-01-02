@@ -195,9 +195,9 @@ namespace ParquetViewer.Tests
             Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][0]);
             Assert.AreEqual("[1,2,3]", dataTable.Rows[0][0].ToString());
             Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][1]);
-            Assert.AreEqual("[abc,efg,hij]", dataTable.Rows[0][1].ToString());
+            Assert.AreEqual(@"[""abc"",""efg"",""hij""]", dataTable.Rows[0][1].ToString());
             Assert.IsInstanceOfType<IListValue>(dataTable.Rows[1][0]);
-            Assert.AreEqual("[,1]", dataTable.Rows[1][0].ToString());
+            Assert.AreEqual("[null,1]", dataTable.Rows[1][0].ToString());
             Assert.IsInstanceOfType<IListValue>(dataTable.Rows[2][1]);
             Assert.HasCount(4, (IListValue)dataTable.Rows[2][1]);
             Assert.AreEqual("efg", ((IListValue)dataTable.Rows[2][1]).Data![0]);
@@ -207,7 +207,7 @@ namespace ParquetViewer.Tests
             //Also try reading with a record offset
             dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 1, 1, default))(false);
             Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][0]);
-            Assert.AreEqual("[,1]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[null,1]", dataTable.Rows[0][0].ToString());
         }
 
         [SkippableTestMethod]

@@ -1,9 +1,7 @@
-﻿using Microsoft.VisualBasic;
-using Parquet;
+﻿using Parquet;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.ParquetNET.Types;
-using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
 
@@ -131,8 +129,10 @@ namespace ParquetViewer.Engine.ParquetNET
             else
             {
                 var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
+                var dataEnumerable = dataColumn.GetDataWithPaddedNulls(field);
+
                 var fieldType = dataTable.Columns[field.Path].Type;
-                foreach (var value in dataColumn.Data)
+                foreach (var value in dataEnumerable)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 

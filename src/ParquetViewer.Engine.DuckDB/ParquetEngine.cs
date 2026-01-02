@@ -18,7 +18,7 @@ namespace ParquetViewer.Engine.DuckDB
 
         public long RecordCount { get; }
 
-        public int NumberOfPartitions => throw new NotImplementedException();
+        public int NumberOfPartitions => this._dbs.Count;
 
         public Dictionary<string, string> CustomMetadata => throw new NotImplementedException();
 
@@ -58,9 +58,10 @@ namespace ParquetViewer.Engine.DuckDB
         }
 
         /// <summary>
-        /// DuckDB sometimes returns field from the DESCRIBE TABLE query that don't actually exist in the Parquet file.
+        /// DuckDB sometimes returns fields from the DESCRIBE TABLE query that don't actually exist in the Parquet file.
         /// </summary>
         /// <returns>Returns a new list with fields that actually exist in the parquet file.</returns>
+        /// <remarks>Fixes PARTITIONED_PARQUET_FILE_TEST</remarks>
         private static List<DuckDBField> FilterOutFieldsThatDontExist(List<DuckDBField> fields, ParquetMetadata metadata)
         {
             var fieldsThatExist = new List<DuckDBField>();
