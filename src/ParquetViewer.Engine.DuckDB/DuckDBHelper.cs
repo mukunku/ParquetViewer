@@ -1,7 +1,9 @@
 ﻿using DuckDB.NET.Data;
 using DuckDB.NET.Native;
 using System.Numerics;
+using System.Text;
 using static ParquetViewer.Engine.IParquetSchemaElement;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ParquetViewer.Engine.DuckDB
 {
@@ -116,6 +118,25 @@ namespace ParquetViewer.Engine.DuckDB
                     await ReadChildrenAsync(childNode, enumerator);
                 }
             }
+        }
+
+        public static async Task<Dictionary<string, string>> GetCustomMetadataAsync(DuckDBHandle db)
+        {
+            var query = $"SELECT * FROM parquet_kv_metadata('{db.ParquetFilePath}');";
+            var metadata = new Dictionary<string, string>();
+            await foreach (var row in db.Connection.QueryAsync(query))
+            {
+                var keyStream = await row.GetFieldValueAsync<Stream>(1);
+                var valueStream = await row.GetFieldValueAsync<Stream>(2);
+
+                using var keyReader = new StreamReader(keyStream, Encoding.UTF8);
+                string key = await keyReader.ReadToEndAsync();
+
+                using var valueReader = new StreamReader(valueStream, Encoding.UTF8);
+                string value = await valueReader.ReadToEndAsync();
+                metadata[key] = value;
+            }
+            return metadata;
         }
     }
 }

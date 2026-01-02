@@ -20,7 +20,7 @@ namespace ParquetViewer.Engine.DuckDB
 
         public int NumberOfPartitions => this._dbs.Count;
 
-        public Dictionary<string, string> CustomMetadata => throw new NotImplementedException();
+        public Dictionary<string, string> CustomMetadata { get; }
 
         private ParquetMetadata _metadata;
         public IParquetMetadata Metadata => _metadata;
@@ -39,22 +39,24 @@ namespace ParquetViewer.Engine.DuckDB
             return hashCode.ToHashCode();
         }
 
-        private ParquetEngine(string filePath, DuckDBHandle db, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount)
+        private ParquetEngine(string filePath, DuckDBHandle db, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount, Dictionary<string, string> customMetadata)
         {
             this._dbs = [db];
             this.Path = filePath;
             this._metadata = metadata;
             this._fields = FilterOutFieldsThatDontExist(fields, this._metadata);
             this.RecordCount = recordCount;
+            this.CustomMetadata = customMetadata;
         }
 
-        private ParquetEngine(string folderPath, List<DuckDBHandle> dbs, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount)
+        private ParquetEngine(string folderPath, List<DuckDBHandle> dbs, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount, Dictionary<string, string> customMetadata)
         {
             this._dbs = dbs;
             this.Path = folderPath;
             this._metadata = metadata;
             this._fields = FilterOutFieldsThatDontExist(fields, this._metadata);
             this.RecordCount = recordCount;
+            this.CustomMetadata = customMetadata;
         }
 
         /// <summary>
@@ -103,7 +105,8 @@ namespace ParquetViewer.Engine.DuckDB
             {
                 var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(db);
                 var fields = await DuckDBHelper.GetFields(db);
-                return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), db.RecordCount);
+                var customMetadata = await DuckDBHelper.GetCustomMetadataAsync(db);
+                return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), db.RecordCount, customMetadata);
             }
             catch (Exception)
             {
@@ -186,8 +189,9 @@ namespace ParquetViewer.Engine.DuckDB
             var totalRecordCount = dbs.Sum(db => db.RecordCount);
             var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(dbs.First());
             var fields = await DuckDBHelper.GetFields(dbs.First());
+            var customMetadata = await DuckDBHelper.GetCustomMetadataAsync(dbs.First());
 
-            return new ParquetEngine(folderPath, dbs, parquetMetadata, fields, totalRecordCount);
+            return new ParquetEngine(folderPath, dbs, parquetMetadata, fields, totalRecordCount, customMetadata);
         }
 
         public void Dispose()

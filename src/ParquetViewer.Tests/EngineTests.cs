@@ -1,5 +1,7 @@
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
+using System.Text.Json;
+using static DuckDB.NET.Native.NativeMethods;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
 namespace ParquetViewer.Tests
@@ -523,10 +525,38 @@ namespace ParquetViewer.Tests
             if (_treatsTwoTierListAsStruct)
                 Assert.AreEqual("{\"nested\":\"nested!\"}", dataTable.Rows[0][5].ToString());
             else
-                Assert.AreEqual(@"[""nested!""]", dataTable.Rows[0][5].ToString()); 
+                Assert.AreEqual(@"[""nested!""]", dataTable.Rows[0][5].ToString());
 
             Assert.AreEqual("096d06d7-e00b-4f70-ad5c-ca4da9a9630a", dataTable.Rows[0][6]);
             Assert.AreEqual("[\"element1\",\"element2\"]", dataTable.Rows[0][7].ToString());
+        }
+
+        [TestMethod]
+        public async Task CUSTOM_METADATA_TEST()
+        {
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
+
+            Assert.Contains("pandas", parquetEngine.CustomMetadata.Keys);
+            const string expectedPandas = "{\"index_columns\":[{\"kind\":\"range\",\"name\":null,\"start\":0,\"stop\":3,\"step\":1}],\"column_indexes\":[{\"name\":null,\"field_name\":null,\"pandas_type\":\"unicode\",\"numpy_type\":\"object\",\"metadata\":{\"encoding\":\"UTF-8\"}}],\"columns\":[{\"name\":\"int64_list\",\"field_name\":\"int64_list\",\"pandas_type\":\"list[int64]\",\"numpy_type\":\"object\",\"metadata\":null},{\"name\":\"utf8_list\",\"field_name\":\"utf8_list\",\"pandas_type\":\"list[unicode]\",\"numpy_type\":\"object\",\"metadata\":null}],\"creator\":{\"library\":\"pyarrow\",\"version\":\"0.15.1\"},\"pandas_version\":\"0.25.3\"}";
+            Assert.AreEqual(TryFormatJSON(expectedPandas), TryFormatJSON(parquetEngine.CustomMetadata["pandas"]));
+
+            Assert.Contains("ARROW:schema", parquetEngine.CustomMetadata.Keys);
+            const string expectedArrow = "/////4ADAAAQAAAAAAAKAA4ABgAFAAgACgAAAAABAwAQAAAAAAAKAAwAAAAEAAgACgAAAHQCAAAEAAAAAQAAAAwAAAAIAAwABAAIAAgAAABMAgAABAAAADwCAAB7ImluZGV4X2NvbHVtbnMiOiBbeyJraW5kIjogInJhbmdlIiwgIm5hbWUiOiBudWxsLCAic3RhcnQiOiAwLCAic3RvcCI6IDMsICJzdGVwIjogMX1dLCAiY29sdW1uX2luZGV4ZXMiOiBbeyJuYW1lIjogbnVsbCwgImZpZWxkX25hbWUiOiBudWxsLCAicGFuZGFzX3R5cGUiOiAidW5pY29kZSIsICJudW1weV90eXBlIjogIm9iamVjdCIsICJtZXRhZGF0YSI6IHsiZW5jb2RpbmciOiAiVVRGLTgifX1dLCAiY29sdW1ucyI6IFt7Im5hbWUiOiAiaW50NjRfbGlzdCIsICJmaWVsZF9uYW1lIjogImludDY0X2xpc3QiLCAicGFuZGFzX3R5cGUiOiAibGlzdFtpbnQ2NF0iLCAibnVtcHlfdHlwZSI6ICJvYmplY3QiLCAibWV0YWRhdGEiOiBudWxsfSwgeyJuYW1lIjogInV0ZjhfbGlzdCIsICJmaWVsZF9uYW1lIjogInV0ZjhfbGlzdCIsICJwYW5kYXNfdHlwZSI6ICJsaXN0W3VuaWNvZGVdIiwgIm51bXB5X3R5cGUiOiAib2JqZWN0IiwgIm1ldGFkYXRhIjogbnVsbH1dLCAiY3JlYXRvciI6IHsibGlicmFyeSI6ICJweWFycm93IiwgInZlcnNpb24iOiAiMC4xNS4xIn0sICJwYW5kYXNfdmVyc2lvbiI6ICIwLjI1LjMifQAAAAAGAAAAcGFuZGFzAAACAAAAYAAAAAQAAACE////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAqP///6T///8AAAEFFAAAAAwAAAAEAAAAAAAAAMT///8EAAAAaXRlbQAAAAAJAAAAdXRmOF9saXN0AAAA3P///wAAAQxkAAAAFAAAAAQAAAABAAAAHAAAAAQABAAEAAAAEAAUAAgABgAHAAwAAAAQABAAAAAAAAECJAAAABQAAAAEAAAAAAAAAAgADAAIAAcACAAAAAAAAAFAAAAABAAAAGl0ZW0AAAAACgAAAGludDY0X2xpc3QAAA==";
+            Assert.AreEqual(expectedArrow, parquetEngine.CustomMetadata["ARROW:schema"]);
+        }
+
+        private static string TryFormatJSON(string possibleJSON)
+        {
+            try
+            {
+                var jsonElement = JsonSerializer.Deserialize<JsonElement>(possibleJSON);
+                return JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions { WriteIndented = true });
+            }
+            catch (Exception)
+            {
+                //malformed json detected
+                return possibleJSON;
+            }
         }
     }
 }
