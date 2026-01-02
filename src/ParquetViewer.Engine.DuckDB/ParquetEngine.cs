@@ -3,6 +3,7 @@ using ParquetViewer.Engine.DuckDB.Types;
 using ParquetViewer.Engine.Exceptions;
 using System.Collections;
 using System.Data;
+using System.Threading.Tasks;
 using static ParquetViewer.Engine.DuckDB.DuckDBHelper;
 using static ParquetViewer.Engine.IParquetSchemaElement;
 
@@ -221,7 +222,7 @@ namespace ParquetViewer.Engine.DuckDB
                     $"OFFSET {offset};";
 
                 offset = 0;
-                
+
                 await foreach (var row in db.Connection.QueryAsync(query))
                 {
                     yield return row;
@@ -376,6 +377,12 @@ namespace ParquetViewer.Engine.DuckDB
 
                     return new ListValue(newList, ((ParquetSchemaElement)parquetSchemaElement).ClrType);
                 }
+                else if (((ParquetSchemaElement)parquetSchemaElement).IsByteArrayType)
+                {
+                    using var ms = new MemoryStream();
+                    ((Stream)value).CopyTo(ms);
+                    return new ByteArrayValue(parquetSchemaElement.Path, ms.ToArray());
+                }
                 else //primitive value
                 {
                     return value;
@@ -392,7 +399,7 @@ namespace ParquetViewer.Engine.DuckDB
                     continue;
 
                 //TODO: This should be GetByName()
-                var schemaField = this.Metadata.SchemaTree.GetSingleOrByName(field.Name);
+                var schemaField = (ParquetSchemaElement)this.Metadata.SchemaTree.GetSingleOrByName(field.Name);
 
                 if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.Struct)
                 {
@@ -405,6 +412,10 @@ namespace ParquetViewer.Engine.DuckDB
                 else if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.Map)
                 {
                     dataTable.Columns.Add(new DataColumn(field.Name, typeof(MapValue)));
+                }
+                else if (schemaField.IsByteArrayType)
+                {
+                    dataTable.Columns.Add(new DataColumn(field.Name, typeof(ByteArrayValue)));
                 }
                 else //Primitive type
                 {

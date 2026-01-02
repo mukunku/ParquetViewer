@@ -27,7 +27,7 @@ namespace ParquetViewer.Engine.DuckDB
             using var reader = command.ExecuteReader();
             if (!reader.Read())
             {
-                throw new Exception("No results returned");
+                yield break;
             }
 
             yield return reader;

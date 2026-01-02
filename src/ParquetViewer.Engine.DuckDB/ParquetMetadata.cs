@@ -103,6 +103,8 @@ namespace ParquetViewer.Engine.DuckDB
 
         public RepetitionTypeId? RepetitionType => this._repetitionType;
 
+        public bool IsByteArrayType => _clrType == typeof(byte[]);
+
         private string? _underlyingType;
         private string? _typeLength;
         private RepetitionTypeId? _repetitionType;

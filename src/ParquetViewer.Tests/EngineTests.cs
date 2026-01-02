@@ -558,5 +558,19 @@ namespace ParquetViewer.Tests
                 return possibleJSON;
             }
         }
+
+        [TestMethod]
+        public async Task BYTEARRAY_VALUE_TEST()
+        {
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/BYTEARRAY_VALUE_TEST.parquet", default);
+            Assert.AreEqual(1, parquetEngine.RecordCount);
+            Assert.HasCount(1, parquetEngine.Fields);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+            Assert.IsInstanceOfType<IByteArrayValue>(dataTable.Rows[0][0]);
+
+            const string expected = "67-33-73-68-61-72-70-5F-73-74-6C-20-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00";
+            Assert.AreEqual(expected, dataTable.Rows[0][0].ToString());
+        }
     }
 }
