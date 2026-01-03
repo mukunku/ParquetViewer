@@ -62,13 +62,12 @@ namespace ParquetViewer.Engine.ParquetNET
             child.Parent = this;
         }
 
-        public ParquetSchemaElement(SchemaElement schemaElement, System.Type? clrType)
+        public ParquetSchemaElement(SchemaElement schemaElement)
         {
             if (schemaElement is null)
                 throw new ArgumentNullException(nameof(schemaElement));
 
             this.SchemaElement = schemaElement;
-            this._clrType = clrType;
         }
 
         public ParquetSchemaElement GetChild(string name)
@@ -188,8 +187,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
         ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => this.Children.ToList<IParquetSchemaElement>();
 
-        private System.Type? _clrType = null;
-        public System.Type ClrType => this._clrType ?? this.FieldType switch
+        public System.Type ClrType => this.DataField?.ClrType ?? this.FieldType switch
         {
             FieldTypeId.List => typeof(ListValue),
             FieldTypeId.Map => typeof(MapValue),

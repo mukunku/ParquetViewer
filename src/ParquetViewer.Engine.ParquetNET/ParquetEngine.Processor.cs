@@ -519,7 +519,7 @@ namespace ParquetViewer.Engine.ParquetNET
                 }
                 else
                 {
-                    var clrType = schema.DataField?.ClrType ?? throw new MalformedFieldException($"`{(parent is not null ? parent + "/" : string.Empty)}/{field}` has no data field");
+                    var clrType = schema.ClrType ?? throw new MalformedFieldException($"`{(parent is not null ? parent + "/" : string.Empty)}/{field}` has no data field");
                     dataTable.AddColumn(field, clrType, parent);
                 }
             }
