@@ -1,4 +1,6 @@
-﻿namespace ParquetViewer.Engine.DuckDB.Types
+﻿using ParquetViewer.Engine.Types;
+
+namespace ParquetViewer.Engine.DuckDB.Types
 {
     public class ByteArrayValue : ByteArrayValueBase
     {

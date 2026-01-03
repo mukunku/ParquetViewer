@@ -1,4 +1,6 @@
-﻿namespace ParquetViewer.Engine.ParquetNET.Types
+﻿using ParquetViewer.Engine.Types;
+
+namespace ParquetViewer.Engine.ParquetNET.Types
 {
     public class ByteArrayValue : ByteArrayValueBase
     {

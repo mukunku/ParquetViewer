@@ -1,7 +1,6 @@
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Text.Json;
-using static DuckDB.NET.Native.NativeMethods;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
 namespace ParquetViewer.Tests

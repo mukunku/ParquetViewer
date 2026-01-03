@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ParquetViewer.Engine
+﻿namespace ParquetViewer.Engine
 {
     public interface IParquetMetadata
     {
@@ -12,7 +6,6 @@ namespace ParquetViewer.Engine
         int RowGroupCount { get; }
         int RowCount { get; }
         string CreatedBy { get; }
-
         ICollection<IRowGroupMetadata> RowGroups { get; }
         IParquetSchemaElement SchemaTree { get; }
     }

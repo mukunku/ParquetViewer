@@ -12,6 +12,7 @@ namespace ParquetViewer.Engine.DuckDB
     public class ParquetEngine : IParquetEngine
     {
         private readonly List<DuckDBHandle> _dbs;
+        private readonly List<ParquetMetadata> _metadatas;
 
         public string Path { get; set; }
 
@@ -23,8 +24,7 @@ namespace ParquetViewer.Engine.DuckDB
 
         public Dictionary<string, string> CustomMetadata { get; }
 
-        private ParquetMetadata _metadata;
-        public IParquetMetadata Metadata => _metadata;
+        public IParquetMetadata Metadata => this._metadatas.First();
 
         private List<DuckDBField> _fields;
 
@@ -44,18 +44,18 @@ namespace ParquetViewer.Engine.DuckDB
         {
             this._dbs = [db];
             this.Path = filePath;
-            this._metadata = metadata;
-            this._fields = FilterOutFieldsThatDontExist(fields, this._metadata);
+            this._metadatas = [metadata];
+            this._fields = FilterOutFieldsThatDontExist(fields, metadata);
             this.RecordCount = recordCount;
             this.CustomMetadata = customMetadata;
         }
 
-        private ParquetEngine(string folderPath, List<DuckDBHandle> dbs, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount, Dictionary<string, string> customMetadata)
+        private ParquetEngine(string folderPath, List<DuckDBHandle> dbs, List<ParquetMetadata> metadatas, List<DuckDBField> fields, long recordCount, Dictionary<string, string> customMetadata)
         {
             this._dbs = dbs;
             this.Path = folderPath;
-            this._metadata = metadata;
-            this._fields = FilterOutFieldsThatDontExist(fields, this._metadata);
+            this._metadatas = metadatas;
+            this._fields = FilterOutFieldsThatDontExist(fields, this._metadatas.First());
             this.RecordCount = recordCount;
             this.CustomMetadata = customMetadata;
         }
@@ -107,7 +107,7 @@ namespace ParquetViewer.Engine.DuckDB
                 var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(db);
                 var fields = await DuckDBHelper.GetFields(db);
                 var customMetadata = await DuckDBHelper.GetCustomMetadataAsync(db);
-                return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), db.RecordCount, customMetadata);
+                return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), parquetMetadata.RowCount, customMetadata);
             }
             catch (Exception)
             {
@@ -187,12 +187,18 @@ namespace ParquetViewer.Engine.DuckDB
             //We have only one schema across all files and are good to go
             List<DuckDBHandle> dbs = fileGroups.Values.First();
 
-            var totalRecordCount = dbs.Sum(db => db.RecordCount);
-            var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(dbs.First());
+            var metadatas = new List<ParquetMetadata>();
+            foreach (var db in dbs)
+            {
+                var metadata = await ParquetMetadata.FromDuckDBAsync(db);
+                metadatas.Add(metadata);
+            }
+
+            var totalRecordCount = metadatas.Sum(m => m.RowCount);
             var fields = await DuckDBHelper.GetFields(dbs.First());
             var customMetadata = await DuckDBHelper.GetCustomMetadataAsync(dbs.First());
 
-            return new ParquetEngine(folderPath, dbs, parquetMetadata, fields, totalRecordCount, customMetadata);
+            return new ParquetEngine(folderPath, dbs, metadatas, fields, totalRecordCount, customMetadata);
         }
 
         public void Dispose()
@@ -203,16 +209,16 @@ namespace ParquetViewer.Engine.DuckDB
         private async IAsyncEnumerable<DuckDBDataReader> QueryDataAsync(List<string> selectedFields, int offset, int recordCount)
         {
             var fields = string.Join(", ", selectedFields.Select(DuckDBHelper.MakeColumnSafe));
-            foreach (var db in this._dbs)
+            foreach ((DuckDBHandle db, ParquetMetadata metadata) in Helpers.PairEnumerables(this._dbs, this._metadatas))
             {
                 EnsureFileExists(db.ParquetFilePath);
 
                 if (recordCount <= 0)
                     yield break;
 
-                if (offset >= db.RecordCount)
+                if (offset >= metadata.RowCount)
                 {
-                    offset -= db.RecordCount;
+                    offset -= metadata.RowCount;
                     continue;
                 }
 
@@ -246,7 +252,7 @@ namespace ParquetViewer.Engine.DuckDB
                 for (var columnIndex = 0; columnIndex < row.FieldCount; columnIndex++)
                 {
                     var fieldName = selectedFields.ElementAt(columnIndex);
-                    var parquetSchemaElement = (ParquetSchemaElement)this._metadata.SchemaTree.Children.First(f => f.Path == fieldName);
+                    var parquetSchemaElement = (ParquetSchemaElement)this._metadatas.First().SchemaTree.Children.First(f => f.Path == fieldName);
                     values[columnIndex] = ConvertValueTypeIfNeeded(values[columnIndex], parquetSchemaElement);
                 }
 

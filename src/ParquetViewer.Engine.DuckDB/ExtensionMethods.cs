@@ -1,11 +1,4 @@
 ﻿using DuckDB.NET.Data;
-using DuckDB.NET.Native;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ParquetViewer.Engine.DuckDB
 {
@@ -36,6 +29,16 @@ namespace ParquetViewer.Engine.DuckDB
             {
                 yield return reader;
             }
+        }
+
+        public static async Task<DuckDBDataReader> QuerySingleAsync(this DuckDBConnection db, string sql)
+        {
+            await foreach (var row in db.QueryAsync(sql))
+            {
+                return row;
+            }
+
+            throw new InvalidOperationException("The query returned no results.");
         }
     }
 }

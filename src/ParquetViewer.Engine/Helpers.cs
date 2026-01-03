@@ -23,6 +23,29 @@ namespace ParquetViewer.Engine
             }
         }
 
+        public static IEnumerable<(T, R)> PairEnumerables<T,R>(IEnumerable<T> enumerable1, IEnumerable<R> enumerable2)
+        {
+            ArgumentNullException.ThrowIfNull(enumerable1);
+            ArgumentNullException.ThrowIfNull(enumerable2);
+
+            var enumerator1 = enumerable1.GetEnumerator();
+            var enumerator2 = enumerable2.GetEnumerator();
+
+            var hasMore1 = enumerator1.MoveNext();
+            var hasMore2 = enumerator2.MoveNext();
+            while (hasMore1 && hasMore2)
+            {
+                yield return (enumerator1.Current, enumerator2.Current);
+                hasMore1 = enumerator1.MoveNext();
+                hasMore2 = enumerator2.MoveNext();
+            }
+
+            if (hasMore1 || hasMore2)
+            {
+                throw new InvalidDataException("Enumerables are of different lengths.");
+            }
+        }
+
         public static int CompareTo(object? value, object? otherValue)
         {
             value ??= DBNull.Value;

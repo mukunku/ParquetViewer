@@ -1,10 +1,9 @@
-﻿using ParquetViewer.Engine.Types;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
 using static ParquetViewer.Engine.Types.IByteArrayValue;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.Types
 {
     public class ByteArrayValueBase : IByteArrayValue
     {
@@ -14,24 +13,24 @@ namespace ParquetViewer.Engine
 
         private DisplayFormat[]? _possibleDisplayFormats;
         public DisplayFormat[] PossibleDisplayFormats =>
-            _possibleDisplayFormats ??= this.CalculatePossibleDisplayFormats();
+            _possibleDisplayFormats ??= CalculatePossibleDisplayFormats();
 
         public ByteArrayValueBase(string name, byte[] data)
         {
-            this.Name = name;
-            this.Data = data;
+            Name = name;
+            Data = data;
         }
 
-        public override string ToString() => BitConverter.ToString(this.Data);
+        public override string ToString() => BitConverter.ToString(Data);
 
         public int CompareTo(IByteArrayValue? other)
         {
             if (other?.Data is null)
                 return 1;
-            else if (this.Data is null)
+            else if (Data is null)
                 return -1;
             else
-                return ByteArraysEqual(this.Data, other.Data);
+                return ByteArraysEqual(Data, other.Data);
         }
 
         private static int ByteArraysEqual(ReadOnlySpan<byte> a1, ReadOnlySpan<byte> a2) => a1.SequenceCompareTo(a2);
@@ -152,7 +151,7 @@ namespace ParquetViewer.Engine
             if (Data.Length == 0)
                 return false;
 
-            var printableCount = this.Data.Sum(@byte =>
+            var printableCount = Data.Sum(@byte =>
                 @byte >= ' ' /*32*/ && @byte <= '~' /*126*/ //Printable ASCII range
                 ? 1 : 0);
 
@@ -289,7 +288,7 @@ namespace ParquetViewer.Engine
                 return BitConverter.ToString(Data);
 
             return BitConverter.ToString(Data, 0, maxBytesToRender / 2) + "[...]"
-            + BitConverter.ToString(Data, Data.Length - (maxBytesToRender / 2));
+            + BitConverter.ToString(Data, Data.Length - maxBytesToRender / 2);
         }
     }
 }

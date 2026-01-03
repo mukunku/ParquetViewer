@@ -6,13 +6,11 @@ namespace ParquetViewer.Engine.DuckDB
     {
         public string ParquetFilePath { get; }
         public DuckDBConnection Connection { get; }
-        public int RecordCount { get; }
 
-        private DuckDBHandle(DuckDBConnection connection, string parquetPath, int recordCount)
+        private DuckDBHandle(DuckDBConnection connection, string parquetPath)
         {
             ParquetFilePath = parquetPath;
             Connection = connection;
-            RecordCount = recordCount;
         }
 
         public static async Task<DuckDBHandle> OpenAsync(string parquetPath)
@@ -24,8 +22,7 @@ namespace ParquetViewer.Engine.DuckDB
             try
             {
                 await connection.OpenAsync();
-                var fileMetadata = await DuckDBHelper.GetFileMetadata(connection, parquetPath);
-                return new DuckDBHandle(connection, parquetPath, (int)fileMetadata.NumRows);
+                return new DuckDBHandle(connection, parquetPath);
             }
             catch
             {

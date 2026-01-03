@@ -1,7 +1,6 @@
-﻿using ParquetViewer.Engine.Types;
-using System.Data;
+﻿using System.Data;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.Types
 {
     public class StructValueBase : IStructValue
     {
@@ -29,7 +28,7 @@ namespace ParquetViewer.Engine
                 return -1;
 
             var otherColumnNames = string.Join("|", other.FieldNames);
-            var columnNames = string.Join("|", this.FieldNames);
+            var columnNames = string.Join("|", FieldNames);
 
             int schemaComparison = columnNames.CompareTo(otherColumnNames);
             if (schemaComparison != 0)
@@ -40,7 +39,7 @@ namespace ParquetViewer.Engine
             {
                 var otherValue = other.Data.Row[i];
                 var value = Data.Row[i];
-                int comparison = Engine.Helpers.CompareTo(value, otherValue);
+                int comparison = Helpers.CompareTo(value, otherValue);
                 if (comparison != 0)
                     return comparison;
             }
@@ -71,14 +70,14 @@ namespace ParquetViewer.Engine
                 using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
                 {
                     jsonWriter.WriteStartObject();
-                    for (var i = 0; i < this.Data.Columns.Count; i++)
+                    for (var i = 0; i < Data.Columns.Count; i++)
                     {
-                        string columnName = this.Data.Columns.Values.ElementAt(i).Name
+                        string columnName = Data.Columns.Values.ElementAt(i).Name
                             //Remove the parent field name from columns when rendering the data as json in the gridview cell.
-                            .Replace($"{this.Name}/", string.Empty);
+                            .Replace($"{Name}/", string.Empty);
                         jsonWriter.WritePropertyName(columnName);
 
-                        object value = this.Data.Row[i];
+                        object value = Data.Row[i];
                         Helpers.WriteValue(jsonWriter, value, desiredLength is not null);
 
                         if (desiredLength > 0 && jsonWriter.ApproximateStringLengthSoFar > desiredLength)

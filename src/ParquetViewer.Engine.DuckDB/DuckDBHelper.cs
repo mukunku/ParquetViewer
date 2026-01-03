@@ -25,25 +25,6 @@ namespace ParquetViewer.Engine.DuckDB
             return fields;
         }
 
-        internal record DuckDBParquetMetadata(string CreatedBy, long NumRows, long NumRowGroups,
-            long ParquetVersion, string? EncryptionAlgorithm, string? FooterSigningKeyMetadata);
-        public static async Task<DuckDBParquetMetadata> GetFileMetadata(DuckDBConnection db, string parquetPath)
-        {
-            await foreach (var row in db.QueryAsync($"SELECT * FROM parquet_file_metadata('{parquetPath}');"))
-            {
-                var createdBy = row.GetString(1);
-                var numRows = row.GetInt64(2);
-                var numRowGroups = row.GetInt64(3);
-                var parquetVersion = row.GetInt64(4);
-                var encryptionAlgorithm = row.IsDBNull(5) ? null : row.GetString(5);
-                var footerSigningKeyMetadata = row.IsDBNull(6) ? null : row.GetString(6);
-
-                return new DuckDBParquetMetadata(createdBy, numRows, numRowGroups, parquetVersion, encryptionAlgorithm, footerSigningKeyMetadata);
-            }
-
-            throw new InvalidOperationException("Failed to retrieve Parquet file metadata.");
-        }
-
         public static string MakeColumnSafe(string columnName)
         {
             // Enclose in double quotes and escape existing double quotes
