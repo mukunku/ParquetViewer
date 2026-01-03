@@ -4,7 +4,7 @@ namespace ParquetViewer.Engine.DuckDB
 {
     internal static class ExtensionMethods
     {
-        public static async IAsyncEnumerable<DuckDBDataReader> QueryAsync(this DuckDBConnection db, string sql)
+        public static async Task<QueryResult> QueryAsync(this DuckDBConnection db, string sql)
         {
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(sql);
@@ -17,28 +17,8 @@ namespace ParquetViewer.Engine.DuckDB
             using var command = db.CreateCommand();
             command.CommandText = sql;
 
-            using var reader = command.ExecuteReader();
-            if (!reader.Read())
-            {
-                yield break;
-            }
-
-            yield return reader;
-
-            while (reader.Read())
-            {
-                yield return reader;
-            }
-        }
-
-        public static async Task<DuckDBDataReader> QuerySingleAsync(this DuckDBConnection db, string sql)
-        {
-            await foreach (var row in db.QueryAsync(sql))
-            {
-                return row;
-            }
-
-            throw new InvalidOperationException("The query returned no results.");
+            var reader = command.ExecuteReader();
+            return new QueryResult(reader);
         }
     }
 }

@@ -1,9 +1,4 @@
 ﻿using Parquet.Meta;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ParquetViewer.Engine.ParquetNET
 {
@@ -21,7 +16,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
         public int RowCount { get; }
 
-        public ParquetMetadata(FileMetaData thriftMetadata, int recordCount)
+        public ParquetMetadata(FileMetaData thriftMetadata, ParquetSchemaElement schemaTree, int recordCount)
         {
             RowCount = recordCount;
             RowGroupCount = thriftMetadata.RowGroups.Count;
@@ -31,7 +26,8 @@ namespace ParquetViewer.Engine.ParquetNET
                     rg.SortingColumns?.Select(sc => new SortingColumnMetadata(sc.ColumnIdx, sc.Descending, sc.NullsFirst))
                     .Cast<ISortingColumnMetadata>().ToList(), rg.FileOffset ?? 0, rg.TotalByteSize, rg.TotalCompressedSize ?? 0))
                 .ToList<IRowGroupMetadata>();
-            SchemaTree = null; //TODO
+            CreatedBy = thriftMetadata.CreatedBy ?? string.Empty;
+            SchemaTree = schemaTree;
         }
     }
 

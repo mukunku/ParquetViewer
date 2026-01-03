@@ -14,7 +14,8 @@ namespace ParquetViewer.Engine.DuckDB
         public static async Task<List<DuckDBField>> GetFields(DuckDBHandle db)
         {
             var fields = new List<DuckDBField>();
-            await foreach (var row in db.Connection.QueryAsync($"DESCRIBE TABLE '{db.ParquetFilePath}';"))
+            using var result = await db.Connection.QueryAsync($"DESCRIBE TABLE '{db.ParquetFilePath}';");
+            await foreach (var row in result)
             {
                 var columnName = row.GetString(0);
                 var columnTypeName = row.GetString(1);
@@ -23,13 +24,6 @@ namespace ParquetViewer.Engine.DuckDB
                 fields.Add(new(columnName, duckDBType, clrType));
             }
             return fields;
-        }
-
-        public static string MakeColumnSafe(string columnName)
-        {
-            // Enclose in double quotes and escape existing double quotes
-            var safeName = columnName.Replace("\"", "\"\"");
-            return $"\"{safeName}\"";
         }
 
         public static (DuckDBType DuckDBType, Type Type) ParseDuckDBType(string duckDBTypeName)
@@ -73,8 +67,8 @@ namespace ParquetViewer.Engine.DuckDB
         //DuckDB flattens the schema so we need to rebuild it into a tree structure.
         public static async Task<ParquetSchemaElement> GetParquetSchemaTreeAsync(DuckDBHandle db)
         {
-            var enumerable = db.Connection.QueryAsync($"SELECT * FROM parquet_schema('{db.ParquetFilePath}');");
-            var enumerator = enumerable.GetAsyncEnumerator();
+            var result = await db.Connection.QueryAsync($"SELECT * FROM parquet_schema('{db.ParquetFilePath}');");
+            var enumerator = result.GetAsyncEnumerator();
 
             if (!await enumerator.MoveNextAsync())
             {
@@ -105,7 +99,8 @@ namespace ParquetViewer.Engine.DuckDB
         {
             var query = $"SELECT * FROM parquet_kv_metadata('{db.ParquetFilePath}');";
             var metadata = new Dictionary<string, string>();
-            await foreach (var row in db.Connection.QueryAsync(query))
+            using var result = await db.Connection.QueryAsync(query);
+            await foreach (var row in result)
             {
                 var keyStream = await row.GetFieldValueAsync<Stream>(1);
                 var valueStream = await row.GetFieldValueAsync<Stream>(2);

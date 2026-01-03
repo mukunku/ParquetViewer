@@ -88,22 +88,22 @@ namespace ParquetViewer.Engine.ParquetNET
                 var field = column.ParentSchema.Children.FirstOrDefault(c => c.Path == column.Name) as ParquetSchemaElement;
                 switch (field?.FieldType)
                 {
-                    case IParquetSchemaElement.FieldTypeId.Primitive:
+                    case FieldTypeId.Primitive:
                         await ReadPrimitiveField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case IParquetSchemaElement.FieldTypeId.List:
+                    case FieldTypeId.List:
                         var listField = field.GetListField();
-                        var itemField = (ParquetSchemaElement)listField.GetListItemField();
+                        var itemField = listField.GetListItemField();
                         var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
                         await ReadListField(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case IParquetSchemaElement.FieldTypeId.Map:
+                    case FieldTypeId.Map:
                         await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case IParquetSchemaElement.FieldTypeId.Struct:
+                    case FieldTypeId.Struct:
                         await ReadStructField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
@@ -175,16 +175,16 @@ namespace ParquetViewer.Engine.ParquetNET
             var lastMilestone = "Start";
             try
             {
-                if (itemField.FieldType == IParquetSchemaElement.FieldTypeId.List)
+                if (itemField.FieldType == FieldTypeId.List)
                 {
                     var nestedListField = itemField.GetListField();
-                    var nestedItemField = (ParquetSchemaElement)nestedListField.GetListItemField();
+                    var nestedItemField = nestedListField.GetListItemField();
                     lastMilestone = "Read";
 
                     await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0,
                         skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                 }
-                else if (itemField.FieldType == IParquetSchemaElement.FieldTypeId.Primitive)
+                else if (itemField.FieldType == FieldTypeId.Primitive)
                 {
                     int rowIndex = rowBeginIndex;
 
@@ -217,7 +217,7 @@ namespace ParquetViewer.Engine.ParquetNET
                         progress?.Report(1);
                     }
                 }
-                else if (itemField.FieldType == IParquetSchemaElement.FieldTypeId.Struct)
+                else if (itemField.FieldType == FieldTypeId.Struct)
                 {
                     //Read struct data as a new datatable
                     DataTableLite structFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
@@ -332,8 +332,8 @@ namespace ParquetViewer.Engine.ParquetNET
             long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
         {
             var keyValueField = field.GetMapKeyValueField();
-            var keyField = (ParquetSchemaElement)keyValueField.GetMapKeyField();
-            var valueField = (ParquetSchemaElement)keyValueField.GetMapValueField();
+            var keyField = keyValueField.GetMapKeyField();
+            var valueField = keyValueField.GetMapValueField();
 
             if (keyField.Children.Any() || valueField.Children.Any())
                 throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested Map types are not supported");
@@ -482,21 +482,21 @@ namespace ParquetViewer.Engine.ParquetNET
 
         private DataTableLite BuildDataTable(ParquetSchemaElement? parent, List<string> fields, int expectedRecordCount)
         {
-            parent ??= this.ParquetSchemaTree;
+            parent ??= (ParquetSchemaElement)this.Metadata.SchemaTree;
             DataTableLite dataTable = new(expectedRecordCount);
             foreach (var field in fields)
             {
                 var schema = parent.GetChild(field);
-                if (schema.FieldType == IParquetSchemaElement.FieldTypeId.List
+                if (schema.FieldType == FieldTypeId.List
                     || schema.DataField?.IsArray == true)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
-                else if (schema.FieldType == IParquetSchemaElement.FieldTypeId.Map)
+                else if (schema.FieldType == FieldTypeId.Map)
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (schema.FieldType == IParquetSchemaElement.FieldTypeId.Struct)
+                else if (schema.FieldType == FieldTypeId.Struct)
                 {
                     dataTable.AddColumn(field, typeof(StructValue), parent);
                 }

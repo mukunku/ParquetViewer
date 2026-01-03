@@ -16,8 +16,6 @@ namespace ParquetViewer.Engine.ParquetNET
 
         private ParquetSchema _schema => _defaultReader.Schema;
 
-        private ParquetSchemaElement? _parquetSchemaTree;
-
         public Dictionary<string, string> CustomMetadata => _defaultReader.CustomMetadata;
 
         public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Metadata?.NumRows ?? 0);
@@ -26,11 +24,10 @@ namespace ParquetViewer.Engine.ParquetNET
 
         public List<string> Fields => _defaultReader.Schema.Fields.Select(f => f.Name).ToList();
 
-        private ParquetSchemaElement ParquetSchemaTree => _parquetSchemaTree ??= BuildParquetSchemaTree();
-
         public string Path { get; }
 
-        public IParquetMetadata Metadata => new ParquetMetadata(_thriftMetadata, (int)RecordCount);
+        ParquetMetadata? _metadata = null;
+        public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(_thriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
 
         private ParquetEngine(string fileOrFolderPath, params ParquetReader[] parquetFiles)
         {
@@ -42,7 +39,8 @@ namespace ParquetViewer.Engine.ParquetNET
         {
             var thriftSchema = _thriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
             var schemaElements = thriftSchema.GetEnumerator();
-            var thriftSchemaTree = ReadSchemaTree(ref schemaElements);
+            var dataFields = _schema.GetDataFields();
+            var thriftSchemaTree = ReadSchemaTree(ref schemaElements, dataFields);
 
             foreach (var dataField in _schema.GetDataFields())
             {
@@ -57,16 +55,24 @@ namespace ParquetViewer.Engine.ParquetNET
             return thriftSchemaTree;
         }
 
-        private static ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements)
+        private static ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements, DataField[]? dataFields)
         {
             if (!schemaElements.MoveNext())
                 throw new ParquetException("Invalid parquet schema");
 
             var current = schemaElements.Current;
-            var parquetSchemaElement = new ParquetSchemaElement(current);
+
+            System.Type? clrType = null;
+            if (dataFields is not null)
+            {
+                var matchingDataField = dataFields.FirstOrDefault(df => df.Path.FirstPart == current.Name);
+                clrType = matchingDataField?.ClrType;
+            }
+
+            var parquetSchemaElement = new ParquetSchemaElement(current, clrType);
             for (int i = 0; i < current.NumChildren; i++)
             {
-                parquetSchemaElement.AddChild(ReadSchemaTree(ref schemaElements));
+                parquetSchemaElement.AddChild(ReadSchemaTree(ref schemaElements, null));
             }
             return parquetSchemaElement;
         }

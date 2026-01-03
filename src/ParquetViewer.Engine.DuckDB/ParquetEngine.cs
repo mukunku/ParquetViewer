@@ -3,7 +3,6 @@ using ParquetViewer.Engine.DuckDB.Types;
 using ParquetViewer.Engine.Exceptions;
 using System.Collections;
 using System.Data;
-using System.Threading.Tasks;
 using static ParquetViewer.Engine.DuckDB.DuckDBHelper;
 using static ParquetViewer.Engine.IParquetSchemaElement;
 
@@ -208,7 +207,7 @@ namespace ParquetViewer.Engine.DuckDB
 
         private async IAsyncEnumerable<DuckDBDataReader> QueryDataAsync(List<string> selectedFields, int offset, int recordCount)
         {
-            var fields = string.Join(", ", selectedFields.Select(DuckDBHelper.MakeColumnSafe));
+            var fields = string.Join(", ", selectedFields.Select(MakeColumnSafe));
             foreach ((DuckDBHandle db, ParquetMetadata metadata) in Helpers.PairEnumerables(this._dbs, this._metadatas))
             {
                 EnsureFileExists(db.ParquetFilePath);
@@ -229,7 +228,8 @@ namespace ParquetViewer.Engine.DuckDB
 
                 offset = 0;
 
-                await foreach (var row in db.Connection.QueryAsync(query))
+                using var result = await db.Connection.QueryAsync(query);
+                await foreach (var row in result)
                 {
                     yield return row;
                     recordCount--;
@@ -273,13 +273,10 @@ namespace ParquetViewer.Engine.DuckDB
                 return result;
             };
 
-            object ConvertValueTypeIfNeeded(object? value, IParquetSchemaElement? parquetSchemaElement)
+            object ConvertValueTypeIfNeeded(object? value, ParquetSchemaElement? parquetSchemaElement)
             {
-                if (value is null)
+                if (value is null || value == DBNull.Value || parquetSchemaElement is null)
                     return DBNull.Value;
-
-                if (value == DBNull.Value || parquetSchemaElement is null)
-                    return value;
 
                 if (parquetSchemaElement.FieldType == FieldTypeId.List)
                 {
@@ -290,21 +287,21 @@ namespace ParquetViewer.Engine.DuckDB
                         var listField = parquetSchemaElement.GetListField();
                         if (listField.Children.Count == 0) //Assume 2-tier list variation (fixes: TWO_TIER_TEPEATED_LIST_FIELDS_TEST)
                         {
-                            listItemField = (ParquetSchemaElement)listField;
+                            listItemField = listField;
                         }
                         else
                         {
-                            listItemField = (ParquetSchemaElement)listField.GetListItemField();
+                            listItemField = listField.GetListItemField();
                         }
                     }
                     else if (parquetSchemaElement.IsPrimitive) //2-tier list (fixes: TWO_TIER_TEPEATED_LIST_FIELDS_TEST)
                     {
-                        var newList2 = new ArrayList(list.Count);
+                        var newestList = new ArrayList(list.Count);
                         foreach (var item in list)
                         {
-                            newList2.Add(item);
+                            newestList.Add(item);
                         }
-                        return new ListValue(newList2, ((ParquetSchemaElement)parquetSchemaElement).ClrType);
+                        return new ListValue(newestList, parquetSchemaElement.ClrType);
                     }
 
                     var newList = new ArrayList(list.Count);
@@ -321,7 +318,7 @@ namespace ParquetViewer.Engine.DuckDB
                     var dataTable = new DataTableLite(1);
                     foreach (var fieldName in @struct.Keys)
                     {
-                        var field = (ParquetSchemaElement)parquetSchemaElement.GetSingleOrByName(fieldName);
+                        var field = parquetSchemaElement.GetSingleOrByName(fieldName);
                         if (field.FieldType == FieldTypeId.List)
                         {
                             dataTable.AddColumn(fieldName, typeof(ListValue), field);
@@ -343,7 +340,7 @@ namespace ParquetViewer.Engine.DuckDB
                     var fieldIndex = 0;
                     foreach (var keyValuePair in @struct)
                     {
-                        var field = (ParquetSchemaElement)parquetSchemaElement.GetSingleOrByName(keyValuePair.Key);
+                        var field = parquetSchemaElement.GetSingleOrByName(keyValuePair.Key);
                         dataTable.Rows[0][fieldIndex] = ConvertValueTypeIfNeeded(keyValuePair.Value ?? DBNull.Value, field);
                         fieldIndex++;
                     }
@@ -367,11 +364,11 @@ namespace ParquetViewer.Engine.DuckDB
                         values.Add(ConvertValueTypeIfNeeded(pair.value, mapValueField));
                     }
 
-                    return new MapValue(keys, ((ParquetSchemaElement)mapKeyField).ClrType,
-                        values, ((ParquetSchemaElement)mapValueField).ClrType);
+                    return new MapValue(keys, mapKeyField.ClrType,
+                        values, mapValueField.ClrType);
                 }
                 else if (parquetSchemaElement.FieldType == FieldTypeId.Primitive //2-tier list
-                    && ((ParquetSchemaElement)parquetSchemaElement).RepetitionType == RepetitionTypeId.Repeated)
+                    && parquetSchemaElement.RepetitionType == RepetitionTypeId.Repeated)
                 {
                     var list = (IList)value;
 
@@ -381,9 +378,9 @@ namespace ParquetViewer.Engine.DuckDB
                         newList.Add(ConvertValueTypeIfNeeded(item, null));
                     }
 
-                    return new ListValue(newList, ((ParquetSchemaElement)parquetSchemaElement).ClrType);
+                    return new ListValue(newList, parquetSchemaElement.ClrType);
                 }
-                else if (((ParquetSchemaElement)parquetSchemaElement).IsByteArrayType)
+                else if (parquetSchemaElement.IsByteArrayType)
                 {
                     using var ms = new MemoryStream();
                     ((Stream)value).CopyTo(ms);
@@ -404,18 +401,16 @@ namespace ParquetViewer.Engine.DuckDB
                 if (!selectedFields.Contains(field.Name))
                     continue;
 
-                //TODO: This should be GetByName()
-                var schemaField = (ParquetSchemaElement)this.Metadata.SchemaTree.GetSingleOrByName(field.Name);
-
-                if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.Struct)
+                var schemaField = (ParquetSchemaElement)this.Metadata.SchemaTree.GetChild(field.Name);
+                if (schemaField.FieldType == FieldTypeId.Struct)
                 {
                     dataTable.Columns.Add(new DataColumn(field.Name, typeof(StructValue)));
                 }
-                else if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.List)
+                else if (schemaField.FieldType == FieldTypeId.List)
                 {
                     dataTable.Columns.Add(new DataColumn(field.Name, typeof(ListValue)));
                 }
-                else if (schemaField.FieldType == IParquetSchemaElement.FieldTypeId.Map)
+                else if (schemaField.FieldType == FieldTypeId.Map)
                 {
                     dataTable.Columns.Add(new DataColumn(field.Name, typeof(MapValue)));
                 }
@@ -438,5 +433,13 @@ namespace ParquetViewer.Engine.DuckDB
                 throw new FileNotFoundException($"Parquet file no longer exists at: {this.Path}");
             }
         }
+
+        private static string MakeColumnSafe(string columnName)
+        {
+            // Enclose in double quotes and escape existing double quotes
+            var safeName = columnName.Replace("\"", "\"\"");
+            return $"\"{safeName}\"";
+        }
+
     }
 }

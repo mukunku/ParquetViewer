@@ -1,7 +1,4 @@
-﻿using ParquetViewer.Engine.ParquetNET;
-using System.Numerics;
-
-namespace ParquetViewer.Engine.ParquetNET
+﻿namespace ParquetViewer.Engine.ParquetNET
 {
     internal static class Helpers
     {
