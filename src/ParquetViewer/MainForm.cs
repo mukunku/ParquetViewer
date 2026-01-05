@@ -283,6 +283,41 @@ namespace ParquetViewer
 
         private async void LoadFileToGridview()
         {
+            if (this._openParquetEngine is null)
+                return;
+
+            try
+            {
+                await this.LoadFileToGridviewImpl(this._openParquetEngine);
+            }
+            catch (Exception unhandledEx)
+            {
+                //Try DuckDB if Parquet.NET fails
+                if (this._openParquetEngine is Engine.DuckDB.ParquetEngine)
+                    throw;
+
+                var readSuccess = false;
+                try
+                {
+                    var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath!, default);
+                    await LoadFileToGridviewImpl(duckDbEngine);
+
+                    readSuccess = true;
+                    this.SwapEngines(duckDbEngine);
+                }
+                catch (Exception duckDbEx)
+                {
+                    //throw unhandledEx;
+                }
+
+                //Re-throw the original unhandled exception
+                if (!readSuccess) 
+                    throw;
+            }
+        }
+
+        private async Task LoadFileToGridviewImpl(IParquetEngine engine)
+        {
             var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
             LoadingIcon? loadingIcon = null;
             var wasSuccessful = false;
@@ -300,41 +335,12 @@ namespace ParquetViewer
                     return;
                 }
 
-                long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, this._openParquetEngine!.RecordCount - this.CurrentOffset);
+                long cellCount = this.SelectedFields.Count * Math.Min(this.CurrentMaxRowCount, engine.RecordCount - this.CurrentOffset);
                 loadingIcon = this.ShowLoadingIcon(Resources.Strings.LoadingDataLabelText, cellCount);
 
                 var intermediateResult = await Task.Run(async () =>
                 {
-                    try
-                    {
-                        return await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
-                    }
-                    //TODO: Ideally all our exceptions should implement a common interface so we can only retry with duckdb if an exception that is not ours is encountered
-                    catch (DecimalOverflowException)
-                    {
-                        throw;
-                    }
-                    catch (Exception parquetNetEx)
-                    {
-                        IParquetEngine? duckDbEngine = null;
-                        try
-                        {
-                            //Try DuckDB
-                            duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(this._openParquetEngine.Path, loadingIcon.CancellationToken);
-                            loadingIcon.Reset();
-                            var result = await duckDbEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
-
-                            //Success! Switch engines
-                            this._openParquetEngine.DisposeSafely();
-                            this._openParquetEngine = duckDbEngine;
-                            return result;
-                        }
-                        catch (Exception duckDbEx)
-                        {
-                            duckDbEngine.DisposeSafely();
-                            throw parquetNetEx; ///TODO: capture both exceptions in amplitude
-                        }
-                    }
+                    return await engine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
                 }, loadingIcon.CancellationToken);
 
                 loadTime = stopwatch.Elapsed;
@@ -351,7 +357,7 @@ namespace ParquetViewer
                 indexTime = stopwatch.Elapsed - loadTime;
 
                 this.recordCountStatusBarLabel.Text = string.Format(Resources.Strings.LoadedRecordCountRangeFormat, this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
-                this.totalRowCountStatusBarLabel.Text = this._openParquetEngine.RecordCount.ToString();
+                this.totalRowCountStatusBarLabel.Text = engine.RecordCount.ToString();
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                 this.MainDataSource = finalResult;
@@ -398,7 +404,7 @@ namespace ParquetViewer
                 $"    Load time: {loadTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Index time: {indexTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Render time: {renderTime:mm\\:ss\\.ff}" + Environment.NewLine +
-                $"Engine: {(this._openParquetEngine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" : "DuckDB")}";
+                $"Engine: {(engine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" : "DuckDB")}";
 
                 loadingIcon?.Dispose();
 
@@ -406,10 +412,10 @@ namespace ParquetViewer
                 {
                     FileOpenEvent.FireAndForget(
                         Directory.Exists(this.OpenFileOrFolderPath),
-                        this._openParquetEngine!.NumberOfPartitions,
-                        this._openParquetEngine.RecordCount,
-                        this._openParquetEngine.Metadata.RowGroups.Count,
-                        this._openParquetEngine.Fields.Count,
+                        engine.NumberOfPartitions,
+                        engine.RecordCount,
+                        engine.Metadata.RowGroups.Count,
+                        engine.Fields.Count,
                         this.MainDataSource!.Columns.Cast<DataColumn>().Select(column => column.DataType.Name).Distinct().Order().ToArray(),
                         this.CurrentOffset,
                         this.CurrentMaxRowCount,
@@ -525,6 +531,12 @@ namespace ParquetViewer
                 //We default to English
                 this.englishToolStripMenuItem.Checked = true;
             }
+        }
+
+        private void SwapEngines(IParquetEngine newEngine)
+        {
+            this._openParquetEngine.DisposeSafely();
+            this._openParquetEngine = newEngine;
         }
     }
 }

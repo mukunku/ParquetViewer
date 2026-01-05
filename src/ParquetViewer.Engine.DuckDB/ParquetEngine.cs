@@ -262,6 +262,8 @@ namespace ParquetViewer.Engine.DuckDB
                 //Convert values to our types
                 for (var columnIndex = 0; columnIndex < row.FieldCount; columnIndex++)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     var fieldName = selectedFields.ElementAt(columnIndex);
                     var parquetSchemaElement = (ParquetSchemaElement)this._metadatas.First().SchemaTree.Children.First(f => f.Path == fieldName);
                     values[columnIndex] = ConvertValueTypeIfNeeded(values[columnIndex], parquetSchemaElement);
