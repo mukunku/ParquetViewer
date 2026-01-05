@@ -28,12 +28,14 @@ namespace ParquetViewer.Engine.ParquetNET
             foreach (var rowGroup in thriftMetadata.RowGroups)
             {
                 List<RowGroupColumnMetadata> columnMetadataList = new();
+                var columnIndex = 0;
                 foreach (var column in rowGroup.Columns)
                 {
                     if (column.MetaData is null)
                         continue;
 
-                    var columnMetadata = new RowGroupColumnMetadata(-1,
+                    var columnMetadata = new RowGroupColumnMetadata(
+                        columnIndex++,
                         string.Join("/", column.MetaData.PathInSchema),
                         column.MetaData.Type.ToString(),
                         (int)column.MetaData.NumValues,

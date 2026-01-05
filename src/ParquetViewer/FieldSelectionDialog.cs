@@ -3,6 +3,7 @@ using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
@@ -16,8 +17,11 @@ namespace ParquetViewer
         private const int DynamicFieldCheckboxYIncrement = 30;
         private const int MaxNumberOfFieldsWeCanRender = 5000;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<string> PreSelectedFields { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<string> AvailableFields { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<string> NewSelectedFields { get; set; }
 
         private string _selectedFieldsOnlyLabelTemplate;

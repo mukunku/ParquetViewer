@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
@@ -34,6 +35,7 @@ namespace ParquetViewer.Controls
             base.Dispose(disposing);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public int DelayedTextChangedTimeout { get; set; }
 
         protected virtual void OnDelayedTextChanged(EventArgs e)

@@ -1,5 +1,6 @@
 ﻿using ParquetViewer.Helpers;
 using System;
+using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace ParquetViewer.Controls
         private readonly string originalTitle = string.Empty;
 
         private string titleSuffix = string.Empty;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string TitleSuffix
         {
             get => titleSuffix;
@@ -30,8 +32,11 @@ namespace ParquetViewer.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Guid UniqueTag { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SourceRowIndex { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SourceColumnIndex { get; set; }
 
         public event EventHandler<TakeMeBackEventArgs>? TakeMeBackEvent;
@@ -95,7 +100,7 @@ namespace ParquetViewer.Controls
             }
             else if (this.mainPictureBox is not null)
             {
-                this.Text += $" ({Resources.Strings.DimensionsText}: {this.mainPictureBox.Image.PhysicalDimension.Width} x {this.mainPictureBox.Image.PhysicalDimension.Height})";
+                this.Text += $" ({Resources.Strings.DimensionsText}: {this.mainPictureBox.Image!.PhysicalDimension.Width} x {this.mainPictureBox.Image.PhysicalDimension.Height})";
                 this.Text += $" ({Resources.Strings.TypeText}: {this.mainPictureBox.Image.RawFormat})";
 
                 this.Width = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Width / 1.8), this.mainPictureBox.Image.Width), 400);
@@ -142,7 +147,7 @@ namespace ParquetViewer.Controls
         {
             using var saveFileDialog = new SaveFileDialog
             {
-                Filter = $"{this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
+                Filter = $"{this.mainPictureBox.Image!.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
                 Title = Resources.Strings.SaveImageAsButtonText.Format(this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant())
             };
 
@@ -165,7 +170,7 @@ namespace ParquetViewer.Controls
             try
             {
                 this.mainPictureBox.Cursor = Cursors.WaitCursor;
-                Clipboard.SetImage(this.mainPictureBox.Image);
+                Clipboard.SetImage(this.mainPictureBox.Image!);
                 await Task.Delay(100); //allow cursor to change
             }
             finally

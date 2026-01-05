@@ -68,7 +68,7 @@ namespace ParquetViewer.Helpers
 
         public static Size RenderedSize(this PictureBox pictureBox)
         {
-            var wfactor = (double)pictureBox.Image.Width / pictureBox.ClientSize.Width;
+            var wfactor = (double)pictureBox.Image!.Width / pictureBox.ClientSize.Width;
             var hfactor = (double)pictureBox.Image.Height / pictureBox.ClientSize.Height;
 
             var resizeFactor = Math.Max(wfactor, hfactor);
@@ -265,7 +265,7 @@ namespace ParquetViewer.Helpers
             catch { /*swallow*/ }
         }
 
-        public static bool ImplementsInterface<T>(this Type type)
+        public static bool ImplementsInterface<T>(this Type? type)
         {
             if (type is null)
                 return false;

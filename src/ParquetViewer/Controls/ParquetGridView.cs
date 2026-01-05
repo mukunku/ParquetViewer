@@ -4,6 +4,7 @@ using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace ParquetViewer.Controls
         const string FORMATTING_ERROR_TEXT = "#ERR";
 
         private Theme _gridTheme = Theme.LightModeTheme;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Theme GridTheme
         {
             get => _gridTheme;
@@ -35,8 +37,11 @@ namespace ParquetViewer.Controls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Image? CopyToClipboardIcon { get; set; } = null;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Image? CopyAsWhereIcon { get; set; } = null;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
 
         private readonly HashSet<int> clickableColumnIndexes = new();
@@ -101,7 +106,7 @@ namespace ParquetViewer.Controls
                         var cellValue = this[column.Index, i].Value;
                         if (cellValue != DBNull.Value)
                         {
-                            var isImage = ((IByteArrayValue)cellValue).ToImage(out var image);
+                            var isImage = ((IByteArrayValue)cellValue!).ToImage(out var image);
                             if (isImage)
                             {
                                 column.DefaultCellStyle = GetHyperlinkCellStyle(column);
@@ -144,8 +149,8 @@ namespace ParquetViewer.Controls
                     e.PaintBackground(e.CellBounds, true);
                     e.PaintContent(e.CellBounds);
 
-                    WidenColumnForIndicator(this.Columns[e.ColumnIndex], e.Graphics!, e.CellStyle!.Font, false);
-                    var length = MeasureStringWidth(e.Graphics!, e.CellStyle.Font, e.FormattedValue?.ToString() ?? string.Empty, false);
+                    WidenColumnForIndicator(this.Columns[e.ColumnIndex], e.Graphics!, e.CellStyle!.Font!, false);
+                    var length = MeasureStringWidth(e.Graphics!, e.CellStyle.Font!, e.FormattedValue?.ToString() ?? string.Empty, false);
                     var drawPoint = new Point(e.CellBounds.Left + length - 2, e.CellBounds.Y + 4);
                     TextRenderer.DrawText(e.Graphics!, "*", e.CellStyle!.Font, drawPoint, e.CellStyle.ForeColor, TextFormatFlags.PreserveGraphicsClipping);
 
@@ -160,7 +165,7 @@ namespace ParquetViewer.Controls
                     e.Paint(e.CellBounds, DataGridViewPaintParts.All
                         & ~(DataGridViewPaintParts.ContentForeground));
 
-                    var font = new Font(e.CellStyle!.Font, FontStyle.Italic);
+                    var font = new Font(e.CellStyle!.Font!, FontStyle.Italic);
                     var color = this.GridTheme.CellPlaceholderTextColor;
                     if (e.State.HasFlag(DataGridViewElementStates.Selected))
                         color = Color.White;
@@ -545,8 +550,11 @@ namespace ParquetViewer.Controls
 
         protected override void OnSorted(EventArgs e)
         {
-            using var graphics = this.CreateGraphics();
-            WidenColumnForIndicator(this.SortedColumn, graphics, this.Font, true);
+            if (this.SortedColumn is not null)
+            {
+                using var graphics = this.CreateGraphics();
+                WidenColumnForIndicator(this.SortedColumn, graphics, this.Font, true);
+            }
             base.OnSorted(e);
         }
 
@@ -732,7 +740,7 @@ namespace ParquetViewer.Controls
                     //Allow longer than preferred width if header is longer
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
-                else if (this.Columns[i].CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell))
+                else if (this.Columns[i].CellTemplate!.GetType() == typeof(AudioPlayerDataGridViewCell))
                 {
                     this.Columns[i].Width = Math.Min(Math.Max(240, newColumnSize), maxWidth);
                     return;
@@ -836,7 +844,7 @@ namespace ParquetViewer.Controls
             this.clickableColumnIndexes.Add(column.Index);
             this.hyperlinkCellStyleCache ??= new DataGridViewCellStyle(column.DefaultCellStyle)
             {
-                Font = new(column.DefaultCellStyle.Font ?? column.InheritedStyle.Font, FontStyle.Underline),
+                Font = new(column.DefaultCellStyle.Font ?? column.InheritedStyle!.Font!, FontStyle.Underline),
                 ForeColor = this.GridTheme.HyperlinkColor
             };
             return this.hyperlinkCellStyleCache;
@@ -892,11 +900,10 @@ namespace ParquetViewer.Controls
                 .GroupBy(cell => cell.ColumnIndex)
                 .OrderBy(column => column.Key))
             {
-                DataTable? dataTable = this.DataSource as DataTable;
-                var cellValues = selectedCellsByColumn.Select(cell => this[cell.ColumnIndex, cell.RowIndex].Value);
+                var cellValues = selectedCellsByColumn.Select(cell => this[cell.ColumnIndex, cell.RowIndex].Value!);
                 var columnIndex = selectedCellsByColumn.Key;
                 var column = this.Columns[columnIndex];
-                columnsAndValuesToFilterBy.Add((column.Name, column.ValueType, cellValues.ToArray()));
+                columnsAndValuesToFilterBy.Add((column.Name, column.ValueType!, cellValues.ToArray()));
             }
 
             var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy);
@@ -1027,7 +1034,7 @@ namespace ParquetViewer.Controls
         {
             //If this is a byte array column, show available formatting options
             if (this.Columns[columnIndex].ValueType.ImplementsInterface<IByteArrayValue>()
-                && this.Columns[columnIndex].CellTemplate.GetType() != typeof(AudioPlayerDataGridViewCell))
+                && this.Columns[columnIndex].CellTemplate?.GetType() != typeof(AudioPlayerDataGridViewCell))
             {
                 const int RECORDS_TO_INTERSECT_COUNT = 8;
 
@@ -1284,7 +1291,7 @@ namespace ParquetViewer.Controls
         public void DisposeAudioCells()
         {
             foreach (var audioColumn in this.Columns.Cast<DataGridViewColumn>()
-                .Where(column => column.CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell)))
+                .Where(column => column.CellTemplate?.GetType() == typeof(AudioPlayerDataGridViewCell)))
             {
                 foreach (DataGridViewRow row in this.Rows)
                 {
