@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ParquetViewer.Exceptions;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -23,6 +24,9 @@ namespace ParquetViewer.Analytics
         public long ReadTimeMS { get; set; }
         public long IndexTimeMS { get; set; }
         public long RenderTimeMS { get; set; }
+        [JsonIgnore]
+        public ParquetEngineTypeId EngineType { get; set; }
+        public string EngineTypeName => EngineType.ToString();
 
         public FileOpenEvent() : base(EVENT_TYPE)
         {
@@ -30,8 +34,8 @@ namespace ParquetViewer.Analytics
         }
 
         public static void FireAndForget(bool isFolder, int numPartitions, long numRows, int numRowGroups, int numFields,
-            string[] fieldTypes, long recordOffset, long recordCount, int numLoadedFields,
-            long totalLoadTimeMilliseconds, long readTimeMS, long indexTimeMS, long renderTimeMS)
+            string[] fieldTypes, long recordOffset, long recordCount, int numLoadedFields, long totalLoadTimeMilliseconds,
+            long readTimeMS, long indexTimeMS, long renderTimeMS, ParquetEngineTypeId engineType)
         {
             var _ = new FileOpenEvent
             {
@@ -47,8 +51,15 @@ namespace ParquetViewer.Analytics
                 LoadTimeMS = totalLoadTimeMilliseconds,
                 ReadTimeMS = readTimeMS,
                 IndexTimeMS = indexTimeMS,
-                RenderTimeMS = renderTimeMS
+                RenderTimeMS = renderTimeMS,
+                EngineType = engineType,
             }.Record();
+        }
+
+        public enum ParquetEngineTypeId
+        {
+            ParquetNET,
+            DuckDB
         }
     }
 
@@ -169,9 +180,18 @@ namespace ParquetViewer.Analytics
             this.Exception = ex ?? throw new ArgumentNullException(nameof(ex));
         }
 
-        public static void FireAndForget(System.Exception ex)
+        public static void FireAndForget(Exception ex)
         {
-            var _ = new ExceptionEvent(ex).Record();
+            if (ex is RowsReadException rre)
+            {
+                //Record two separate exceptions for both parquet.net and duckdb
+                var _ = new ExceptionEvent(rre.ParquetNetException).Record()
+                    .ContinueWith((_) => _ = new ExceptionEvent(rre.DuckDbException).Record());
+            }
+            else
+            {
+                var _ = new ExceptionEvent(ex).Record();
+            }
         }
     }
 

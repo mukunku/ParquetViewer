@@ -2,6 +2,7 @@ using ParquetViewer.Analytics;
 using ParquetViewer.Controls;
 using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -222,9 +223,9 @@ namespace ParquetViewer
                     {
                         HandleSomeFilesSkippedException(sfse);
                     }
-                    else if (ex is FileReadException fre)
+                    else if (ex is Engine.Exceptions.FileReadException fre)
                     {
-                        HandleFileReadException(fre);
+                        MainForm.HandleFileReadException(fre);
                     }
                     else if (ex is MultipleSchemasFoundException msfe)
                     {
@@ -296,23 +297,17 @@ namespace ParquetViewer
                 if (this._openParquetEngine is Engine.DuckDB.ParquetEngine)
                     throw;
 
-                var readSuccess = false;
                 try
                 {
                     var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath!, default);
                     await LoadFileToGridviewImpl(duckDbEngine);
-
-                    readSuccess = true;
                     this.SwapEngines(duckDbEngine);
                 }
                 catch (Exception duckDbEx)
                 {
-                    //throw unhandledEx;
+                    //If DuckDB fails too, bail
+                    throw new RowsReadException(unhandledEx, duckDbEx);
                 }
-
-                //Re-throw the original unhandled exception
-                if (!readSuccess) 
-                    throw;
             }
         }
 
@@ -371,9 +366,9 @@ namespace ParquetViewer
             {
                 HandleSomeFilesSkippedException(ex);
             }
-            catch (FileReadException ex)
+            catch (Engine.Exceptions.FileReadException ex)
             {
-                HandleFileReadException(ex);
+                MainForm.HandleFileReadException(ex);
             }
             catch (MultipleSchemasFoundException ex)
             {
@@ -410,6 +405,10 @@ namespace ParquetViewer
 
                 if (wasSuccessful)
                 {
+                    var engineType = this._openParquetEngine is Engine.DuckDB.ParquetEngine
+                        ? FileOpenEvent.ParquetEngineTypeId.DuckDB
+                        : FileOpenEvent.ParquetEngineTypeId.ParquetNET;
+
                     FileOpenEvent.FireAndForget(
                         Directory.Exists(this.OpenFileOrFolderPath),
                         engine.NumberOfPartitions,
@@ -423,7 +422,8 @@ namespace ParquetViewer
                         (long)totalTime.TotalMilliseconds,
                         (long)loadTime.TotalMilliseconds,
                         (long)indexTime.TotalMilliseconds,
-                        (long)renderTime.TotalMilliseconds);
+                        (long)renderTime.TotalMilliseconds,
+                        engineType);
                 }
             }
         }
