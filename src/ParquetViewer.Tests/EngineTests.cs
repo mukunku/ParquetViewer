@@ -1,5 +1,6 @@
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
+using System.Data;
 using System.Text.Json;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
@@ -508,7 +509,7 @@ namespace ParquetViewer.Tests
         }
 
         [TestMethod]
-        public async Task TWO_TIER_TEPEATED_LIST_FIELDS_TEST()
+        public async Task TWO_TIER_REPEATED_LIST_FIELDS_TEST()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/TWO_TIER_TEPEATED_LIST_FIELDS_TEST.parquet", default);
             Assert.AreEqual(1, parquetEngine.RecordCount);
@@ -553,6 +554,40 @@ namespace ParquetViewer.Tests
 
             await Assert.ThrowsAsync<DecimalOverflowException>(() =>
                 parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default));
+        }
+
+        [TestMethod]
+        [SkipWhen(typeof(ParquetNETEngineTests), "Our implementation can't open this file")]
+        public async Task LIST_OF_NESTED_STRUCTS_TEST()
+        {
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_NESTED_STRUCTS_TEST.parquet", default);
+            Assert.AreEqual(1, parquetEngine.RecordCount);
+            Assert.HasCount(1, parquetEngine.Fields);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+
+            Assert.AreEqual("[{\"B\":{\"id\":1}},{\"B\":{\"id\":null}},{\"B\":null}]", dataTable.Rows[0][0].ToString());
+        }
+
+        [TestMethod]
+        [SkipWhen(typeof(ParquetNETEngineTests), "Nested Maps not supported")]
+        public async Task NESTED_MAPS_TEST()
+        {
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_MAPS_TEST.parquet", default);
+            Assert.AreEqual(6, parquetEngine.RecordCount);
+            Assert.HasCount(3, parquetEngine.Fields);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 3, default))(false);
+
+            Assert.AreEqual("[(a,[(1,True),(2,False)])]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[(b,[(1,True)])]", dataTable.Rows[1][0].ToString());
+            Assert.AreEqual("[(c,)]", dataTable.Rows[2][0].ToString());
+
+            dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 3, 3, default))(false);
+
+            Assert.AreEqual("[(d,[])]", dataTable.Rows[0][0].ToString());
+            Assert.AreEqual("[(e,[(1,True)])]", dataTable.Rows[1][0].ToString());
+            Assert.AreEqual("[(f,[(3,True),(4,False),(5,True)])]", dataTable.Rows[2][0].ToString());
         }
 
         private static string TryFormatJSON(string possibleJSON)
