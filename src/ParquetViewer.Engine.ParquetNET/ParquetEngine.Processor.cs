@@ -9,8 +9,6 @@ namespace ParquetViewer.Engine.ParquetNET
 {
     public partial class ParquetEngine
     {
-        public static readonly string TotalRecordCountExtendedPropertyKey = "TOTAL_RECORD_COUNT";
-
         public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
             {
@@ -32,7 +30,6 @@ namespace ParquetViewer.Engine.ParquetNET
                 return (logProgress) =>
                 {
                     var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
-                    datatable.ExtendedProperties[TotalRecordCountExtendedPropertyKey] = result.DataSetSize;
                     return datatable;
                 };
             }

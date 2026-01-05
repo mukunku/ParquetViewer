@@ -495,15 +495,17 @@ namespace ParquetViewer
             ShowError(Resources.Errors.MalformedFieldErrorMessageFormat.Format(ex.Message));
         }
 
-        private static void HandleDecimalOverflowException(DecimalOverflowException ex)            
+        private static void HandleDecimalOverflowException(DecimalOverflowException ex)
             => ShowError(
-                Resources.Errors.DecimalValueTooLargeErrorMessageFormat.Format(
-                    ex.FieldName,
-                    ex.Precision,
-                    ex.Scale,
-                    DecimalOverflowException.MAX_DECIMAL_PRECISION,
-                    DecimalOverflowException.MAX_DECIMAL_SCALE),
-                Resources.Errors.DecimalValueTooLargeErrorTitle);
+                   (ex.HasDetailedInfo ? Resources.Errors.DecimalValueTooLargeErrorMessageFormat 
+                        : Resources.Errors.DecimalValueUnknownSizeTooLargeErrorMessageFormat)
+                   .Format(
+                       ex.FieldName,
+                       ex.Precision,
+                       ex.Scale,
+                       DecimalOverflowException.MAX_DECIMAL_PRECISION,
+                       DecimalOverflowException.MAX_DECIMAL_SCALE),
+                   Resources.Errors.DecimalValueTooLargeErrorTitle);
 
         private static void ShowError(string message, string? title = null) 
             => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);

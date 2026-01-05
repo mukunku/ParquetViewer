@@ -467,6 +467,9 @@
   <data name="&gt;&gt;mainGridView.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
+  <metadata name="loadAllRowsButtonTooltip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="loadAllRowsButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -494,9 +497,6 @@
   <data name="loadAllRowsButton.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <metadata name="loadAllRowsButtonTooltip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="loadAllRowsButton.ToolTip" xml:space="preserve">
     <value>Load all records (Ctrl+E)</value>
   </data>
@@ -554,6 +554,133 @@
   <metadata name="mainMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>382, 17</value>
   </metadata>
+  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>37, 20</value>
+  </data>
+  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;File</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAAxVJREFUWEfVV1mrjWEYPWQWmed5ynCQUiSFMg8hF4aSeTgnrGNMxswJIZRcK1wp
+        SqFcGG6cdXBQboyLMl3wE7R4Pk7fxd7fae8jnlrtvb/9vvtd7zOtZ5eU/EsGymgPaiGopaCWBPx++Aaq
+        pKLyF4puZc9eJwR84EFQU0FNi9dFoPYERntd0a3s6ZuEwIo4aA2o+hWPPvjZWFB3Qd0ENRBUa1D9QQ3I
+        AK9rB6peTuIpAjtAPQA1EtRmUC9AnYvwGNdBfQL1MQO87gaoTlkJrAY1GdR5UC9B3Y8QbAXVFFQjUFNA
+        rasFHMrGWQnY9fNATQB11skHqh+o40EgvbU4trb6VULASXYG1IHAflAnQa3KG8dCLQj4EMe5B6juga7h
+        +vSW4loQGBWuP1QDpyI0f8UDTsL5oJqBagmqRZTSsXiW3lY8CwIrQU1MDopnbaI5mUBDUONALY+SzQev
+        c0LnD2EOAm0jFK6CDlHXX0F9yQCvuwWqc1YCzvY0AXvgMKjm4Dt/7ghqCKjSDPA6N6H8+ROHLY7DpoOa
+        BWpmuNGJmLuZFGo13O1GZEVM4E5YikqVoKruCTQP8ZkUoUjQLb5PbyuOlf+R4wXhbodiWcwCm0DtjPdD
+        vW591dv0TxRmNbTAVWAFnJMkDqhBoYAPQyHdG3qC6pUBXtcqr/dScuyavxci5Kb0GNRlUH1D26+C+gDq
+        fQZ43bXayLHLcAaoi3HjJ6C2gNoIqklUwuyQ56yYG3vTx/6xlBx7DPNMcCW0wU3kaJ224tVPXiYEnPEX
+        QO2LUHg8sxz7JvXrjIAtCPgQ37gPqN4BJ1JuFxZq5c9/DyRuncnN9wbcGV0V7hE/u+G6yjfpnyjMUjPh
+        elCDawwlw0KMXIrOjTol4DI8EUOJb+tbV4CqBnUk1NBzoivBXskHrxsBqkHOEKYakSvB/wPc+S6BegRq
+        exAygdugvoP6lgFedwdUl6wEHAIPELtBfY7x3DdwLrgMnaRuSNaLrHBDy11Ba6t/a4E94KbjZrQL1JiY
+        60//LTl2/zYBAyFE20CNj+/T2/5v+wEn/rziAX3j2AAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+F</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="changeFieldsMenuStripButton.Text" xml:space="preserve">
+    <value>Add/Remove &amp;Fields</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        vAAADrwBlbxySQAAAMZJREFUWEftkMEKAkEMQwf07s3//0pPioI4siRNLd2Mp32Qy762WWaMA81ljPH8
+        pMvcP6OosC3u/MSu/eveA5390+bJ8OnxezVqPwSHsgPVZPvEPRnC79Vk+wQO/DpQSbZP4MDqEDiwOgQO
+        rA4hhRnZI4UZ2SOFGdkTiRvE4aKeN5GY31Y4QgozskcKM7InEpWn7DoiEpVDXUdIYUb2SGFG9kSi8pRd
+        R0SicqjrCCnMyB4pzMgeKczInin+kQeWT3BwVQ6+vACQfnpPxBPj1gAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="changeDateFormatToolStripMenuItem.Text" xml:space="preserve">
+    <value>Date Format</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Always Load All Records</value>
+  </data>
+  <data name="alwaysLoadAllRecordsToolStripMenuItem.ToolTipText" xml:space="preserve">
+    <value>When opening a new file ParquetViewer will load all records</value>
+  </data>
+  <data name="darkModeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="darkModeToolStripMenuItem.Text" xml:space="preserve">
+    <value>Dark Mode</value>
+  </data>
+  <data name="parquetNetToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="parquetNetToolStripMenuItem.Text" xml:space="preserve">
+    <value>Parquet.NET</value>
+  </data>
+  <data name="duckDBToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="duckDBToolStripMenuItem.Text" xml:space="preserve">
+    <value>DuckDB</value>
+  </data>
+  <data name="parquetEngineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="parquetEngineToolStripMenuItem.Text" xml:space="preserve">
+    <value>Parquet Engine</value>
+  </data>
+  <data name="editToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>39, 20</value>
+  </data>
+  <data name="editToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Edit</value>
+  </data>
+  <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 20</value>
+  </data>
+  <data name="toolsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
+  </data>
+  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Help</value>
+  </data>
+  <data name="mainMenuStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="mainMenuStrip.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>7, 2, 0, 2</value>
+  </data>
+  <data name="mainMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>944, 24</value>
+  </data>
+  <data name="mainMenuStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="mainMenuStrip.Text" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.Name" xml:space="preserve">
+    <value>mainMenuStrip</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;mainMenuStrip.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="newToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -662,40 +789,6 @@
   <data name="exitToolStripMenuItem.Text" xml:space="preserve">
     <value>Exit</value>
   </data>
-  <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 20</value>
-  </data>
-  <data name="fileToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;File</value>
-  </data>
-  <data name="changeFieldsMenuStripButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAAxVJREFUWEfVV1mrjWEYPWQWmed5ynCQUiSFMg8hF4aSeTgnrGNMxswJIZRcK1wp
-        SqFcGG6cdXBQboyLMl3wE7R4Pk7fxd7fae8jnlrtvb/9vvtd7zOtZ5eU/EsGymgPaiGopaCWBPx++Aaq
-        pKLyF4puZc9eJwR84EFQU0FNi9dFoPYERntd0a3s6ZuEwIo4aA2o+hWPPvjZWFB3Qd0ENRBUa1D9QQ3I
-        AK9rB6peTuIpAjtAPQA1EtRmUC9AnYvwGNdBfQL1MQO87gaoTlkJrAY1GdR5UC9B3Y8QbAXVFFQjUFNA
-        rasFHMrGWQnY9fNATQB11skHqh+o40EgvbU4trb6VULASXYG1IHAflAnQa3KG8dCLQj4EMe5B6juga7h
-        +vSW4loQGBWuP1QDpyI0f8UDTsL5oJqBagmqRZTSsXiW3lY8CwIrQU1MDopnbaI5mUBDUONALY+SzQev
-        c0LnD2EOAm0jFK6CDlHXX0F9yQCvuwWqc1YCzvY0AXvgMKjm4Dt/7ghqCKjSDPA6N6H8+ROHLY7DpoOa
-        BWpmuNGJmLuZFGo13O1GZEVM4E5YikqVoKruCTQP8ZkUoUjQLb5PbyuOlf+R4wXhbodiWcwCm0DtjPdD
-        vW591dv0TxRmNbTAVWAFnJMkDqhBoYAPQyHdG3qC6pUBXtcqr/dScuyavxci5Kb0GNRlUH1D26+C+gDq
-        fQZ43bXayLHLcAaoi3HjJ6C2gNoIqklUwuyQ56yYG3vTx/6xlBx7DPNMcCW0wU3kaJ224tVPXiYEnPEX
-        QO2LUHg8sxz7JvXrjIAtCPgQ37gPqN4BJ1JuFxZq5c9/DyRuncnN9wbcGV0V7hE/u+G6yjfpnyjMUjPh
-        elCDawwlw0KMXIrOjTol4DI8EUOJb+tbV4CqBnUk1NBzoivBXskHrxsBqkHOEKYakSvB/wPc+S6BegRq
-        exAygdugvoP6lgFedwdUl6wEHAIPELtBfY7x3DdwLrgMnaRuSNaLrHBDy11Ba6t/a4E94KbjZrQL1JiY
-        60//LTl2/zYBAyFE20CNj+/T2/5v+wEn/rziAX3j2AAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="changeFieldsMenuStripButton.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Ctrl+F</value>
-  </data>
-  <data name="changeFieldsMenuStripButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>217, 22</value>
-  </data>
-  <data name="changeFieldsMenuStripButton.Text" xml:space="preserve">
-    <value>Add/Remove &amp;Fields</value>
-  </data>
   <data name="defaultToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>125, 22</value>
   </data>
@@ -719,42 +812,6 @@
   </data>
   <data name="customDateFormatToolStripMenuItem.Text" xml:space="preserve">
     <value>Custom...</value>
-  </data>
-  <data name="changeDateFormatToolStripMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vAAADrwBlbxySQAAAMZJREFUWEftkMEKAkEMQwf07s3//0pPioI4siRNLd2Mp32Qy762WWaMA81ljPH8
-        pMvcP6OosC3u/MSu/eveA5390+bJ8OnxezVqPwSHsgPVZPvEPRnC79Vk+wQO/DpQSbZP4MDqEDiwOgQO
-        rA4hhRnZI4UZ2SOFGdkTiRvE4aKeN5GY31Y4QgozskcKM7InEpWn7DoiEpVDXUdIYUb2SGFG9kSi8pRd
-        R0SicqjrCCnMyB4pzMgeKczInin+kQeWT3BwVQ6+vACQfnpPxBPj1gAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="changeDateFormatToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>217, 22</value>
-  </data>
-  <data name="changeDateFormatToolStripMenuItem.Text" xml:space="preserve">
-    <value>Date Format</value>
-  </data>
-  <data name="alwaysLoadAllRecordsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>217, 22</value>
-  </data>
-  <data name="alwaysLoadAllRecordsToolStripMenuItem.Text" xml:space="preserve">
-    <value>Always Load All Records</value>
-  </data>
-  <data name="alwaysLoadAllRecordsToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>When opening a new file ParquetViewer will load all records</value>
-  </data>
-  <data name="darkModeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>217, 22</value>
-  </data>
-  <data name="darkModeToolStripMenuItem.Text" xml:space="preserve">
-    <value>Dark Mode</value>
-  </data>
-  <data name="editToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>39, 20</value>
-  </data>
-  <data name="editToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Edit</value>
   </data>
   <data name="getSQLCreateTableScriptToolStripMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -798,26 +855,26 @@
   <data name="metadataViewerToolStripMenuItem.Text" xml:space="preserve">
     <value>Metadata Viewer</value>
   </data>
-  <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 20</value>
-  </data>
-  <data name="toolsToolStripMenuItem.Text" xml:space="preserve">
-    <value>Tools</value>
-  </data>
   <data name="userGuideToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="userGuideToolStripMenuItem.Text" xml:space="preserve">
     <value>User Guide</value>
   </data>
   <data name="shareAnonymousUsageDataToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="shareAnonymousUsageDataToolStripMenuItem.Text" xml:space="preserve">
     <value>Share Usage Data</value>
   </data>
   <data name="shareAnonymousUsageDataToolStripMenuItem.ToolTipText" xml:space="preserve">
     <value>See About page for link to privacy policy</value>
+  </data>
+  <data name="languageToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="languageToolStripMenuItem.Text" xml:space="preserve">
+    <value>Language</value>
   </data>
   <data name="englishToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 22</value>
@@ -831,50 +888,11 @@
   <data name="turkishToolStripMenuItem.Text" xml:space="preserve">
     <value>Türkçe</value>
   </data>
-  <data name="languageToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 22</value>
-  </data>
-  <data name="languageToolStripMenuItem.Text" xml:space="preserve">
-    <value>Language</value>
-  </data>
   <data name="aboutToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="aboutToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;About...</value>
-  </data>
-  <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 20</value>
-  </data>
-  <data name="helpToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Help</value>
-  </data>
-  <data name="mainMenuStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="mainMenuStrip.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>7, 2, 0, 2</value>
-  </data>
-  <data name="mainMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>944, 24</value>
-  </data>
-  <data name="mainMenuStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="mainMenuStrip.Text" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;mainMenuStrip.Name" xml:space="preserve">
-    <value>mainMenuStrip</value>
-  </data>
-  <data name="&gt;&gt;mainMenuStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;mainMenuStrip.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;mainMenuStrip.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="showingRecordCountStatusBarLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 17</value>
@@ -975,6 +993,9 @@
   <data name="openFolderDialog.Description" xml:space="preserve">
     <value>Select a folder with parquet files</value>
   </data>
+  <metadata name="loadAllRowsButtonTooltip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -1220,6 +1241,24 @@
   </data>
   <data name="&gt;&gt;loadAllRowsButtonTooltip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;parquetEngineToolStripMenuItem.Name" xml:space="preserve">
+    <value>parquetEngineToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;parquetEngineToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;parquetNetToolStripMenuItem.Name" xml:space="preserve">
+    <value>parquetNetToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;parquetNetToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;duckDBToolStripMenuItem.Name" xml:space="preserve">
+    <value>duckDBToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;duckDBToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MainForm</value>

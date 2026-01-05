@@ -1,4 +1,6 @@
 ﻿using Microsoft.Win32;
+using ParquetViewer.Engine;
+using ParquetViewer.Engine.DuckDB;
 using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 using System;
@@ -11,6 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers

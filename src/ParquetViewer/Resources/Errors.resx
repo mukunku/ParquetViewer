@@ -287,4 +287,8 @@ If you think the file is valid please consider opening an issue in the GitHub re
     <value>(CTRL+C to copy)</value>
     <comment>Shown in the messagebox for unhandled exceptions to teach users how to copy the error text</comment>
   </data>
+  <data name="DecimalValueUnknownSizeTooLargeErrorMessageFormat" xml:space="preserve">
+    <value>Encountered DECIMAL data outside ParquetViewer's supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0)</value>
+    <comment>Shown when a field contains decimal values outside the supported range for .NET AND we don't know it's name, scale, or precision</comment>
+  </data>
 </root>

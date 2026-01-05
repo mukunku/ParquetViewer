@@ -20,6 +20,7 @@ namespace ParquetViewer
         private const string CustomDateFormatKey = "CustomDateFormat";
         private const string DarkModeKey = "DarkMode";
         private const string UserSelectedCultureKey = "UserSelectedCulture";
+        private const string UseDuckDBEngineKey = "UseDuckDBEngine";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -112,6 +113,12 @@ namespace ParquetViewer
                 (UtilityMethods.TryParseCultureInfo(value, out CultureInfo? cultureInfo) ? cultureInfo : null) 
                 : null;
             set => SetRegistryValue(UserSelectedCultureKey, value?.ToString() ?? string.Empty);
+        }
+
+        public static bool UseDuckDBEngine
+        {
+            get => ReadRegistryValue(UseDuckDBEngineKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+            set => SetRegistryValue(UseDuckDBEngineKey, value.ToString());
         }
 
         private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)

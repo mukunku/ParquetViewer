@@ -1,6 +1,7 @@
 ﻿using DuckDB.NET.Data;
 using ParquetViewer.Engine.DuckDB.Types;
 using ParquetViewer.Engine.Exceptions;
+using System;
 using System.Collections;
 using System.Data;
 using static ParquetViewer.Engine.DuckDB.DuckDBHelper;
@@ -245,7 +246,18 @@ namespace ParquetViewer.Engine.DuckDB
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var values = new object[row.FieldCount];
-                row.GetValues(values);
+                try
+                {
+                    row.GetValues(values);
+                }
+                catch(OverflowException ex) when (ex.Message == "Value was either too large or too small for a Decimal.")
+                {
+                    throw new DecimalOverflowException(ex);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
 
                 //Convert values to our types
                 for (var columnIndex = 0; columnIndex < row.FieldCount; columnIndex++)

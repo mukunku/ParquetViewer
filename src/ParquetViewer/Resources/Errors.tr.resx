@@ -247,4 +247,7 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
   <data name="CopyErrorMessageText" xml:space="preserve">
     <value>(Kopyalamak için CTRL+C)</value>
   </data>
+  <data name="DecimalValueUnknownSizeTooLargeErrorMessageFormat" xml:space="preserve">
+    <value>ParquetViewer'ın desteklediği aralığın, DECIMAL({3}, {4}) ve DECIMAL({3}, 0), dışında bir DECIMAL değerine rastlanıldı</value>
+  </data>
 </root>

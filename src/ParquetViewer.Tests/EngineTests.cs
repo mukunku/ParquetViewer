@@ -544,6 +544,17 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(expectedArrow, parquetEngine.CustomMetadata["ARROW:schema"]);
         }
 
+        [TestMethod]
+        public async Task DECIMALS_OUTOFRANGE_TEST()
+        {
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_OUTOFRANGE_TEST.parquet", default);
+            Assert.AreEqual(12, parquetEngine.RecordCount);
+            Assert.HasCount(51, parquetEngine.Fields);
+
+            await Assert.ThrowsAsync<DecimalOverflowException>(() =>
+                parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default));
+        }
+
         private static string TryFormatJSON(string possibleJSON)
         {
             try

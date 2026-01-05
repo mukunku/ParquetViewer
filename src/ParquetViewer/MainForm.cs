@@ -180,6 +180,10 @@ namespace ParquetViewer
             this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
             this.RefreshExperimentalFeatureToolStrips();
             this.SetLanguageCheckmark();
+            if (AppSettings.UseDuckDBEngine)
+                this.duckDBToolStripMenuItem.Checked = true;
+            else
+                this.parquetNetToolStripMenuItem.Checked = true;
 
             //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
             Program.GetUserConsentToGatherAnalytics();
@@ -206,7 +210,7 @@ namespace ParquetViewer
                 {
                     if (this._openParquetEngine == null)
                     {
-                        //cancel file open
+                        //cancel the file open
                         this.OpenFileOrFolderPath = null;
                     }
 
@@ -239,7 +243,7 @@ namespace ParquetViewer
                 }
             }
 
-           List<string>? fields = null;
+            List<string>? fields = null;
             try
             {
                 fields = this._openParquetEngine.Fields;
@@ -301,7 +305,36 @@ namespace ParquetViewer
 
                 var intermediateResult = await Task.Run(async () =>
                 {
-                    return await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
+                    try
+                    {
+                        return await this._openParquetEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
+                    }
+                    //TODO: Ideally all our exceptions should implement a common interface so we can only retry with duckdb if an exception that is not ours is encountered
+                    catch (DecimalOverflowException)
+                    {
+                        throw;
+                    }
+                    catch (Exception parquetNetEx)
+                    {
+                        IParquetEngine? duckDbEngine = null;
+                        try
+                        {
+                            //Try DuckDB
+                            duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(this._openParquetEngine.Path, loadingIcon.CancellationToken);
+                            loadingIcon.Reset();
+                            var result = await duckDbEngine.ReadRowsAsync(this.SelectedFields, this.CurrentOffset, this.CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
+
+                            //Success! Switch engines
+                            this._openParquetEngine.DisposeSafely();
+                            this._openParquetEngine = duckDbEngine;
+                            return result;
+                        }
+                        catch (Exception duckDbEx)
+                        {
+                            duckDbEngine.DisposeSafely();
+                            throw parquetNetEx; ///TODO: capture both exceptions in amplitude
+                        }
+                    }
                 }, loadingIcon.CancellationToken);
 
                 loadTime = stopwatch.Elapsed;
@@ -318,7 +351,7 @@ namespace ParquetViewer
                 indexTime = stopwatch.Elapsed - loadTime;
 
                 this.recordCountStatusBarLabel.Text = string.Format(Resources.Strings.LoadedRecordCountRangeFormat, this.CurrentOffset, this.CurrentOffset + finalResult.Rows.Count);
-                this.totalRowCountStatusBarLabel.Text = finalResult.ExtendedProperties[Engine.ParquetNET.ParquetEngine.TotalRecordCountExtendedPropertyKey]!.ToString();
+                this.totalRowCountStatusBarLabel.Text = this._openParquetEngine.RecordCount.ToString();
                 this.actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
                 this.MainDataSource = finalResult;
@@ -364,7 +397,8 @@ namespace ParquetViewer
                 this.showingStatusBarLabel.ToolTipText = $"Total time: {totalTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Load time: {loadTime:mm\\:ss\\.ff}" + Environment.NewLine +
                 $"    Index time: {indexTime:mm\\:ss\\.ff}" + Environment.NewLine +
-                $"    Render time: {renderTime:mm\\:ss\\.ff}" + Environment.NewLine;
+                $"    Render time: {renderTime:mm\\:ss\\.ff}" + Environment.NewLine +
+                $"Engine: {(this._openParquetEngine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" : "DuckDB")}";
 
                 loadingIcon?.Dispose();
 

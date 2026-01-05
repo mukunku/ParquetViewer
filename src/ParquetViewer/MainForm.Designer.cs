@@ -35,7 +35,7 @@ namespace ParquetViewer
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             mainTableLayoutPanel = new TableLayoutPanel();
             recordsToLabel = new Label();
             recordCountTextBox = new DelayedOnChangedTextBox();
@@ -87,6 +87,9 @@ namespace ParquetViewer
             exportFileDialog = new SaveFileDialog();
             openFolderDialog = new FolderBrowserDialog();
             loadAllRowsButtonTooltip = new ToolTip(components);
+            parquetEngineToolStripMenuItem = new ToolStripMenuItem();
+            parquetNetToolStripMenuItem = new ToolStripMenuItem();
+            duckDBToolStripMenuItem = new ToolStripMenuItem();
             mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)mainGridView).BeginInit();
             mainMenuStrip.SuspendLayout();
@@ -177,14 +180,14 @@ namespace ParquetViewer
             resources.ApplyResources(mainGridView, "mainGridView");
             mainGridView.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             mainGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            mainGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             mainTableLayoutPanel.SetColumnSpan(mainGridView, 11);
             mainGridView.CopyAsWhereIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyAsWhereIcon");
@@ -269,7 +272,7 @@ namespace ParquetViewer
             // 
             // editToolStripMenuItem
             // 
-            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem, darkModeToolStripMenuItem });
+            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem, darkModeToolStripMenuItem, parquetEngineToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
             resources.ApplyResources(editToolStripMenuItem, "editToolStripMenuItem");
             // 
@@ -446,6 +449,24 @@ namespace ParquetViewer
             resources.ApplyResources(openFolderDialog, "openFolderDialog");
             openFolderDialog.ShowNewFolderButton = false;
             // 
+            // parquetEngineToolStripMenuItem
+            // 
+            parquetEngineToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { parquetNetToolStripMenuItem, duckDBToolStripMenuItem });
+            parquetEngineToolStripMenuItem.Name = "parquetEngineToolStripMenuItem";
+            resources.ApplyResources(parquetEngineToolStripMenuItem, "parquetEngineToolStripMenuItem");
+            // 
+            // parquetNetToolStripMenuItem
+            // 
+            parquetNetToolStripMenuItem.Name = "parquetNetToolStripMenuItem";
+            resources.ApplyResources(parquetNetToolStripMenuItem, "parquetNetToolStripMenuItem");
+            parquetNetToolStripMenuItem.Click += parquetNetToolStripMenuItem_Click;
+            // 
+            // duckDBToolStripMenuItem
+            // 
+            duckDBToolStripMenuItem.Name = "duckDBToolStripMenuItem";
+            resources.ApplyResources(duckDBToolStripMenuItem, "duckDBToolStripMenuItem");
+            duckDBToolStripMenuItem.Click += duckDBToolStripMenuItem_Click;
+            // 
             // MainForm
             // 
             AllowDrop = true;
@@ -527,6 +548,9 @@ namespace ParquetViewer
         private ToolStripMenuItem languageToolStripMenuItem;
         private ToolStripMenuItem englishToolStripMenuItem;
         private ToolStripMenuItem turkishToolStripMenuItem;
+        private ToolStripMenuItem parquetEngineToolStripMenuItem;
+        private ToolStripMenuItem parquetNetToolStripMenuItem;
+        private ToolStripMenuItem duckDBToolStripMenuItem;
     }
 }
 

@@ -287,5 +287,19 @@ namespace ParquetViewer
             AppSettings.UserSelectedCulture = newCultureInfo;
             UtilityMethods.RestartApplication();
         }
+
+        private void parquetNetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.parquetNetToolStripMenuItem.Checked = true;
+            this.duckDBToolStripMenuItem.Checked = false;
+            AppSettings.UseDuckDBEngine = false;
+        }
+
+        private void duckDBToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.parquetNetToolStripMenuItem.Checked = false;
+            this.duckDBToolStripMenuItem.Checked = true;
+            AppSettings.UseDuckDBEngine = true;
+        }
     }
 }
