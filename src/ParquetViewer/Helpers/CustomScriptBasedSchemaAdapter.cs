@@ -82,7 +82,17 @@ namespace ParquetViewer.Helpers
 
         public static string GetTypeFor(DataColumn column)
         {
-            var item = TypeMap[column.DataType] as string;
+            Type columnType = column.DataType;
+            if (columnType.ImplementsInterface<IListValue>())
+                columnType = typeof(IListValue);
+            else if (columnType.ImplementsInterface<IMapValue>())
+                columnType = typeof(IMapValue);
+            else if (columnType.ImplementsInterface<IStructValue>())
+                columnType = typeof(IStructValue);
+            else if (columnType.ImplementsInterface<IByteArrayValue>())
+                columnType = typeof(IByteArrayValue);
+
+            var item = TypeMap[columnType] as string;
             if (item == null)
             {
                 throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));

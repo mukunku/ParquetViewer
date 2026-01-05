@@ -1253,7 +1253,7 @@ namespace ParquetViewer.Controls
             //Check for audio data
             foreach (DataGridViewColumn column in this.Columns)
             {
-                if (column.ValueType == typeof(IByteArrayValue))
+                if (column.ValueType.ImplementsInterface<IByteArrayValue>())
                 {
                     var isAudioColumn = false;
                     var tryCount = 0;
