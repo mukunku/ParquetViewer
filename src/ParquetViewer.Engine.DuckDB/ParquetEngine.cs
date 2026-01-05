@@ -4,7 +4,6 @@ using ParquetViewer.Engine.Exceptions;
 using System.Collections;
 using System.Data;
 using static ParquetViewer.Engine.DuckDB.DuckDBHelper;
-using static ParquetViewer.Engine.IParquetSchemaElement;
 
 namespace ParquetViewer.Engine.DuckDB
 {
@@ -263,9 +262,9 @@ namespace ParquetViewer.Engine.DuckDB
             }
             result.EndLoadData();
 
-            return (bool logProgress) =>
+            return (bool shouldLogProgress) =>
             {
-                if (logProgress)
+                if (shouldLogProgress)
                 {
                     //We don't have any post-processing. So just report the total.
                     progress?.Report(result.Rows.Count * result.Columns.Count);

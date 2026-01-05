@@ -2,8 +2,6 @@
 using DuckDB.NET.Native;
 using System.Numerics;
 using System.Text;
-using static ParquetViewer.Engine.IParquetSchemaElement;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ParquetViewer.Engine.DuckDB
 {

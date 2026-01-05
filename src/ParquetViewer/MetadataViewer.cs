@@ -124,60 +124,6 @@ namespace ParquetViewer
             }
         }
 
-        private void copyRawThriftMetadataButton_Click(object sender, EventArgs e)
-        {
-            var rawJson = JsonSerializer.Serialize(this._parquetEngine!.Metadata,
-                new JsonSerializerOptions()
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, //don't escape anything to make it human readable
-                    WriteIndented = true
-                });
-
-            try
-            {
-                Clipboard.SetText(rawJson);
-                MessageBox.Show(Resources.Strings.ThriftMetadataCopiedToClipboardMessage, "ParquetViewer");
-            }
-            catch (Exception)
-            {
-                var selection = MessageBox.Show(this,
-                    Resources.Errors.CopyRawMetadataFailedErrorMessage, 
-                    Resources.Errors.CopyRawMetadataFailedErrorTitle, 
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (selection == DialogResult.Yes)
-                {
-                    using var saveFileDialog = new SaveFileDialog();
-                    saveFileDialog.Filter = "JSON file|*.json";
-                    saveFileDialog.Title = Resources.Strings.SaveRawMetadataToFileDialogTitle;
-                    saveFileDialog.ShowDialog();
-
-                    if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
-                    {
-                        using var fileStream = File.OpenWrite(saveFileDialog.FileName);
-                        using var writer = new StreamWriter(fileStream);
-                        writer.Write(rawJson);
-
-                        MessageBox.Show(this,
-                            Resources.Strings.MetadataSuccessfullyExportedToFileMessageFormat.Format(saveFileDialog.FileName),
-                            Resources.Strings.MetadataSuccessfullyExportedToFileMessageTitle, 
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                }
-            }
-        }
-
-        private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (this.tabControl.TabCount == 0)
-                return;
-
-            //Copy raw option is only for Thrift metadata.
-            if (this.tabControl.SelectedIndex == 0)
-                this.copyRawThriftMetadataButton.Visible = true;
-            else
-                this.copyRawThriftMetadataButton.Visible = false;
-        }
-
         public override void SetTheme(Theme theme)
         {
             if (DesignMode)
@@ -187,7 +133,6 @@ namespace ParquetViewer
 
             base.SetTheme(theme);
             this.closeButton.ForeColor = Color.Black;
-            this.copyRawThriftMetadataButton.ForeColor = Color.Black;
         }
     }
 }

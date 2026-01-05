@@ -13,8 +13,6 @@ namespace ParquetViewer.Engine.DuckDB
 
         public bool IsPrimitive => this._clrType is not null;
 
-        public int? NumChildren => (int?)this._numChildren;
-
         public Type ClrType => this._clrType ?? this.FieldType switch
         {
             FieldTypeId.List => typeof(ListValue),
@@ -23,7 +21,7 @@ namespace ParquetViewer.Engine.DuckDB
             _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
         };
 
-        public FieldTypeId FieldType => this._convertedType switch
+        public FieldTypeId FieldType => this.ConvertedType switch
         {
             "LIST" => FieldTypeId.List,
             "MAP" => FieldTypeId.Map,
@@ -32,11 +30,11 @@ namespace ParquetViewer.Engine.DuckDB
         };
 
         /// <summary>
-        /// DuckDB has terrible metadata resolution. So we have to guess the field type based on available metadata.
+        /// DuckDB isn't good with metadata resolution it seems. So we have to guess the field type based on available metadata.
         /// </summary>
         private FieldTypeId GuessFieldType()
         {
-            if (this._clrType is not null || this._numChildren <= 0)
+            if (this._clrType is not null || (this.NumChildren ?? 0) <= 0)
             {
                 if (this._repetitionType == RepetitionTypeId.Repeated)
                     return FieldTypeId.List;
@@ -44,7 +42,7 @@ namespace ParquetViewer.Engine.DuckDB
                     return FieldTypeId.Primitive;
             }
 
-            if (this._numChildren == 2)
+            if (this.NumChildren == 2)
             {
                 try
                 {
@@ -54,7 +52,7 @@ namespace ParquetViewer.Engine.DuckDB
                 catch { }
             }
 
-            if (this._numChildren == 1 && this._repetitionType == RepetitionTypeId.Repeated)
+            if (this.NumChildren == 1 && this._repetitionType == RepetitionTypeId.Repeated)
                 return FieldTypeId.List;
 
             return FieldTypeId.Struct;
@@ -66,22 +64,24 @@ namespace ParquetViewer.Engine.DuckDB
 
         ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => this.Children.ToList<IParquetSchemaElement>();
 
+        public string? Type => this._underlyingType;
+
         private string? _underlyingType;
-        private string? _typeLength;
+        public int? TypeLength { get; }
         private RepetitionTypeId? _repetitionType;
-        private long? _numChildren;
-        private string? _convertedType;
-        private long? _scale;
-        private long? _precision;
+        public int? NumChildren { get; }
+        public string? ConvertedType { get; }
+        public int? Scale { get; }
+        public int? Precision { get; }
         private string? _fieldId;
-        private string? _logicalType;
+        public object? LogicalType { get; }
         private DuckDBType? _duckDbType;
         private Type? _clrType;
 
         public ParquetSchemaElement(
             string path,
             string? underlyingType,
-            string? typeLength,
+            int? typeLength,
             RepetitionTypeId? repetitionType,
             long? numChildren,
             string? convertedType,
@@ -95,14 +95,14 @@ namespace ParquetViewer.Engine.DuckDB
             this.Children = new List<ParquetSchemaElement>();
             this.Path = path;
             this._underlyingType = underlyingType;
-            this._typeLength = typeLength;
+            this.TypeLength = typeLength;
             this._repetitionType = repetitionType;
-            this._numChildren = numChildren;
-            this._convertedType = convertedType;
-            this._scale = scale;
-            this._precision = precision;
+            this.NumChildren = (int?)numChildren;
+            this.ConvertedType = convertedType;
+            this.Scale = (int?)scale;
+            this.Precision = (int?)precision;
             this._fieldId = fieldId;
-            this._logicalType = logicalType;
+            this.LogicalType = logicalType;
             this._duckDbType = duckDbType;
             this._clrType = ClrType;
         }
@@ -111,7 +111,7 @@ namespace ParquetViewer.Engine.DuckDB
         {
             string columnName = row.GetString(1);
             string? columnTypeName = row.IsDBNull(2) ? null : row.GetString(2);
-            string? typeLength = row.IsDBNull(3) ? null : row.GetString(3);
+            string? typeLengthString = row.IsDBNull(3) ? null : row.GetString(3);
             string? repetitionTypeName = row.IsDBNull(4) ? null : row.GetString(4);
             long? numChildren = row.IsDBNull(5) ? null : row.GetInt64(5);
             string? convertedType = row.IsDBNull(6) ? null : row.GetString(6);
@@ -120,6 +120,8 @@ namespace ParquetViewer.Engine.DuckDB
             string? fieldId = row.IsDBNull(9) ? null : row.GetString(9);
             string? logicalType = row.IsDBNull(10) ? null : row.GetString(10);
             string? duckDbTypeName = row.IsDBNull(11) ? null : row.GetString(11); //Note: This field isn't returned for complex types like LIST, MAP, STRUCT unfortunately
+
+            int? typeLength = int.TryParse(typeLengthString, out var typeLengthValue) ? typeLengthValue : null;
 
             DuckDBType? duckDBType = null;
             Type? clrType = null;

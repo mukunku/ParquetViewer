@@ -1,4 +1,6 @@
-﻿namespace ParquetViewer.Engine
+﻿using System.Text.Json.Serialization;
+
+namespace ParquetViewer.Engine
 {
     public interface IParquetSchemaElement<T> : IParquetSchemaElement where T : IParquetSchemaElement
     {
@@ -34,6 +36,7 @@
 
         ICollection<IParquetSchemaElement> Children { get; }
 
+        [JsonIgnore]
         Type ClrType { get; }
 
         FieldTypeId FieldType { get; }
@@ -41,6 +44,14 @@
         RepetitionTypeId? RepetitionType { get; }
 
         bool IsPrimitive { get; }
+
+        public string? Type { get; }
+        public int? TypeLength { get; }
+        public int? NumChildren { get; }
+        public string? ConvertedType { get; }
+        public int? Scale { get; }
+        public int? Precision { get; }
+        public object? LogicalType { get; }
 
         /// <summary>
         /// Case insensitive version of <see cref="GetChild(string)"/>

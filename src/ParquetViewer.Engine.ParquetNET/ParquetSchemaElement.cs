@@ -2,10 +2,8 @@
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.ParquetNET.Types;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Reflection.Metadata;
-using static ParquetViewer.Engine.IParquetSchemaElement;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace ParquetViewer.Engine.ParquetNET
 {
@@ -195,6 +193,110 @@ namespace ParquetViewer.Engine.ParquetNET
             _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
         };
 
+        public object? LogicalType => LogicalTypeToJSONObject(this.SchemaElement.LogicalType);
+
+        private static object? LogicalTypeToJSONObject(LogicalType? logicalType)
+        {
+            if (logicalType is null)
+            {
+                return null;
+            }
+            else if (logicalType.STRING is not null)
+            {
+                return new { Name = nameof(logicalType.STRING) };
+            }
+            else if (logicalType.MAP is not null)
+            {
+                return new { Name = nameof(logicalType.MAP) };
+            }
+            else if (logicalType.LIST is not null)
+            {
+                return new { Name = nameof(logicalType.LIST) };
+            }
+            else if (logicalType.ENUM is not null)
+            {
+                return new { Name = nameof(logicalType.ENUM) };
+            }
+            else if (logicalType.DECIMAL is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.DECIMAL),
+                    logicalType.DECIMAL.Scale,
+                    logicalType.DECIMAL.Precision
+                };
+            }
+            else if (logicalType.DATE is not null)
+            {
+                return new { Name = nameof(logicalType.DATE) };
+            }
+            else if (logicalType.TIME is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.TIME),
+                    logicalType.TIME.IsAdjustedToUTC,
+                    Unit = TimeUnitToString(logicalType.TIME.Unit)
+                };
+            }
+            else if (logicalType.TIMESTAMP is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.TIMESTAMP),
+                    logicalType.TIMESTAMP.IsAdjustedToUTC,
+                    Unit = TimeUnitToString(logicalType.TIMESTAMP.Unit)
+                };
+            }
+            else if (logicalType.INTEGER is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.INTEGER),
+                    logicalType.INTEGER.BitWidth,
+                    logicalType.INTEGER.IsSigned
+                };
+            }
+            else if (logicalType.JSON is not null)
+            {
+                return new { Name = nameof(logicalType.JSON) };
+            }
+            else if (logicalType.BSON is not null)
+            {
+                return new { Name = nameof(logicalType.BSON) };
+            }
+            else if (logicalType.UUID is not null)
+            {
+                return new { Name = nameof(logicalType.UUID) };
+            }
+            else if (logicalType.UNKNOWN is not null)
+            {
+                return new { Name = $"{logicalType.UNKNOWN.GetType().Name}" };
+            }
+            else
+            {
+                return new { Name = nameof(logicalType.UNKNOWN) };
+            }
+        }
+
+        static string TimeUnitToString(TimeUnit? timeUnit)
+            {
+                var timeUnitString = string.Empty;
+                if (timeUnit?.MILLIS is not null)
+                {
+                    timeUnitString = nameof(timeUnit.MILLIS);
+                }
+                else if (timeUnit?.MICROS is not null)
+                {
+                    timeUnitString = nameof(timeUnit.MICROS);
+                }
+                else if (timeUnit?.NANOS is not null)
+                {
+                    timeUnitString = nameof(timeUnit.NANOS);
+                }
+                return timeUnitString;
+            }
+
         public RepetitionTypeId? RepetitionType => this.SchemaElement.RepetitionType switch
         {
             FieldRepetitionType.REQUIRED => RepetitionTypeId.Required,
@@ -202,6 +304,14 @@ namespace ParquetViewer.Engine.ParquetNET
             FieldRepetitionType.REPEATED => RepetitionTypeId.Repeated,
             _ => null
         };
+
+        public int? TypeLength => this.SchemaElement.TypeLength;
+        public int? NumChildren => this.SchemaElement.NumChildren;
+        public string? ConvertedType => this.SchemaElement.ConvertedType?.ToString();
+        public int? Scale => this.SchemaElement.Scale;
+        public int? Precision => this.SchemaElement.Precision;
+        object? IParquetSchemaElement.LogicalType => this.LogicalType;
+        public string? Type => this.SchemaElement.Type?.ToString();
 
         private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
             => new InvalidOperationException($"Can't get {fieldType} node from '{this.Parent?._systemFieldType}' " +

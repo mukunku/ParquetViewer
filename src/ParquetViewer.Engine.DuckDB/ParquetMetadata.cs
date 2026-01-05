@@ -21,7 +21,7 @@ namespace ParquetViewer.Engine.DuckDB
 
         public IParquetSchemaElement SchemaTree { get; }
 
-        private ParquetMetadata(IParquetSchemaElement schemaTree, ICollection<IRowGroupMetadata> rowGroups, 
+        private ParquetMetadata(IParquetSchemaElement schemaTree, ICollection<IRowGroupMetadata> rowGroups,
             int recordCount, int parquetVersion, string createdBy, int rowGroupCount)
         {
             this.SchemaTree = schemaTree;
@@ -37,7 +37,7 @@ namespace ParquetViewer.Engine.DuckDB
             var schemaTree = await DuckDBHelper.GetParquetSchemaTreeAsync(db);
 
             #region RowGroups
-            var rowGroups = new List<IRowGroupMetadata>();
+            var rowGroupColumns = new List<(RowGroupMetadataResult RowGroup, RowGroupColumnMetadata Column)>();
             using var result = await db.Connection.QueryAsync($"SELECT * FROM parquet_metadata('{db.ParquetFilePath}');");
             await foreach (var row in result)
             {
@@ -47,6 +47,8 @@ namespace ParquetViewer.Engine.DuckDB
                 long rowGroupNumRows = row.GetInt64(2);
                 long rowGroupNumColumns = row.GetInt64(3);
                 long rowGroupBytes = row.GetInt64(4);
+                long? rowGroupCompressedBytes = row.IsDBNull(28) ? null : row.GetInt64(28);
+                var rowGroupMetadataResult = new RowGroupMetadataResult(rowGroupId, rowGroupNumRows, rowGroupNumColumns, rowGroupBytes, rowGroupCompressedBytes ?? -1);
 
                 long columnId = row.GetInt64(5);
                 long? fileOffset = row.IsDBNull(6) ? null : row.GetInt64(6);
@@ -77,21 +79,57 @@ namespace ParquetViewer.Engine.DuckDB
                 long? bloomFilterOffset = row.IsDBNull(24) ? null : row.GetInt64(24);
                 long? bloomFilterLength = row.IsDBNull(25) ? null : row.GetInt64(25);
 
-                long? rowGroupCompressedBytes = row.IsDBNull(28) ? null : row.GetInt64(28);
+                bool? minIsExact = row.IsDBNull(26) ? null : row.GetBoolean(26);
+                bool? maxIsExact = row.IsDBNull(27) ? null : row.GetBoolean(27);
 
-                if (rowGroups.Exists(rg => rg.Ordinal == (int)rowGroupId))
+                var rowGroupColumnMetadata = new RowGroupColumnMetadata(
+                    (int)columnId,
+                    pathInSchema,
+                    type,
+                    (int)numValues,
+                    totalUncompressedSize,
+                    totalCompressedSize,
+                    dataPageOffset,
+                    indexPageOffset,
+                    dictionaryPageOffset,
+                    new RowGroupColumnStatistics(
+                        statsMin,
+                        statsMax,
+                        statsNullCount,
+                        statsDistinctCount,
+                        statsMinValue,
+                        statsMaxValue,
+                        minIsExact,
+                        maxIsExact),
+                    bloomFilterOffset,
+                    bloomFilterLength);
+
+                rowGroupColumns.Add((rowGroupMetadataResult, rowGroupColumnMetadata));
+            }
+
+            List<IRowGroupMetadata> rowGroups = rowGroupColumns.GroupBy(rgc => rgc.RowGroup.rowGroupId).Select(group =>
+            {
+                var rowGroupId = group.Key;
+                RowGroupMetadataResult? rowGroupMetadataResult = null;
+                List<RowGroupColumnMetadata> columnMetadatas = new();
+                foreach (var column in group)
                 {
-                    //DuckDB returns rows/offsets for each column in the rowgroup. So we only keep the first one.
-                    continue;
+                    rowGroupMetadataResult = column.RowGroup;
+                    columnMetadatas.Add(column.Column);
                 }
 
-                rowGroups.Add(new RowGroupMetadata(
+                if (rowGroupMetadataResult is null)
+                    return null;
+
+                return new RowGroupMetadata(
                     (int)rowGroupId,
-                    (int)rowGroupNumRows,
-                    fileOffset ?? 0,
-                    rowGroupBytes,
-                    totalCompressedSize));
-            }
+                    (int)rowGroupMetadataResult.rowGroupNumRows,
+                    (int)rowGroupMetadataResult.rowGroupNumColumns,
+                    rowGroupColumns.First(rgc => rgc.RowGroup.rowGroupId == group.Key).Column.DataPageOffset ?? 0,
+                    rowGroupMetadataResult.rowGroupBytes,
+                    columnMetadatas.Sum(cm => cm.TotalCompressedSize ?? 0), 
+                    columnMetadatas);
+            }).Where(rg => rg is not null)!.ToList<IRowGroupMetadata>();
             #endregion
 
             #region File Metadata
@@ -108,5 +146,110 @@ namespace ParquetViewer.Engine.DuckDB
             var metadata = new ParquetMetadata(schemaTree, rowGroups, (int)numRows, (int)parquetVersion, createdBy ?? string.Empty, (int)numRowGroups);
             return metadata;
         }
-    }    
+
+        private record RowGroupMetadataResult(long rowGroupId, long rowGroupNumRows, long rowGroupNumColumns, long rowGroupBytes, long rowGroupCompressedBytes);
+    }
+
+    public class RowGroupMetadata : IRowGroupMetadata
+    {
+        public int Ordinal { get; }
+        public int RowCount { get; }
+        public int ColumnCount { get; }
+        public ICollection<ISortingColumnMetadata>? SortingColumns { get; }
+        public ICollection<IRowGroupColumnMetadata>? Columns { get; }
+        public long FileOffset { get; }
+        public long TotalByteSize { get; }
+        public long TotalCompressedSize { get; }
+
+        public RowGroupMetadata(int ordinal, int rowCount, int columnCount, long fileOffset, long totalByteSize, long totalCompressedSize, List<RowGroupColumnMetadata> columnMetadatas)
+        {
+            this.Ordinal = ordinal;
+            this.RowCount = rowCount;
+            this.ColumnCount = columnCount;
+            this.FileOffset = fileOffset;
+            this.TotalByteSize = totalByteSize;
+            this.TotalCompressedSize = totalCompressedSize;
+            this.SortingColumns = null; //DuckDB doesn't seem to have info on this
+            this.Columns = columnMetadatas.ToList<IRowGroupColumnMetadata>();
+        }
+    }
+
+    public class RowGroupColumnMetadata : IRowGroupColumnMetadata
+    {
+        public int? ColumnId { get; }
+
+        public string? PathInSchema { get; }
+
+        public string? Type { get; }
+
+        public int? NumValues { get; }
+
+        public long? TotalUncompressedSize { get; }
+
+        public long? TotalCompressedSize { get; }
+
+        public long? DataPageOffset { get; }
+
+        public long? IndexPageOffset { get; }
+
+        public long? DictionaryPageOffset { get; }
+
+        public IRowGroupColumnStatistics? Statistics { get; }
+
+        public long? BloomFilterOffset { get; }
+
+        public long? BloomFilterLength { get; }
+
+        public RowGroupColumnMetadata(
+            int? columnId, 
+            string? pathInSchema, 
+            string? type, 
+            int? numValues, 
+            long? totalUncompressedSize, 
+            long? totalCompressedSize, 
+            long? dataPageOffset, 
+            long? indexPageOffset, 
+            long? dictionaryPageOffset,
+            RowGroupColumnStatistics? statistics, 
+            long? bloomFilterOffset, 
+            long? bloomFilterLength)
+        {
+            ColumnId = columnId;
+            PathInSchema = pathInSchema;
+            Type = type;
+            NumValues = numValues;
+            TotalUncompressedSize = totalUncompressedSize;
+            TotalCompressedSize = totalCompressedSize;
+            DataPageOffset = dataPageOffset;
+            IndexPageOffset = indexPageOffset;
+            DictionaryPageOffset = dictionaryPageOffset;
+            Statistics = statistics;
+            BloomFilterOffset = bloomFilterOffset;
+            BloomFilterLength = bloomFilterLength;
+        }
+    }
+
+    public class RowGroupColumnStatistics : IRowGroupColumnStatistics
+    {
+        public object? Min { get; }
+        public object? Max { get; }
+        public long? NullCount { get; }
+        public long? DistinctCount { get; }
+        public object? MinValue { get; }
+        public object? MaxValue { get; }
+        public bool? IsMinValueExact { get; }
+        public bool? IsMaxValueExact { get; }
+
+        public RowGroupColumnStatistics(object? min, object? max, long? nullCount, long? distinctCount, object? minValue, object? maxValue, bool? isMinValueExact, bool? isMaxValueExact)
+        {
+            Min = min;
+            Max = max;
+            NullCount = nullCount;
+            DistinctCount = distinctCount;
+            MinValue = minValue;
+            MaxValue = maxValue;
+            IsMinValueExact = isMinValueExact;
+            IsMaxValueExact = isMaxValueExact;
+        }
+    }
 }
