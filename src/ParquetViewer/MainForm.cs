@@ -181,10 +181,6 @@ namespace ParquetViewer
             this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
             this.RefreshExperimentalFeatureToolStrips();
             this.SetLanguageCheckmark();
-            if (AppSettings.UseDuckDBEngine)
-                this.duckDBToolStripMenuItem.Checked = true;
-            else
-                this.parquetNetToolStripMenuItem.Checked = true;
 
             //Get user's consent to gather analytics; and update the toolstrip menu item accordingly
             Program.GetUserConsentToGatherAnalytics();

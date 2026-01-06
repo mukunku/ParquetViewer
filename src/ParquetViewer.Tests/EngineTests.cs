@@ -617,5 +617,25 @@ namespace ParquetViewer.Tests
             const string expected = "67-33-73-68-61-72-70-5F-73-74-6C-20-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00";
             Assert.AreEqual(expected, dataTable.Rows[0][0].ToString());
         }
+
+        [TestMethod]
+        [SkipWhen(typeof(ParquetNETEngineTests), "List field is causing issues")]
+        public async Task NESTED_STRUCTS_AND_LISTS()
+        {
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet", default);
+            Assert.AreEqual(552, parquetEngine.RecordCount);
+            Assert.HasCount(20, parquetEngine.Fields);
+
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 1, default))(false);
+
+            Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][1]);
+            Assert.AreEqual("[{\"explicit\":null,\"ref_reco\":3,\"text\":\"it is not the case that routine child vaccinations should be mandatory.\"}]", dataTable.Rows[0][1].ToString());
+
+            Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][11]);
+            Assert.AreEqual("[[\"p\",\"routine child vaccinations, or their side effects, are dangerous\"],[\"q\",\"routine child vaccinations should be mandatory\"]]", dataTable.Rows[0][11].ToString());
+
+            Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][19]);
+            Assert.AreEqual("[[\"id\",\"argkp_1feffc6a-01eb-4f64-a42f-db898627fbc8\"]]", dataTable.Rows[0][19].ToString());
+        }
     }
 }
