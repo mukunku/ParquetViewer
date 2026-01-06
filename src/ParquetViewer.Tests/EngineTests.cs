@@ -9,7 +9,11 @@ namespace ParquetViewer.Tests
     [TestClass]
     public class ParquetNETEngineTests : EngineTests
     {
-        public ParquetNETEngineTests() : base(useDuckDBEngine: false, canHandleNullComplexTypes: true, treatsTwoTierListAsStruct: true)
+        public ParquetNETEngineTests() : base(
+            useDuckDBEngine: false, 
+            canHandleNullComplexTypes: true, 
+            treatsTwoTierListAsStruct: true,
+            "/")
         {
 
         }
@@ -18,7 +22,11 @@ namespace ParquetViewer.Tests
     [TestClass]
     public class DuckDBEngineTests : EngineTests
     {
-        public DuckDBEngineTests() : base(useDuckDBEngine: true, canHandleNullComplexTypes: false, treatsTwoTierListAsStruct: false)
+        public DuckDBEngineTests() : base(
+            useDuckDBEngine: true, 
+            canHandleNullComplexTypes: false, 
+            treatsTwoTierListAsStruct: false,
+            ", ")
         {
 
         }
@@ -29,8 +37,9 @@ namespace ParquetViewer.Tests
         private bool _useDuckDBEngine;
         private bool _canHandleNullComplexTypes;
         private bool _treatsTwoTierListAsStruct;
+        private string _schemaPathSeperator;
 
-        public EngineTests(bool useDuckDBEngine, bool canHandleNullComplexTypes, bool treatsTwoTierListAsStruct)
+        public EngineTests(bool useDuckDBEngine, bool canHandleNullComplexTypes, bool treatsTwoTierListAsStruct, string schemaPathSeperator)
         {
             //Set a consistent date format for all tests
             ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
@@ -39,6 +48,7 @@ namespace ParquetViewer.Tests
             this._useDuckDBEngine = useDuckDBEngine;
             this._canHandleNullComplexTypes = canHandleNullComplexTypes;
             this._treatsTwoTierListAsStruct = treatsTwoTierListAsStruct;
+            this._schemaPathSeperator = schemaPathSeperator;
         }
 
         private async Task<IParquetEngine> OpenFileOrFolderAsync(string path, CancellationToken cancellationToken)
@@ -636,6 +646,73 @@ namespace ParquetViewer.Tests
 
             Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][19]);
             Assert.AreEqual("[[\"id\",\"argkp_1feffc6a-01eb-4f64-a42f-db898627fbc8\"]]", dataTable.Rows[0][19].ToString());
+        }
+
+        [SkippableTestMethod]
+        public async Task METADATA_TEST1()
+        {
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet", default);
+            Assert.AreEqual(1, parquetEngine.Metadata.ParquetVersion);
+            Assert.AreEqual(552, parquetEngine.Metadata.RowCount);
+            Assert.AreEqual(1, parquetEngine.Metadata.RowGroupCount);
+            Assert.AreEqual("parquet-cpp-arrow version 4.0.1", parquetEngine.Metadata.CreatedBy);
+            Assert.HasCount(1, parquetEngine.Metadata.RowGroups);
+            var rowGroup = parquetEngine.Metadata.RowGroups.First();
+            Assert.AreEqual(33, rowGroup.ColumnCount);
+            Assert.AreEqual(552, rowGroup.RowCount);
+            Assert.AreEqual(2704, rowGroup.FileOffset);
+            Assert.AreEqual(0, rowGroup.Ordinal);
+            Assert.AreEqual(134465, rowGroup.TotalByteSize);
+            Assert.AreEqual(61314, rowGroup.TotalCompressedSize);
+
+            Assert.IsNotNull(rowGroup.Columns);
+            Assert.HasCount(33, rowGroup.Columns);
+            
+            var firstColumn = rowGroup.Columns.First();
+            Assert.IsNull(firstColumn.BloomFilterLength);
+            Assert.IsNull(firstColumn.BloomFilterOffset);
+            Assert.AreEqual(0, firstColumn.ColumnId);
+            Assert.AreEqual(1801, firstColumn.DataPageOffset);
+            Assert.AreEqual(4, firstColumn.DictionaryPageOffset);
+            Assert.IsNull(firstColumn.IndexPageOffset);
+            Assert.AreEqual(552, firstColumn.NumValues);
+            Assert.AreEqual("argdown_reconstruction", firstColumn.PathInSchema);
+            Assert.AreEqual(2700, firstColumn.TotalCompressedSize);
+            Assert.AreEqual(10114, firstColumn.TotalUncompressedSize);
+            Assert.AreEqual("BYTE_ARRAY", firstColumn.Type);
+
+            Assert.IsNotNull(firstColumn.Statistics);
+            Assert.IsNull(firstColumn.Statistics.Min);
+            Assert.IsNull(firstColumn.Statistics.Max);
+            Assert.IsNull(firstColumn.Statistics.DistinctCount);
+            Assert.AreEqual(0, firstColumn.Statistics.NullCount);
+            Assert.AreEqual("(1) child vaccination saves lives. (2) if child vaccination saves lives then routine child vaccinations should be mandatory. -- with modus ponens from (1) (2) -- (3) routine child vaccinations should be mandatory.", firstColumn.Statistics.MinValue);
+            Assert.AreEqual("(1) the us offers great opportunities for individuals. (2) if the us offers great opportunities for individuals then the usa is a good country to live in. -- with modus ponens from (1) (2) -- (3) the usa is a good country to live in.", firstColumn.Statistics.MaxValue);
+            Assert.IsNull(firstColumn.Statistics.IsMinValueExact);
+            Assert.IsNull(firstColumn.Statistics.IsMinValueExact);
+
+            var lastColumn = rowGroup.Columns.Last();
+            Assert.IsNull(lastColumn.BloomFilterLength);
+            Assert.IsNull(lastColumn.BloomFilterOffset);
+            Assert.AreEqual(32, lastColumn.ColumnId);
+            Assert.AreEqual(63771, lastColumn.DataPageOffset);
+            Assert.AreEqual(43433, lastColumn.DictionaryPageOffset);
+            Assert.IsNull(lastColumn.IndexPageOffset);
+            Assert.AreEqual(1104, lastColumn.NumValues);
+            Assert.AreEqual($"metadata{_schemaPathSeperator}list{_schemaPathSeperator}item{_schemaPathSeperator}list{_schemaPathSeperator}item", lastColumn.PathInSchema);
+            Assert.AreEqual(21830, lastColumn.TotalCompressedSize);
+            Assert.AreEqual(27163, lastColumn.TotalUncompressedSize);
+            Assert.AreEqual("BYTE_ARRAY", lastColumn.Type);
+
+            Assert.IsNotNull(lastColumn.Statistics);
+            Assert.IsNull(lastColumn.Statistics.Min);
+            Assert.IsNull(lastColumn.Statistics.Max);
+            Assert.IsNull(lastColumn.Statistics.DistinctCount);
+            Assert.AreEqual(0, lastColumn.Statistics.NullCount);
+            Assert.AreEqual("argkp_007a45bc-7a3b-4030-8178-33d7c5fa5cb8", lastColumn.Statistics.MinValue);
+            Assert.AreEqual("id", lastColumn.Statistics.MaxValue);
+            Assert.IsNull(lastColumn.Statistics.IsMinValueExact);
+            Assert.IsNull(lastColumn.Statistics.IsMinValueExact);
         }
     }
 }
