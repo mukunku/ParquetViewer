@@ -60,7 +60,7 @@ namespace ParquetViewer.Engine.DuckDB
 
         public RepetitionTypeId? RepetitionType => this._repetitionType;
 
-        public bool IsByteArrayType => _clrType == typeof(byte[]);
+        public bool IsByteArrayType => _clrType == typeof(ByteArrayValue);
 
         ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => this.Children.ToList<IParquetSchemaElement>();
 

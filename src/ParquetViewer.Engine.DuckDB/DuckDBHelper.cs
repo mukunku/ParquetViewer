@@ -1,5 +1,6 @@
 ﻿using DuckDB.NET.Data;
 using DuckDB.NET.Native;
+using ParquetViewer.Engine.DuckDB.Types;
 using System.Numerics;
 using System.Text;
 
@@ -53,7 +54,7 @@ namespace ParquetViewer.Engine.DuckDB
                 "UHUGEINT" => (DuckDBType.HugeInt, typeof(BigInteger)),
                 "DOUBLE" => (DuckDBType.Double, typeof(double)),
                 "FLOAT" or "REAL" => (DuckDBType.Float, typeof(float)),
-                "BLOB" => (DuckDBType.Blob, typeof(byte[])),
+                "BLOB" => (DuckDBType.Blob, typeof(ByteArrayValue)),
                 "DATE" => (DuckDBType.Date, typeof(DateOnly)),
                 "TIME" => (DuckDBType.Time, typeof(TimeSpan)),
                 "INTERVAL" => (DuckDBType.Interval, typeof(TimeSpan)),

@@ -17,7 +17,10 @@ namespace ParquetViewer.Engine.ParquetNET
             ArgumentNullException.ThrowIfNull(data);
             ArgumentNullException.ThrowIfNull(type);
 
-            _type = type;
+            if (type == typeof(byte[]))
+                _type = typeof(ByteArrayValue);
+            else
+                _type = type;
 
             //We assume they all have the same length
             _definitionLevels = definitionLevels;
@@ -58,7 +61,11 @@ namespace ParquetViewer.Engine.ParquetNET
                 var listValue = ReadListValue(rowRange, numberOfListParents, () =>
                 {
                     //TODO: optimize to avoid skipping all rows every time
-                    return _data.Skip(rowRange.Start.Value).Take(rowRange.End.Value - rowRange.Start.Value).ToArray();
+                    return _data
+                    .Select(data => data is byte[] bytes ? new ByteArrayValue(bytes) : data) //Need to handle byte array type separately
+                    .Skip(rowRange.Start.Value)
+                    .Take(rowRange.End.Value - rowRange.Start.Value)
+                    .ToArray();
                 },
                 (int index) =>
                 {

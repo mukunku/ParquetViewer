@@ -10,7 +10,6 @@ namespace ParquetViewer.Engine.Types
 {
     public interface IByteArrayValue : IComparable<IByteArrayValue>, IComparable
     {
-        string Name { get; }
         byte[] Data { get; }
         DisplayFormat[] PossibleDisplayFormats { get; }
 

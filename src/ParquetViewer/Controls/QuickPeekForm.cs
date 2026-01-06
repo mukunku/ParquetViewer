@@ -91,6 +91,11 @@ namespace ParquetViewer.Controls
                 {
                     width += column.Width;
                 }
+                if (this.mainGridView.Rows.Count > 8) //8 is a magic number... Better than nothing imo
+                {
+                    width += 24; //widen for scrollbar
+                }
+
                 this.Width = Math.Min(Math.Max(width, 280), 900); //900 pixel max seems reasonable, right?
 
                 if (this.mainGridView.Rows.Count == 1)

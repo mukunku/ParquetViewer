@@ -7,7 +7,6 @@ namespace ParquetViewer.Engine.Types
 {
     public class ByteArrayValueBase : IByteArrayValue
     {
-        public string Name { get; }
         public byte[] Data { get; }
 
 
@@ -15,9 +14,8 @@ namespace ParquetViewer.Engine.Types
         public DisplayFormat[] PossibleDisplayFormats =>
             _possibleDisplayFormats ??= CalculatePossibleDisplayFormats();
 
-        public ByteArrayValueBase(string name, byte[] data)
+        public ByteArrayValueBase(byte[] data)
         {
-            Name = name;
             Data = data;
         }
 

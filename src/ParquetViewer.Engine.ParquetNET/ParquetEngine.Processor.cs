@@ -153,7 +153,7 @@ namespace ParquetViewer.Engine.ParquetNET
                     }
                     else if (fieldType == typeof(ByteArrayValue))
                     {
-                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
+                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue((byte[])value);
                     }
                     else
                     {
@@ -245,6 +245,17 @@ namespace ParquetViewer.Engine.ParquetNET
                                 }
 
                                 var columnValues = (ListValue)valueArray[columnOrdinal];
+
+                                if (columnValues.Data.Count == 0 && columnOrdinal != 0) //All values are null
+                                {
+                                    for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
+                                    {
+                                        newStructFieldTable.Rows[i][columnOrdinal] = DBNull.Value;
+                                    }
+
+                                    continue;
+                                }
+
                                 for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
                                 {
                                     lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";

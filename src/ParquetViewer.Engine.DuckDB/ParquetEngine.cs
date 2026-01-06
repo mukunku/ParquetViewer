@@ -397,7 +397,7 @@ namespace ParquetViewer.Engine.DuckDB
                 {
                     using var ms = new MemoryStream();
                     ((Stream)value).CopyTo(ms);
-                    return new ByteArrayValue(parquetSchemaElement.Path, ms.ToArray());
+                    return new ByteArrayValue(ms.ToArray());
                 }
                 else //primitive value
                 {
