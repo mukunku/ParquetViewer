@@ -457,7 +457,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(0m, dataTable.Rows[100][7]);
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         public async Task LIST_OF_LIST_OF_INT()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_LIST_OF_INT.parquet", default);
@@ -476,7 +476,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual("[[1],[],[3],null,[5]]", dataTable.Rows[0][0].ToString());
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         public async Task LIST_OF_LIST_OF_LIST_OF_STRING()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_LIST_OF_LIST_OF_STRING.parquet", default);
@@ -495,7 +495,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual("[[[\"a\",\"b\"],[\"c\",\"d\"],[\"e\"]],[null,[\"f\"]]]", dataTable.Rows[0][0].ToString());
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT.parquet", default);
@@ -508,7 +508,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(expectedJson, dataTable.Rows[0][0].ToString());
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         public async Task TWO_TIER_REPEATED_LIST_FIELDS_TEST()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/TWO_TIER_TEPEATED_LIST_FIELDS_TEST.parquet", default);
@@ -531,7 +531,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual("[\"element1\",\"element2\"]", dataTable.Rows[0][7].ToString());
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         public async Task CUSTOM_METADATA_TEST()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
@@ -545,7 +545,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(expectedArrow, parquetEngine.CustomMetadata["ARROW:schema"]);
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         public async Task DECIMALS_OUTOFRANGE_TEST()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_OUTOFRANGE_TEST.parquet", default);
@@ -556,7 +556,7 @@ namespace ParquetViewer.Tests
                 parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default));
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         [SkipWhen(typeof(ParquetNETEngineTests), "Our implementation can't open this file")]
         public async Task LIST_OF_NESTED_STRUCTS_TEST()
         {
@@ -569,7 +569,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual("[{\"B\":{\"id\":1}},{\"B\":{\"id\":null}},{\"B\":null}]", dataTable.Rows[0][0].ToString());
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         [SkipWhen(typeof(ParquetNETEngineTests), "Nested Maps not supported")]
         public async Task NESTED_MAPS_TEST()
         {
@@ -604,7 +604,7 @@ namespace ParquetViewer.Tests
             }
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         public async Task BYTEARRAY_VALUE_TEST()
         {
             using var parquetEngine = await OpenFileOrFolderAsync("Data/BYTEARRAY_VALUE_TEST.parquet", default);
@@ -618,7 +618,7 @@ namespace ParquetViewer.Tests
             Assert.AreEqual(expected, dataTable.Rows[0][0].ToString());
         }
 
-        [TestMethod]
+        [SkippableTestMethod]
         [SkipWhen(typeof(ParquetNETEngineTests), "List field is causing issues")]
         public async Task NESTED_STRUCTS_AND_LISTS()
         {

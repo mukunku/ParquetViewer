@@ -25,8 +25,11 @@ namespace ParquetViewer.Engine.ParquetNET
             SchemaTree = schemaTree;
 
             List<RowGroupMetadata> rowGroupMetadataList = new();
+            var rowGroupIndex = -1;
             foreach (var rowGroup in thriftMetadata.RowGroups)
             {
+                rowGroupIndex++;
+
                 List<RowGroupColumnMetadata> columnMetadataList = new();
                 var columnIndex = -1;
                 foreach (var column in rowGroup.Columns)
@@ -35,7 +38,20 @@ namespace ParquetViewer.Engine.ParquetNET
                     if (column.MetaData is null)
                         continue;
 
-                    var field = schemaTree.Children.ElementAt(columnIndex);
+                    ParquetSchemaElement? field = null;
+                    try
+                    {
+                        var currentNode = schemaTree;
+                        foreach (var path in column.MetaData.PathInSchema)
+                        {
+                            currentNode = currentNode.GetChild(path);
+                        }
+                        field = currentNode;
+                    }
+                    catch 
+                    {  
+                        /*swallow*/
+                    }
 
                     var columnMetadata = new RowGroupColumnMetadata(
                         columnIndex,
@@ -65,7 +81,7 @@ namespace ParquetViewer.Engine.ParquetNET
                 }
 
                 rowGroupMetadataList.Add(new RowGroupMetadata(
-                    rowGroup.Ordinal.HasValue ? (int)rowGroup.Ordinal.Value : -1,
+                    rowGroup.Ordinal.HasValue ? (int)rowGroup.Ordinal.Value : rowGroupIndex,
                     (int)rowGroup.NumRows,
                     rowGroup.Columns.Count,
                     rowGroup.SortingColumns?.Select(sc => new SortingColumnMetadata(sc.ColumnIdx, sc.Descending, sc.NullsFirst))
@@ -193,19 +209,19 @@ namespace ParquetViewer.Engine.ParquetNET
         public bool? IsMaxValueExact { get; }
 
         public RowGroupColumnStatistics(object? min, object? max, long? nullCount, long? distinctCount, 
-            object? minValue, object? maxValue, bool? isMinValueExact, bool? isMaxValueExact, ParquetSchemaElement field)
+            object? minValue, object? maxValue, bool? isMinValueExact, bool? isMaxValueExact, ParquetSchemaElement? field)
         {
             if (min is not null && minValue is not null && Engine.Helpers.ByteArraysEqual(min as byte[], minValue as byte[]) == 0)
                 min = null; //don't show the same data twice in the deprecated field
             if (max is not null && maxValue is not null && Engine.Helpers.ByteArraysEqual(max as byte[], maxValue as byte[]) == 0)
                 max = null; //don't show the same data twice in the deprecated field
 
-            Min = TryDeserializeValue(min as byte[], field);
-            Max = TryDeserializeValue(max as byte[], field);
+            Min = field is not null ? TryDeserializeValue(min as byte[], field) : min;
+            Max = field is not null ? TryDeserializeValue(max as byte[], field) : max;
             NullCount = nullCount;
             DistinctCount = distinctCount;
-            MinValue = TryDeserializeValue(minValue as byte[], field);
-            MaxValue = TryDeserializeValue(maxValue as byte[], field);
+            MinValue = field is not null ? TryDeserializeValue(minValue as byte[], field) : minValue;
+            MaxValue = field is not null ? TryDeserializeValue(maxValue as byte[], field) : maxValue;
             IsMinValueExact = isMinValueExact;
             IsMaxValueExact = isMaxValueExact;
         }
