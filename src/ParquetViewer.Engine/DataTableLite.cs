@@ -30,6 +30,8 @@ namespace ParquetViewer.Engine
 
         public DataTableLite(int expectedRowCount = 1000)
         {
+            ArgumentOutOfRangeException.ThrowIfLessThan(expectedRowCount, 0);
+
             this._rows = new(expectedRowCount);
         }
 

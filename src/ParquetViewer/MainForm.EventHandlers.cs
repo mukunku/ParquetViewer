@@ -45,7 +45,7 @@ namespace ParquetViewer
         private void recordsToTextBox_TextChanged(object sender, EventArgs? e)
         {
             var textbox = (TextBox)sender;
-            if (int.TryParse(textbox.Text, out var recordCount))
+            if (int.TryParse(textbox.Text, out var recordCount) && recordCount >= 0)
                 this.CurrentMaxRowCount = recordCount;
             else
                 textbox.Text = this.CurrentMaxRowCount.ToString();

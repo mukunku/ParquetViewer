@@ -196,5 +196,7 @@ namespace ParquetViewer.Engine
                 catch { /* Swallow */ }
             }
         }
+
+        public static int ByteArraysEqual(ReadOnlySpan<byte> a1, ReadOnlySpan<byte> a2) => a1.SequenceCompareTo(a2);
     }
 }

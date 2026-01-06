@@ -28,14 +28,17 @@ namespace ParquetViewer.Engine.ParquetNET
             foreach (var rowGroup in thriftMetadata.RowGroups)
             {
                 List<RowGroupColumnMetadata> columnMetadataList = new();
-                var columnIndex = 0;
+                var columnIndex = -1;
                 foreach (var column in rowGroup.Columns)
                 {
+                    columnIndex++;
                     if (column.MetaData is null)
                         continue;
 
+                    var field = schemaTree.Children.ElementAt(columnIndex);
+
                     var columnMetadata = new RowGroupColumnMetadata(
-                        columnIndex++,
+                        columnIndex,
                         string.Join("/", column.MetaData.PathInSchema),
                         column.MetaData.Type.ToString(),
                         (int)column.MetaData.NumValues,
@@ -52,7 +55,8 @@ namespace ParquetViewer.Engine.ParquetNET
                             column.MetaData.Statistics.MinValue,
                             column.MetaData.Statistics.MaxValue,
                             column.MetaData.Statistics.IsMinValueExact,
-                            column.MetaData.Statistics.IsMaxValueExact
+                            column.MetaData.Statistics.IsMaxValueExact,
+                            field
                         ) : null,
                         column.MetaData.BloomFilterOffset,
                         column.MetaData.BloomFilterLength);
@@ -188,16 +192,98 @@ namespace ParquetViewer.Engine.ParquetNET
         public bool? IsMinValueExact { get; }
         public bool? IsMaxValueExact { get; }
 
-        public RowGroupColumnStatistics(object? min, object? max, long? nullCount, long? distinctCount, object? minValue, object? maxValue, bool? isMinValueExact, bool? isMaxValueExact)
+        public RowGroupColumnStatistics(object? min, object? max, long? nullCount, long? distinctCount, 
+            object? minValue, object? maxValue, bool? isMinValueExact, bool? isMaxValueExact, ParquetSchemaElement field)
         {
-            Min = min;
-            Max = max;
+            if (min is not null && minValue is not null && Engine.Helpers.ByteArraysEqual(min as byte[], minValue as byte[]) == 0)
+                min = null; //don't show the same data twice in the deprecated field
+            if (max is not null && maxValue is not null && Engine.Helpers.ByteArraysEqual(max as byte[], maxValue as byte[]) == 0)
+                max = null; //don't show the same data twice in the deprecated field
+
+            Min = TryDeserializeValue(min as byte[], field);
+            Max = TryDeserializeValue(max as byte[], field);
             NullCount = nullCount;
             DistinctCount = distinctCount;
-            MinValue = minValue;
-            MaxValue = maxValue;
+            MinValue = TryDeserializeValue(minValue as byte[], field);
+            MaxValue = TryDeserializeValue(maxValue as byte[], field);
             IsMinValueExact = isMinValueExact;
             IsMaxValueExact = isMaxValueExact;
+        }
+
+        private object? TryDeserializeValue(byte[]? value, ParquetSchemaElement field)
+        {
+            try
+            {
+                if (value == null || value.Length == 0)
+                    return value;
+
+                var type = field.ClrType;
+
+                if (type == typeof(string))
+                    return System.Text.Encoding.UTF8.GetString(value);
+
+                if (type == typeof(byte))
+                    return BitConverter.ToUInt32(value, 0);
+
+                if (type == typeof(sbyte))
+                    return BitConverter.ToInt32(value, 0);
+
+                if (type == typeof(short))
+                    return BitConverter.ToInt16(value, 0);
+
+                if (type == typeof(ushort))
+                    return BitConverter.ToUInt16(value, 0);
+
+                if (type == typeof(int))
+                    return BitConverter.ToInt32(value, 0);
+
+                if (type == typeof(uint))
+                    return BitConverter.ToUInt32(value, 0);
+
+                if (type == typeof(long))
+                    return BitConverter.ToInt64(value, 0);
+
+                if (type == typeof(ulong))
+                    return BitConverter.ToUInt64(value, 0);
+
+                if (type == typeof(float))
+                    return BitConverter.ToSingle(value, 0);
+
+                if (type == typeof(double))
+                    return BitConverter.ToDouble(value, 0);
+
+                if (type == typeof(bool))
+                    return BitConverter.ToBoolean(value, 0);
+
+                if (type == typeof(DateTime))
+                {
+                    var ticks = BitConverter.ToInt64(value, 0);
+                    var timeUnit = field.SchemaElement.LogicalType?.TIMESTAMP?.Unit;
+
+                    if (timeUnit?.MILLIS is not null)
+                        return DateTime.UnixEpoch.AddMilliseconds(ticks);
+                    else if (timeUnit?.MICROS is not null)
+                        return DateTime.UnixEpoch.AddMicroseconds(ticks);
+                    else if (timeUnit?.NANOS is not null)
+                        return DateTime.UnixEpoch.AddMicroseconds(ticks / 1000);
+                    else
+                        return ticks;
+                }
+
+                if (type == typeof(DateOnly))
+                    return DateOnly.FromDateTime(DateTime.UnixEpoch)
+                        .AddDays(BitConverter.ToInt32(value, 0));
+
+                if (type == typeof(Guid))
+                    return new Guid(value);
+
+                //give up
+                return value;
+            }
+            catch
+            {
+                return value;
+            }
         }
     }
 }

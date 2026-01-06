@@ -1,11 +1,4 @@
-﻿using DuckDB.NET.Data;
-using DuckDB.NET.Native;
-using ParquetViewer.Engine.DuckDB.Types;
-using ParquetViewer.Engine.Exceptions;
-using System.Security.Cryptography;
-using static ParquetViewer.Engine.IParquetSchemaElement;
-
-namespace ParquetViewer.Engine.DuckDB
+﻿namespace ParquetViewer.Engine.DuckDB
 {
     public class ParquetMetadata : IParquetMetadata
     {
@@ -48,10 +41,10 @@ namespace ParquetViewer.Engine.DuckDB
                 long rowGroupNumColumns = row.GetInt64(3);
                 long rowGroupBytes = row.GetInt64(4);
                 long? rowGroupCompressedBytes = row.IsDBNull(28) ? null : row.GetInt64(28);
-                var rowGroupMetadataResult = new RowGroupMetadataResult(rowGroupId, rowGroupNumRows, rowGroupNumColumns, rowGroupBytes, rowGroupCompressedBytes ?? -1);
+                long? fileOffset = row.IsDBNull(6) ? null : row.GetInt64(6);
+                var rowGroupMetadataResult = new RowGroupMetadataResult(rowGroupId, rowGroupNumRows, rowGroupNumColumns, rowGroupBytes, rowGroupCompressedBytes ?? -1, fileOffset ?? -1);
 
                 long columnId = row.GetInt64(5);
-                long? fileOffset = row.IsDBNull(6) ? null : row.GetInt64(6);
                 long numValues = row.GetInt64(7);
 
                 string pathInSchema = row.GetString(8);
@@ -110,10 +103,12 @@ namespace ParquetViewer.Engine.DuckDB
             List<IRowGroupMetadata> rowGroups = rowGroupColumns.GroupBy(rgc => rgc.RowGroup.rowGroupId).Select(group =>
             {
                 var rowGroupId = group.Key;
+                long? firstFileOffset = null;
                 RowGroupMetadataResult? rowGroupMetadataResult = null;
                 List<RowGroupColumnMetadata> columnMetadatas = new();
                 foreach (var column in group)
                 {
+                    firstFileOffset ??= column.RowGroup.fileOffset;
                     rowGroupMetadataResult = column.RowGroup;
                     columnMetadatas.Add(column.Column);
                 }
@@ -125,7 +120,7 @@ namespace ParquetViewer.Engine.DuckDB
                     (int)rowGroupId,
                     (int)rowGroupMetadataResult.rowGroupNumRows,
                     (int)rowGroupMetadataResult.rowGroupNumColumns,
-                    rowGroupColumns.First(rgc => rgc.RowGroup.rowGroupId == group.Key).Column.DataPageOffset ?? 0,
+                    firstFileOffset ?? -1,
                     rowGroupMetadataResult.rowGroupBytes,
                     columnMetadatas.Sum(cm => cm.TotalCompressedSize ?? 0), 
                     columnMetadatas);
@@ -147,7 +142,7 @@ namespace ParquetViewer.Engine.DuckDB
             return metadata;
         }
 
-        private record RowGroupMetadataResult(long rowGroupId, long rowGroupNumRows, long rowGroupNumColumns, long rowGroupBytes, long rowGroupCompressedBytes);
+        private record RowGroupMetadataResult(long rowGroupId, long rowGroupNumRows, long rowGroupNumColumns, long rowGroupBytes, long rowGroupCompressedBytes, long fileOffset);
     }
 
     public class RowGroupMetadata : IRowGroupMetadata

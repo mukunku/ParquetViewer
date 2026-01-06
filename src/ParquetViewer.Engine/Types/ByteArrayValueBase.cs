@@ -28,10 +28,8 @@ namespace ParquetViewer.Engine.Types
             else if (Data is null)
                 return -1;
             else
-                return ByteArraysEqual(Data, other.Data);
+                return Helpers.ByteArraysEqual(Data, other.Data);
         }
-
-        private static int ByteArraysEqual(ReadOnlySpan<byte> a1, ReadOnlySpan<byte> a2) => a1.SequenceCompareTo(a2);
 
         public int CompareTo(object? obj)
         {
