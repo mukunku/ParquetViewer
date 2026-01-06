@@ -127,7 +127,7 @@ namespace ParquetViewer.Engine.DuckDB
             Type? clrType = null;
             if (duckDbTypeName is not null)
             {
-                (duckDBType, clrType) = DuckDBHelper.ParseDuckDBType(duckDbTypeName);
+                (duckDBType, clrType) = DuckDBHelper.ParseDuckDBType(duckDbTypeName, columnTypeName);
             }
 
             RepetitionTypeId? repetitionType = null;

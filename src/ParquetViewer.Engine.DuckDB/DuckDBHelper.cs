@@ -1,8 +1,10 @@
 ﻿using DuckDB.NET.Data;
 using DuckDB.NET.Native;
 using ParquetViewer.Engine.DuckDB.Types;
+using System;
 using System.Numerics;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ParquetViewer.Engine.DuckDB
 {
@@ -18,15 +20,33 @@ namespace ParquetViewer.Engine.DuckDB
             {
                 var columnName = row.GetString(0);
                 var columnTypeName = row.GetString(1);
-                var (duckDBType, clrType) = ParseDuckDBType(columnTypeName);
+                var (duckDBType, clrType) = ParseDuckDBType(columnTypeName, columnTypeName);
 
                 fields.Add(new(columnName, duckDBType, clrType));
             }
             return fields;
         }
 
-        public static (DuckDBType DuckDBType, Type Type) ParseDuckDBType(string duckDBTypeName)
+        public static (DuckDBType DuckDBType, Type Type) ParseDuckDBType(string duckDBTypeName, string? columnTypeName)
         {
+            //Sometimes the duckdb type is reported as NULL, in which case we need to fall back to the column type name.
+            //Values here seem to match the Parquet format's supported types: https://parquet.apache.org/docs/file-format/types/
+            if (duckDBTypeName.Trim('"') == "NULL" && columnTypeName is not null)
+            {
+                return columnTypeName switch
+                {
+                    "BOOLEAN" => (DuckDBType.Boolean, typeof(bool)),
+                    "INT32" => (DuckDBType.Integer, typeof(int)),
+                    "INT64" => (DuckDBType.BigInt, typeof(long)),
+                    "INT96" => (DuckDBType.HugeInt, typeof(BigInteger)),
+                    "FLOAT" => (DuckDBType.Float, typeof(float)),
+                    "DOUBLE" => (DuckDBType.Double, typeof(double)),
+                    "FIXED_LEN_BYTE_ARRAY" => (DuckDBType.Blob, typeof(ByteArrayValue)),
+                    "BYTE_ARRAY" => (DuckDBType.Blob, typeof(ByteArrayValue)),
+                    _ => throw new ArgumentOutOfRangeException(nameof(columnTypeName), $"Unsupported Parquet column type: {columnTypeName}"),
+                };
+            }
+
             // This mapping is based on https://duckdb.net/docs/type-mapping.html
             // It handles simple types and parameterized types by checking the start of the string.
             if (duckDBTypeName.EndsWith("[]")) return (DuckDBType.List, typeof(List<>));
@@ -59,7 +79,7 @@ namespace ParquetViewer.Engine.DuckDB
                 "TIME" => (DuckDBType.Time, typeof(TimeSpan)),
                 "INTERVAL" => (DuckDBType.Interval, typeof(TimeSpan)),
                 "UUID" => (DuckDBType.Uuid, typeof(Guid)),
-                _ => throw new ArgumentOutOfRangeException(nameof(duckDBTypeName), $"Unsupported DuckDB type: {duckDBTypeName}")
+                _ => throw new ArgumentOutOfRangeException(nameof(duckDBTypeName), $"Unsupported DuckDB type: {duckDBTypeName}({columnTypeName})")
             };
         }
 

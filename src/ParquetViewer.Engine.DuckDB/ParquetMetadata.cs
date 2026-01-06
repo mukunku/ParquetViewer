@@ -60,7 +60,7 @@ namespace ParquetViewer.Engine.DuckDB
                 string? statsMin = row.IsDBNull(10) ? null : row.GetString(10);
                 string? statsMax = row.IsDBNull(11) ? null : row.GetString(11);
 
-                long statsNullCount = row.GetInt64(12);
+                long? statsNullCount = row.IsDBNull(12) ? null : row.GetInt64(12);
                 long? statsDistinctCount = row.IsDBNull(13) ? null : row.GetInt64(13);
 
                 string? statsMinValue = row.IsDBNull(14) ? null : row.GetString(14);
