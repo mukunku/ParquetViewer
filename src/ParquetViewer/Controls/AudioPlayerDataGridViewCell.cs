@@ -484,7 +484,7 @@ namespace ParquetViewer.Controls
                 }
             }
         }
-    
+
         public enum AudioFormat
         {
             Invalid,

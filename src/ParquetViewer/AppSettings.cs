@@ -109,7 +109,7 @@ namespace ParquetViewer
         public static CultureInfo? UserSelectedCulture
         {
             get => ReadRegistryValue(UserSelectedCultureKey, out string? value) ?
-                (UtilityMethods.TryParseCultureInfo(value, out CultureInfo? cultureInfo) ? cultureInfo : null) 
+                (UtilityMethods.TryParseCultureInfo(value, out CultureInfo? cultureInfo) ? cultureInfo : null)
                 : null;
             set => SetRegistryValue(UserSelectedCultureKey, value?.ToString() ?? string.Empty);
         }

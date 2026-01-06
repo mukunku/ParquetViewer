@@ -164,8 +164,8 @@ namespace ParquetViewer.Controls
                 bitmap.Save(saveFileDialog.FileName, this.mainPictureBox.Image.RawFormat);
 
                 MessageBox.Show(this,
-                    Resources.Strings.ImageSavedToDiskMessage.Format(saveFileDialog.FileName), 
-                    Resources.Strings.ImageSavedToDiskTitle, 
+                    Resources.Strings.ImageSavedToDiskMessage.Format(saveFileDialog.FileName),
+                    Resources.Strings.ImageSavedToDiskTitle,
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }

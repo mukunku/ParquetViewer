@@ -127,7 +127,7 @@ namespace ParquetViewer.Helpers
             var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
             var values = Array.CreateInstance(type, recordCountToRead);
             var index = 0;
-            foreach(DataRow row in dataTable.Rows)
+            foreach (DataRow row in dataTable.Rows)
             {
                 if (skipCount-- > 0)
                 {
@@ -271,7 +271,7 @@ namespace ParquetViewer.Helpers
                 return typeof(T).IsAssignableFrom(type);
         }
 
-        public static string Format(this string formatString, params object?[] args) 
+        public static string Format(this string formatString, params object?[] args)
             => string.Format(formatString, args);
 
         /// <summary>

@@ -98,7 +98,7 @@ namespace ParquetViewer
             {
                 MessageBox.Show(this,
                     Resources.Errors.MetadataReadErrorMessage + Environment.NewLine + e.Error,
-                    Resources.Errors.MetadataReadErrorTitle, 
+                    Resources.Errors.MetadataReadErrorTitle,
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else

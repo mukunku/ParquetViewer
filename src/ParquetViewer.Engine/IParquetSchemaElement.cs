@@ -5,7 +5,7 @@ namespace ParquetViewer.Engine
     public interface IParquetSchemaElement<T> : IParquetSchemaElement where T : IParquetSchemaElement
     {
         new string Path { get; }
-        
+
         new ICollection<T> Children { get; }
 
         new Type ClrType { get; }

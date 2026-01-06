@@ -122,7 +122,7 @@
                     (int)rowGroupMetadataResult.rowGroupNumColumns,
                     firstFileOffset ?? -1,
                     rowGroupMetadataResult.rowGroupBytes,
-                    columnMetadatas.Sum(cm => cm.TotalCompressedSize ?? 0), 
+                    columnMetadatas.Sum(cm => cm.TotalCompressedSize ?? 0),
                     columnMetadatas);
             }).Where(rg => rg is not null)!.ToList<IRowGroupMetadata>();
             #endregion
@@ -196,17 +196,17 @@
         public long? BloomFilterLength { get; }
 
         public RowGroupColumnMetadata(
-            int? columnId, 
-            string? pathInSchema, 
-            string? type, 
-            int? numValues, 
-            long? totalUncompressedSize, 
-            long? totalCompressedSize, 
-            long? dataPageOffset, 
-            long? indexPageOffset, 
+            int? columnId,
+            string? pathInSchema,
+            string? type,
+            int? numValues,
+            long? totalUncompressedSize,
+            long? totalCompressedSize,
+            long? dataPageOffset,
+            long? indexPageOffset,
             long? dictionaryPageOffset,
-            RowGroupColumnStatistics? statistics, 
-            long? bloomFilterOffset, 
+            RowGroupColumnStatistics? statistics,
+            long? bloomFilterOffset,
             long? bloomFilterLength)
         {
             ColumnId = columnId;

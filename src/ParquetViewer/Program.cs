@@ -105,7 +105,7 @@ namespace ParquetViewer
         private static void ExceptionHandler(Exception ex)
         {
             ExceptionEvent.FireAndForget(ex);
-            MessageBox.Show($"{Resources.Errors.GenericErrorMessage} {Resources.Errors.CopyErrorMessageText}:{Environment.NewLine}{Environment.NewLine}{ex}", 
+            MessageBox.Show($"{Resources.Errors.GenericErrorMessage} {Resources.Errors.CopyErrorMessageText}:{Environment.NewLine}{Environment.NewLine}{ex}",
                 ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 

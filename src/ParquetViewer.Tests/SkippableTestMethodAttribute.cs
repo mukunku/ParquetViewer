@@ -4,10 +4,10 @@ namespace ParquetViewer.Tests
 {
     internal class SkippableTestMethodAttribute : TestMethodAttribute
     {
-        public SkippableTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1) 
+        public SkippableTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
             : base(callerFilePath, callerLineNumber)
         {
-            
+
         }
 
         public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
@@ -25,7 +25,7 @@ namespace ParquetViewer.Tests
                     Outcome = UnitTestOutcome.Inconclusive, // treated as skipped in MSTest
                     TestFailureException = null
                 };
-                result.TestContextMessages 
+                result.TestContextMessages
                     = $"Test skipped for {testMethod.TestClassName}.{testMethod.TestMethodName}" +
                     $"{(skipAttribute.Reason is not null ? $" {skipAttribute.Reason}" : string.Empty)}.";
 

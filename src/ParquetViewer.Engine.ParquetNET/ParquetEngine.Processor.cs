@@ -11,28 +11,29 @@ namespace ParquetViewer.Engine.ParquetNET
     {
         public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(recordCount, nameof(recordCount));
+            ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
+
+            long recordsLeftToRead = recordCount;
+            DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
+
+            foreach (var reader in this.GetReaders(offset))
             {
-                long recordsLeftToRead = recordCount;
-                DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
+                cancellationToken.ThrowIfCancellationRequested();
 
-                foreach (var reader in this.GetReaders(offset))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
+                if (recordsLeftToRead <= 0)
+                    break;
 
-                    if (recordsLeftToRead <= 0)
-                        break;
-
-                    recordsLeftToRead = await PopulateDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
-                }
-
-                result.DataSetSize = this.RecordCount;
-
-                return (logProgress) =>
-                {
-                    var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
-                    return datatable;
-                };
+                recordsLeftToRead = await PopulateDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
             }
+
+            result.DataSetSize = this.RecordCount;
+
+            return (logProgress) =>
+            {
+                var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
+                return datatable;
+            };
         }
 
         private async Task<long> PopulateDataTable(DataTableLite dataTable, ParquetReader parquetReader,

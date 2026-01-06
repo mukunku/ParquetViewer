@@ -275,7 +275,7 @@ namespace ParquetViewer
                 {
                     if (!IsSupportedFieldType(structField, out unsupportedReason))
                     {
-                        unsupportedReason = Resources.Errors.StructWithUnsupportedFieldErrorMessageFormat.Format(field.Name, structField.Name) 
+                        unsupportedReason = Resources.Errors.StructWithUnsupportedFieldErrorMessageFormat.Format(field.Name, structField.Name)
                             + Environment.NewLine + unsupportedReason;
                         return false;
                     }
@@ -334,9 +334,9 @@ namespace ParquetViewer
                 else
                 {
                     MessageBox.Show(this,
-                        Resources.Errors.SelectAtLeastOneFieldErrorMessage, 
-                        Resources.Errors.SelectAtLeastOneFieldErrorTitle, 
-                        MessageBoxButtons.OK, 
+                        Resources.Errors.SelectAtLeastOneFieldErrorMessage,
+                        Resources.Errors.SelectAtLeastOneFieldErrorTitle,
+                        MessageBoxButtons.OK,
                         MessageBoxIcon.Warning);
                     return;
                 }

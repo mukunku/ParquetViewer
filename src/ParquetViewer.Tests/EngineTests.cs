@@ -10,8 +10,8 @@ namespace ParquetViewer.Tests
     public class ParquetNETEngineTests : EngineTests
     {
         public ParquetNETEngineTests() : base(
-            useDuckDBEngine: false, 
-            canHandleNullComplexTypes: true, 
+            useDuckDBEngine: false,
+            canHandleNullComplexTypes: true,
             treatsTwoTierListAsStruct: true,
             "/")
         {
@@ -23,8 +23,8 @@ namespace ParquetViewer.Tests
     public class DuckDBEngineTests : EngineTests
     {
         public DuckDBEngineTests() : base(
-            useDuckDBEngine: true, 
-            canHandleNullComplexTypes: false, 
+            useDuckDBEngine: true,
+            canHandleNullComplexTypes: false,
             treatsTwoTierListAsStruct: false,
             ", ")
         {
@@ -667,7 +667,7 @@ namespace ParquetViewer.Tests
 
             Assert.IsNotNull(rowGroup.Columns);
             Assert.HasCount(33, rowGroup.Columns);
-            
+
             var firstColumn = rowGroup.Columns.First();
             Assert.IsNull(firstColumn.BloomFilterLength);
             Assert.IsNull(firstColumn.BloomFilterOffset);

@@ -171,7 +171,7 @@ namespace ParquetViewer.Engine.ParquetNET
             return field;
         }
         public bool BelongsToListField => this._systemFieldType == SystemFieldTypeId.ListItemNode;
-        public bool BelongsToListOfStructsField => 
+        public bool BelongsToListOfStructsField =>
             this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
         public int NumberOfListParents => _parentsExcludingRoot.Count(@field => @field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
 
@@ -280,22 +280,22 @@ namespace ParquetViewer.Engine.ParquetNET
         }
 
         static string TimeUnitToString(TimeUnit? timeUnit)
+        {
+            var timeUnitString = string.Empty;
+            if (timeUnit?.MILLIS is not null)
             {
-                var timeUnitString = string.Empty;
-                if (timeUnit?.MILLIS is not null)
-                {
-                    timeUnitString = nameof(timeUnit.MILLIS);
-                }
-                else if (timeUnit?.MICROS is not null)
-                {
-                    timeUnitString = nameof(timeUnit.MICROS);
-                }
-                else if (timeUnit?.NANOS is not null)
-                {
-                    timeUnitString = nameof(timeUnit.NANOS);
-                }
-                return timeUnitString;
+                timeUnitString = nameof(timeUnit.MILLIS);
             }
+            else if (timeUnit?.MICROS is not null)
+            {
+                timeUnitString = nameof(timeUnit.MICROS);
+            }
+            else if (timeUnit?.NANOS is not null)
+            {
+                timeUnitString = nameof(timeUnit.NANOS);
+            }
+            return timeUnitString;
+        }
 
         public RepetitionTypeId? RepetitionType => this.SchemaElement.RepetitionType switch
         {

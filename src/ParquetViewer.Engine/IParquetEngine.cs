@@ -1,6 +1,4 @@
-﻿using ParquetViewer.Engine.Types;
-using System.Data;
-using System.Numerics;
+﻿using System.Data;
 
 namespace ParquetViewer.Engine
 {
@@ -13,7 +11,7 @@ namespace ParquetViewer.Engine
         string Path { get; }
         IParquetMetadata Metadata { get; }
 
-        Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, 
+        Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount,
             CancellationToken cancellationToken, IProgress<int>? progress = null);
     }
 }

@@ -48,8 +48,8 @@ namespace ParquetViewer.Engine.ParquetNET
                         }
                         field = currentNode;
                     }
-                    catch 
-                    {  
+                    catch
+                    {
                         /*swallow*/
                     }
 
@@ -208,7 +208,7 @@ namespace ParquetViewer.Engine.ParquetNET
         public bool? IsMinValueExact { get; }
         public bool? IsMaxValueExact { get; }
 
-        public RowGroupColumnStatistics(object? min, object? max, long? nullCount, long? distinctCount, 
+        public RowGroupColumnStatistics(object? min, object? max, long? nullCount, long? distinctCount,
             object? minValue, object? maxValue, bool? isMinValueExact, bool? isMaxValueExact, ParquetSchemaElement? field)
         {
             if (min is not null && minValue is not null && Engine.Helpers.ByteArraysEqual(min as byte[], minValue as byte[]) == 0)

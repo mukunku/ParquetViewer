@@ -75,8 +75,11 @@ namespace ParquetViewer.Helpers
                     }
                 }
 
-                return JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true, 
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
+                return JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                });
             }
             catch (Exception ex)
             {

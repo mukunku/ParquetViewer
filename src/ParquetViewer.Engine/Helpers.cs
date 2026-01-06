@@ -23,7 +23,7 @@ namespace ParquetViewer.Engine
             }
         }
 
-        public static IEnumerable<(T, R)> PairEnumerables<T,R>(IEnumerable<T> enumerable1, IEnumerable<R> enumerable2)
+        public static IEnumerable<(T, R)> PairEnumerables<T, R>(IEnumerable<T> enumerable1, IEnumerable<R> enumerable2)
         {
             ArgumentNullException.ThrowIfNull(enumerable1);
             ArgumentNullException.ThrowIfNull(enumerable2);

@@ -239,6 +239,9 @@ namespace ParquetViewer.Engine.DuckDB
 
         public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(recordCount, nameof(recordCount));
+            ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
+
             var result = CreateEmptyDataTable(selectedFields);
             result.BeginLoadData();
             await foreach (var row in this.QueryDataAsync(selectedFields, offset, recordCount))
@@ -250,7 +253,7 @@ namespace ParquetViewer.Engine.DuckDB
                 {
                     row.GetValues(values);
                 }
-                catch(OverflowException ex) when (ex.Message == "Value was either too large or too small for a Decimal.")
+                catch (OverflowException ex) when (ex.Message == "Value was either too large or too small for a Decimal.")
                 {
                     throw new DecimalOverflowException(ex);
                 }

@@ -23,7 +23,7 @@
         public static IEnumerable<object> GetDataWithPaddedNulls(this Parquet.Data.DataColumn dataColumn, ParquetSchemaElement field)
         {
             var dataEnumerable = dataColumn.Data.Cast<object?>().Select(d => d ?? DBNull.Value);
-            
+
             int levelCount = dataColumn.DefinitionLevels?.Length ?? 0;
             if (levelCount > dataColumn.Data.Length)
             {

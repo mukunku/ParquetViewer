@@ -915,7 +915,7 @@ namespace ParquetViewer.Controls
             {
                 MessageBox.Show(this,
                     Resources.Errors.CopyAsWhereTooLargeErrorMessage,
-                    Resources.Errors.CopyAsWhereTooLargeErrorTitle, 
+                    Resources.Errors.CopyAsWhereTooLargeErrorTitle,
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

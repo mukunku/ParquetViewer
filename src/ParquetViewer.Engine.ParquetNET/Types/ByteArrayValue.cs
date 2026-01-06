@@ -6,7 +6,7 @@ namespace ParquetViewer.Engine.ParquetNET.Types
     {
         public ByteArrayValue(byte[] data) : base(data)
         {
-            
+
         }
     }
 }

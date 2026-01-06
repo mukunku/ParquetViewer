@@ -96,7 +96,7 @@ namespace ParquetViewer
                             {
                                 MessageBox.Show(this,
                                     Resources.Errors.TooManyColumnsXlsxErrorMessageFormat.Format(MAX_XLSX_COLUMN_COUNT, this.MainDataSource.Columns.Count),
-                                    Resources.Errors.TooManyColumnsErrorTitle, 
+                                    Resources.Errors.TooManyColumnsErrorTitle,
                                     MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                                 return;
@@ -127,15 +127,15 @@ namespace ParquetViewer
                             long fileSizeInBytes = new FileInfo(filePath).Length;
 
                             FileExportEvent.FireAndForget(
-                                selectedFileType.Value, 
+                                selectedFileType.Value,
                                 fileSizeInBytes,
-                                this.mainGridView.RowCount, 
-                                this.mainGridView.ColumnCount, 
+                                this.mainGridView.RowCount,
+                                this.mainGridView.ColumnCount,
                                 stopWatch.ElapsedMilliseconds);
 
                             MessageBox.Show(this,
                                 Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
-                                Resources.Strings.ExportSuccessfulTitle, 
+                                Resources.Strings.ExportSuccessfulTitle,
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
@@ -149,10 +149,10 @@ namespace ParquetViewer
             catch (XlsCellLengthException ex)
             {
                 CleanupFile(filePath);
-                
+
                 if (MessageBox.Show(this,
                     Resources.Strings.SwitchFromXlsToXlsxMessageFormat.Format(ex.MaxLength, ex.FileType.GetExtension(), FileType.XLSX.GetExtension()),
-                    Resources.Strings.SwitchFromXlsToXlsxMessageTitle, 
+                    Resources.Strings.SwitchFromXlsToXlsxMessageTitle,
                     MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
                 {
                     rerunType = FileType.XLSX;
@@ -497,7 +497,7 @@ namespace ParquetViewer
 
         private static void HandleDecimalOverflowException(DecimalOverflowException ex)
             => ShowError(
-                   (ex.HasDetailedInfo ? Resources.Errors.DecimalValueTooLargeErrorMessageFormat 
+                   (ex.HasDetailedInfo ? Resources.Errors.DecimalValueTooLargeErrorMessageFormat
                         : Resources.Errors.DecimalValueUnknownSizeTooLargeErrorMessageFormat)
                    .Format(
                        ex.FieldName,
@@ -507,7 +507,7 @@ namespace ParquetViewer
                        DecimalOverflowException.MAX_DECIMAL_SCALE),
                    Resources.Errors.DecimalValueTooLargeErrorTitle);
 
-        private static void ShowError(string message, string? title = null) 
+        private static void ShowError(string message, string? title = null)
             => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }

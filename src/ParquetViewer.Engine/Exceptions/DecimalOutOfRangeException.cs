@@ -20,7 +20,7 @@
 
         public DecimalOverflowException(OverflowException overflowEx) : base(overflowEx.Message, overflowEx)
         {
-            
+
         }
     }
 }
