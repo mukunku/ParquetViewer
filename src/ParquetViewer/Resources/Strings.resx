@@ -378,4 +378,16 @@ You can always toggle this on/off from the Edit menu.</value>
     <value>Switch to Dark Mode?</value>
     <comment>Message box title shown to the user asking if they'd like to switch to dark mode</comment>
   </data>
+  <data name="QueryRunningStatusText" xml:space="preserve">
+    <value>Running:</value>
+    <comment>Shown in the Query Editor tool when the query is running</comment>
+  </data>
+  <data name="QueryFinishedStatusText" xml:space="preserve">
+    <value>Finished in:</value>
+    <comment>Shown in the Query Editor status bar when the query finishes executing</comment>
+  </data>
+  <data name="QueryZoomStatusTextFormat" xml:space="preserve">
+    <value>Query Zoom: {0}%</value>
+    <comment>Text format used in the Query Editor tool to display the current zoom level</comment>
+  </data>
 </root>

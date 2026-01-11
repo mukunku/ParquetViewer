@@ -223,6 +223,24 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lists with null values are not supported. Relevant rows have been removed..
+        /// </summary>
+        internal static string ListsWithNullsErrorMessage {
+            get {
+                return ResourceManager.GetString("ListsWithNullsErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read all records.
+        /// </summary>
+        internal static string ListsWithNullsErrorTitle {
+            get {
+                return ResourceManager.GetString("ListsWithNullsErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}
         ///
         ///If you think the file is valid please consider opening an issue in the GitHub repo. See: Help → About.
@@ -329,6 +347,24 @@ namespace ParquetViewer.Resources {
         internal static string ParquetSchemaReadErrorMessage {
             get {
                 return ResourceManager.GetString("ParquetSchemaReadErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error executing query.
+        /// </summary>
+        internal static string QueryExecutionErrorTitle {
+            get {
+                return ResourceManager.GetString("QueryExecutionErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error rendering results.
+        /// </summary>
+        internal static string RenderResultsErrorTitle {
+            get {
+                return ResourceManager.GetString("RenderResultsErrorTitle", resourceCulture);
             }
         }
         

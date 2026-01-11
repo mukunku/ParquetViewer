@@ -321,4 +321,13 @@ Tercihinizi Düzen menüsünden istediğiniz zaman değiştirebilirsiniz.</value
   <data name="DarkModePromptTitle" xml:space="preserve">
     <value>Gece Moduna Geçilsin mi?</value>
   </data>
+  <data name="QueryRunningStatusText" xml:space="preserve">
+    <value>İşleniyor:</value>
+  </data>
+  <data name="QueryFinishedStatusText" xml:space="preserve">
+    <value>Tamamlandı:</value>
+  </data>
+  <data name="QueryZoomStatusTextFormat" xml:space="preserve">
+    <value>Sorgu Zumu: {0}%</value>
+  </data>
 </root>

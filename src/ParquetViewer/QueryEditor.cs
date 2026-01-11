@@ -71,7 +71,7 @@ OFFSET {3};";
             this.Cursor = Cursors.WaitCursor;
             this.queryExecutionStatusLabel.Visible = true;
             this.timeElapsedLabel.Visible = true;
-            this.queryExecutionStatusLabel.Text = "Running:";
+            this.queryExecutionStatusLabel.Text = Resources.Strings.QueryRunningStatusText;
             this.timeElapsedLabel.Text = "00:00";
 
             var result = new DataTable();
@@ -101,7 +101,7 @@ OFFSET {3};";
                 stopwatch.Stop();
                 await queryTask;
 
-                this.queryExecutionStatusLabel.Text = "Finished in:";
+                this.queryExecutionStatusLabel.Text = Resources.Strings.QueryFinishedStatusText;
                 this.timeElapsedLabel.Text = stopwatch.Elapsed.ToString("mm\\:ss");
                 queryEvent.IsValid = true;
                 queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
@@ -113,16 +113,17 @@ OFFSET {3};";
                 result.Dispose();
                 if (ex is InvalidCastException && ex.Message.Contains("The list contains null value"))
                 {
-                    MessageBox.Show($"Lists with null values are not supported. Relevant rows have been removed.", "Error showing all results", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(Resources.Errors.ListsWithNullsErrorMessage, Resources.Errors.ListsWithNullsErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 else if (ex is DuckDBException && ex.Message.StartsWith("Parser Error:"))
                 {
-                    MessageBox.Show($"{ex.Message}", "Invalid query", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"{Resources.Errors.InvalidQueryErrorMessage}{Environment.NewLine}{Environment.NewLine}{ex.Message}", 
+                        Resources.Errors.InvalidQueryErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {
                     ExceptionEvent.FireAndForget(ex);
-                    MessageBox.Show($"{ex.Message}", "Error executing query", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(ex.Message, Resources.Errors.QueryExecutionErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 this.executeQueryButton.Enabled = true;
                 this.Cursor = Cursors.Default;
@@ -148,7 +149,7 @@ OFFSET {3};";
             {
                 ExceptionEvent.FireAndForget(ex);
                 MessageBox.Show($"{ex.Message}{Environment.NewLine}{Environment.NewLine}{ex.StackTrace}", 
-                    "Error rendering results", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Resources.Errors.RenderResultsErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -174,7 +175,7 @@ OFFSET {3};";
         {
             zoomPercentage = Math.Clamp(zoomPercentage ?? 100, 100, 150);
             this.queryRichTextBox.Zoom = zoomPercentage.Value;
-            this.zoomPercentageDropDown.Text = $"Query Zoom: {zoomPercentage}%";
+            this.zoomPercentageDropDown.Text = Resources.Strings.QueryZoomStatusTextFormat.Format(zoomPercentage);
             AppSettings.QueryEditorZoomLevel = zoomPercentage.Value;
 
             foreach (ToolStripMenuItem menuItem in this.zoomPercentageDropDown.DropDownItems)

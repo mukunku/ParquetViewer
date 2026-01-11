@@ -67,24 +67,16 @@ namespace ParquetViewer
             // 
             // mainTableLayoutPanel
             // 
-            mainTableLayoutPanel.ColumnCount = 2;
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            mainTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
+            resources.ApplyResources(mainTableLayoutPanel, "mainTableLayoutPanel");
             mainTableLayoutPanel.Controls.Add(queryRichTextBox, 0, 0);
             mainTableLayoutPanel.Controls.Add(executeQueryButton, 0, 1);
             mainTableLayoutPanel.Controls.Add(querySyntaxDocsButton, 1, 1);
-            mainTableLayoutPanel.Dock = DockStyle.Fill;
-            mainTableLayoutPanel.Location = new System.Drawing.Point(0, 0);
             mainTableLayoutPanel.Name = "mainTableLayoutPanel";
-            mainTableLayoutPanel.RowCount = 2;
-            mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            mainTableLayoutPanel.Size = new System.Drawing.Size(1016, 176);
-            mainTableLayoutPanel.TabIndex = 0;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainTableLayoutPanel, resources.GetString("mainTableLayoutPanel.ToolTip"));
             // 
             // queryRichTextBox
             // 
-            queryRichTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            resources.ApplyResources(queryRichTextBox, "queryRichTextBox");
             queryRichTextBox.AutoCompleteBracketsList = new char[]
     {
     '(',
@@ -99,61 +91,47 @@ namespace ParquetViewer
     '\''
     };
             queryRichTextBox.AutoIndentCharsPatterns = "";
-            queryRichTextBox.AutoScrollMinSize = new System.Drawing.Size(29, 16);
             queryRichTextBox.BackBrush = null;
             queryRichTextBox.CharHeight = 16;
             queryRichTextBox.CharWidth = 9;
             mainTableLayoutPanel.SetColumnSpan(queryRichTextBox, 2);
             queryRichTextBox.CommentPrefix = "--";
             queryRichTextBox.DisabledColor = System.Drawing.Color.FromArgb(100, 180, 180, 180);
-            queryRichTextBox.Font = new System.Drawing.Font("Courier New", 11.25F);
             queryRichTextBox.Hotkeys = resources.GetString("queryRichTextBox.Hotkeys");
             queryRichTextBox.IsReplaceMode = false;
             queryRichTextBox.Language = Language.SQL;
             queryRichTextBox.LeftBracket = '(';
-            queryRichTextBox.Location = new System.Drawing.Point(3, 3);
             queryRichTextBox.Name = "queryRichTextBox";
             queryRichTextBox.Paddings = new Padding(0);
             queryRichTextBox.RightBracket = ')';
             queryRichTextBox.SelectionColor = System.Drawing.Color.FromArgb(60, 0, 0, 255);
             queryRichTextBox.ServiceColors = (ServiceColors)resources.GetObject("queryRichTextBox.ServiceColors");
-            queryRichTextBox.Size = new System.Drawing.Size(1010, 138);
-            queryRichTextBox.TabIndex = 0;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(queryRichTextBox, resources.GetString("queryRichTextBox.ToolTip"));
             queryRichTextBox.Zoom = 100;
             queryRichTextBox.TextChanged += queryRichTextBox_TextChanged;
             queryRichTextBox.KeyDown += queryRichTextBox_KeyDown;
             // 
             // executeQueryButton
             // 
-            executeQueryButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            resources.ApplyResources(executeQueryButton, "executeQueryButton");
             executeQueryButton.Image = Resources.Icons.exclamation_icon;
-            executeQueryButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            executeQueryButton.Location = new System.Drawing.Point(3, 147);
             executeQueryButton.Name = "executeQueryButton";
-            executeQueryButton.Size = new System.Drawing.Size(890, 26);
-            executeQueryButton.TabIndex = 1;
-            executeQueryButton.Text = "Execute";
-            executeQueryButton.TextImageRelation = TextImageRelation.ImageBeforeText;
-            executeQueryKeyboardShortcutToolTip.SetToolTip(executeQueryButton, "(Shift + Enter)");
+            executeQueryKeyboardShortcutToolTip.SetToolTip(executeQueryButton, resources.GetString("executeQueryButton.ToolTip"));
             executeQueryButton.UseVisualStyleBackColor = true;
             executeQueryButton.Click += executeQueryButton_Click;
             // 
             // querySyntaxDocsButton
             // 
-            querySyntaxDocsButton.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            resources.ApplyResources(querySyntaxDocsButton, "querySyntaxDocsButton");
             querySyntaxDocsButton.Image = Resources.Icons.external_link_icon;
-            querySyntaxDocsButton.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            querySyntaxDocsButton.Location = new System.Drawing.Point(899, 147);
             querySyntaxDocsButton.Name = "querySyntaxDocsButton";
-            querySyntaxDocsButton.Size = new System.Drawing.Size(114, 26);
-            querySyntaxDocsButton.TabIndex = 2;
-            querySyntaxDocsButton.Text = "Query Syntax";
-            querySyntaxDocsButton.TextImageRelation = TextImageRelation.ImageBeforeText;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(querySyntaxDocsButton, resources.GetString("querySyntaxDocsButton.ToolTip"));
             querySyntaxDocsButton.UseVisualStyleBackColor = true;
             querySyntaxDocsButton.Click += querySyntaxDocsButton_Click;
             // 
             // resultsGridView
             // 
+            resources.ApplyResources(resultsGridView, "resultsGridView");
             resultsGridView.AllowUserToAddRows = false;
             resultsGridView.AllowUserToDeleteRows = false;
             resultsGridView.AllowUserToOrderColumns = true;
@@ -163,165 +141,139 @@ namespace ParquetViewer
             resultsGridView.ColumnNameEscapeFormat = "[{0}]";
             resultsGridView.CopyAsWhereIcon = null;
             resultsGridView.CopyToClipboardIcon = null;
-            resultsGridView.Dock = DockStyle.Fill;
             resultsGridView.EnableHeadersVisualStyles = false;
-            resultsGridView.Location = new System.Drawing.Point(0, 0);
             resultsGridView.Name = "resultsGridView";
             resultsGridView.ReadOnly = true;
-            resultsGridView.RowHeadersWidth = 24;
             resultsGridView.ShowCellToolTips = false;
             resultsGridView.ShowCopyAsWhereContextMenuItem = false;
-            resultsGridView.Size = new System.Drawing.Size(1016, 242);
-            resultsGridView.TabIndex = 2;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(resultsGridView, resources.GetString("resultsGridView.ToolTip"));
             // 
             // statusStrip
             // 
+            resources.ApplyResources(statusStrip, "statusStrip");
             statusStrip.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, showingCountLabel, toolStripStatusLabel2, toolStripStatusLabel4, zoomPercentageDropDown, queryExecutionStatusLabel, timeElapsedLabel });
-            statusStrip.Location = new System.Drawing.Point(0, 428);
             statusStrip.Name = "statusStrip";
-            statusStrip.Size = new System.Drawing.Size(1018, 22);
-            statusStrip.TabIndex = 1;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(statusStrip, resources.GetString("statusStrip.ToolTip"));
             // 
             // toolStripStatusLabel1
             // 
+            resources.ApplyResources(toolStripStatusLabel1, "toolStripStatusLabel1");
             toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new System.Drawing.Size(56, 17);
-            toolStripStatusLabel1.Text = "Showing:";
             // 
             // showingCountLabel
             // 
-            showingCountLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            resources.ApplyResources(showingCountLabel, "showingCountLabel");
             showingCountLabel.Name = "showingCountLabel";
-            showingCountLabel.Size = new System.Drawing.Size(14, 17);
-            showingCountLabel.Text = "0";
             // 
             // toolStripStatusLabel2
             // 
+            resources.ApplyResources(toolStripStatusLabel2, "toolStripStatusLabel2");
             toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-            toolStripStatusLabel2.Size = new System.Drawing.Size(44, 17);
-            toolStripStatusLabel2.Text = "Results";
             // 
             // toolStripStatusLabel4
             // 
+            resources.ApplyResources(toolStripStatusLabel4, "toolStripStatusLabel4");
             toolStripStatusLabel4.Name = "toolStripStatusLabel4";
-            toolStripStatusLabel4.Size = new System.Drawing.Size(675, 17);
             toolStripStatusLabel4.Spring = true;
             // 
             // zoomPercentageDropDown
             // 
+            resources.ApplyResources(zoomPercentageDropDown, "zoomPercentageDropDown");
             zoomPercentageDropDown.DisplayStyle = ToolStripItemDisplayStyle.Text;
             zoomPercentageDropDown.DropDownItems.AddRange(new ToolStripItem[] { percentage100, percentage110, percentage125, percentage140, percentage150 });
-            zoomPercentageDropDown.Image = (System.Drawing.Image)resources.GetObject("zoomPercentageDropDown.Image");
-            zoomPercentageDropDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             zoomPercentageDropDown.Name = "zoomPercentageDropDown";
-            zoomPercentageDropDown.Size = new System.Drawing.Size(121, 20);
-            zoomPercentageDropDown.Text = "Query Zoom: 100%";
             // 
             // percentage100
             // 
+            resources.ApplyResources(percentage100, "percentage100");
             percentage100.Checked = true;
             percentage100.CheckOnClick = true;
             percentage100.CheckState = CheckState.Checked;
             percentage100.Name = "percentage100";
-            percentage100.Size = new System.Drawing.Size(102, 22);
             percentage100.Tag = "100";
-            percentage100.Text = "100%";
             percentage100.Click += zoomPercentage_Click;
             // 
             // percentage110
             // 
+            resources.ApplyResources(percentage110, "percentage110");
             percentage110.Name = "percentage110";
-            percentage110.Size = new System.Drawing.Size(102, 22);
             percentage110.Tag = "110";
-            percentage110.Text = "110%";
             percentage110.Click += zoomPercentage_Click;
             // 
             // percentage125
             // 
+            resources.ApplyResources(percentage125, "percentage125");
             percentage125.CheckOnClick = true;
             percentage125.Name = "percentage125";
-            percentage125.Size = new System.Drawing.Size(102, 22);
             percentage125.Tag = "125";
-            percentage125.Text = "125%";
             percentage125.Click += zoomPercentage_Click;
             // 
             // percentage140
             // 
+            resources.ApplyResources(percentage140, "percentage140");
             percentage140.Name = "percentage140";
-            percentage140.Size = new System.Drawing.Size(102, 22);
             percentage140.Tag = "140";
-            percentage140.Text = "140%";
             percentage140.Click += zoomPercentage_Click;
             // 
             // percentage150
             // 
+            resources.ApplyResources(percentage150, "percentage150");
             percentage150.CheckOnClick = true;
             percentage150.Name = "percentage150";
-            percentage150.Size = new System.Drawing.Size(102, 22);
             percentage150.Tag = "150";
-            percentage150.Text = "150%";
             percentage150.Click += zoomPercentage_Click;
             // 
             // queryExecutionStatusLabel
             // 
+            resources.ApplyResources(queryExecutionStatusLabel, "queryExecutionStatusLabel");
             queryExecutionStatusLabel.Name = "queryExecutionStatusLabel";
-            queryExecutionStatusLabel.Size = new System.Drawing.Size(55, 17);
-            queryExecutionStatusLabel.Text = "Running:";
             // 
             // timeElapsedLabel
             // 
-            timeElapsedLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, 0);
+            resources.ApplyResources(timeElapsedLabel, "timeElapsedLabel");
             timeElapsedLabel.Name = "timeElapsedLabel";
-            timeElapsedLabel.Size = new System.Drawing.Size(38, 17);
-            timeElapsedLabel.Text = "00:00";
             // 
             // mainSplitContainer
             // 
+            resources.ApplyResources(mainSplitContainer, "mainSplitContainer");
             mainSplitContainer.BackColor = System.Drawing.SystemColors.Control;
             mainSplitContainer.BorderStyle = BorderStyle.FixedSingle;
-            mainSplitContainer.Dock = DockStyle.Fill;
-            mainSplitContainer.Location = new System.Drawing.Point(0, 0);
             mainSplitContainer.Name = "mainSplitContainer";
-            mainSplitContainer.Orientation = Orientation.Horizontal;
             // 
             // mainSplitContainer.Panel1
             // 
+            resources.ApplyResources(mainSplitContainer.Panel1, "mainSplitContainer.Panel1");
             mainSplitContainer.Panel1.Controls.Add(mainTableLayoutPanel);
-            mainSplitContainer.Panel1MinSize = 120;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainSplitContainer.Panel1, resources.GetString("mainSplitContainer.Panel1.ToolTip"));
             // 
             // mainSplitContainer.Panel2
             // 
+            resources.ApplyResources(mainSplitContainer.Panel2, "mainSplitContainer.Panel2");
             mainSplitContainer.Panel2.BackColor = System.Drawing.SystemColors.Control;
             mainSplitContainer.Panel2.Controls.Add(resultsGridView);
-            mainSplitContainer.Panel2MinSize = 150;
-            mainSplitContainer.Size = new System.Drawing.Size(1018, 428);
-            mainSplitContainer.SplitterDistance = 178;
-            mainSplitContainer.SplitterWidth = 6;
-            mainSplitContainer.TabIndex = 2;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainSplitContainer.Panel2, resources.GetString("mainSplitContainer.Panel2.ToolTip"));
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainSplitContainer, resources.GetString("mainSplitContainer.ToolTip"));
             // 
             // closeButton
             // 
-            closeButton.Location = new System.Drawing.Point(942, 221);
+            resources.ApplyResources(closeButton, "closeButton");
             closeButton.Name = "closeButton";
-            closeButton.Size = new System.Drawing.Size(0, 0);
-            closeButton.TabIndex = 3;
-            closeButton.Text = "Close";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(closeButton, resources.GetString("closeButton.ToolTip"));
             closeButton.UseVisualStyleBackColor = true;
             closeButton.Click += closeButton_Click;
             // 
             // QueryEditor
             // 
             AcceptButton = executeQueryButton;
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            resources.ApplyResources(this, "$this");
             AutoScaleMode = AutoScaleMode.Font;
             CancelButton = closeButton;
-            ClientSize = new System.Drawing.Size(1018, 450);
             Controls.Add(closeButton);
             Controls.Add(mainSplitContainer);
             Controls.Add(statusStrip);
             Icon = Resources.Icons.sql_server_icon;
             Name = "QueryEditor";
-            Text = "ParquetViewer - Query Editor (Powered by DuckDB)";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             Load += QueryEditor_Load;
             KeyUp += QueryEditor_KeyUp;
             mainTableLayoutPanel.ResumeLayout(false);
