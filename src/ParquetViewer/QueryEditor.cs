@@ -2,6 +2,7 @@
 using ParquetViewer.Analytics;
 using ParquetViewer.Controls;
 using ParquetViewer.Engine;
+using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
@@ -119,8 +120,16 @@ OFFSET {3}";
                 }
                 else if (ex is DuckDBException && ex.Message.StartsWith("Parser Error:"))
                 {
-                    MessageBox.Show($"{Resources.Errors.InvalidQueryErrorMessage}{Environment.NewLine}{Environment.NewLine}{ex.Message}", 
+                    MessageBox.Show($"{Resources.Errors.InvalidQueryErrorMessage}{Environment.NewLine}{Environment.NewLine}{ex.Message}",
                         Resources.Errors.InvalidQueryErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else if (ex is OverflowException && ex.Message.Contains("Value was either too large or too small for a Decimal"))
+                {
+                    MessageBox.Show(Resources.Errors.DecimalValueUnknownSizeTooLargeErrorMessageFormat
+                   .Format(null, null, null,
+                       DecimalOverflowException.MAX_DECIMAL_PRECISION,
+                       DecimalOverflowException.MAX_DECIMAL_SCALE),
+                   Resources.Errors.DecimalValueTooLargeErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {
@@ -150,7 +159,7 @@ OFFSET {3}";
             catch (Exception ex)
             {
                 ExceptionEvent.FireAndForget(ex);
-                MessageBox.Show($"{ex.Message}{Environment.NewLine}{Environment.NewLine}{ex.StackTrace}", 
+                MessageBox.Show($"{ex.Message}{Environment.NewLine}{Environment.NewLine}{ex.StackTrace}",
                     Resources.Errors.RenderResultsErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -299,7 +308,7 @@ OFFSET {3}";
             else if (value is Dictionary<string, object?> structDictionary)
             {
                 var dataRow = new QueryResultDataRow(structDictionary.Keys.ToList(),
-                    structDictionary.Values.Select(v => v is null ? DBNull.Value : ConvertValue(v)).ToArray());
+                    structDictionary.Values.Select(ConvertValue).ToArray());
 
                 var structValue = new StructValue(dataRow);
                 return structValue;
@@ -328,11 +337,32 @@ OFFSET {3}";
             else if (value is IDictionary dictionary)
             {
                 var types = dictionary.GetType().GetGenericArguments();
-                var keyType = types[0];
-                var valueType = types[1];
+
+                var keysList = new ArrayList(dictionary.Keys.Count);
+                var valuesList = new ArrayList(dictionary.Values.Count);
+                var keysType = typeof(object);
+                var valuesType = typeof(object);
+                foreach(var keyValuePair in Engine.Helpers.PairEnumerables(
+                    dictionary.Keys.OfType<object?>(), 
+                    dictionary.Values.OfType<object?>(),
+                    DBNull.Value))
+                {
+                    var convertedKey = ConvertValue(keyValuePair.Item1);
+                    var convertedValue = ConvertValue(keyValuePair.Item2);
+                    keysList.Add(convertedKey);
+                    valuesList.Add(convertedValue);
+                    if (convertedKey != DBNull.Value)
+                    {
+                        keysType = convertedKey.GetType();
+                    }
+                    if (convertedValue != DBNull.Value)
+                    {
+                        valuesType = convertedValue.GetType();
+                    }
+                }
                 var mapValue = new MapValue(
-                    new ArrayList(dictionary.Keys), keyType,
-                    new ArrayList(dictionary.Values), valueType);
+                    keysList, keysType,
+                    valuesList, valuesType);
                 return mapValue;
             }
             else if (value is Stream byteArray)
