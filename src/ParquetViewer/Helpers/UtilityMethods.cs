@@ -84,23 +84,6 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static bool TryParseCultureInfo(string? cultureString, [NotNullWhen(true)] out CultureInfo? cultureInfo)
-        {
-            if (string.IsNullOrWhiteSpace(cultureString))
-                throw new ArgumentNullException(nameof(cultureString));
-
-            try
-            {
-                cultureInfo = new CultureInfo(cultureString);
-                return true;
-            }
-            catch (CultureNotFoundException)
-            {
-                cultureInfo = null;
-                return false;
-            }
-        }
-
         /// <summary>
         /// Starts a new ParquetViewer instance and terminates the current one.
         /// </summary>
