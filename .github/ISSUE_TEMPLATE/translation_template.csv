@@ -75,9 +75,45 @@
 "MainForm.resx","userGuideToolStripMenuItem.Text",,"User Guide","Kullanıcı Kılavuzu",""
 "MetadataViewer.resx","$this.Text",,"Parquet Metadata Viewer","Parquet Metadata Önizleyicisi",""
 "MetadataViewer.resx","closeButton.Text",,"Close","Kapat",""
-"MetadataViewer.resx","copyRawThriftMetadataButton.Text",,"Copy Raw Metadata","Ham Metadatayı Kopyala",""
-"MetadataViewer.resx","copyRawThriftMetadataButton.ToolTip",,"Exports full, raw Thrift metadata to the clipboard.","Ham Thrift metadatasını panoya kopyalar",""
 "MetadataViewer.resx","loadingTab.Text",,"Loading...","Yükleniyor...",""
+"QueryEditor.resx","$this.Text",,"ParquetViewer - Query Editor (Powered by DuckDB)","ParquetViewer - Sorgu Editörü (DuckDB Desteğiyle)",""
+"QueryEditor.resx","executeQueryButton.Text",,"Execute","İşle",""
+"QueryEditor.resx","queryExecutionStatusLabel.Text",,"Running:","İşleniyor:",""
+"QueryEditor.resx","queryRichTextBox.ServiceColors",,"
+        AAEAAAD/////AQAAAAAAAAAMAgAAAERGYXN0Q29sb3JlZFRleHRCb3gsIEN1bHR1cmU9bmV1dHJhbCwg
+        UHVibGljS2V5VG9rZW49ZmI4YWExMmI5OTRlZjYxYgwDAAAAUVN5c3RlbS5EcmF3aW5nLCBWZXJzaW9u
+        PTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQUB
+        AAAAIkZhc3RDb2xvcmVkVGV4dEJveE5TLlNlcnZpY2VDb2xvcnMGAAAAKDxDb2xsYXBzZU1hcmtlckZv
+        cmVDb2xvcj5rX19CYWNraW5nRmllbGQoPENvbGxhcHNlTWFya2VyQmFja0NvbG9yPmtfX0JhY2tpbmdG
+        aWVsZCo8Q29sbGFwc2VNYXJrZXJCb3JkZXJDb2xvcj5rX19CYWNraW5nRmllbGQmPEV4cGFuZE1hcmtl
+        ckZvcmVDb2xvcj5rX19CYWNraW5nRmllbGQmPEV4cGFuZE1hcmtlckJhY2tDb2xvcj5rX19CYWNraW5n
+        RmllbGQoPEV4cGFuZE1hcmtlckJvcmRlckNvbG9yPmtfX0JhY2tpbmdGaWVsZAQEBAQEBBRTeXN0ZW0u
+        RHJhd2luZy5Db2xvcgMAAAAUU3lzdGVtLkRyYXdpbmcuQ29sb3IDAAAAFFN5c3RlbS5EcmF3aW5nLkNv
+        bG9yAwAAABRTeXN0ZW0uRHJhd2luZy5Db2xvcgMAAAAUU3lzdGVtLkRyYXdpbmcuQ29sb3IDAAAAFFN5
+        c3RlbS5EcmF3aW5nLkNvbG9yAwAAAAIAAAAF/P///xRTeXN0ZW0uRHJhd2luZy5Db2xvcgQAAAAEbmFt
+        ZQV2YWx1ZQprbm93bkNvbG9yBXN0YXRlAQAAAAkHBwMAAAAKAAAAAAAAAACWAAEAAfv////8////CgAA
+        AAAAAAAApAABAAH6/////P///woAAAAAAAAAAJYAAQAB+f////z///8KAAAAAAAAAACNAAEAAfj////8
+        ////CgAAAAAAAAAApAABAAH3/////P///woAAAAAAAAAAJYAAQAL
+","
+        AAEAAAD/////AQAAAAAAAAAMAgAAAERGYXN0Q29sb3JlZFRleHRCb3gsIEN1bHR1cmU9bmV1dHJhbCwg
+        UHVibGljS2V5VG9rZW49ZmI4YWExMmI5OTRlZjYxYgwDAAAAUVN5c3RlbS5EcmF3aW5nLCBWZXJzaW9u
+        PTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQUB
+        AAAAIkZhc3RDb2xvcmVkVGV4dEJveE5TLlNlcnZpY2VDb2xvcnMGAAAAKDxDb2xsYXBzZU1hcmtlckZv
+        cmVDb2xvcj5rX19CYWNraW5nRmllbGQoPENvbGxhcHNlTWFya2VyQmFja0NvbG9yPmtfX0JhY2tpbmdG
+        aWVsZCo8Q29sbGFwc2VNYXJrZXJCb3JkZXJDb2xvcj5rX19CYWNraW5nRmllbGQmPEV4cGFuZE1hcmtl
+        ckZvcmVDb2xvcj5rX19CYWNraW5nRmllbGQmPEV4cGFuZE1hcmtlckJhY2tDb2xvcj5rX19CYWNraW5n
+        RmllbGQoPEV4cGFuZE1hcmtlckJvcmRlckNvbG9yPmtfX0JhY2tpbmdGaWVsZAQEBAQEBBRTeXN0ZW0u
+        RHJhd2luZy5Db2xvcgMAAAAUU3lzdGVtLkRyYXdpbmcuQ29sb3IDAAAAFFN5c3RlbS5EcmF3aW5nLkNv
+        bG9yAwAAABRTeXN0ZW0uRHJhd2luZy5Db2xvcgMAAAAUU3lzdGVtLkRyYXdpbmcuQ29sb3IDAAAAFFN5
+        c3RlbS5EcmF3aW5nLkNvbG9yAwAAAAIAAAAF/P///xRTeXN0ZW0uRHJhd2luZy5Db2xvcgQAAAAEbmFt
+        ZQV2YWx1ZQprbm93bkNvbG9yBXN0YXRlAQAAAAkHBwMAAAAKAAAAAAAAAACWAAEAAfv////8////CgAA
+        AAAAAAAApAABAAH6/////P///woAAAAAAAAAAJYAAQAB+f////z///8KAAAAAAAAAACNAAEAAfj////8
+        ////CgAAAAAAAAAApAABAAH3/////P///woAAAAAAAAAAJYAAQAL
+",""
+"QueryEditor.resx","querySyntaxDocsButton.Text",,"Query Syntax","Sorgu Söz Dizimi",""
+"QueryEditor.resx","toolStripStatusLabel1.Text",,"Showing:","Gösterilen:",""
+"QueryEditor.resx","toolStripStatusLabel2.Text",,"Results","Sonuç",""
+"QueryEditor.resx","zoomPercentageDropDown.Text",,"Query Zoom: 100%","Sorgu Zumu: 100%",""
 "QuickPeekForm.resx","$this.Text",,"Quick Peek","Hızlı Önizleme",""
 "QuickPeekForm.resx","copyToClipboardToolStripMenuItem.Text",,"Copy to clipboard","Panoya kopyala",""
 "QuickPeekForm.resx","saveImageToFileButton.Text",,"Save as PNG","PNG olarak Kaydet",""
@@ -90,6 +126,7 @@
 "Errors.resx","CopyToClipboardErrorTitle","Shown when copying to the clipboard fails","Copy to clipboard failed","Panoya kopyalama başarısız oldu",""
 "Errors.resx","DecimalValueTooLargeErrorMessageFormat","Shown when a field contains decimal values outside the supported range for .NET","Field `{0}` with type DECIMAL({1}, {2}) contains values outside ParquetViewer's supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0)","DECIMAL({1}, {2}) tipli alan `{0}` ParquetViewer'ın desteklediği aralığın dışında bulunuyor: DECIMAL({3}, {4}) ve DECIMAL({3}, 0)",""
 "Errors.resx","DecimalValueTooLargeErrorTitle","Shown when a field contains decimal values outside the supported range for .NET","Decimal value too large","Decimal değeri çok büyük",""
+"Errors.resx","DecimalValueUnknownSizeTooLargeErrorMessageFormat","Shown when a field contains decimal values outside the supported range for .NET AND we don't know it's name, scale, or precision","Encountered DECIMAL data outside ParquetViewer's supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0)","ParquetViewer'ın desteklediği aralığın, DECIMAL({3}, {4}) ve DECIMAL({3}, 0), dışında bir DECIMAL değerine rastlanıldı",""
 "Errors.resx","ExportFailedErrorTitle","Shown when an exception is encountered during a file export","File export failed","Dosyaya aktarım başarısız oldu",""
 "Errors.resx","FieldListGenerationError","Generic error shown when the field list in the field selection dialog cannot be rendered for some reason","Something went wrong while generating the field list.","Alan listesi oluşturulurken bir hata oldu.",""
 "Errors.resx","FileAssociationFailedErrorMessageFormat","Shown when file association fails in the Help page","Something went wrong (Error code: {0}). Try running ParquetViewer as administrator and try again. ","Birşey ters gitti (Hata kodu: {0}). ParquetViewer'ı yönetici olarak çaliştırıp tekrar deneyin.",""
@@ -99,6 +136,8 @@
 "Errors.resx","InvalidDateFormatErrorTitle","Shown in the custom date format dialog when the user tries to save an invalid date","Invalid Date Format","Geçersiz Tarih Formatı",""
 "Errors.resx","InvalidQueryErrorMessage","Thrown when an invalid query is executed","The query doesn't seem to be valid. Please try again.","Sorgu geçerli gözükmüyor.",""
 "Errors.resx","InvalidQueryErrorTitle","Shown when the user inputs an invalid filter query and clicks Execute","Invalid Query","Geçersiz Sorgu",""
+"Errors.resx","ListsWithNullsErrorMessage","Shown when using the Query Editor and a List field in the result contains nulls","Lists with null values are not supported. Relevant rows have been removed.","null içeren Listeler desteklenmemektedir.",""
+"Errors.resx","ListsWithNullsErrorTitle","Shown when using the Query Editor and a List field in the result contains nulls","Could not read all records","Tüm kayıtlar okunamadı",""
 "Errors.resx","MalformedFieldErrorMessageFormat","Shown to users when ParquetViewer fails to read a specific field. It should prompt the user to open a bug ticket if they believe the file is valid","{0}
 
 If you think the file is valid please consider opening an issue in the GitHub repo. See: Help → About","{0}
@@ -115,6 +154,8 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
 "Errors.resx","NoValidParquetFilesFoundErrorMessage","Shown when the user tries to open a folder and all found parquet files are invalid","No valid parquet files found in folder. Invalid parquet files:","Geçerli parquet dosyası bulunamadı. Bulunan geçersiz dosyalar:",""
 "Errors.resx","OpenFileNoLongerExistsErrorMessageFormat","Shown in the unlikely event where the open file(s) were somehow deleted","The specified file/folder no longer exists: {0}Please try opening a new file or folder.","Belirtilen dosya/klasör artık bulunamıyor: {0}Lütfen başka bir dosya veya klasör açın.",""
 "Errors.resx","ParquetSchemaReadErrorMessage","Generic error shown when ParquetViewer is unable to read the schema of a parquet file","Could not read parquet schema.","Parquet şeması okunamadı.",""
+"Errors.resx","QueryExecutionErrorTitle","Shown in the Query Editor when the query fails to run due to an unexpected exception","Error executing query","Sorgu işlenirken bir hata oluştu",""
+"Errors.resx","RenderResultsErrorTitle","Shown when values can't be converted/shown in the Query Editor page","Error rendering results","Sonuçlar gösterilirken bir hata oluştu",""
 "Errors.resx","SelectAtLeastOneFieldErrorMessage","Shown when the user tries to close the field selection dialog without selecting any fields","Please select at least one field","En az bir alan seçin",""
 "Errors.resx","SelectAtLeastOneFieldErrorTitle","Shown when the user tries to close the field selection dialog without selecting any fields","Error","Hata",""
 "Errors.resx","SomeInvalidParquetFilesFoundErrorMessage","Shown when the user tries to open a folder and some of the found parquet files are invalid","Some files could not be loaded. Invalid Parquet files:","Bazı parquet dosyaları yüklenemedi. Bulunan geçersiz dosyalar:",""
@@ -148,6 +189,8 @@ You can always change this setting later from the Help menu.","Anonim kullanım 
 
 Tercihinizi Yardım menüsunden her zaman değiştirebilirsiniz.",""
 "Strings.resx","AnalyticsConsentPromptTitle","Message box title that is shown when asking the user if we can gather analytics data","Share Anonymous Usage Data?","Anonim Kullanım Verisi Toplansın mı?",""
+"Strings.resx","ByteArraysNotSupportedErrorMessage","Shown when a byte[] type is in the results in the Query Editor window. As these types are currently not supported by DuckDB.","Unfortunately byte[] types are currently unsupported in query results. Values will be shown as null.","Ne yazık ki byte[] alanlar sorgu sonuçlarında gösterilememektedir. Değerleri null olarak gösterilecektir.",""
+"Strings.resx","ByteArraysNotSupportedErrorTitle","Shown when a byte[] type is in the results in the Query Editor window. As these types are currently not supported by DuckDB.","Byte arrays not supported","Byte[] tipli sonuçlar desteklenmemektedir",""
 "Strings.resx","CancelButtonText","Text to be shown on cancel buttons","Cancel","İptal Et",""
 "Strings.resx","CancelInitiatedLabelText","Text to be shown between the time a user initiates a cancel operation and when it completes.","Cancelling...","İptal ediliyor...",""
 "Strings.resx","CantGoBackLinkButtonText","Text shown when the quick peek window's link to go back to the source cell is clicked but the source cell no longer exists","can't go back","geri gidilemiyor",""
@@ -209,6 +252,8 @@ Bu ayarı Yardim → Hakkinda sayfasında da yapabilirsiniz.",""
 "Strings.resx","MetadataSuccessfullyExportedToFileMessageFormat","Shown when raw thrift metadata is successfully exported to a file","Metadata successfully exported to: {0}","Metadata başarıyla kaydedildi: {0}",""
 "Strings.resx","MetadataSuccessfullyExportedToFileMessageTitle","Shown when raw thrift metadata is successfully exported to a file","Export complete","Kayıt başarılı",""
 "Strings.resx","PrivacyPolicyLabelText","Title to be shown before the privacy policy","Privacy policy","Gizlilik politikası",""
+"Strings.resx","QueryFinishedStatusText","Shown in the Query Editor status bar when the query finishes executing","Finished in:","Tamamlandı:",""
+"Strings.resx","QueryRunningStatusText","Shown in the Query Editor tool when the query is running","Running:","İşleniyor:",""
 "Strings.resx","QuerySyntaxHelpText","Shown when the user clicks on the Filter Query (?): link button","NULL CHECK: 
     WHERE field_name IS NULL
     WHERE field_name IS NOT NULL
@@ -249,6 +294,7 @@ BIRDEN FAZLA KOŞUL:
 
 Daha fazla bilgi için: 'Hakkında → Kullanıcı Kılavuzu'",""
 "Strings.resx","QuerySyntaxHelpTitle","Shown when the user clicks on the Filter Query (?): link button","Filter Query Syntax Examples","Sorgu Filtresi Söz Dizim Örnekleri",""
+"Strings.resx","QueryZoomStatusTextFormat","Text format used in the Query Editor tool to display the current zoom level","Query Zoom: {0}%","Sorgu Zumu: {0}%",""
 "Strings.resx","RecordsToBeExportedTitleFormat","Title shown on the save file dialog when the user is exporting data","{0} records will be exported","{0} kayıt kaydedilecektir",""
 "Strings.resx","SaveImageAsButtonText","Shown on the save image to file button in the quick peek form","Save image as {0}","Resmi {0} olarak kaydet",""
 "Strings.resx","SaveImageToFileButtonTextFormat","Text template for the button to save an image preview to disk","Save as {0}","{0} olarak Kaydet",""
