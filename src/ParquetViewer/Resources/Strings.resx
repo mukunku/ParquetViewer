@@ -161,10 +161,6 @@
     <value>Deselect All (Count: {0})</value>
     <comment>Shown in the field selection dialog to bulk deselect checkmarks</comment>
   </data>
-  <data name="UnsupportedFieldText" xml:space="preserve">
-    <value>(Unsupported)</value>
-    <comment>Shown in the field selection dialog next to field names to indicate the field is not supported for viewing with ParquetViewer</comment>
-  </data>
   <data name="ThriftMetadataCopiedToClipboardMessage" xml:space="preserve">
     <value>Raw Thrift metadata copied to clipboard.</value>
     <comment>Shown when the user clicks the Copy Raw Thrift Metadata button</comment>

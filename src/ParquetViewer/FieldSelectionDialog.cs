@@ -85,12 +85,8 @@ namespace ParquetViewer
                         }
 
                         var totalFieldCount = availableFields.Count;
-                        var supportedFieldCount = availableFields.Count; //TODO: Remove supportedFieldCount
-                        var unsupportedFieldCount = totalFieldCount - supportedFieldCount;
-                        var unsupportedFieldsText = unsupportedFieldCount > 0 ? $" - {Resources.Strings.UnsupportedFieldCountTextFormat.Format(unsupportedFieldCount)}" : string.Empty;
-
-                        string selectAllCheckBoxText = Resources.Strings.SelectAllCheckmarkTextFormat.Format(supportedFieldCount + unsupportedFieldsText);
-                        string deselectAllCheckBoxText = Resources.Strings.DeselectAllCheckmarkTextFormat.Format(supportedFieldCount + unsupportedFieldsText);
+                        string selectAllCheckBoxText = Resources.Strings.SelectAllCheckmarkTextFormat.Format(totalFieldCount);
+                        string deselectAllCheckBoxText = Resources.Strings.DeselectAllCheckmarkTextFormat.Format(totalFieldCount);
                         var selectAllCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                         {
                             Name = SelectAllCheckboxName,
@@ -131,17 +127,16 @@ namespace ParquetViewer
                         locationY += DynamicFieldCheckboxYIncrement;
                     }
 
-                    bool isUnsupportedFieldType = false; //We support everything now!?
                     var fieldCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
                     {
                         Name = string.Concat("checkbox_", field),
-                        Text = string.Concat(field, isUnsupportedFieldType ? $" {Resources.Strings.UnsupportedFieldText}" : string.Empty),
+                        Text = field,
                         Tag = field,
                         Checked = preSelectedFields?.Contains(field) == true,
                         Location = new Point(locationX, locationY),
                         DisabledForeColor = _disabledTextColor,
                         AutoSize = true,
-                        Enabled = !isUnsupportedFieldType
+                        Enabled = true
                     };
                     fieldCheckbox.CheckedChanged += (object? checkboxSender, EventArgs checkboxEventArgs) =>
                     {
@@ -182,11 +177,6 @@ namespace ParquetViewer
                     };
                     checkboxControls.Add(fieldCheckbox);
 
-                    if (isUnsupportedFieldType)
-                    {
-                        //fieldCheckbox.SetTooltip(unsupportedReason!);
-                    }
-
                     locationY += DynamicFieldCheckboxYIncrement;
                 }
 
@@ -226,69 +216,6 @@ namespace ParquetViewer
             this.fieldsPanel.Controls.Clear();
         }
 
-        public static bool IsSupportedFieldType(string fieldName) => true;
-
-        public static bool IsSupportedFieldType(Field field)
-            => IsSupportedFieldType(field, out var _);
-
-        public static bool IsSupportedFieldType(Field field, [NotNullWhen(false)] out string? unsupportedReason)
-        {
-            if (field.SchemaType == SchemaType.Data)
-            {
-                unsupportedReason = null;
-                return true;
-            }
-
-            if (field.SchemaType == SchemaType.List && field is ListField lf)
-            {
-                //We don't support lists of maps
-                if (lf.Item.SchemaType == SchemaType.Map)
-                {
-                    unsupportedReason = Resources.Errors.NestedListOfTypeNotSupportedMessageFormat.Format(SchemaType.List.ToString(), lf.Item.SchemaType.ToString());
-                    return false;
-                }
-
-                unsupportedReason = null;
-                return true;
-            }
-
-            if (field.SchemaType == SchemaType.Map && field is MapField mf)
-            {
-                if (mf.Key.SchemaType != SchemaType.Data)
-                {
-                    unsupportedReason = Resources.Errors.NestedListOfTypeNotSupportedMessageFormat.Format(SchemaType.Map.ToString(), mf.Key.SchemaType.ToString());
-                    return false;
-                }
-                else if (mf.Value.SchemaType != SchemaType.Data)
-                {
-                    unsupportedReason = Resources.Errors.NestedListOfTypeNotSupportedMessageFormat.Format(SchemaType.Map.ToString(), mf.Value.SchemaType.ToString());
-                    return false;
-                }
-
-                unsupportedReason = null;
-                return true;
-            }
-
-            if (field.SchemaType == SchemaType.Struct && field is StructField sf)
-            {
-                foreach (var structField in sf.Fields)
-                {
-                    if (!IsSupportedFieldType(structField, out unsupportedReason))
-                    {
-                        unsupportedReason = Resources.Errors.StructWithUnsupportedFieldErrorMessageFormat.Format(field.Name, structField.Name)
-                            + Environment.NewLine + unsupportedReason;
-                        return false;
-                    }
-                }
-
-                unsupportedReason = null;
-                return true;
-            }
-
-            unsupportedReason = Resources.Errors.UnknownFieldTypeErrorMessage;
-            return false;
-        }
-
         private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             if (((RadioButton)sender).Checked)
@@ -325,7 +252,7 @@ namespace ParquetViewer
                 this.NewSelectedFields.Clear();
                 if (this.allFieldsRadioButton.Checked || (this.fieldsPanel.Controls.Find(SelectAllCheckboxName, true).FirstOrDefault() as CheckBox)?.Checked == true)
                 {
-                    this.NewSelectedFields.AddRange(this.AvailableFields.Where(IsSupportedFieldType).Select(f => f));
+                    this.NewSelectedFields.AddRange(this.AvailableFields);
                 }
                 else if (this.PreSelectedFields.Count > 0)
                 {

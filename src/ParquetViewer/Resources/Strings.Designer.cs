@@ -639,14 +639,5 @@ namespace ParquetViewer.Resources {
                 return ResourceManager.GetString("UnsupportedFieldCountTextFormat", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to (Unsupported).
-        /// </summary>
-        internal static string UnsupportedFieldText {
-            get {
-                return ResourceManager.GetString("UnsupportedFieldText", resourceCulture);
-            }
-        }
     }
 }

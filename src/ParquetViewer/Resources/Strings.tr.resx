@@ -150,9 +150,6 @@
   <data name="DeselectAllCheckmarkTextFormat" xml:space="preserve">
     <value>Seçimleri Kaldır (Sayı: {0})</value>
   </data>
-  <data name="UnsupportedFieldText" xml:space="preserve">
-    <value>(Desteklenmiyor)</value>
-  </data>
   <data name="ThriftMetadataCopiedToClipboardMessage" xml:space="preserve">
     <value>Ham Thrift metadatası panoya kopyalandı.</value>
   </data>
