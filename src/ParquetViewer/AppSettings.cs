@@ -121,7 +121,6 @@ namespace ParquetViewer
             set => SetRegistryValue(QueryEditorZoomLevelKey, value);
         }
         
-
         private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)
         {
             try

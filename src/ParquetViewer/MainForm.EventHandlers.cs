@@ -289,6 +289,41 @@ namespace ParquetViewer
             UtilityMethods.RestartApplication();
         }
 
+        private void languageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (sender is not ToolStripItem toolStripItem)
+            {
+                return;
+            }
+
+            var targetCulture = toolStripItem.Tag?.ToString();
+            if (string.IsNullOrWhiteSpace(targetCulture))
+            {
+                targetCulture = "en-US"; //our default culture
+            }
+
+            if (!UtilityMethods.TryParseCultureInfo(targetCulture, out CultureInfo? newCultureInfo))
+            {
+                return; //invalid culture
+            }
+
+            if (newCultureInfo.Equals(CultureInfo.CurrentUICulture))
+            {
+                return; //no change
+            }
+
+            if (MessageBox.Show(this,
+                Resources.Strings.LanguageChangeConfirmationMessage,
+                Resources.Strings.LanguageChangeConfirmationTitle,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return; //user cancelled
+            }
+
+            AppSettings.UserSelectedCulture = newCultureInfo;
+            UtilityMethods.RestartApplication();
+        }
+
         private QueryEditor? _openQueryEditor = null;
         private string? _queryEditorSavedQueryText = null;
         private void openQueryEditorToolToolStripMenuItem_Click(object sender, EventArgs e)

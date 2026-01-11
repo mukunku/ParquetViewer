@@ -57,6 +57,7 @@
             // 
             // loadingTab
             // 
+            resources.ApplyResources(loadingTab, "loadingTab");
             loadingTab.BackColor = System.Drawing.Color.LightGray;
             resources.ApplyResources(loadingTab, "loadingTab");
             loadingTab.Name = "loadingTab";

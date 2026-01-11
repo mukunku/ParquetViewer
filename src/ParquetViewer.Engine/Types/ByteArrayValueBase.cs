@@ -284,7 +284,7 @@ namespace ParquetViewer.Engine.Types
                 return BitConverter.ToString(Data);
 
             return BitConverter.ToString(Data, 0, maxBytesToRender / 2) + "[...]"
-            + BitConverter.ToString(Data, Data.Length - maxBytesToRender / 2);
+            + BitConverter.ToString(Data, Data.Length - (maxBytesToRender / 2));
         }
     }
 }

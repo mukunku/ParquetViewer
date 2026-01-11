@@ -463,6 +463,12 @@ namespace ParquetViewer
                     sb.AppendLine("...");
                     break;
                 }
+
+                if (schemaIndex > maxSchemasLimit)
+                {
+                    sb.AppendLine("...");
+                    break;
+                }
             }
             ShowError(sb.ToString());
         }

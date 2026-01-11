@@ -92,11 +92,8 @@ namespace ParquetViewer.Helpers
             else if (columnType.ImplementsInterface<IByteArrayValue>())
                 columnType = typeof(IByteArrayValue);
 
-            var item = TypeMap[columnType] as string;
-            if (item == null)
-            {
-                throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
-            }
+            var item = TypeMap[columnType] as string
+                ?? throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
             bool useMaxKeyword = column.DataType == typeof(string) || column.DataType.ImplementsInterface<IByteArrayValue>();
             return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
         }

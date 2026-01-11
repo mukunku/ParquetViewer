@@ -3,6 +3,8 @@ using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.Net.Http;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -10,7 +12,7 @@ namespace ParquetViewer
     public partial class CustomDateFormatInputForm : FormBase
     {
         public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
-
+        
         public CustomDateFormatInputForm()
         {
             InitializeComponent();
