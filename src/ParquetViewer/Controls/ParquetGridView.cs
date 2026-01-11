@@ -708,7 +708,6 @@ namespace ParquetViewer.Controls
                 }
                 else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
                 {
-                    //TODO: Confirm the IStructValue type works here
                     colStringCollection = nonNullColumnValues
                         .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
                 }
