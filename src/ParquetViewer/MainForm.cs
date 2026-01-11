@@ -257,7 +257,7 @@ namespace ParquetViewer
             {
                 if (AppSettings.AlwaysSelectAllFields && !forceOpenDialog)
                 {
-                    return fields.Where(FieldsToLoadForm.IsSupportedFieldType).Select(f => f).ToList();
+                    return fields;
                 }
                 else
                 {
