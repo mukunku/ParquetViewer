@@ -1,7 +1,6 @@
 ﻿using DuckDB.NET.Data;
-using ParquetViewer.Engine.DuckDB.Types;
 using ParquetViewer.Engine.Exceptions;
-using System;
+using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
 using static ParquetViewer.Engine.DuckDB.DuckDBHelper;

@@ -5,7 +5,7 @@ using static ParquetViewer.Engine.Types.IByteArrayValue;
 
 namespace ParquetViewer.Engine.Types
 {
-    public class ByteArrayValueBase : IByteArrayValue
+    public class ByteArrayValue : IByteArrayValue
     {
         public byte[] Data { get; }
 
@@ -14,7 +14,7 @@ namespace ParquetViewer.Engine.Types
         public DisplayFormat[] PossibleDisplayFormats =>
             _possibleDisplayFormats ??= CalculatePossibleDisplayFormats();
 
-        public ByteArrayValueBase(byte[] data)
+        public ByteArrayValue(byte[] data)
         {
             Data = data;
         }

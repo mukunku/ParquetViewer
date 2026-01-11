@@ -3,13 +3,13 @@ using System.Collections;
 
 namespace ParquetViewer.Engine
 {
-    public class ListValueBase : IListValue
+    public class ListValue : IListValue
     {
         public IList Data { get; }
 
         public Type Type { get; }
 
-        public ListValueBase(ArrayList data, Type type)
+        public ListValue(ArrayList data, Type type)
         {
             Data = data;
             Type = type; //the parameter is needed for the case where the entire list is null

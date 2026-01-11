@@ -1,6 +1,6 @@
 ﻿using DuckDB.NET.Data;
 using DuckDB.NET.Native;
-using ParquetViewer.Engine.DuckDB.Types;
+using ParquetViewer.Engine.Types;
 using System.Numerics;
 using System.Text;
 

@@ -2,13 +2,13 @@
 
 namespace ParquetViewer.Engine.Types
 {
-    public class StructValueBase : IStructValue
+    public class StructValue : IStructValue
     {
         public IDataRowLite Data { get; }
 
         public IReadOnlyCollection<string> FieldNames => Data.ColumnNames;
 
-        public StructValueBase(IDataRowLite data)
+        public StructValue(IDataRowLite data)
         {
             Data = data ?? throw new ArgumentNullException(nameof(data));
         }

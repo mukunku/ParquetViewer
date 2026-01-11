@@ -221,8 +221,9 @@ OFFSET {3};";
             var hasComplexType = false;
             foreach (DataColumn column in intermediateResult.Columns)
             {
-                if (column.DataType.ImplementsInterface<System.Collections.IDictionary>()
-                    || column.DataType.ImplementsInterface<System.Collections.IList>())
+                if (column.DataType.ImplementsInterface<IDictionary>()
+                    || column.DataType.ImplementsInterface<IList>()
+                    || column.DataType == typeof(Stream))
                 {
                     hasComplexType = true;
                     break;
@@ -240,19 +241,19 @@ OFFSET {3};";
             {
                 if (column.DataType == typeof(Dictionary<string, object?>))
                 {
-                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(QueryResultStructValue)));
+                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(StructValue)));
                 }
                 else if (column.DataType.ImplementsInterface<IList>())
                 {
-                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(QueryResultListValue)));
+                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(ListValue)));
                 }
                 else if (column.DataType.ImplementsInterface<IDictionary>())
                 {
-                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(QueryResultMapValue)));
+                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(MapValue)));
                 }
-                else if (column.DataType == typeof(byte[]))
+                else if (column.DataType == typeof(Stream))
                 {
-                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(QueryResultByteArrayValue)));
+                    result.Columns.Add(new DataColumn(column.ColumnName, typeof(ByteArrayValue)));
                 }
                 else
                 {
@@ -287,7 +288,7 @@ OFFSET {3};";
                 var dataRow = new QueryResultDataRow(structDictionary.Keys.ToList(),
                     structDictionary.Values.Select(v => v is null ? DBNull.Value : ConvertValue(v)).ToArray());
 
-                var structValue = new QueryResultStructValue(dataRow);
+                var structValue = new StructValue(dataRow);
                 return structValue;
             }
             else if (value is IList list)
@@ -308,7 +309,7 @@ OFFSET {3};";
                     }
                 }
 
-                var listValue = new QueryResultListValue(arrayList, listType);
+                var listValue = new ListValue(arrayList, listType);
                 return listValue;
             }
             else if (value is IDictionary dictionary)
@@ -316,14 +317,16 @@ OFFSET {3};";
                 var types = dictionary.GetType().GetGenericArguments();
                 var keyType = types[0];
                 var valueType = types[1];
-                var mapValue = new QueryResultMapValue(
+                var mapValue = new MapValue(
                     new ArrayList(dictionary.Keys), keyType,
                     new ArrayList(dictionary.Values), valueType);
                 return mapValue;
             }
-            else if (value is byte[] byteArray)
+            else if (value is Stream byteArray)
             {
-                var byteArrayValue = new QueryResultByteArrayValue(byteArray);
+                using var ms = new MemoryStream();
+                byteArray.CopyTo(ms);
+                var byteArrayValue = new ByteArrayValue(ms.ToArray());
                 return byteArrayValue;
             }
             else
@@ -332,36 +335,7 @@ OFFSET {3};";
             }
         }
 
-        internal class QueryResultStructValue : StructValueBase
-        {
-            public QueryResultStructValue(IDataRowLite data) : base(data)
-            {
-            }
-        }
-
-        internal class QueryResultListValue : ListValueBase
-        {
-            public QueryResultListValue(ArrayList data, Type type) : base(data, type)
-            {
-            }
-        }
-
-        internal class QueryResultMapValue : MapValueBase
-        {
-            public QueryResultMapValue(ArrayList keys, Type keyType, ArrayList values, Type valueType)
-                : base(keys, keyType, values, valueType)
-            {
-            }
-        }
-
-        internal class QueryResultByteArrayValue : ByteArrayContent
-        {
-            public QueryResultByteArrayValue(byte[] content) : base(content)
-            {
-            }
-        }
-
-        internal class QueryResultDataRow : IDataRowLite
+        private class QueryResultDataRow : IDataRowLite
         {
             public IReadOnlyCollection<string> ColumnNames { get; }
 

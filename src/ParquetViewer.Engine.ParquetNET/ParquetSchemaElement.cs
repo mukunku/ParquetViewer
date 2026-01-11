@@ -189,7 +189,7 @@ namespace ParquetViewer.Engine.ParquetNET
         {
             FieldTypeId.List => typeof(ListValue),
             FieldTypeId.Map => typeof(MapValue),
-            FieldTypeId.Struct => typeof(StructValue),
+            FieldTypeId.Struct => typeof(StructValueExt),
             _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
         };
 

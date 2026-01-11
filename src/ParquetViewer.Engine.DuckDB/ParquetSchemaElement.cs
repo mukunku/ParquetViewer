@@ -1,7 +1,7 @@
 ﻿using DuckDB.NET.Data;
 using DuckDB.NET.Native;
-using ParquetViewer.Engine.DuckDB.Types;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.Types;
 
 namespace ParquetViewer.Engine.DuckDB
 {

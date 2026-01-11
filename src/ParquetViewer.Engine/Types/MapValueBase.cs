@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ParquetViewer.Engine
 {
-    public class MapValueBase : IMapValue
+    public class MapValue : IMapValue
     {
         public ArrayList Keys { get; }
 
@@ -16,7 +16,7 @@ namespace ParquetViewer.Engine
 
         public int Length => Math.Max(Keys.Count, Values.Count);
 
-        public MapValueBase(ArrayList keys, Type keyType, ArrayList values, Type valueType)
+        public MapValue(ArrayList keys, Type keyType, ArrayList values, Type valueType)
         {
             if (keys is null)
                 throw new ArgumentNullException(nameof(keys));

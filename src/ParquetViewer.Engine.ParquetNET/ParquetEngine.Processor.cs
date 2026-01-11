@@ -2,6 +2,7 @@
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.ParquetNET.Types;
+using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
 
@@ -263,7 +264,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
                                     var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("Column value missing during pivot");
                                     #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
-                                    if (columnValue is StructValue structValue && structValue.IsList)
+                                    if (columnValue is StructValueExt structValue && structValue.IsList)
                                     {
                                         //We need to convert `columnValue` from struct to a list of structs as it was a nested structure
                                         var areTypesAsExpected = newStructFieldTable.Columns.Values.ElementAt(columnOrdinal).Type == typeof(ListValue);
@@ -282,9 +283,9 @@ namespace ParquetViewer.Engine.ParquetNET
                                         for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
                                         {
                                             var row = nestedStructFieldTable.GetRowAt(i);
-                                            listValues.Add(new StructValue(row));
+                                            listValues.Add(new StructValueExt(row));
                                         }
-                                        columnValue = new ListValue(listValues, typeof(StructValue));
+                                        columnValue = new ListValue(listValues, typeof(StructValueExt));
                                     }
                                     #endregion
 
@@ -315,7 +316,7 @@ namespace ParquetViewer.Engine.ParquetNET
                                 }
                                 else
                                 {
-                                    listValues.Add(new StructValue(dataRow) { IsList = itemField.NumberOfListParents > 1 });
+                                    listValues.Add(new StructValueExt(dataRow) { IsList = itemField.NumberOfListParents > 1 });
                                 }
                             }
                             return listValues;
@@ -326,7 +327,7 @@ namespace ParquetViewer.Engine.ParquetNET
                         if (isFirstColumn)
                             dataTable.NewRow();
 
-                        dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValue));
+                        dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValueExt));
                         rowIndex++;
                     }
                 }
@@ -466,7 +467,7 @@ namespace ParquetViewer.Engine.ParquetNET
                 else
                 {
                     var dataRow = structFieldTable.GetRowAt(i);
-                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(dataRow);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValueExt(dataRow);
                 }
                 rowIndex++;
             }
@@ -512,7 +513,7 @@ namespace ParquetViewer.Engine.ParquetNET
                 }
                 else if (schema.FieldType == FieldTypeId.Struct)
                 {
-                    dataTable.AddColumn(field, typeof(StructValue), parent);
+                    dataTable.AddColumn(field, typeof(StructValueExt), parent);
                 }
                 else if (schema.SchemaElement.Type == Parquet.Meta.Type.BYTE_ARRAY
                     && schema.SchemaElement.LogicalType is null
