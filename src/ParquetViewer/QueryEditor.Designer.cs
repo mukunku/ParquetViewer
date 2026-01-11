@@ -67,19 +67,24 @@ namespace ParquetViewer
             // 
             // mainSplitContainer
             // 
+            resources.ApplyResources(mainSplitContainer, "mainSplitContainer");
             mainSplitContainer.BackColor = System.Drawing.SystemColors.Control;
             mainSplitContainer.BorderStyle = BorderStyle.FixedSingle;
-            resources.ApplyResources(mainSplitContainer, "mainSplitContainer");
             mainSplitContainer.Name = "mainSplitContainer";
             // 
             // mainSplitContainer.Panel1
             // 
+            resources.ApplyResources(mainSplitContainer.Panel1, "mainSplitContainer.Panel1");
             mainSplitContainer.Panel1.Controls.Add(mainTableLayoutPanel);
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainSplitContainer.Panel1, resources.GetString("mainSplitContainer.Panel1.ToolTip"));
             // 
             // mainSplitContainer.Panel2
             // 
+            resources.ApplyResources(mainSplitContainer.Panel2, "mainSplitContainer.Panel2");
             mainSplitContainer.Panel2.BackColor = System.Drawing.SystemColors.Control;
             mainSplitContainer.Panel2.Controls.Add(resultsGridView);
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainSplitContainer.Panel2, resources.GetString("mainSplitContainer.Panel2.ToolTip"));
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainSplitContainer, resources.GetString("mainSplitContainer.ToolTip"));
             // 
             // mainTableLayoutPanel
             // 
@@ -88,6 +93,7 @@ namespace ParquetViewer
             mainTableLayoutPanel.Controls.Add(executeQueryButton, 0, 1);
             mainTableLayoutPanel.Controls.Add(querySyntaxDocsButton, 1, 1);
             mainTableLayoutPanel.Name = "mainTableLayoutPanel";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(mainTableLayoutPanel, resources.GetString("mainTableLayoutPanel.ToolTip"));
             // 
             // queryRichTextBox
             // 
@@ -121,6 +127,7 @@ namespace ParquetViewer
             queryRichTextBox.RightBracket = ')';
             queryRichTextBox.SelectionColor = System.Drawing.Color.FromArgb(60, 0, 0, 255);
             queryRichTextBox.ServiceColors = (ServiceColors)resources.GetObject("queryRichTextBox.ServiceColors");
+            executeQueryKeyboardShortcutToolTip.SetToolTip(queryRichTextBox, resources.GetString("queryRichTextBox.ToolTip"));
             queryRichTextBox.Zoom = 100;
             queryRichTextBox.TextChanged += queryRichTextBox_TextChanged;
             queryRichTextBox.KeyDown += queryRichTextBox_KeyDown;
@@ -139,11 +146,13 @@ namespace ParquetViewer
             resources.ApplyResources(querySyntaxDocsButton, "querySyntaxDocsButton");
             querySyntaxDocsButton.Image = Resources.Icons.external_link_icon;
             querySyntaxDocsButton.Name = "querySyntaxDocsButton";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(querySyntaxDocsButton, resources.GetString("querySyntaxDocsButton.ToolTip"));
             querySyntaxDocsButton.UseVisualStyleBackColor = true;
             querySyntaxDocsButton.Click += querySyntaxDocsButton_Click;
             // 
             // resultsGridView
             // 
+            resources.ApplyResources(resultsGridView, "resultsGridView");
             resultsGridView.AllowUserToAddRows = false;
             resultsGridView.AllowUserToDeleteRows = false;
             resultsGridView.AllowUserToOrderColumns = true;
@@ -153,23 +162,24 @@ namespace ParquetViewer
             resultsGridView.ColumnNameEscapeFormat = "[{0}]";
             resultsGridView.CopyAsWhereIcon = null;
             resultsGridView.CopyToClipboardIcon = null;
-            resources.ApplyResources(resultsGridView, "resultsGridView");
             resultsGridView.EnableHeadersVisualStyles = false;
             resultsGridView.Name = "resultsGridView";
             resultsGridView.ReadOnly = true;
             resultsGridView.ShowCellToolTips = false;
             resultsGridView.ShowCopyAsWhereContextMenuItem = false;
+            executeQueryKeyboardShortcutToolTip.SetToolTip(resultsGridView, resources.GetString("resultsGridView.ToolTip"));
             // 
             // statusStrip
             // 
-            statusStrip.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, showingCountLabel, toolStripStatusLabel2, toolStripStatusLabel4, zoomPercentageDropDown, queryExecutionStatusLabel, timeElapsedLabel });
             resources.ApplyResources(statusStrip, "statusStrip");
+            statusStrip.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, showingCountLabel, toolStripStatusLabel2, toolStripStatusLabel4, zoomPercentageDropDown, queryExecutionStatusLabel, timeElapsedLabel });
             statusStrip.Name = "statusStrip";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(statusStrip, resources.GetString("statusStrip.ToolTip"));
             // 
             // toolStripStatusLabel1
             // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             resources.ApplyResources(toolStripStatusLabel1, "toolStripStatusLabel1");
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             // 
             // showingCountLabel
             // 
@@ -178,66 +188,66 @@ namespace ParquetViewer
             // 
             // toolStripStatusLabel2
             // 
-            toolStripStatusLabel2.Name = "toolStripStatusLabel2";
             resources.ApplyResources(toolStripStatusLabel2, "toolStripStatusLabel2");
+            toolStripStatusLabel2.Name = "toolStripStatusLabel2";
             // 
             // toolStripStatusLabel4
             // 
-            toolStripStatusLabel4.Name = "toolStripStatusLabel4";
             resources.ApplyResources(toolStripStatusLabel4, "toolStripStatusLabel4");
+            toolStripStatusLabel4.Name = "toolStripStatusLabel4";
             toolStripStatusLabel4.Spring = true;
             // 
             // zoomPercentageDropDown
             // 
+            resources.ApplyResources(zoomPercentageDropDown, "zoomPercentageDropDown");
             zoomPercentageDropDown.DisplayStyle = ToolStripItemDisplayStyle.Text;
             zoomPercentageDropDown.DropDownItems.AddRange(new ToolStripItem[] { percentage100, percentage110, percentage125, percentage140, percentage150 });
-            resources.ApplyResources(zoomPercentageDropDown, "zoomPercentageDropDown");
             zoomPercentageDropDown.Name = "zoomPercentageDropDown";
             // 
             // percentage100
             // 
+            resources.ApplyResources(percentage100, "percentage100");
             percentage100.Checked = true;
             percentage100.CheckOnClick = true;
             percentage100.CheckState = CheckState.Checked;
             percentage100.Name = "percentage100";
-            resources.ApplyResources(percentage100, "percentage100");
             percentage100.Tag = "100";
             percentage100.Click += zoomPercentage_Click;
             // 
             // percentage110
             // 
-            percentage110.Name = "percentage110";
             resources.ApplyResources(percentage110, "percentage110");
+            percentage110.Name = "percentage110";
             percentage110.Tag = "110";
             percentage110.Click += zoomPercentage_Click;
             // 
             // percentage125
             // 
+            resources.ApplyResources(percentage125, "percentage125");
             percentage125.CheckOnClick = true;
             percentage125.Name = "percentage125";
-            resources.ApplyResources(percentage125, "percentage125");
             percentage125.Tag = "125";
             percentage125.Click += zoomPercentage_Click;
             // 
             // percentage140
             // 
-            percentage140.Name = "percentage140";
             resources.ApplyResources(percentage140, "percentage140");
+            percentage140.Name = "percentage140";
             percentage140.Tag = "140";
             percentage140.Click += zoomPercentage_Click;
             // 
             // percentage150
             // 
+            resources.ApplyResources(percentage150, "percentage150");
             percentage150.CheckOnClick = true;
             percentage150.Name = "percentage150";
-            resources.ApplyResources(percentage150, "percentage150");
             percentage150.Tag = "150";
             percentage150.Click += zoomPercentage_Click;
             // 
             // queryExecutionStatusLabel
             // 
-            queryExecutionStatusLabel.Name = "queryExecutionStatusLabel";
             resources.ApplyResources(queryExecutionStatusLabel, "queryExecutionStatusLabel");
+            queryExecutionStatusLabel.Name = "queryExecutionStatusLabel";
             // 
             // timeElapsedLabel
             // 
@@ -248,6 +258,7 @@ namespace ParquetViewer
             // 
             resources.ApplyResources(closeButton, "closeButton");
             closeButton.Name = "closeButton";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(closeButton, resources.GetString("closeButton.ToolTip"));
             closeButton.UseVisualStyleBackColor = true;
             closeButton.Click += closeButton_Click;
             // 
@@ -262,6 +273,7 @@ namespace ParquetViewer
             Controls.Add(statusStrip);
             Icon = Resources.Icons.sql_server_icon;
             Name = "QueryEditor";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             Load += QueryEditor_Load;
             KeyUp += QueryEditor_KeyUp;
             mainSplitContainer.Panel1.ResumeLayout(false);

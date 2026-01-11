@@ -45,6 +45,8 @@ namespace ParquetViewer.Controls
         public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string ColumnNameEscapeFormat { get; set; } = "[{0}]";
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        public string DateValueEscapeFormat { get; set; } = "#{0}#";
 
         private readonly HashSet<int> clickableColumnIndexes = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
@@ -907,7 +909,7 @@ namespace ParquetViewer.Controls
                 columnsAndValuesToFilterBy.Add((column.Name, column.ValueType!, cellValues.ToArray()));
             }
 
-            var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy, this.ColumnNameEscapeFormat);
+            var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy, this.ColumnNameEscapeFormat, this.DateValueEscapeFormat);
             if (filterQuery.Length < new TextBox().MaxLength) 
             {
                 Clipboard.SetText(filterQuery, TextDataFormat.Text);
@@ -925,10 +927,13 @@ namespace ParquetViewer.Controls
         public static string GenerateFilterQuery(string columnName, Type valueType, object value)
             => GenerateFilterQuery(new() { (columnName, valueType, [value]) });
 
-        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy, string columnNameEscapeFormat = "[{0}]")
+        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy, 
+            string columnNameEscapeFormat = "[{0}]", string dateValueEscapeFormat = "#{0}#")
         {
             if (columnNameEscapeFormat.Length < 5)
                 throw new ArgumentException("Column name escape format is too short.", nameof(columnNameEscapeFormat));
+            if(dateValueEscapeFormat.Length < 5)
+                throw new ArgumentException("Date value escape format is too short.", nameof(dateValueEscapeFormat));
 
             var queryBuilder = new StringBuilder();
             if (columnsAndValuesToFilterBy is null || columnsAndValuesToFilterBy.Count == 0)
@@ -1001,7 +1006,7 @@ namespace ParquetViewer.Controls
                         if (valueType == typeof(DateTime))
                         {
                             //Use a standard date format so the query is always syntactically correct
-                            queryBuilder.Append($"#{((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF")}#");
+                            queryBuilder.AppendFormat(dateValueEscapeFormat, ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF"));
                         }
                         else if (valueType.IsNumber())
                         {

@@ -120,11 +120,26 @@
   <data name="recordsToLabel.Text" xml:space="preserve">
     <value>Kayıt Sayısı:</value>
   </data>
+  <data name="recordsToLabel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="recordCountTextBox.ToolTip" xml:space="preserve">
+    <value />
+  </data>
   <data name="showRecordsFromLabel.Text" xml:space="preserve">
     <value>Kayıt Atla:</value>
   </data>
+  <data name="showRecordsFromLabel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="offsetTextBox.ToolTip" xml:space="preserve">
+    <value />
+  </data>
   <data name="runQueryButton.Text" xml:space="preserve">
     <value>İşle</value>
+  </data>
+  <data name="runQueryButton.ToolTip" xml:space="preserve">
+    <value />
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="searchFilterLabel.Font" type="System.Drawing.Font, System.Drawing">
@@ -139,8 +154,17 @@
   <data name="searchFilterLabel.Text" xml:space="preserve">
     <value>Sorgu Filtresi (?):</value>
   </data>
+  <data name="searchFilterLabel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="searchFilterTextBox.ToolTip" xml:space="preserve">
+    <value />
+  </data>
   <data name="clearFilterButton.Text" xml:space="preserve">
     <value>Temizle</value>
+  </data>
+  <data name="clearFilterButton.ToolTip" xml:space="preserve">
+    <value />
   </data>
   <data name="mainGridView.CopyAsWhereIcon" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -179,8 +203,17 @@
         SletYXyhW54FgKMFd4Y/+A3rSyMPm3Pf6gAAAABJRU5ErkJggg==
 </value>
   </data>
+  <data name="mainGridView.ToolTip" xml:space="preserve">
+    <value />
+  </data>
   <data name="loadAllRowsButton.ToolTip" xml:space="preserve">
     <value>Tüm kayıtları yükle (Ctrl+E)</value>
+  </data>
+  <data name="mainTableLayoutPanel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="mainMenuStrip.ToolTip" xml:space="preserve">
+    <value />
   </data>
   <data name="fileToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>51, 20</value>
@@ -381,6 +414,12 @@
   <data name="metadataViewerToolStripMenuItem.Text" xml:space="preserve">
     <value>Metadata Önizleyicisi</value>
   </data>
+  <data name="openQueryEditorToolToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>251, 22</value>
+  </data>
+  <data name="openQueryEditorToolToolStripMenuItem.Text" xml:space="preserve">
+    <value>Sorgu Editörü (Beta)</value>
+  </data>
   <data name="helpToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 20</value>
   </data>
@@ -441,7 +480,13 @@
   <data name="outOfStatusBarLabel.Text" xml:space="preserve">
     <value>Toplam:</value>
   </data>
+  <data name="mainStatusStrip.ToolTip" xml:space="preserve">
+    <value />
+  </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Yeni Parquet Dosyası</value>
+  </data>
+  <data name="$this.ToolTip" xml:space="preserve">
+    <value />
   </data>
 </root>

@@ -117,6 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="mainTableLayoutPanel.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="mainSplitContainer.Panel1.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="resultsGridView.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="mainSplitContainer.Panel2.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="mainSplitContainer.ToolTip" xml:space="preserve">
+    <value />
+  </data>
   <data name="queryRichTextBox.ServiceColors" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAERGYXN0Q29sb3JlZFRleHRCb3gsIEN1bHR1cmU9bmV1dHJhbCwg
@@ -138,18 +153,8 @@
   <data name="queryRichTextBox.ToolTip" xml:space="preserve">
     <value />
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="executeQueryButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>880, 26</value>
-  </data>
   <data name="executeQueryButton.Text" xml:space="preserve">
     <value>İşle</value>
-  </data>
-  <data name="querySyntaxDocsButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>889, 147</value>
-  </data>
-  <data name="querySyntaxDocsButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>124, 26</value>
   </data>
   <data name="querySyntaxDocsButton.Text" xml:space="preserve">
     <value>Sorgu Söz Dizimi</value>
@@ -157,15 +162,10 @@
   <data name="querySyntaxDocsButton.ToolTip" xml:space="preserve">
     <value />
   </data>
-  <data name="mainTableLayoutPanel.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="resultsGridView.ToolTip" xml:space="preserve">
-    <value />
-  </data>
   <data name="statusStrip.ToolTip" xml:space="preserve">
     <value />
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="toolStripStatusLabel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>63, 17</value>
   </data>
@@ -179,7 +179,7 @@
     <value>Sonuç</value>
   </data>
   <data name="toolStripStatusLabel4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>674, 17</value>
+    <value>637, 17</value>
   </data>
   <data name="zoomPercentageDropDown.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -196,35 +196,11 @@
   <data name="zoomPercentageDropDown.Text" xml:space="preserve">
     <value>Sorgu Zumu: 100%</value>
   </data>
-  <data name="percentage100.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="percentage110.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="percentage125.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="percentage140.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="percentage150.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
   <data name="queryExecutionStatusLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>54, 17</value>
   </data>
   <data name="queryExecutionStatusLabel.Text" xml:space="preserve">
     <value>İşleniyor:</value>
-  </data>
-  <data name="mainSplitContainer.Panel1.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="mainSplitContainer.Panel2.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="mainSplitContainer.ToolTip" xml:space="preserve">
-    <value />
   </data>
   <data name="closeButton.ToolTip" xml:space="preserve">
     <value />

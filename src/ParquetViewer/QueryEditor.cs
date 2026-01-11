@@ -44,6 +44,7 @@ OFFSET {3} ";
             this.resultsGridView.ShowCopyAsWhereContextMenuItem = true;
             this.resultsGridView.CopyAsWhereIcon = Resources.Icons.sql_server_icon.ToBitmap();
             this.resultsGridView.ColumnNameEscapeFormat = "\"{0}\"";
+            this.resultsGridView.DateValueEscapeFormat = "'{0}'";
         }
 
         public QueryEditor(IEnumerable<string>? fields = null, string? filePath = null, int offset = 0, int limit = 1000) : this()
