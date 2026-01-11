@@ -68,6 +68,7 @@ namespace ParquetViewer
             toolsToolStripMenuItem = new ToolStripMenuItem();
             getSQLCreateTableScriptToolStripMenuItem = new ToolStripMenuItem();
             metadataViewerToolStripMenuItem = new ToolStripMenuItem();
+            openQueryEditorToolToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             userGuideToolStripMenuItem = new ToolStripMenuItem();
             shareAnonymousUsageDataToolStripMenuItem = new ToolStripMenuItem();
@@ -322,7 +323,7 @@ namespace ParquetViewer
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { getSQLCreateTableScriptToolStripMenuItem, metadataViewerToolStripMenuItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { getSQLCreateTableScriptToolStripMenuItem, metadataViewerToolStripMenuItem, openQueryEditorToolToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             resources.ApplyResources(toolsToolStripMenuItem, "toolsToolStripMenuItem");
             // 
@@ -338,6 +339,12 @@ namespace ParquetViewer
             resources.ApplyResources(metadataViewerToolStripMenuItem, "metadataViewerToolStripMenuItem");
             metadataViewerToolStripMenuItem.Name = "metadataViewerToolStripMenuItem";
             metadataViewerToolStripMenuItem.Click += MetadataViewerToolStripMenuItem_Click;
+            // 
+            // openQueryEditorToolToolStripMenuItem
+            // 
+            openQueryEditorToolToolStripMenuItem.Name = "openQueryEditorToolToolStripMenuItem";
+            resources.ApplyResources(openQueryEditorToolToolStripMenuItem, "openQueryEditorToolToolStripMenuItem");
+            openQueryEditorToolToolStripMenuItem.Click += openQueryEditorToolToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
@@ -527,6 +534,7 @@ namespace ParquetViewer
         private ToolStripMenuItem languageToolStripMenuItem;
         private ToolStripMenuItem englishToolStripMenuItem;
         private ToolStripMenuItem turkishToolStripMenuItem;
+        private ToolStripMenuItem openQueryEditorToolToolStripMenuItem;
     }
 }
 

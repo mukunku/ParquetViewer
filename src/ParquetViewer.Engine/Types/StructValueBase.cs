@@ -4,15 +4,12 @@ namespace ParquetViewer.Engine.Types
 {
     public class StructValueBase : IStructValue
     {
-        public string Name { get; }
+        public IDataRowLite Data { get; }
 
-        public DataRowLite Data { get; }
+        public IReadOnlyCollection<string> FieldNames => Data.ColumnNames;
 
-        public IReadOnlyCollection<string> FieldNames => Data.Columns.Keys;
-
-        public StructValueBase(string name, DataRowLite data)
+        public StructValueBase(IDataRowLite data)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
             Data = data ?? throw new ArgumentNullException(nameof(data));
         }
 
@@ -55,7 +52,21 @@ namespace ParquetViewer.Engine.Types
                 return 1;
         }
 
-        public DataTable ToDataTable() => Data.ToDataTable();
+        public DataTable ToDataTable()
+        {
+            var dt = new DataTable();
+            foreach (var pair in Helpers.PairEnumerables(this.Data.ColumnNames, this.Data.Row))
+            {
+                var columnName = pair.Item1;
+                var value = pair.Item2;
+                var valueType = value != DBNull.Value ? value.GetType() : typeof(object);
+                dt.Columns.Add(new DataColumn(columnName, valueType));
+            }
+            var row = dt.NewRow();
+            row.ItemArray = this.Data.Row;
+            dt.Rows.Add(row);
+            return dt;
+        }
 
         public override string ToString() => ToJSON(out _);
 
@@ -70,11 +81,9 @@ namespace ParquetViewer.Engine.Types
                 using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
                 {
                     jsonWriter.WriteStartObject();
-                    for (var i = 0; i < Data.Columns.Count; i++)
+                    for (var i = 0; i < Data.ColumnNames.Count; i++)
                     {
-                        string columnName = Data.Columns.Values.ElementAt(i).Name
-                            //Remove the parent field name from columns when rendering the data as json in the gridview cell.
-                            .Replace($"{Name}/", string.Empty);
+                        string columnName = Data.ColumnNames.ElementAt(i);
                         jsonWriter.WritePropertyName(columnName);
 
                         object value = Data.Row[i];
@@ -103,7 +112,7 @@ namespace ParquetViewer.Engine.Types
             catch (Exception ex)
             {
                 success = false;
-                return $"Error while serializing Struct field '{Name}': {Environment.NewLine}{Environment.NewLine}{ex}";
+                return $"Error while serializing Struct field: {Environment.NewLine}{Environment.NewLine}{ex}";
             }
         }
     }

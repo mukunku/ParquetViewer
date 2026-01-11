@@ -222,7 +222,7 @@ namespace ParquetViewer.Engine.DuckDB
                 }
 
                 var query = $"SELECT {fields} " +
-                    $"FROM '{db.ParquetFilePath}' " +
+                    $"FROM read_parquet('{db.ParquetFilePath}') " +
                     $"LIMIT {recordCount} " +
                     $"OFFSET {offset};";
 
@@ -361,7 +361,7 @@ namespace ParquetViewer.Engine.DuckDB
                         fieldIndex++;
                     }
 
-                    return new StructValue(parquetSchemaElement.Path, dataTable.GetRowAt(0));
+                    return new StructValue(dataTable.GetRowAt(0));
                 }
                 else if (parquetSchemaElement.FieldType == FieldTypeId.Map)
                 {

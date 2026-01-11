@@ -134,12 +134,12 @@ namespace ParquetViewer.Engine
         }
     }
 
-    public class DataRowLite
+    public class DataRowLite : IDataRowLite
     {
+        public IReadOnlyCollection<string> ColumnNames => Columns.Keys;
         public Dictionary<string, ColumnLite> Columns { get; }
         public object[] Row { get; }
         public DataTableLite Table { get; }
-
         public DataRowLite(object[] data, IEnumerable<ColumnLite> columns, DataTableLite table)
         {
             ArgumentNullException.ThrowIfNull(data);
@@ -154,20 +154,6 @@ namespace ParquetViewer.Engine
                 throw new ArgumentException($"Data length {data.Length} doesn't match number of columns {columns.Count()}", nameof(data));
             }
         }
-
-        public DataTable ToDataTable()
-        {
-            var dt = new DataTable();
-            foreach (var column in this.Columns)
-            {
-                dt.Columns.Add(new DataColumn(column.Key, column.Value.Type));
-            }
-            var row = dt.NewRow();
-            row.ItemArray = this.Row;
-            dt.Rows.Add(row);
-            return dt;
-        }
-
         public object GetValue(string columnName)
         {
             if (!this.Columns.ContainsKey(columnName))
@@ -186,5 +172,12 @@ namespace ParquetViewer.Engine
             }
             throw new IndexOutOfRangeException($"Could not get value for column `{columnName}`");
         }
+    }
+
+    public interface IDataRowLite
+    {
+        IReadOnlyCollection<string> ColumnNames { get; }
+        object[] Row { get; }
+        object GetValue(string columnName);
     }
 }

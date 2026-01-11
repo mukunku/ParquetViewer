@@ -6,7 +6,7 @@ namespace ParquetViewer.Engine.ParquetNET.Types
     {
         internal bool IsList { get; set; }
 
-        internal StructValue(string name, DataRowLite data) : base(name, data)
+        internal StructValue(DataRowLite data) : base(data)
         {
 
         }

@@ -43,6 +43,8 @@ namespace ParquetViewer.Controls
         public Image? CopyAsWhereIcon { get; set; } = null;
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        public string ColumnNameEscapeFormat { get; set; } = "[{0}]";
 
         private readonly HashSet<int> clickableColumnIndexes = new();
         private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
@@ -662,7 +664,7 @@ namespace ParquetViewer.Controls
             const int MAX_WIDTH = 360;
             const int DECIMAL_PREFERRED_WIDTH = 180;
 
-            if (this.DataSource is not DataTable gridTable)
+            if (this.DataSource is not DataTable gridTable || this.Columns.Count == 0)
                 return;
 
             var maxWidth = MAX_WIDTH;
@@ -906,13 +908,14 @@ namespace ParquetViewer.Controls
                 columnsAndValuesToFilterBy.Add((column.Name, column.ValueType!, cellValues.ToArray()));
             }
 
-            var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy);
-            if (filterQuery.Length < new TextBox().MaxLength) //This length check doesn't make the most sense but I wanted to put some kind of cap on this.
+            var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy, this.ColumnNameEscapeFormat);
+            if (filterQuery.Length < new TextBox().MaxLength) 
             {
                 Clipboard.SetText(filterQuery, TextDataFormat.Text);
             }
             else
             {
+                //If the query is too long to fit in our query box, show an error
                 MessageBox.Show(this,
                     Resources.Errors.CopyAsWhereTooLargeErrorMessage,
                     Resources.Errors.CopyAsWhereTooLargeErrorTitle,
@@ -923,8 +926,11 @@ namespace ParquetViewer.Controls
         public static string GenerateFilterQuery(string columnName, Type valueType, object value)
             => GenerateFilterQuery(new() { (columnName, valueType, [value]) });
 
-        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy)
+        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy, string columnNameEscapeFormat = "[{0}]")
         {
+            if (columnNameEscapeFormat.Length < 5)
+                throw new ArgumentException("Column name escape format is too short.", nameof(columnNameEscapeFormat));
+
             var queryBuilder = new StringBuilder();
             if (columnsAndValuesToFilterBy is null || columnsAndValuesToFilterBy.Count == 0)
             {
@@ -939,10 +945,10 @@ namespace ParquetViewer.Controls
                 ArgumentNullException.ThrowIfNull(values);
 
                 //Wrap column name in brackets if it contains spaces or punctuation (if it isn't wrapped already)
-                var isAlreadyWrapped = columnName.StartsWith("[") && columnName.EndsWith("]");
+                var isAlreadyWrapped = columnName.StartsWith(columnNameEscapeFormat.First()) && columnName.EndsWith(columnNameEscapeFormat.Last());
                 if (!isAlreadyWrapped && !_validColumnNameRegex.IsMatch(columnName))
                 {
-                    columnName = $"[{columnName}]";
+                    columnName = string.Format(columnNameEscapeFormat, columnName);
                 }
 
                 var hasNulls = values.Any(value => value == DBNull.Value || value is null);

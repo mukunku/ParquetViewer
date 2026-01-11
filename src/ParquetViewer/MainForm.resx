@@ -798,6 +798,15 @@
   <data name="metadataViewerToolStripMenuItem.Text" xml:space="preserve">
     <value>Metadata Viewer</value>
   </data>
+  <data name="openQueryEditorToolToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Q</value>
+  </data>
+  <data name="openQueryEditorToolToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="openQueryEditorToolToolStripMenuItem.Text" xml:space="preserve">
+    <value>Query Editor (Beta)</value>
+  </data>
   <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>47, 20</value>
   </data>
@@ -1111,6 +1120,12 @@
     <value>metadataViewerToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;metadataViewerToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;openQueryEditorToolToolStripMenuItem.Name" xml:space="preserve">
+    <value>openQueryEditorToolToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;openQueryEditorToolToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;helpToolStripMenuItem.Name" xml:space="preserve">

@@ -4,9 +4,7 @@ namespace ParquetViewer.Engine.Types
 {
     public interface IStructValue : IComparable<IStructValue>, IComparable
     {
-        public string Name { get; }
-
-        public DataRowLite Data { get; }
+        public IDataRowLite Data { get; }
 
         IReadOnlyCollection<string> FieldNames { get; }
 

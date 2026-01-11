@@ -3,8 +3,6 @@ using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
-using System.Net.Http;
 using System.Windows.Forms;
 
 namespace ParquetViewer

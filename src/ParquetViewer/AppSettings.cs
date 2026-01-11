@@ -20,6 +20,7 @@ namespace ParquetViewer
         private const string CustomDateFormatKey = "CustomDateFormat";
         private const string DarkModeKey = "DarkMode";
         private const string UserSelectedCultureKey = "UserSelectedCulture";
+        private const string QueryEditorZoomLevelKey = "QueryEditorZoomLevel";
 
         public static DateFormat DateTimeDisplayFormat
         {
@@ -113,6 +114,13 @@ namespace ParquetViewer
                 : null;
             set => SetRegistryValue(UserSelectedCultureKey, value?.ToString() ?? string.Empty);
         }
+
+        public static int? QueryEditorZoomLevel
+        {
+            get => ReadRegistryValue(QueryEditorZoomLevelKey, out int value) ? value : null;
+            set => SetRegistryValue(QueryEditorZoomLevelKey, value);
+        }
+        
 
         private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)
         {

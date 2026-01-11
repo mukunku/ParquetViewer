@@ -272,12 +272,17 @@ namespace ParquetViewer.Engine.ParquetNET
                                             throw new UnsupportedFieldException("Failed to pivot list of structs.");
                                         }
 
-                                        var nestedStructFieldTable = PivotTable(structValue.Data.Row, structValue.Data.Table.Clone());
+                                        if (structValue.Data is not DataRowLite dataRowLite)
+                                        {
+                                            throw new InvalidDataException("Struct data wasn't the expected type.");
+                                        }
+
+                                        var nestedStructFieldTable = PivotTable(structValue.Data.Row, dataRowLite.Table.Clone());
                                         var listValues = new ArrayList(nestedStructFieldTable.Rows.Count);
                                         for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
                                         {
                                             var row = nestedStructFieldTable.GetRowAt(i);
-                                            listValues.Add(new StructValue(itemField.Path, row));
+                                            listValues.Add(new StructValue(row));
                                         }
                                         columnValue = new ListValue(listValues, typeof(StructValue));
                                     }
@@ -310,7 +315,7 @@ namespace ParquetViewer.Engine.ParquetNET
                                 }
                                 else
                                 {
-                                    listValues.Add(new StructValue(itemField.Path, dataRow) { IsList = itemField.NumberOfListParents > 1 });
+                                    listValues.Add(new StructValue(dataRow) { IsList = itemField.NumberOfListParents > 1 });
                                 }
                             }
                             return listValues;
@@ -461,7 +466,7 @@ namespace ParquetViewer.Engine.ParquetNET
                 else
                 {
                     var dataRow = structFieldTable.GetRowAt(i);
-                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, dataRow);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(dataRow);
                 }
                 rowIndex++;
             }

@@ -3,6 +3,7 @@ using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
+using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -286,6 +287,32 @@ namespace ParquetViewer
 
             AppSettings.UserSelectedCulture = newCultureInfo;
             UtilityMethods.RestartApplication();
+        }
+
+        private QueryEditor? _openQueryEditor = null;
+        private string? _queryEditorSavedQueryText = null;
+        private void openQueryEditorToolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (this._openQueryEditor == null || this._openQueryEditor.IsDisposed)
+            {
+                this._openQueryEditor = new QueryEditor(this.SelectedFields, this.OpenFileOrFolderPath, this.CurrentOffset, this.CurrentMaxRowCount);
+                this._openQueryEditor.FormClosed += (s, args) =>
+                {
+                    //Remember the user's query in case they accidentally close the window
+                    this._queryEditorSavedQueryText = this._openQueryEditor.QueryText;
+                    this._openQueryEditor.Dispose();
+                    this._openQueryEditor = null;
+                };
+                if (!string.IsNullOrWhiteSpace(this._queryEditorSavedQueryText))
+                {
+                    this._openQueryEditor.QueryText = this._queryEditorSavedQueryText;
+                }
+                this._openQueryEditor.Show(this);
+            }
+            else
+            {
+                this._openQueryEditor.BringToFront();
+            }
         }
     }
 }

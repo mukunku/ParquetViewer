@@ -1,10 +1,8 @@
 ﻿using DuckDB.NET.Data;
 using DuckDB.NET.Native;
 using ParquetViewer.Engine.DuckDB.Types;
-using System;
 using System.Numerics;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ParquetViewer.Engine.DuckDB
 {

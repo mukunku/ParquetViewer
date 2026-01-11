@@ -280,9 +280,9 @@ namespace ParquetViewer.Helpers
         /// <returns>True if this is a struct named "image" with "bytes" and "path" fields</returns>
         public static bool IsHuggingFaceImageFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
         {
-            if (structValue.Data.Columns.Keys.Count == 2
-                && structValue.Data.Columns.Keys.Contains("bytes")
-                && structValue.Data.Columns.Keys.Contains("path")
+            if (structValue.Data.ColumnNames.Count == 2
+                && structValue.Data.ColumnNames.Contains("bytes")
+                && structValue.Data.ColumnNames.Contains("path")
                 && structValue.Data.GetValue("bytes") is ByteArrayValue byteArrayValue)
             {
                 data = byteArrayValue.Data;

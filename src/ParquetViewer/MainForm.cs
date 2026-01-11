@@ -51,6 +51,7 @@ namespace ParquetViewer
                 this.mainGridView.ClearQuickPeekForms();
                 this.mainGridView.ClearColumnFormatOverrides();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
+                this._queryEditorSavedQueryText = null;
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {

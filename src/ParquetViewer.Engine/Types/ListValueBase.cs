@@ -9,12 +9,6 @@ namespace ParquetViewer.Engine
 
         public Type Type { get; }
 
-        public ListValueBase(Array data)
-        {
-            Data = data ?? throw new ArgumentNullException(nameof(data));
-            Type = Data.GetType().GetElementType() ?? throw new ArgumentException("Invalid array type");
-        }
-
         public ListValueBase(ArrayList data, Type type)
         {
             Data = data;
