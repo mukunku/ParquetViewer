@@ -59,6 +59,7 @@
 "MainForm.resx","newToolStripMenuItem.Text",,"&New","Yeni",""
 "MainForm.resx","openFolderToolStripMenuItem.Text",,"&Open Folder","Klasör Aç",""
 "MainForm.resx","openFolderToolStripMenuItem.ToolTipText",,"All parquet files in the folder must have the same schema","Klasördeki tüm parquet dosyaları aynı veri şemasına sahip olmalıdır",""
+"MainForm.resx","openQueryEditorToolToolStripMenuItem.Text",,"Query Editor (Beta)","Sorgu Editörü (Beta)",""
 "MainForm.resx","openToolStripMenuItem.Text",,"&Open File","Dosya Aç",""
 "MainForm.resx","outOfStatusBarLabel.Text",,"Out of:","Toplam:",""
 "MainForm.resx","recordsTextStatusBarLabel.Text",,"Results","Sonuç",""
