@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -209,19 +210,19 @@ namespace ParquetViewer.Controls
                 {
                     if (_contextMenu is null)
                     {
-                        var copy = new ToolStripMenuItem("Copy", this.CopyToClipboardIcon);
+                        var copy = new ToolStripMenuItem(Resources.Strings.CopyToClipboardText, this.CopyToClipboardIcon);
                         copy.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(false);
                         };
 
-                        var copyWithHeaders = new ToolStripMenuItem("Copy with headers");
+                        var copyWithHeaders = new ToolStripMenuItem(Resources.Strings.CopyToClipboardWithHeadersText);
                         copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboard(true);
                         };
 
-                        var copyAsWhere = new ToolStripMenuItem("Copy as WHERE...", this.CopyAsWhereIcon);
+                        var copyAsWhere = new ToolStripMenuItem(Resources.Strings.CopyAsWhereConditionText, this.CopyAsWhereIcon);
                         copyAsWhere.Click += (object? clickSender, EventArgs clickArgs) =>
                         {
                             this.CopySelectionToClipboardAsWhereCondition();
@@ -788,7 +789,20 @@ namespace ParquetViewer.Controls
             }
             try
             {
-                Clipboard.SetDataObject(this.GetClipboardContent(), true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+                var clipboardContent = this.GetClipboardContent();
+                if (clipboardContent is not null) //Not sure why it would ever be null but saw some exceptions in Amplitude so added this check here to be safe.
+                    Clipboard.SetDataObject(clipboardContent, true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+            }
+            catch (ExternalException ex) //This can happen if the user spams CTRL+C
+            {
+                MessageBox.Show(this,
+                    ex.Message,
+                    Resources.Errors.CopyToClipboardErrorTitle,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception)
+            {
+                throw;
             }
             finally
             {
@@ -880,8 +894,10 @@ namespace ParquetViewer.Controls
             }
             else
             {
-                MessageBox.Show("The selected data is too large. Please select less cells.",
-                    "Copy to clipboard failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    Resources.Errors.CopyAsWhereTooLargeErrorMessage,
+                    Resources.Errors.CopyAsWhereTooLargeErrorTitle, 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -1059,7 +1075,7 @@ namespace ParquetViewer.Controls
                 if (!floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                     displayFormat = default;
 
-                var scientificNotationMenuItem = new ToolStripMenuItem("Scientific")
+                var scientificNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalScientificFormatting)
                 { Checked = displayFormat == FloatDisplayFormat.Scientific };
                 scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
@@ -1075,7 +1091,7 @@ namespace ParquetViewer.Controls
                 };
                 columnHeaderContextMenu.Items.Add(scientificNotationMenuItem);
 
-                var decimalNotationMenuItem = new ToolStripMenuItem("Decimal")
+                var decimalNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalFormatting)
                 { Checked = displayFormat == FloatDisplayFormat.Decimal };
                 decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
@@ -1253,10 +1269,8 @@ namespace ParquetViewer.Controls
             }
         }
 
-        protected override void Dispose(bool disposing)
+        public void DisposeAudioCells()
         {
-            //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
-            //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
             foreach (var audioColumn in this.Columns.Cast<DataGridViewColumn>()
                 .Where(column => column.CellTemplate.GetType() == typeof(AudioPlayerDataGridViewCell)))
             {
@@ -1265,6 +1279,13 @@ namespace ParquetViewer.Controls
                     row.Cells[audioColumn.Index].Dispose();
                 }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
+            //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
+            this.DisposeAudioCells();
 
             base.Dispose(disposing);
         }

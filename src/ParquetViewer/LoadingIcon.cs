@@ -46,7 +46,7 @@ namespace ParquetViewer
             var pictureBox = new PictureBox()
             {
                 Name = "loadingpicturebox",
-                Image = Properties.Resources.hourglass,
+                Image = Resources.Icons.hourglass,
                 Size = new Size(200, 200)
             };
             this._panel.Controls.Add(pictureBox);
@@ -54,7 +54,7 @@ namespace ParquetViewer
             this._cancelButton = new Button()
             {
                 Name = "cancelloadingbutton",
-                Text = "Cancel",
+                Text = Resources.Strings.CancelButtonText,
                 Dock = DockStyle.Bottom,
                 Enabled = this._cancellationToken.Token.CanBeCanceled,
                 BackColor = Color.White,
@@ -67,7 +67,7 @@ namespace ParquetViewer
                 if (buttonSender is Button button)
                 {
                     button.Enabled = false;
-                    button.Text = "Cancelling...";
+                    button.Text = Resources.Strings.CancelInitiatedLabelText;
                 }
             };
             this._panel.Controls.Add(this._cancelButton);

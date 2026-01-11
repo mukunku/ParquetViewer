@@ -8,10 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ParquetViewer.Properties {
+namespace ParquetViewer.Resources {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -22,14 +22,14 @@ namespace ParquetViewer.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    internal class Icons {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources() {
+        internal Icons() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace ParquetViewer.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ParquetViewer.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ParquetViewer.Resources.Icons", typeof(Icons).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,6 +61,16 @@ namespace ParquetViewer.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon calendar_icon {
+            get {
+                object obj = ResourceManager.GetObject("calendar_icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap coffee {
@@ -69,21 +79,17 @@ namespace ParquetViewer.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon copy_clipboard_icon
-        {
-            get
-            {
+        internal static System.Drawing.Icon copy_clipboard_icon {
+            get {
                 object obj = ResourceManager.GetObject("copy_clipboard_icon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
-
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -93,31 +99,37 @@ namespace ParquetViewer.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap exclamation_icon_yellow
-        {
-            get
-            {
+        internal static System.Drawing.Bitmap exclamation_icon_yellow {
+            get {
                 object obj = ResourceManager.GetObject("exclamation_icon_yellow", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap external_link_icon
-        {
-            get
-            {
+        internal static System.Drawing.Bitmap external_link_icon {
+            get {
                 object obj = ResourceManager.GetObject("external-link-icon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon help_icon_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("help_icon_16x16", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -127,43 +139,7 @@ namespace ParquetViewer.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap next
-        {
-            get
-            {
-                object obj = ResourceManager.GetObject("next", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap next_disabled
-        {
-            get
-            {
-                object obj = ResourceManager.GetObject("next-disabled", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap next_blue
-        {
-            get
-            {
-                object obj = ResourceManager.GetObject("next-blue", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
@@ -171,6 +147,36 @@ namespace ParquetViewer.Properties {
             get {
                 object obj = ResourceManager.GetObject("list_icon_32x32", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap localization_icon {
+            get {
+                object obj = ResourceManager.GetObject("localization_icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap next_blue {
+            get {
+                object obj = ResourceManager.GetObject("next-blue", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap next_disabled {
+            get {
+                object obj = ResourceManager.GetObject("next-disabled", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -187,69 +193,39 @@ namespace ParquetViewer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon text_file_icon {
+        internal static System.Drawing.Icon plus_minus_icon {
             get {
-                object obj = ResourceManager.GetObject("text_file_icon_16x16", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon sql_server_icon
-        {
-            get
-            {
-                object obj = ResourceManager.GetObject("sql_server_icon", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon plus_minus_icon
-        {
-            get
-            {
                 object obj = ResourceManager.GetObject("plus_minus_icon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon calendar_icon
-        {
-            get
-            {
-                object obj = ResourceManager.GetObject("calendar_icon", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap save_icon
-        {
-            get
-            {
+        internal static System.Drawing.Bitmap save_icon {
+            get {
                 object obj = ResourceManager.GetObject("save-icon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon help_icon
-        {
-            get
-            {
-                object obj = ResourceManager.GetObject("help_icon_16x16", resourceCulture);
+        internal static System.Drawing.Icon sql_server_icon {
+            get {
+                object obj = ResourceManager.GetObject("sql_server_icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon text_file_icon_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("text_file_icon_16x16", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

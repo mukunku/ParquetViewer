@@ -82,11 +82,8 @@ namespace ParquetViewer.Helpers
 
         public static string GetTypeFor(DataColumn column)
         {
-            var item = TypeMap[column.DataType] as string;
-            if (item == null)
-            {
-                throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
-            }
+            var item = TypeMap[column.DataType] as string
+                ?? throw new NotSupportedException($"No type mapping is provided for {column.DataType.Name}");
             bool useMaxKeyword = column.DataType == typeof(string) || column.DataType == typeof(ByteArrayValue);
             return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
         }
