@@ -8,8 +8,7 @@ using System.Runtime.Versioning;
 [assembly: AssemblyTitle("ParquetViewer")]
 [assembly: AssemblyDescription("Simple Windows desktop application for viewing Apache Parquet files\r\n" +
     "https://github.com/mukunku/ParquetViewer\r\n\r\n" +
-    "Privacy policy: https://github.com/mukunku/ParquetViewer/wiki/Privacy-Policy\r\n\r\n" +
-    "Special thanks to: https://github.com/aloneguid/parquet-dotnet")]
+    "Privacy policy: https://github.com/mukunku/ParquetViewer/wiki/Privacy-Policy")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Author: Mukunku")]
 [assembly: AssemblyProduct("ParquetViewer")]
