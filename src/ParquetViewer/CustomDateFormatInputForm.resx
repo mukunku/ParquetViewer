@@ -1759,7 +1759,7 @@
     <value>17</value>
   </data>
   <data name="instructionsTableLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>554, 254</value>
+    <value>554, 236</value>
   </data>
   <data name="instructionsTableLayoutPanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1894,7 +1894,7 @@
     <value>6</value>
   </data>
   <data name="mainTableLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>578, 373</value>
+    <value>578, 355</value>
   </data>
   <data name="mainTableLayoutPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1939,7 +1939,10 @@
     <value>7, 15</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>578, 373</value>
+    <value>578, 355</value>
+  </data>
+  <data name="$this.MaximumSize" type="System.Drawing.Size, System.Drawing">
+    <value>900, 750</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
