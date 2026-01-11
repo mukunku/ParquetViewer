@@ -2,6 +2,8 @@
 using Parquet.Meta;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.Types;
+using System.Data;
 
 namespace ParquetViewer.Engine.ParquetNET
 {
@@ -180,6 +182,101 @@ namespace ParquetViewer.Engine.ParquetNET
             }
         }
 
+        public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path,
+            CancellationToken cancellationToken, IProgress<int> progress, Dictionary<string, string>? customMetadata)
+        {
+            var fields = new List<Field>(dataTable.Columns.Count);
+            foreach (DataColumn column in dataTable.Columns)
+            {
+                fields.Add(this._schema.Fields
+                    .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
+                    .First());
+            }
+            var parquetSchema = new ParquetSchema(fields);
+
+            using var fs = new FileStream(path, FileMode.OpenOrCreate);
+            using var parquetWriter = await ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
+            parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
+            if (customMetadata is not null)
+                parquetWriter.CustomMetadata = customMetadata;
+
+            const int MAX_ROWS_PER_ROWGROUP = 100_000; //Without batching we sometimes get "OverflowException: Array dimensions exceeded supported range" from Parquet.NET
+            var batchIndex = 0;
+            var isLastBatch = false;
+            while (!isLastBatch)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                using var rowGroup = parquetWriter.CreateRowGroup();
+                foreach (var dataField in parquetSchema.DataFields)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    var type = dataField.IsNullable ? GetNullableVersion(dataField.ClrType) : dataField.ClrType;
+                    var values = GetColumnValues(dataTable, type, dataField.Name, batchIndex * MAX_ROWS_PER_ROWGROUP, MAX_ROWS_PER_ROWGROUP);
+                    var dataColumn = new Parquet.Data.DataColumn(dataField, values);
+                    await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
+                    progress.Report(values.Length); //No way to report progress for each row, so do it by column
+                    isLastBatch = values.Length < MAX_ROWS_PER_ROWGROUP;
+                }
+                batchIndex++;
+            }
+        }
+
         public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles);
+
+        private static System.Type GetNullableVersion(System.Type sourceType) => sourceType == null
+                ? throw new ArgumentNullException(nameof(sourceType))
+                : !sourceType.IsValueType
+                    || (sourceType.IsGenericType
+                        && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                ? sourceType
+                : typeof(Nullable<>).MakeGenericType(sourceType);
+
+        private static Array GetColumnValues(DataTable dataTable, System.Type type, string columnName, int skipCount, int fetchCount)
+        {
+            ArgumentNullException.ThrowIfNull(dataTable);
+            ArgumentNullException.ThrowIfNull(type);
+            ArgumentOutOfRangeException.ThrowIfLessThan(skipCount, 0);
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
+
+            if (!dataTable.Columns.Contains(columnName))
+                throw new ArgumentException($"Column `{columnName}` does not exist in the datatable");
+
+            var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
+            var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
+            var values = Array.CreateInstance(type, recordCountToRead);
+            var index = 0;
+            foreach (DataRow row in dataTable.Rows)
+            {
+                if (skipCount-- > 0)
+                {
+                    continue;
+                }
+
+                var value = row[columnName];
+                if (value == DBNull.Value)
+                    value = null;
+                else if (value is IByteArrayValue byteArray)
+                    value = byteArray.Data;
+                else if (value is IListValue || value is IMapValue || value is IStructValue)
+                    throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
+
+                values.SetValue(value, index++);
+
+                if (--fetchCount <= 0)
+                {
+                    break;
+                }
+            }
+
+            return values;
+        }
     }
 }

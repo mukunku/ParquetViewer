@@ -113,54 +113,6 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName, int skipCount, int fetchCount)
-        {
-            ArgumentNullException.ThrowIfNull(dataTable);
-            ArgumentNullException.ThrowIfNull(type);
-            ArgumentOutOfRangeException.ThrowIfLessThan(skipCount, 0);
-            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
-
-            if (!dataTable.Columns.Contains(columnName))
-                throw new ArgumentException($"Column `{columnName}` does not exist in the datatable");
-
-            var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
-            var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
-            var values = Array.CreateInstance(type, recordCountToRead);
-            var index = 0;
-            foreach (DataRow row in dataTable.Rows)
-            {
-                if (skipCount-- > 0)
-                {
-                    continue;
-                }
-
-                var value = row[columnName];
-                if (value == DBNull.Value)
-                    value = null;
-                else if (value is IByteArrayValue byteArray)
-                    value = byteArray.Data;
-                else if (value is IListValue || value is IMapValue || value is IStructValue)
-                    throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
-
-                values.SetValue(value, index++);
-
-                if (--fetchCount <= 0)
-                {
-                    break;
-                }
-            }
-
-            return values;
-        }
-
-        public static Type GetNullableVersion(this Type sourceType) => sourceType == null
-                ? throw new ArgumentNullException(nameof(sourceType))
-                : !sourceType.IsValueType
-                    || (sourceType.IsGenericType
-                        && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                ? sourceType
-                : typeof(Nullable<>).MakeGenericType(sourceType);
-
         /// <summary>
         /// Converts a float to a string without using the scientific notation, if possible
         /// </summary>

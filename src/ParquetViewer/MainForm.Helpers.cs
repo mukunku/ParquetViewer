@@ -1,7 +1,7 @@
 ﻿using MiniExcelLibs;
 using ParquetViewer.Analytics;
+using ParquetViewer.Engine;
 using ParquetViewer.Engine.Exceptions;
-using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
@@ -55,7 +55,8 @@ namespace ParquetViewer
                     this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
                     this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
-                    if (this._openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true)
+                    if (this._openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
+                        && this._openParquetEngine is not Engine.DuckDB.ParquetEngine)
                     {
                         this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
                     }
@@ -67,55 +68,13 @@ namespace ParquetViewer
 
                         var fileExtension = Path.GetExtension(filePath);
                         FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
+                        if (selectedFileType is null)
+                            throw new ArgumentOutOfRangeException(fileExtension);
 
                         var stopWatch = Stopwatch.StartNew();
                         loadingIcon = this.ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
-                        if (selectedFileType == FileType.CSV)
-                        {
-                            await WriteDataToCSVFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
-                        }
-                        else if (selectedFileType == FileType.XLS)
-                        {
-                            const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
-                            if (this.MainDataSource!.Columns.Count > MAX_XLS_COLUMN_COUNT)
-                            {
-                                MessageBox.Show(this,
-                                    Resources.Errors.TooManyColumnsXlsErrorMessageFormat.Format(MAX_XLS_COLUMN_COUNT, this.MainDataSource.Columns.Count),
-                                    Resources.Errors.TooManyColumnsErrorTitle,
-                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                                return;
-                            }
-
-                            await WriteDataToExcel93File(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
-                        }
-                        else if (selectedFileType == FileType.XLSX)
-                        {
-                            const int MAX_XLSX_COLUMN_COUNT = 16384; //.xlsx format has a hard limit on 16384 columns
-                            if (this.MainDataSource!.Columns.Count > MAX_XLSX_COLUMN_COUNT)
-                            {
-                                MessageBox.Show(this,
-                                    Resources.Errors.TooManyColumnsXlsxErrorMessageFormat.Format(MAX_XLSX_COLUMN_COUNT, this.MainDataSource.Columns.Count),
-                                    Resources.Errors.TooManyColumnsErrorTitle,
-                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                                return;
-                            }
-
-                            await WriteDataToExcel2007File(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
-                        }
-                        else if (selectedFileType == FileType.JSON)
-                        {
-                            await WriteDataToJSONFile(this.MainDataSource, filePath, loadingIcon.CancellationToken, loadingIcon);
-                        }
-                        else if (selectedFileType == FileType.PARQUET)
-                        {
-                            await this.WriteDataToParquetFile(filePath, loadingIcon.CancellationToken, loadingIcon);
-                        }
-                        else
-                        {
-                            throw new Exception(string.Format(Resources.Errors.UnsupportedExportTypeFormat, fileExtension));
-                        }
+                        await ExportResultsImpl(this.MainDataSource!, selectedFileType.Value, this._openParquetEngine,
+                            filePath, loadingIcon.CancellationToken, loadingIcon, this.OpenFileOrFolderPath);
 
                         if (loadingIcon.CancellationToken.IsCancellationRequested)
                         {
@@ -184,10 +143,66 @@ namespace ParquetViewer
             }
         }
 
-        private async Task WriteDataToExcel2007File(DataTable mainDataSource, string path, CancellationToken cancellationToken, IProgress<int> progress)
+
+        private static Task ExportResultsImpl(DataTable dataTable, FileType selectedFileType, IParquetEngine? engine,
+            string filePath, CancellationToken cancellationToken, IProgress<int> progress, string? sourceFileOrFolderPath)
+        {
+            if (selectedFileType == FileType.CSV)
+            {
+                return WriteDataToCSVFile(dataTable, filePath, cancellationToken, progress);
+            }
+            else if (selectedFileType == FileType.XLS)
+            {
+                const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
+                if (dataTable.Columns.Count > MAX_XLS_COLUMN_COUNT)
+                {
+                    MessageBox.Show(
+                        Resources.Errors.TooManyColumnsXlsErrorMessageFormat.Format(MAX_XLS_COLUMN_COUNT, dataTable.Columns.Count),
+                        Resources.Errors.TooManyColumnsErrorTitle,
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    return Task.CompletedTask;
+                }
+
+                return WriteDataToExcel93File(dataTable, filePath, cancellationToken, progress);
+            }
+            else if (selectedFileType == FileType.XLSX)
+            {
+                const int MAX_XLSX_COLUMN_COUNT = 16384; //.xlsx format has a hard limit on 16384 columns
+                if (dataTable.Columns.Count > MAX_XLSX_COLUMN_COUNT)
+                {
+                    MessageBox.Show(
+                        Resources.Errors.TooManyColumnsXlsxErrorMessageFormat.Format(MAX_XLSX_COLUMN_COUNT, dataTable.Columns.Count),
+                        Resources.Errors.TooManyColumnsErrorTitle,
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    return Task.CompletedTask;
+                }
+
+                var sheetName = Path.GetFileNameWithoutExtension(sourceFileOrFolderPath) ?? "Sheet1";
+                return WriteDataToExcel2007File(dataTable, filePath, sheetName, cancellationToken, progress);
+            }
+            else if (selectedFileType == FileType.JSON)
+            {
+                return WriteDataToJSONFile(dataTable, filePath, cancellationToken, progress);
+            }
+            else if (selectedFileType == FileType.PARQUET)
+            {
+                ArgumentNullException.ThrowIfNull(engine);
+                var engineTypeName = engine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" :
+                    engine is Engine.DuckDB.ParquetEngine ? "DuckDB" :
+                    "Unknown";
+                return WriteDataToParquetFile(engine, dataTable, filePath, cancellationToken, progress, engineTypeName);
+            }
+            else
+            {
+                throw new Exception(string.Format(Resources.Errors.UnsupportedExportTypeFormat, selectedFileType.ToString()));
+            }
+        }
+
+        private static async Task WriteDataToExcel2007File(DataTable mainDataSource, string path, string sheetName, CancellationToken cancellationToken, IProgress<int> progress)
         {
             const int MAX_XLSX_SHEET_NAME_LENGTH = 31;
-            var sheetName = Path.GetFileNameWithoutExtension(this.OpenFileOrFolderPath) ?? "Sheet1";
 
             //sanitize sheet name
             sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
@@ -371,23 +386,11 @@ namespace ParquetViewer
                     jsonWriter.WriteEndArray();
                 }, cancellationToken);
 
-        private Task WriteDataToParquetFile(string path, CancellationToken cancellationToken, IProgress<int> progress)
+        private static Task WriteDataToParquetFile(IParquetEngine engine, DataTable dataTable, string path, 
+            CancellationToken cancellationToken, IProgress<int> progress, string engineName)
             => Task.Run(async () =>
                 {
-                    throw new NotImplementedException("Not implemented yet");
-                    var fields = new List<Parquet.Schema.Field>(this.MainDataSource!.Columns.Count);
-                    foreach (DataColumn column in this.MainDataSource.Columns)
-                    {
-                        //fields.Add(this._openParquetEngine?.Fields
-                        //    .Where(field => field?.Equals(column.ColumnName, StringComparison.InvariantCulture) == true)
-                        //    .First());
-                    }
-                    var parquetSchema = new Parquet.Schema.ParquetSchema(fields);
-
-                    using var fs = new FileStream(path, FileMode.OpenOrCreate);
-                    using var parquetWriter = await Parquet.ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
-                    parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
-                    parquetWriter.CustomMetadata = new Dictionary<string, string>
+                    var customMetadata = new Dictionary<string, string>
                             {
                                 {
 "ParquetViewer", @"
@@ -395,38 +398,12 @@ namespace ParquetViewer
     ""CreatedWith"": ""ParquetViewer"",
     ""Version"": """ + Env.AssemblyVersion.ToString() + @""",
     ""Website"": ""https://github.com/mukunku/ParquetViewer"",
-    ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + @"""
+    ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + @""",
+    ""Engine"": """ + engineName + @"""
 }"
                                 }
                             };
-
-                    const int MAX_ROWS_PER_ROWGROUP = 100_000; //Without batching we sometimes get "OverflowException: Array dimensions exceeded supported range" from Parquet.NET
-                    var batchIndex = 0;
-                    var isLastBatch = false;
-                    while (!isLastBatch)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
-
-                        using var rowGroup = parquetWriter.CreateRowGroup();
-                        foreach (var dataField in parquetSchema.DataFields)
-                        {
-                            if (cancellationToken.IsCancellationRequested)
-                            {
-                                break;
-                            }
-
-                            var type = dataField.IsNullable ? dataField.ClrType.GetNullableVersion() : dataField.ClrType;
-                            var values = this.MainDataSource.GetColumnValues(type, dataField.Name, batchIndex * MAX_ROWS_PER_ROWGROUP, MAX_ROWS_PER_ROWGROUP);
-                            var dataColumn = new Parquet.Data.DataColumn(dataField, values);
-                            await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
-                            progress.Report(values.Length); //No way to report progress for each row, so do it by column
-                            isLastBatch = values.Length < MAX_ROWS_PER_ROWGROUP;
-                        }
-                        batchIndex++;
-                    }
+                    await engine.WriteDataToParquetFileAsync(dataTable, path, cancellationToken, progress, customMetadata);
                 }, cancellationToken);
 
         private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
