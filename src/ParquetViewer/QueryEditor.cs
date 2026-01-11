@@ -24,7 +24,9 @@ namespace ParquetViewer
 @"SELECT {0}
 FROM {1}
 LIMIT {2}
-OFFSET {3};";
+OFFSET {3}";
+
+        private Brush _splitterColor = Brushes.Silver;
 
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -223,7 +225,7 @@ OFFSET {3};";
                 var rectangle = splitContainer.SplitterRectangle;
                 rectangle.Offset(0, 1);
                 rectangle.Height -= 2;
-                e.Graphics.FillRectangle(Brushes.Silver, rectangle);
+                e.Graphics.FillRectangle(_splitterColor, rectangle);
             }
         }
 
@@ -365,6 +367,36 @@ OFFSET {3};";
                 if (result == default)
                     throw new ArgumentOutOfRangeException($"Column `{columnName}` doesn't exist");
                 return this.Row[result.Index];
+            }
+        }
+
+        public override void SetTheme(Theme theme)
+        {
+            if (DesignMode)
+            {
+                return;
+            }
+
+            base.SetTheme(theme);
+            this.resultsGridView.GridTheme = theme;
+            this.querySyntaxDocsButton.ForeColor = Color.Black;
+            this.executeQueryButton.ForeColor = Color.Black;
+            this.statusStrip.BackColor = theme.FormBackgroundColor;
+            this.statusStrip.ForeColor = theme.TextColor;
+            this.mainTableLayoutPanel.BackColor = theme.FormBackgroundColor;
+            this._splitterColor = new SolidBrush(theme.DisabledTextColor);
+            this.queryRichTextBox.IndentBackColor = theme.RowHeaderColor;
+            this.queryRichTextBox.ForeColor = theme.TextColor;
+            this.queryRichTextBox.SelectionColor = theme.SelectionBackColor;
+            this.queryRichTextBox.CaretColor = theme.TextColor;
+
+            if (theme == Theme.LightModeTheme)
+            {
+                this.queryRichTextBox.BackColor = Color.White;
+            }
+            else
+            {
+                this.queryRichTextBox.BackColor = theme.CellBackgroundColor;
             }
         }
     }
