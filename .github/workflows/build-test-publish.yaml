@@ -108,10 +108,12 @@ jobs:
           search-text: 'private const string AMPLITUDE_API_KEY = "";'
           replacement-text: 'private const string AMPLITUDE_API_KEY = "${{ secrets.AMPLITUDE_API_KEY }}";'
 
-      - name: Build & Publish Regular Release
-        run: |
-            dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release  -f net10.0-windows --nologo -o publish -r win-x64 --no-self-contained
-            Get-Item "./publish/ParquetViewer.exe" | Select-Object Name, Length
+      # With DuckDB, the regular release is close to 40MB which defeats the purpose of having this version of the release.
+      # Starting with v4.0.0 we're switching to only publishing the self-contained version.
+      #- name: Build & Publish Regular Release
+      #  run: |
+      #      dotnet publish src/ParquetViewer/ParquetViewer.csproj -c Release  -f net10.0-windows --nologo -o publish -r win-x64 --no-self-contained
+      #      Get-Item "./publish/ParquetViewer.exe" | Select-Object Name, Length
             
       - name: Build & Publish SelfContained Release
         run: |
@@ -120,8 +122,8 @@ jobs:
 
       - name: Prepare executables for upload
         run: |
-          Move-Item -Path "publish/ParquetViewer.exe" -Destination "./ParquetViewer.exe"
-          Move-Item -Path "publish_selfcontained/ParquetViewer.exe" -Destination "./ParquetViewer_SelfContained.exe"
+          #Move-Item -Path "publish/ParquetViewer.exe" -Destination "./ParquetViewer.exe"
+          Move-Item -Path "publish_selfcontained/ParquetViewer.exe" -Destination "./ParquetViewer.exe"
 
       - name: Upload unsigned artifact for signing
         id: upload-unsigned-artifact
@@ -129,12 +131,12 @@ jobs:
         with:
           path: |
             ParquetViewer.exe
-            ParquetViewer_SelfContained.exe
+            #ParquetViewer_SelfContained.exe
 
       - name: Remove unsigned exe's for safety
         run: |
           Remove-Item -Path "ParquetViewer.exe"
-          Remove-Item -Path "ParquetViewer_SelfContained.exe"
+          #Remove-Item -Path "ParquetViewer_SelfContained.exe"
 
       # Documentation: https://about.signpath.io/documentation/trusted-build-systems/github
       - name: Submit signing request to SignPath.io
@@ -150,7 +152,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "signed-package/ParquetViewer.exe,signed-package/ParquetViewer_SelfContained.exe"
+          artifacts: "signed-package/ParquetViewer.exe" #",signed-package/ParquetViewer_SelfContained.exe"
           body: "PR: #${{ env.PR_NUMBER }}"
           allowUpdates: ${{ env.BRANCH_NAME != 'main' }}
           omitBodyDuringUpdate: true
