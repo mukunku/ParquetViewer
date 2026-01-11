@@ -390,4 +390,12 @@ You can always toggle this on/off from the Edit menu.</value>
     <value>Query Zoom: {0}%</value>
     <comment>Text format used in the Query Editor tool to display the current zoom level</comment>
   </data>
+  <data name="ByteArraysNotSupportedErrorMessage" xml:space="preserve">
+    <value>Unfortunately byte[] types are currently unsupported in query results. Values will be shown as null.</value>
+    <comment>Shown when a byte[] type is in the results in the Query Editor window. As these types are currently not supported by DuckDB.</comment>
+  </data>
+  <data name="ByteArraysNotSupportedErrorTitle" xml:space="preserve">
+    <value>Byte arrays not supported</value>
+    <comment>Shown when a byte[] type is in the results in the Query Editor window. As these types are currently not supported by DuckDB.</comment>
+  </data>
 </root>

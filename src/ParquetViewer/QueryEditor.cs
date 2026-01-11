@@ -28,7 +28,7 @@ LIMIT {2}
 OFFSET {3}";
 
         private Brush _splitterColor = Brushes.Silver;
-
+        private bool _wasByteArrayConversionErrorShown = false;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string QueryText
@@ -315,9 +315,6 @@ OFFSET {3}";
             }
             else if (value is IList list)
             {
-                if (!list.GetType().IsGenericType)
-                    throw new InvalidDataException("List was not generic as expected.");
-
                 var arrayList = new ArrayList(list.Count);
                 var listType = typeof(object);
                 for (var i = 0; i < list.Count; i++)
@@ -336,8 +333,6 @@ OFFSET {3}";
             }
             else if (value is IDictionary dictionary)
             {
-                var types = dictionary.GetType().GetGenericArguments();
-
                 var keysList = new ArrayList(dictionary.Keys.Count);
                 var valuesList = new ArrayList(dictionary.Values.Count);
                 var keysType = typeof(object);
@@ -368,10 +363,21 @@ OFFSET {3}";
             else if (value is Stream byteArray)
             {
                 //DuckDB doesn't seem to like byte array values. It fails to read after the first row with a memory access violation error.
-                using var ms = new MemoryStream();
-                byteArray.CopyTo(ms);
-                var byteArrayValue = new ByteArrayValue(ms.ToArray());
-                return byteArrayValue;
+                if (!this._wasByteArrayConversionErrorShown)
+                {
+                    this._wasByteArrayConversionErrorShown = true;
+                    MessageBox.Show(
+                        Resources.Strings.ByteArraysNotSupportedErrorMessage,
+                        Resources.Strings.ByteArraysNotSupportedErrorTitle,
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                return DBNull.Value;
+                /*
+                    using var ms = new MemoryStream();
+                    byteArray.CopyTo(ms); //MemoryAccessViolation thrown here on second row and beyond
+                    var byteArrayValue = new ByteArrayValue(ms.ToArray());
+                    return byteArrayValue;
+                */
             }
             else
             {

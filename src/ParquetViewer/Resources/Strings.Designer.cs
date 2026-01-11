@@ -81,6 +81,24 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unfortunately byte[] types are currently unsupported in query results. Values will be shown as null..
+        /// </summary>
+        internal static string ByteArraysNotSupportedErrorMessage {
+            get {
+                return ResourceManager.GetString("ByteArraysNotSupportedErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Byte arrays not supported.
+        /// </summary>
+        internal static string ByteArraysNotSupportedErrorTitle {
+            get {
+                return ResourceManager.GetString("ByteArraysNotSupportedErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         internal static string CancelButtonText {
