@@ -107,7 +107,19 @@ OFFSET {3};";
             catch (Exception ex)
             {
                 result.Dispose();
-                MessageBox.Show($"{ex.Message}", "Error executing query", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (ex is InvalidCastException && ex.Message.Contains("The list contains null value"))
+                {
+                    MessageBox.Show($"Lists with null values are not supported. Relevant rows have been removed.", "Error showing all results", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else if (ex is DuckDBException && ex.Message.StartsWith("Parser Error:"))
+                {
+                    MessageBox.Show($"{ex.Message}", "Invalid query", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    //TODO: Log exception
+                    MessageBox.Show($"{ex.Message}", "Error executing query", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
                 this.executeQueryButton.Enabled = true;
                 this.Cursor = Cursors.Default;
                 return;
