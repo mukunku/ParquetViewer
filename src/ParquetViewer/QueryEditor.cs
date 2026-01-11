@@ -25,7 +25,7 @@ namespace ParquetViewer
 @"SELECT {0}
 FROM {1}
 LIMIT {2}
-OFFSET {3}";
+OFFSET {3} ";
 
         private Brush _splitterColor = Brushes.Silver;
         private bool _wasByteArrayConversionErrorShown = false;
@@ -65,6 +65,10 @@ OFFSET {3}";
             this.queryExecutionStatusLabel.Visible = false;
             this.timeElapsedLabel.Visible = false;
 
+            //Set caret to the end of the text
+            this.queryRichTextBox.SelectionStart = this.queryRichTextBox.Text.Length;
+            this.queryRichTextBox.SelectionLength = 0;
+
             SetZoom(AppSettings.QueryEditorZoomLevel);
         }
 
@@ -76,6 +80,7 @@ OFFSET {3}";
             this.timeElapsedLabel.Visible = true;
             this.queryExecutionStatusLabel.Text = Resources.Strings.QueryRunningStatusText;
             this.timeElapsedLabel.Text = "00:00";
+            this.resultsGridView.Enabled = false;
 
             var result = new DataTable();
             var queryEvent = new ExecuteQueryEvent() { IsDuckDB = true };
@@ -137,6 +142,7 @@ OFFSET {3}";
                     MessageBox.Show(ex.Message, Resources.Errors.QueryExecutionErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 this.executeQueryButton.Enabled = true;
+                this.resultsGridView.Enabled = true;
                 this.Cursor = Cursors.Default;
                 return;
             }
@@ -165,6 +171,7 @@ OFFSET {3}";
             finally
             {
                 this.executeQueryButton.Enabled = true;
+                this.resultsGridView.Enabled = true;
                 this.Cursor = Cursors.Default;
             }
         }
@@ -434,6 +441,8 @@ OFFSET {3}";
             {
                 this.queryRichTextBox.BackColor = theme.CellBackgroundColor;
             }
+
+            this.statusStrip.Renderer = theme.ToolStripRenderer;
         }
     }
 }

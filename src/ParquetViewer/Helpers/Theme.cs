@@ -169,5 +169,11 @@ namespace ParquetViewer.Helpers
         public override Color MenuItemPressedGradientMiddle => this._theme.SelectionBackColor;
         public override Color MenuItemPressedGradientEnd => this._theme.SelectionBackColor;
         #endregion
+
+        #region Dropdown hover colors
+        public override Color ButtonSelectedGradientBegin => this._theme.SelectionBackColor;
+        public override Color ButtonSelectedGradientMiddle => this._theme.SelectionBackColor;
+        public override Color ButtonSelectedGradientEnd => this._theme.SelectionBackColor;
+        #endregion
     }
 }
