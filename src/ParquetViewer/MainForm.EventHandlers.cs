@@ -308,6 +308,7 @@ namespace ParquetViewer
                     this._openQueryEditor.QueryText = this._queryEditorSavedQueryText;
                 }
                 this._openQueryEditor.Show(this);
+                MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.QueryEditor);
             }
             else
             {

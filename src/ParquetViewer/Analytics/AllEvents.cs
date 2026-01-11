@@ -125,7 +125,8 @@ namespace ParquetViewer.Analytics
             AboutBox,
             UserGuide,
             DragDrop,
-            LoadAllRows
+            LoadAllRows,
+            QueryEditor,
         }
     }
 
@@ -230,10 +231,11 @@ namespace ParquetViewer.Analytics
         private const string EVENT_TYPE = "sql.execute";
 
         public bool IsValid { get; set; }
-        public int RecordCountTotal { get; set; }
+        public int? RecordCountTotal { get; set; }
         public int? RecordCountFiltered { get; set; }
-        public int ColumnCount { get; set; }
+        public int? ColumnCount { get; set; }
         public long RunTimeMS { get; set; }
+        public bool IsDuckDB { get; set; }
 
         public ExecuteQueryEvent() : base(EVENT_TYPE)
         {

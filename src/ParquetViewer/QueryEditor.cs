@@ -1,4 +1,5 @@
 ﻿using DuckDB.NET.Data;
+using ParquetViewer.Analytics;
 using ParquetViewer.Controls;
 using ParquetViewer.Engine;
 using ParquetViewer.Engine.Types;
@@ -6,15 +7,14 @@ using ParquetViewer.Helpers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.ComponentModel;
 
 namespace ParquetViewer
 {
@@ -75,7 +75,7 @@ OFFSET {3};";
             this.timeElapsedLabel.Text = "00:00";
 
             var result = new DataTable();
-
+            var queryEvent = new ExecuteQueryEvent() { IsDuckDB = true };
             try
             {
                 var stopwatch = Stopwatch.StartNew();
@@ -103,6 +103,10 @@ OFFSET {3};";
 
                 this.queryExecutionStatusLabel.Text = "Finished in:";
                 this.timeElapsedLabel.Text = stopwatch.Elapsed.ToString("mm\\:ss");
+                queryEvent.IsValid = true;
+                queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
+                queryEvent.RecordCountFiltered = result.Rows.Count;
+                queryEvent.ColumnCount = result.Columns.Count;
             }
             catch (Exception ex)
             {
@@ -117,12 +121,17 @@ OFFSET {3};";
                 }
                 else
                 {
-                    //TODO: Log exception
+                    ExceptionEvent.FireAndForget(ex);
                     MessageBox.Show($"{ex.Message}", "Error executing query", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 this.executeQueryButton.Enabled = true;
                 this.Cursor = Cursors.Default;
                 return;
+            }
+            finally
+            {
+                //Fire and forget
+                var _ = queryEvent.Record();
             }
 
             //Cleanup previous results
@@ -137,6 +146,7 @@ OFFSET {3};";
             }
             catch (Exception ex)
             {
+                ExceptionEvent.FireAndForget(ex);
                 MessageBox.Show($"{ex.Message}{Environment.NewLine}{Environment.NewLine}{ex.StackTrace}", 
                     "Error rendering results", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -324,6 +334,7 @@ OFFSET {3};";
             }
             else if (value is Stream byteArray)
             {
+                //DuckDB doesn't seem to like byte array values. It fails to read after the first row with a memory access violation error.
                 using var ms = new MemoryStream();
                 byteArray.CopyTo(ms);
                 var byteArrayValue = new ByteArrayValue(ms.ToArray());
