@@ -1,6 +1,7 @@
 ﻿using Apache.Arrow.Ipc;
-using Parquet.Meta;
+using ParquetViewer.Engine;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
@@ -25,155 +26,64 @@ namespace ParquetViewer.Helpers
             }
         }
 
-        public static string ThriftMetadataToJSON(Engine.ParquetEngine parquetEngine, long recordCount, int fieldCount)
+        public static string ThriftMetadataToJSON(IParquetEngine parquetEngine, long recordCount, int fieldCount)
         {
             try
             {
-                object ProcessSchemaTree(Engine.ParquetSchemaElement parquetSchemaElement)
-                {
-                    return new
-                    {
-                        parquetSchemaElement.Path,
-                        Type = parquetSchemaElement.SchemaElement.Type.ToString(),
-                        parquetSchemaElement.SchemaElement.TypeLength,
-                        LogicalType = LogicalTypeToJSONObject(parquetSchemaElement.SchemaElement.LogicalType),
-                        RepetitionType = parquetSchemaElement.SchemaElement.RepetitionType.ToString(),
-                        ConvertedType = parquetSchemaElement.SchemaElement.ConvertedType.ToString(),
-                        Children = parquetSchemaElement.Children.Select(pse => ProcessSchemaTree(pse)).ToArray()
-                    };
-                }
-
                 var jsonObject = new
                 {
-                    parquetEngine.ThriftMetadata.Version,
+                    parquetEngine.Metadata.ParquetVersion,
                     NumRows = recordCount,
-                    NumRowGroups = parquetEngine.ThriftMetadata.RowGroups?.Count ?? -1, //What about partitioned files?
+                    NumRowGroups = parquetEngine.Metadata.RowGroupCount, //We assume partitioned files all have the same row group count
                     NumFields = fieldCount,
-                    parquetEngine.ThriftMetadata.CreatedBy,
-                    Schema = ProcessSchemaTree(parquetEngine.ParquetSchemaTree),
-                    RowGroups = (parquetEngine.ThriftMetadata.RowGroups ?? Enumerable.Empty<RowGroup>()).Select(rowGroup => new
+                    parquetEngine.Metadata.CreatedBy,
+                    Schema = new
+                    {
+                        parquetEngine.Metadata.SchemaTree.Path,
+                        RepetitionType = parquetEngine.Metadata.SchemaTree.RepetitionType?.ToString().ToUpper(),
+                        Children = ProcessChildren(parquetEngine.Metadata.SchemaTree)
+                    },
+                    RowGroups = (parquetEngine.Metadata.RowGroups ?? Enumerable.Empty<IRowGroupMetadata>()).Select(rowGroup => new
                     {
                         rowGroup.Ordinal,
-                        rowGroup.NumRows,
-                        SortingColumns = (rowGroup.SortingColumns ?? Enumerable.Empty<SortingColumn>()).Select(sortingColumn => new
-                        {
-                            sortingColumn.ColumnIdx,
-                            sortingColumn.Descending,
-                            sortingColumn.NullsFirst
-                        }).ToArray(),
+                        rowGroup.RowCount,
+                        rowGroup.SortingColumns,
+                        rowGroup.Columns,
                         rowGroup.FileOffset,
                         rowGroup.TotalByteSize,
                         rowGroup.TotalCompressedSize
                     }).ToArray()
                 };
 
-                return JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                IEnumerable<object> ProcessChildren(IParquetSchemaElement schemaElement)
+                {
+                    foreach (var child in (schemaElement.Children ?? Enumerable.Empty<IParquetSchemaElement>()))
+                    {
+                        yield return new
+                        {
+                            child.Path,
+                            child.Type,
+                            child.TypeLength,
+                            child.LogicalType,
+                            RepetitionType = child.RepetitionType?.ToString().ToUpper(),
+                            child.ConvertedType,
+                            child.Scale,
+                            child.Precision,
+                            child.NumChildren,
+                            Children = child.Children.Select(ProcessChildren)
+                        };
+                    }
+                }
+
+                return JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                });
             }
             catch (Exception ex)
             {
                 return $"Something went wrong while processing the schema:{Environment.NewLine}{Environment.NewLine}{ex}";
-            }
-
-            static object? LogicalTypeToJSONObject(LogicalType? logicalType)
-            {
-                if (logicalType is null)
-                {
-                    return null;
-                }
-                else if (logicalType.STRING is not null)
-                {
-                    return new { Name = nameof(logicalType.STRING) };
-                }
-                else if (logicalType.MAP is not null)
-                {
-                    return new { Name = nameof(logicalType.MAP) };
-                }
-                else if (logicalType.LIST is not null)
-                {
-                    return new { Name = nameof(logicalType.LIST) };
-                }
-                else if (logicalType.ENUM is not null)
-                {
-                    return new { Name = nameof(logicalType.ENUM) };
-                }
-                else if (logicalType.DECIMAL is not null)
-                {
-                    return new
-                    {
-                        Name = nameof(logicalType.DECIMAL),
-                        logicalType.DECIMAL.Scale,
-                        logicalType.DECIMAL.Precision
-                    };
-                }
-                else if (logicalType.DATE is not null)
-                {
-                    return new { Name = nameof(logicalType.DATE) };
-                }
-                else if (logicalType.TIME is not null)
-                {
-                    return new
-                    {
-                        Name = nameof(logicalType.TIME),
-                        logicalType.TIME.IsAdjustedToUTC,
-                        Unit = TimeUnitToString(logicalType.TIME.Unit)
-                    };
-                }
-                else if (logicalType.TIMESTAMP is not null)
-                {
-                    return new
-                    {
-                        Name = nameof(logicalType.TIMESTAMP),
-                        logicalType.TIMESTAMP.IsAdjustedToUTC,
-                        Unit = TimeUnitToString(logicalType.TIMESTAMP.Unit)
-                    };
-                }
-                else if (logicalType.INTEGER is not null)
-                {
-                    return new
-                    {
-                        Name = nameof(logicalType.INTEGER),
-                        logicalType.INTEGER.BitWidth,
-                        logicalType.INTEGER.IsSigned
-                    };
-                }
-                else if (logicalType.JSON is not null)
-                {
-                    return new { Name = nameof(logicalType.JSON) };
-                }
-                else if (logicalType.BSON is not null)
-                {
-                    return new { Name = nameof(logicalType.BSON) };
-                }
-                else if (logicalType.UUID is not null)
-                {
-                    return new { Name = nameof(logicalType.UUID) };
-                }
-                else if (logicalType.UNKNOWN is not null)
-                {
-                    return new { Name = $"{logicalType.UNKNOWN.GetType().Name}" };
-                }
-                else
-                {
-                    return new { Name = nameof(logicalType.UNKNOWN) };
-                }
-            }
-
-            static string TimeUnitToString(TimeUnit? timeUnit)
-            {
-                var timeUnitString = string.Empty;
-                if (timeUnit?.MILLIS is not null)
-                {
-                    timeUnitString = nameof(timeUnit.MILLIS);
-                }
-                else if (timeUnit?.MICROS is not null)
-                {
-                    timeUnitString = nameof(timeUnit.MICROS);
-                }
-                else if (timeUnit?.NANOS is not null)
-                {
-                    timeUnitString = nameof(timeUnit.NANOS);
-                }
-                return timeUnitString;
             }
         }
 

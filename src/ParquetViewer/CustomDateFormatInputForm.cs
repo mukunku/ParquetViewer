@@ -12,7 +12,7 @@ namespace ParquetViewer
     public partial class CustomDateFormatInputForm : FormBase
     {
         public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
-        
+
         public CustomDateFormatInputForm()
         {
             InitializeComponent();
@@ -85,8 +85,8 @@ namespace ParquetViewer
             else
             {
                 MessageBox.Show(this,
-                    Resources.Errors.InvalidDateFormatErrorMessage, 
-                    Resources.Errors.InvalidDateFormatErrorTitle, 
+                    Resources.Errors.InvalidDateFormatErrorMessage,
+                    Resources.Errors.InvalidDateFormatErrorTitle,
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

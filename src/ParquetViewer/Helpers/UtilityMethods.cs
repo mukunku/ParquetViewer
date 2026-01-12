@@ -98,5 +98,22 @@ namespace ParquetViewer.Helpers
             //Terminate this instance
             Application.Exit();
         }
+
+        /// <summary>
+        /// Best effort attempt at stripping time components from a date format string.
+        /// </summary>
+        /// <param name="dateFormat">Date format with potential time components</param>
+        /// <returns>Date format with no time components</returns>
+        public static string StripTimeComponentsFromDateFormat(string dateFormat)
+        {
+            var timeComponents = new string[] { "H", "h", "m", "s", "f", "F", "t", "z", "K" };
+            foreach (var component in timeComponents)
+            {
+                dateFormat = dateFormat.Replace(component, string.Empty);
+            }
+            dateFormat = dateFormat.Replace("  ", " ");
+            dateFormat = dateFormat.TrimEnd('/', '-', '.', ' ', ',', '_');
+            return dateFormat.Trim();
+        }
     }
 }

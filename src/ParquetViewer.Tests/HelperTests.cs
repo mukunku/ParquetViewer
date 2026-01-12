@@ -288,7 +288,7 @@ namespace ParquetViewer.Tests
         [TestMethod]
         public void ByteArrayValue_IsCorrectlyTruncated()
         {
-            var byteArrayValue = new ByteArrayValue("test", [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10]);
+            var byteArrayValue = new Engine.Types.ByteArrayValue([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10]);
             Assert.AreEqual("01[...]10", byteArrayValue.ToStringTruncated(1));
             Assert.AreEqual("01[...]10", byteArrayValue.ToStringTruncated(2));
             Assert.AreEqual("01-02[...]09-10", byteArrayValue.ToStringTruncated(11));

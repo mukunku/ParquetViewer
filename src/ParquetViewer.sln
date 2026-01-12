@@ -1,13 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.4.33213.308
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer", "ParquetViewer\ParquetViewer.csproj", "{6019FC1B-3610-4682-BF96-8345C95CB7EC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Engine", "ParquetViewer.Engine\ParquetViewer.Engine.csproj", "{77900356-25F3-4A24-B638-845C784C1175}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer.Tests", "ParquetViewer.Tests\ParquetViewer.Tests.csproj", "{16D10BC9-08BF-4248-8975-1B54C42EB2C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParquetViewer.Engine.DuckDB", "ParquetViewer.Engine.DuckDB\ParquetViewer.Engine.DuckDB.csproj", "{D00ACD9C-20B0-4E4A-8CC9-9DEC941D7747}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParquetViewer.Engine.ParquetNET", "ParquetViewer.Engine.ParquetNET\ParquetViewer.Engine.ParquetNET.csproj", "{4B69AD86-BDF8-01E8-59B8-E690760BB827}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F5D39637-1812-4802-8DB3-254CBBE5C313}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,8 +27,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{77900356-25F3-4A24-B638-845C784C1175}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{77900356-25F3-4A24-B638-845C784C1175}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{77900356-25F3-4A24-B638-845C784C1175}.Release_SelfContained|Any CPU.ActiveCfg = Release_SelfContained|Any CPU
-		{77900356-25F3-4A24-B638-845C784C1175}.Release_SelfContained|Any CPU.Build.0 = Release_SelfContained|Any CPU
+		{77900356-25F3-4A24-B638-845C784C1175}.Release_SelfContained|Any CPU.ActiveCfg = Release|Any CPU
+		{77900356-25F3-4A24-B638-845C784C1175}.Release_SelfContained|Any CPU.Build.0 = Release|Any CPU
 		{77900356-25F3-4A24-B638-845C784C1175}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77900356-25F3-4A24-B638-845C784C1175}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6019FC1B-3610-4682-BF96-8345C95CB7EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -34,6 +43,18 @@ Global
 		{16D10BC9-08BF-4248-8975-1B54C42EB2C2}.Release_SelfContained|Any CPU.Build.0 = Release_SelfContained|Any CPU
 		{16D10BC9-08BF-4248-8975-1B54C42EB2C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16D10BC9-08BF-4248-8975-1B54C42EB2C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D00ACD9C-20B0-4E4A-8CC9-9DEC941D7747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D00ACD9C-20B0-4E4A-8CC9-9DEC941D7747}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D00ACD9C-20B0-4E4A-8CC9-9DEC941D7747}.Release_SelfContained|Any CPU.ActiveCfg = Release|Any CPU
+		{D00ACD9C-20B0-4E4A-8CC9-9DEC941D7747}.Release_SelfContained|Any CPU.Build.0 = Release|Any CPU
+		{D00ACD9C-20B0-4E4A-8CC9-9DEC941D7747}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D00ACD9C-20B0-4E4A-8CC9-9DEC941D7747}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B69AD86-BDF8-01E8-59B8-E690760BB827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B69AD86-BDF8-01E8-59B8-E690760BB827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B69AD86-BDF8-01E8-59B8-E690760BB827}.Release_SelfContained|Any CPU.ActiveCfg = Release_SelfContained|Any CPU
+		{4B69AD86-BDF8-01E8-59B8-E690760BB827}.Release_SelfContained|Any CPU.Build.0 = Release_SelfContained|Any CPU
+		{4B69AD86-BDF8-01E8-59B8-E690760BB827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B69AD86-BDF8-01E8-59B8-E690760BB827}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

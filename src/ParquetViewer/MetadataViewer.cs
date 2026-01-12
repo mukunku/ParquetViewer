@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Controls;
+using ParquetViewer.Engine;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,11 @@ namespace ParquetViewer
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
         private static readonly string PANDAS_SCHEMA = "pandas";
-        private Engine.ParquetEngine? parquetEngine;
+        private IParquetEngine? _parquetEngine;
 
-        public MetadataViewer(Engine.ParquetEngine parquetEngine) : this()
+        public MetadataViewer(IParquetEngine parquetEngine) : this()
         {
-            this.parquetEngine = parquetEngine;
+            this._parquetEngine = parquetEngine;
         }
 
         public MetadataViewer()
@@ -57,17 +58,17 @@ namespace ParquetViewer
         private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var metadataResult = new List<(string TabName, string Text)>();
-            if (parquetEngine!.ThriftMetadata != null)
+            if (_parquetEngine!.Metadata != null)
             {
-                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(parquetEngine, parquetEngine.RecordCount, parquetEngine.Fields.Count);
+                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(_parquetEngine, _parquetEngine.RecordCount, _parquetEngine.Fields.Count);
                 metadataResult.Add((THRIFT_METADATA, json));
             }
             else
                 metadataResult.Add((THRIFT_METADATA, Resources.Errors.NoThriftMetadataAvailableErrorMessage));
 
-            if (parquetEngine.CustomMetadata != null)
+            if (_parquetEngine.CustomMetadata != null)
             {
-                foreach (var _customMetadata in parquetEngine.CustomMetadata)
+                foreach (var _customMetadata in _parquetEngine.CustomMetadata)
                 {
                     string value = _customMetadata.Value;
                     if (PANDAS_SCHEMA.Equals(_customMetadata.Key))
@@ -97,7 +98,7 @@ namespace ParquetViewer
             {
                 MessageBox.Show(this,
                     Resources.Errors.MetadataReadErrorMessage + Environment.NewLine + e.Error,
-                    Resources.Errors.MetadataReadErrorTitle, 
+                    Resources.Errors.MetadataReadErrorTitle,
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
@@ -123,60 +124,6 @@ namespace ParquetViewer
             }
         }
 
-        private void copyRawThriftMetadataButton_Click(object sender, EventArgs e)
-        {
-            var rawJson = JsonSerializer.Serialize(this.parquetEngine!.ThriftMetadata,
-                new JsonSerializerOptions()
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, //don't escape anything to make it human readable
-                    WriteIndented = true
-                });
-
-            try
-            {
-                Clipboard.SetText(rawJson);
-                MessageBox.Show(Resources.Strings.ThriftMetadataCopiedToClipboardMessage, "ParquetViewer");
-            }
-            catch (Exception)
-            {
-                var selection = MessageBox.Show(this,
-                    Resources.Errors.CopyRawMetadataFailedErrorMessage, 
-                    Resources.Errors.CopyRawMetadataFailedErrorTitle, 
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (selection == DialogResult.Yes)
-                {
-                    using var saveFileDialog = new SaveFileDialog();
-                    saveFileDialog.Filter = "JSON file|*.json";
-                    saveFileDialog.Title = Resources.Strings.SaveRawMetadataToFileDialogTitle;
-                    saveFileDialog.ShowDialog();
-
-                    if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
-                    {
-                        using var fileStream = File.OpenWrite(saveFileDialog.FileName);
-                        using var writer = new StreamWriter(fileStream);
-                        writer.Write(rawJson);
-
-                        MessageBox.Show(this,
-                            Resources.Strings.MetadataSuccessfullyExportedToFileMessageFormat.Format(saveFileDialog.FileName),
-                            Resources.Strings.MetadataSuccessfullyExportedToFileMessageTitle, 
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                }
-            }
-        }
-
-        private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (this.tabControl.TabCount == 0)
-                return;
-
-            //Copy raw option is only for Thrift metadata.
-            if (this.tabControl.SelectedIndex == 0)
-                this.copyRawThriftMetadataButton.Visible = true;
-            else
-                this.copyRawThriftMetadataButton.Visible = false;
-        }
-
         public override void SetTheme(Theme theme)
         {
             if (DesignMode)
@@ -186,7 +133,6 @@ namespace ParquetViewer
 
             base.SetTheme(theme);
             this.closeButton.ForeColor = Color.Black;
-            this.copyRawThriftMetadataButton.ForeColor = Color.Black;
         }
     }
 }

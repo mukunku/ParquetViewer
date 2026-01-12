@@ -247,4 +247,19 @@ Eğer dosyanın aslında geçerli olduğunu düşünüyorsanız lutfen projenin 
   <data name="CopyErrorMessageText" xml:space="preserve">
     <value>(Kopyalamak için CTRL+C)</value>
   </data>
+  <data name="DecimalValueUnknownSizeTooLargeErrorMessageFormat" xml:space="preserve">
+    <value>ParquetViewer'ın desteklediği aralığın, DECIMAL({3}, {4}) ve DECIMAL({3}, 0), dışında bir DECIMAL değerine rastlanıldı</value>
+  </data>
+  <data name="ListsWithNullsErrorMessage" xml:space="preserve">
+    <value>null içeren Listeler desteklenmemektedir.</value>
+  </data>
+  <data name="ListsWithNullsErrorTitle" xml:space="preserve">
+    <value>Tüm kayıtlar okunamadı</value>
+  </data>
+  <data name="QueryExecutionErrorTitle" xml:space="preserve">
+    <value>Sorgu işlenirken bir hata oluştu</value>
+  </data>
+  <data name="RenderResultsErrorTitle" xml:space="preserve">
+    <value>Sonuçlar gösterilirken bir hata oluştu</value>
+  </data>
 </root>

@@ -19,7 +19,7 @@ namespace ParquetViewer.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Errors {
@@ -133,6 +133,15 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Encountered DECIMAL data outside ParquetViewer&apos;s supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0).
+        /// </summary>
+        internal static string DecimalValueUnknownSizeTooLargeErrorMessageFormat {
+            get {
+                return ResourceManager.GetString("DecimalValueUnknownSizeTooLargeErrorMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File export failed.
         /// </summary>
         internal static string ExportFailedErrorTitle {
@@ -210,6 +219,24 @@ namespace ParquetViewer.Resources {
         internal static string InvalidQueryErrorTitle {
             get {
                 return ResourceManager.GetString("InvalidQueryErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lists with null values are not supported. Relevant rows have been removed..
+        /// </summary>
+        internal static string ListsWithNullsErrorMessage {
+            get {
+                return ResourceManager.GetString("ListsWithNullsErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read all records.
+        /// </summary>
+        internal static string ListsWithNullsErrorTitle {
+            get {
+                return ResourceManager.GetString("ListsWithNullsErrorTitle", resourceCulture);
             }
         }
         
@@ -320,6 +347,24 @@ namespace ParquetViewer.Resources {
         internal static string ParquetSchemaReadErrorMessage {
             get {
                 return ResourceManager.GetString("ParquetSchemaReadErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error executing query.
+        /// </summary>
+        internal static string QueryExecutionErrorTitle {
+            get {
+                return ResourceManager.GetString("QueryExecutionErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error rendering results.
+        /// </summary>
+        internal static string RenderResultsErrorTitle {
+            get {
+                return ResourceManager.GetString("RenderResultsErrorTitle", resourceCulture);
             }
         }
         

@@ -287,4 +287,24 @@ If you think the file is valid please consider opening an issue in the GitHub re
     <value>(CTRL+C to copy)</value>
     <comment>Shown in the messagebox for unhandled exceptions to teach users how to copy the error text</comment>
   </data>
+  <data name="DecimalValueUnknownSizeTooLargeErrorMessageFormat" xml:space="preserve">
+    <value>Encountered DECIMAL data outside ParquetViewer's supported range between DECIMAL({3}, {4}) and DECIMAL({3}, 0)</value>
+    <comment>Shown when a field contains decimal values outside the supported range for .NET AND we don't know it's name, scale, or precision</comment>
+  </data>
+  <data name="ListsWithNullsErrorMessage" xml:space="preserve">
+    <value>Lists with null values are not supported. Relevant rows have been removed.</value>
+    <comment>Shown when using the Query Editor and a List field in the result contains nulls</comment>
+  </data>
+  <data name="ListsWithNullsErrorTitle" xml:space="preserve">
+    <value>Could not read all records</value>
+    <comment>Shown when using the Query Editor and a List field in the result contains nulls</comment>
+  </data>
+  <data name="QueryExecutionErrorTitle" xml:space="preserve">
+    <value>Error executing query</value>
+    <comment>Shown in the Query Editor when the query fails to run due to an unexpected exception</comment>
+  </data>
+  <data name="RenderResultsErrorTitle" xml:space="preserve">
+    <value>Error rendering results</value>
+    <comment>Shown when values can't be converted/shown in the Query Editor page</comment>
+  </data>
 </root>

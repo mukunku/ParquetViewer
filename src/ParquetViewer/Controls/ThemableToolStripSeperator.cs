@@ -1,10 +1,12 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
     public class ThemableToolStripSeperator : ToolStripSeparator
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public new Color BackColor { get; set; } = Color.Transparent;
 
         /// <remarks>

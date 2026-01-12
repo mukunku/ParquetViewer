@@ -1,9 +1,10 @@
-﻿using ParquetViewer.Engine.Types;
+﻿using ParquetViewer.Engine.ParquetNET.Types;
+using ParquetViewer.Engine.Types;
 using System.Collections;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
-    internal class ListValueBuilder
+    public class ListValueBuilder
     {
         private int[] _repetitionLevels;
         private int[] _definitionLevels;
@@ -17,7 +18,10 @@ namespace ParquetViewer.Engine
             ArgumentNullException.ThrowIfNull(data);
             ArgumentNullException.ThrowIfNull(type);
 
-            _type = type;
+            if (type == typeof(byte[]))
+                _type = typeof(ByteArrayValue);
+            else
+                _type = type;
 
             //We assume they all have the same length
             _definitionLevels = definitionLevels;
@@ -58,7 +62,11 @@ namespace ParquetViewer.Engine
                 var listValue = ReadListValue(rowRange, numberOfListParents, () =>
                 {
                     //TODO: optimize to avoid skipping all rows every time
-                    return _data.Skip(rowRange.Start.Value).Take(rowRange.End.Value - rowRange.Start.Value).ToArray();
+                    return _data
+                    .Select(data => data is byte[] bytes ? new ByteArrayValue(bytes) : data) //Need to handle byte array type separately
+                    .Skip(rowRange.Start.Value)
+                    .Take(rowRange.End.Value - rowRange.Start.Value)
+                    .ToArray();
                 },
                 (int index) =>
                 {

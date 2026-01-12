@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <AssemblyName>ParquetViewer</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -30,17 +30,27 @@
     <LangVersion>default</LangVersion>
     <Optimize>True</Optimize>
     <IsPublishable>True</IsPublishable>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishSelfContained>false</PublishSelfContained>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_SelfContained|AnyCPU'">
     <DebugType>full</DebugType>
     <LangVersion>default</LangVersion>
     <Optimize>True</Optimize>
     <IsPublishable>True</IsPublishable>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishSelfContained>true</PublishSelfContained>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="Controls\DelayedOnChangedTextBox.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Update="Resources\Errors.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -64,15 +74,22 @@
   <ItemGroup>
     <PackageReference Include="Apache.Arrow" />
     <PackageReference Include="dotnet-file-associator" />
+    <PackageReference Include="FCTB" />
     <PackageReference Include="MiniExcel" />
     <PackageReference Include="NAudio" />
     <PackageReference Include="NAudio.WinForms" />
     <PackageReference Include="Parquet.Net" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ParquetViewer.Engine.DuckDB\ParquetViewer.Engine.DuckDB.csproj" />
+    <ProjectReference Include="..\ParquetViewer.Engine.ParquetNET\ParquetViewer.Engine.ParquetNET.csproj" />
     <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Update="Resources\Errors.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Errors.Designer.cs</LastGenOutput>

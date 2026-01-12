@@ -150,9 +150,6 @@
   <data name="DeselectAllCheckmarkTextFormat" xml:space="preserve">
     <value>Seçimleri Kaldır (Sayı: {0})</value>
   </data>
-  <data name="UnsupportedFieldText" xml:space="preserve">
-    <value>(Desteklenmiyor)</value>
-  </data>
   <data name="ThriftMetadataCopiedToClipboardMessage" xml:space="preserve">
     <value>Ham Thrift metadatası panoya kopyalandı.</value>
   </data>
@@ -320,5 +317,20 @@ Tercihinizi Düzen menüsünden istediğiniz zaman değiştirebilirsiniz.</value
   </data>
   <data name="DarkModePromptTitle" xml:space="preserve">
     <value>Gece Moduna Geçilsin mi?</value>
+  </data>
+  <data name="QueryRunningStatusText" xml:space="preserve">
+    <value>İşleniyor:</value>
+  </data>
+  <data name="QueryFinishedStatusText" xml:space="preserve">
+    <value>Tamamlandı:</value>
+  </data>
+  <data name="QueryZoomStatusTextFormat" xml:space="preserve">
+    <value>Sorgu Zumu: {0}%</value>
+  </data>
+  <data name="ByteArraysNotSupportedErrorMessage" xml:space="preserve">
+    <value>Ne yazık ki byte[] alanlar sorgu sonuçlarında gösterilememektedir. Değerleri null olarak gösterilecektir.</value>
+  </data>
+  <data name="ByteArraysNotSupportedErrorTitle" xml:space="preserve">
+    <value>Byte[] tipli sonuçlar desteklenmemektedir</value>
   </data>
 </root>

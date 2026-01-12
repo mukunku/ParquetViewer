@@ -55,7 +55,7 @@ jobs:
                 Write-Host "Found English file: $englishFilePath"
                 [xml]$englishContent = Get-Content -Path $englishFilePath
                 $englishContent.root.data | ForEach-Object {
-                    if (-not $_.HasAttribute('type')) {
+                    if ((-not $_.HasAttribute('type')) -and (-not $_.HasAttribute('mimetype'))) {
                     $englishData[$_.name] = $_.value
                     $englishComments[$_.name] = $_.comment
                     }

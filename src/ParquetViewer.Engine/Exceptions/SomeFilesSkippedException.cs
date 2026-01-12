@@ -6,7 +6,7 @@
 
         public List<SkippedFile> SkippedFiles { get; private set; }
 
-        internal SomeFilesSkippedException(IEnumerable<KeyValuePair<string, Exception>> skippedFiles) : base("Some files could not be opened.")
+        public SomeFilesSkippedException(IEnumerable<KeyValuePair<string, Exception>> skippedFiles) : base("Some files could not be opened.")
         {
             SkippedFiles = new List<SkippedFile>();
 

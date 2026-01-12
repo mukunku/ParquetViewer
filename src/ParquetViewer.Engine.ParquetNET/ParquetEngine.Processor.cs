@@ -1,17 +1,20 @@
 ﻿using Parquet;
+using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
     public partial class ParquetEngine
     {
-        public static readonly string TotalRecordCountExtendedPropertyKey = "TOTAL_RECORD_COUNT";
-
         public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
         {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(recordCount, nameof(recordCount));
+            ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
+
             long recordsLeftToRead = recordCount;
             DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
 
@@ -30,7 +33,6 @@ namespace ParquetViewer.Engine
             return (logProgress) =>
             {
                 var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
-                datatable.ExtendedProperties[TotalRecordCountExtendedPropertyKey] = result.DataSetSize;
                 return datatable;
             };
         }
@@ -82,28 +84,30 @@ namespace ParquetViewer.Engine
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var field = column.ParentSchema.GetChild(column.Name);
-                switch (field.FieldType)
+                var field = column.ParentSchema.Children.FirstOrDefault(c => c.Path == column.Name) as ParquetSchemaElement;
+                switch (field?.FieldType)
                 {
-                    case ParquetSchemaElement.FieldTypeId.Primitive:
+                    case FieldTypeId.Primitive:
                         await ReadPrimitiveField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case ParquetSchemaElement.FieldTypeId.List:
+                    case FieldTypeId.List:
                         var listField = field.GetListField();
                         var itemField = listField.GetListItemField();
                         var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
                         await ReadListField(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
                             skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case ParquetSchemaElement.FieldTypeId.Map:
+                    case FieldTypeId.Map:
                         await ReadMapField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
-                    case ParquetSchemaElement.FieldTypeId.Struct:
+                    case FieldTypeId.Struct:
                         await ReadStructField(dataTable, groupReader, rowBeginIndex, field, skipRecords,
                             readRecords, isFirstColumn, cancellationToken, progress);
                         break;
+                    default:
+                        throw new InvalidDataException($"`{column.Name}`");
                 }
 
                 isFirstColumn = false;
@@ -151,7 +155,7 @@ namespace ParquetViewer.Engine
                     }
                     else if (fieldType == typeof(ByteArrayValue))
                     {
-                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue(field.Path, (byte[])value);
+                        dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue((byte[])value);
                     }
                     else
                     {
@@ -170,7 +174,7 @@ namespace ParquetViewer.Engine
             var lastMilestone = "Start";
             try
             {
-                if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.List)
+                if (itemField.FieldType == FieldTypeId.List)
                 {
                     var nestedListField = itemField.GetListField();
                     var nestedItemField = nestedListField.GetListItemField();
@@ -179,7 +183,7 @@ namespace ParquetViewer.Engine
                     await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0,
                         skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
                 }
-                else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Primitive)
+                else if (itemField.FieldType == FieldTypeId.Primitive)
                 {
                     int rowIndex = rowBeginIndex;
 
@@ -212,7 +216,7 @@ namespace ParquetViewer.Engine
                         progress?.Report(1);
                     }
                 }
-                else if (itemField.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
+                else if (itemField.FieldType == FieldTypeId.Struct)
                 {
                     //Read struct data as a new datatable
                     DataTableLite structFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
@@ -243,13 +247,24 @@ namespace ParquetViewer.Engine
                                 }
 
                                 var columnValues = (ListValue)valueArray[columnOrdinal];
-                                for (var rowValueIndex = 0; rowValueIndex < columnValues.Length; rowValueIndex++)
+
+                                if (columnValues.Data.Count == 0 && columnOrdinal != 0) //All values are null
+                                {
+                                    for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
+                                    {
+                                        newStructFieldTable.Rows[i][columnOrdinal] = DBNull.Value;
+                                    }
+
+                                    continue;
+                                }
+
+                                for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
                                 {
                                     lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
 
                                     var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("Column value missing during pivot");
                                     #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
-                                    if (columnValue is StructValue structValue && structValue.IsList)
+                                    if (columnValue is StructValueExt structValue && structValue.IsList)
                                     {
                                         //We need to convert `columnValue` from struct to a list of structs as it was a nested structure
                                         var areTypesAsExpected = newStructFieldTable.Columns.Values.ElementAt(columnOrdinal).Type == typeof(ListValue);
@@ -258,14 +273,19 @@ namespace ParquetViewer.Engine
                                             throw new UnsupportedFieldException("Failed to pivot list of structs.");
                                         }
 
-                                        var nestedStructFieldTable = PivotTable(structValue.Data.Row, structValue.Data.Table.Clone());
+                                        if (structValue.Data is not DataRowLite dataRowLite)
+                                        {
+                                            throw new InvalidDataException("Struct data wasn't the expected type.");
+                                        }
+
+                                        var nestedStructFieldTable = PivotTable(structValue.Data.Row, dataRowLite.Table.Clone());
                                         var listValues = new ArrayList(nestedStructFieldTable.Rows.Count);
                                         for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
                                         {
                                             var row = nestedStructFieldTable.GetRowAt(i);
-                                            listValues.Add(new StructValue(itemField.Path, row));
+                                            listValues.Add(new StructValueExt(row));
                                         }
-                                        columnValue = new ListValue(listValues, typeof(StructValue));
+                                        columnValue = new ListValue(listValues, typeof(StructValueExt));
                                     }
                                     #endregion
 
@@ -296,7 +316,7 @@ namespace ParquetViewer.Engine
                                 }
                                 else
                                 {
-                                    listValues.Add(new StructValue(itemField.Path, dataRow) { IsList = itemField.NumberOfListParents > 1 });
+                                    listValues.Add(new StructValueExt(dataRow) { IsList = itemField.NumberOfListParents > 1 });
                                 }
                             }
                             return listValues;
@@ -307,7 +327,7 @@ namespace ParquetViewer.Engine
                         if (isFirstColumn)
                             dataTable.NewRow();
 
-                        dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValue));
+                        dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValueExt));
                         rowIndex++;
                     }
                 }
@@ -342,7 +362,7 @@ namespace ParquetViewer.Engine
             var keyDataEnumerable = keyDataColumn.GetDataWithPaddedNulls(keyField);
             var valueDataEnumerable = valueDataColumn.GetDataWithPaddedNulls(valueField);
 
-            var dataEnumerable = Helpers.PairEnumerables(keyDataEnumerable, valueDataEnumerable, DBNull.Value);
+            var dataEnumerable = Engine.Helpers.PairEnumerables(keyDataEnumerable, valueDataEnumerable, DBNull.Value);
 
             var levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
             var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
@@ -447,7 +467,7 @@ namespace ParquetViewer.Engine
                 else
                 {
                     var dataRow = structFieldTable.GetRowAt(i);
-                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(field.Path, dataRow);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new StructValueExt(dataRow);
                 }
                 rowIndex++;
             }
@@ -477,23 +497,23 @@ namespace ParquetViewer.Engine
 
         private DataTableLite BuildDataTable(ParquetSchemaElement? parent, List<string> fields, int expectedRecordCount)
         {
-            parent ??= this.ParquetSchemaTree;
+            parent ??= (ParquetSchemaElement)this.Metadata.SchemaTree;
             DataTableLite dataTable = new(expectedRecordCount);
             foreach (var field in fields)
             {
                 var schema = parent.GetChild(field);
-                if (schema.FieldType == ParquetSchemaElement.FieldTypeId.List
+                if (schema.FieldType == FieldTypeId.List
                     || schema.DataField?.IsArray == true)
                 {
                     dataTable.AddColumn(field, typeof(ListValue), parent);
                 }
-                else if (schema.FieldType == ParquetSchemaElement.FieldTypeId.Map)
+                else if (schema.FieldType == FieldTypeId.Map)
                 {
                     dataTable.AddColumn(field, typeof(MapValue), parent);
                 }
-                else if (schema.FieldType == ParquetSchemaElement.FieldTypeId.Struct)
+                else if (schema.FieldType == FieldTypeId.Struct)
                 {
-                    dataTable.AddColumn(field, typeof(StructValue), parent);
+                    dataTable.AddColumn(field, typeof(StructValueExt), parent);
                 }
                 else if (schema.SchemaElement.Type == Parquet.Meta.Type.BYTE_ARRAY
                     && schema.SchemaElement.LogicalType is null
@@ -501,9 +521,20 @@ namespace ParquetViewer.Engine
                 {
                     dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
                 }
+                else if (schema.DataField is DateTimeDataField dateField)
+                {
+                    if (dateField.DateTimeFormat == DateTimeFormat.Date)
+                    {
+                        dataTable.AddColumn(field, typeof(DateOnly), parent);
+                    }
+                    else
+                    {
+                        dataTable.AddColumn(field, typeof(DateTime), parent);
+                    }
+                }
                 else
                 {
-                    var clrType = schema.DataField?.ClrType ?? throw new MalformedFieldException($"`{(parent is not null ? parent + "/" : string.Empty)}/{field}` has no data field");
+                    var clrType = schema.ClrType ?? throw new MalformedFieldException($"`{(parent is not null ? parent + "/" : string.Empty)}/{field}` has no data field");
                     dataTable.AddColumn(field, clrType, parent);
                 }
             }

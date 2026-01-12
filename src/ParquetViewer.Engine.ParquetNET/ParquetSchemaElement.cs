@@ -1,10 +1,13 @@
 ﻿using Parquet.Meta;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
+using ParquetViewer.Engine.ParquetNET.Types;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine.ParquetNET
 {
-    public class ParquetSchemaElement
+    public class ParquetSchemaElement : IParquetSchemaElement
     {
         public string Path => SchemaElement.Name;
         public string PathWithParent => string.Concat(this.Parent?.Parent is not null /*exclude root node*/ ? (this.Parent.Path + "/") : string.Empty, Path);
@@ -40,9 +43,9 @@ namespace ParquetViewer.Engine
             {
                 if (this.DataField is not null)
                     return FieldTypeId.Primitive;
-                else if (this.SchemaElement.LogicalType?.LIST is not null || this.SchemaElement.ConvertedType == ConvertedType.LIST)
+                else if (this.SchemaElement.LogicalType?.LIST is not null || this.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                     return FieldTypeId.List;
-                else if (this.SchemaElement.LogicalType?.MAP is not null || this.SchemaElement.ConvertedType == ConvertedType.MAP)
+                else if (this.SchemaElement.LogicalType?.MAP is not null || this.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.MAP)
                     return FieldTypeId.Map;
                 else if (this.SchemaElement.NumChildren > 0) //Struct
                     return FieldTypeId.Struct;
@@ -168,27 +171,175 @@ namespace ParquetViewer.Engine
             return field;
         }
         public bool BelongsToListField => this._systemFieldType == SystemFieldTypeId.ListItemNode;
-        public bool BelongsToListOfStructsField => 
+        public bool BelongsToListOfStructsField =>
             this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
-        public int NumberOfListParents => _parentsExcludingRoot.Count(field => field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
+        public int NumberOfListParents => _parentsExcludingRoot.Count(@field => @field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
 
         public int CurrentDefinitionLevel => _parentsExcludingRoot.Append(this)
             .Count(
-                field => field.SchemaElement.RepetitionType == FieldRepetitionType.OPTIONAL
-                || (field._systemFieldType == SystemFieldTypeId.ListNode && field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
+                @field => @field.SchemaElement.RepetitionType == FieldRepetitionType.OPTIONAL
+                || (@field._systemFieldType == SystemFieldTypeId.ListNode && @field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
             );
+
+        public bool IsPrimitive => FieldType == FieldTypeId.Primitive;
+
+        ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => this.Children.ToList<IParquetSchemaElement>();
+
+        public System.Type ClrType => this.DataField?.ClrType ?? this.FieldType switch
+        {
+            FieldTypeId.List => typeof(ListValue),
+            FieldTypeId.Map => typeof(MapValue),
+            FieldTypeId.Struct => typeof(StructValueExt),
+            _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
+        };
+
+        public object? LogicalType => LogicalTypeToJSONObject(this.SchemaElement.LogicalType);
+
+        private static object? LogicalTypeToJSONObject(LogicalType? logicalType)
+        {
+            if (logicalType is null)
+            {
+                return null;
+            }
+            else if (logicalType.STRING is not null)
+            {
+                return new { Name = nameof(logicalType.STRING) };
+            }
+            else if (logicalType.MAP is not null)
+            {
+                return new { Name = nameof(logicalType.MAP) };
+            }
+            else if (logicalType.LIST is not null)
+            {
+                return new { Name = nameof(logicalType.LIST) };
+            }
+            else if (logicalType.ENUM is not null)
+            {
+                return new { Name = nameof(logicalType.ENUM) };
+            }
+            else if (logicalType.DECIMAL is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.DECIMAL),
+                    logicalType.DECIMAL.Scale,
+                    logicalType.DECIMAL.Precision
+                };
+            }
+            else if (logicalType.DATE is not null)
+            {
+                return new { Name = nameof(logicalType.DATE) };
+            }
+            else if (logicalType.TIME is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.TIME),
+                    logicalType.TIME.IsAdjustedToUTC,
+                    Unit = TimeUnitToString(logicalType.TIME.Unit)
+                };
+            }
+            else if (logicalType.TIMESTAMP is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.TIMESTAMP),
+                    logicalType.TIMESTAMP.IsAdjustedToUTC,
+                    Unit = TimeUnitToString(logicalType.TIMESTAMP.Unit)
+                };
+            }
+            else if (logicalType.INTEGER is not null)
+            {
+                return new
+                {
+                    Name = nameof(logicalType.INTEGER),
+                    logicalType.INTEGER.BitWidth,
+                    logicalType.INTEGER.IsSigned
+                };
+            }
+            else if (logicalType.JSON is not null)
+            {
+                return new { Name = nameof(logicalType.JSON) };
+            }
+            else if (logicalType.BSON is not null)
+            {
+                return new { Name = nameof(logicalType.BSON) };
+            }
+            else if (logicalType.UUID is not null)
+            {
+                return new { Name = nameof(logicalType.UUID) };
+            }
+            else if (logicalType.UNKNOWN is not null)
+            {
+                return new { Name = $"{logicalType.UNKNOWN.GetType().Name}" };
+            }
+            else
+            {
+                return new { Name = nameof(logicalType.UNKNOWN) };
+            }
+        }
+
+        static string TimeUnitToString(TimeUnit? timeUnit)
+        {
+            var timeUnitString = string.Empty;
+            if (timeUnit?.MILLIS is not null)
+            {
+                timeUnitString = nameof(timeUnit.MILLIS);
+            }
+            else if (timeUnit?.MICROS is not null)
+            {
+                timeUnitString = nameof(timeUnit.MICROS);
+            }
+            else if (timeUnit?.NANOS is not null)
+            {
+                timeUnitString = nameof(timeUnit.NANOS);
+            }
+            return timeUnitString;
+        }
+
+        public RepetitionTypeId? RepetitionType => this.SchemaElement.RepetitionType switch
+        {
+            FieldRepetitionType.REQUIRED => RepetitionTypeId.Required,
+            FieldRepetitionType.OPTIONAL => RepetitionTypeId.Optional,
+            FieldRepetitionType.REPEATED => RepetitionTypeId.Repeated,
+            _ => null
+        };
+
+        public int? TypeLength => this.SchemaElement.TypeLength;
+        public int? NumChildren => this.SchemaElement.NumChildren;
+        public string? ConvertedType => this.SchemaElement.ConvertedType?.ToString();
+        public int? Scale => this.SchemaElement.Scale;
+        public int? Precision => this.SchemaElement.Precision;
+        object? IParquetSchemaElement.LogicalType => this.LogicalType;
+        public string? Type => this.SchemaElement.Type?.ToString();
 
         private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
             => new InvalidOperationException($"Can't get {fieldType} node from '{this.Parent?._systemFieldType}' " +
                     $"for `{this.Parent?.Path + '/' + this.Path}` with types '{this.Parent?.FieldType.ToString() + '/' + this.FieldType.ToString()}'");
 
-        public enum FieldTypeId
-        {
-            Primitive,
-            List,
-            Struct,
-            Map
-        }
+        IParquetSchemaElement IParquetSchemaElement.GetChildCI(string name)
+            => GetChildCI(name);
+
+        IParquetSchemaElement IParquetSchemaElement.GetChild(string name)
+            => GetChild(name);
+
+        IParquetSchemaElement IParquetSchemaElement.GetListField()
+            => GetListField();
+
+        IParquetSchemaElement IParquetSchemaElement.GetListItemField()
+            => GetListItemField();
+
+        IParquetSchemaElement IParquetSchemaElement.GetSingleOrByName(string name)
+            => GetSingleOrByName(name);
+
+        IParquetSchemaElement IParquetSchemaElement.GetMapKeyValueField()
+            => GetMapKeyValueField();
+
+        IParquetSchemaElement IParquetSchemaElement.GetMapKeyField()
+            => GetMapKeyField();
+
+        IParquetSchemaElement IParquetSchemaElement.GetMapValueField()
+            => GetMapValueField();
 
         private enum SystemFieldTypeId
         {

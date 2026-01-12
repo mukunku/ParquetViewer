@@ -4,9 +4,9 @@ using static ParquetViewer.Engine.DataTableLite;
 
 namespace ParquetViewer.Engine
 {
-    internal class DataTableLite
+    public class DataTableLite
     {
-        internal record ColumnLite(string Name, Type Type, ParquetSchemaElement ParentSchema, int Ordinal);
+        public record ColumnLite(string Name, Type Type, IParquetSchemaElement ParentSchema, int Ordinal);
 
         private int _ordinal = 0;
         private readonly Dictionary<string, ColumnLite> _columns = new();
@@ -30,10 +30,12 @@ namespace ParquetViewer.Engine
 
         public DataTableLite(int expectedRowCount = 1000)
         {
+            ArgumentOutOfRangeException.ThrowIfLessThan(expectedRowCount, 0);
+
             this._rows = new(expectedRowCount);
         }
 
-        public ColumnLite AddColumn(string name, Type type, ParquetSchemaElement parent)
+        public ColumnLite AddColumn(string name, Type type, IParquetSchemaElement parent)
         {
             if (_rows.Count > 0)
             {
@@ -132,12 +134,12 @@ namespace ParquetViewer.Engine
         }
     }
 
-    internal class DataRowLite
+    public class DataRowLite : IDataRowLite
     {
+        public IReadOnlyCollection<string> ColumnNames => Columns.Keys;
         public Dictionary<string, ColumnLite> Columns { get; }
         public object[] Row { get; }
         public DataTableLite Table { get; }
-
         public DataRowLite(object[] data, IEnumerable<ColumnLite> columns, DataTableLite table)
         {
             ArgumentNullException.ThrowIfNull(data);
@@ -152,20 +154,6 @@ namespace ParquetViewer.Engine
                 throw new ArgumentException($"Data length {data.Length} doesn't match number of columns {columns.Count()}", nameof(data));
             }
         }
-
-        public DataTable ToDataTable()
-        {
-            var dt = new DataTable();
-            foreach (var column in this.Columns)
-            {
-                dt.Columns.Add(new DataColumn(column.Key, column.Value.Type));
-            }
-            var row = dt.NewRow();
-            row.ItemArray = this.Row;
-            dt.Rows.Add(row);
-            return dt;
-        }
-
         public object GetValue(string columnName)
         {
             if (!this.Columns.ContainsKey(columnName))
@@ -184,5 +172,12 @@ namespace ParquetViewer.Engine
             }
             throw new IndexOutOfRangeException($"Could not get value for column `{columnName}`");
         }
+    }
+
+    public interface IDataRowLite
+    {
+        IReadOnlyCollection<string> ColumnNames { get; }
+        object[] Row { get; }
+        object GetValue(string columnName);
     }
 }

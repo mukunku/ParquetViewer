@@ -161,10 +161,6 @@
     <value>Deselect All (Count: {0})</value>
     <comment>Shown in the field selection dialog to bulk deselect checkmarks</comment>
   </data>
-  <data name="UnsupportedFieldText" xml:space="preserve">
-    <value>(Unsupported)</value>
-    <comment>Shown in the field selection dialog next to field names to indicate the field is not supported for viewing with ParquetViewer</comment>
-  </data>
   <data name="ThriftMetadataCopiedToClipboardMessage" xml:space="preserve">
     <value>Raw Thrift metadata copied to clipboard.</value>
     <comment>Shown when the user clicks the Copy Raw Thrift Metadata button</comment>
@@ -377,5 +373,25 @@ You can always toggle this on/off from the Edit menu.</value>
   <data name="DarkModePromptTitle" xml:space="preserve">
     <value>Switch to Dark Mode?</value>
     <comment>Message box title shown to the user asking if they'd like to switch to dark mode</comment>
+  </data>
+  <data name="QueryRunningStatusText" xml:space="preserve">
+    <value>Running:</value>
+    <comment>Shown in the Query Editor tool when the query is running</comment>
+  </data>
+  <data name="QueryFinishedStatusText" xml:space="preserve">
+    <value>Finished in:</value>
+    <comment>Shown in the Query Editor status bar when the query finishes executing</comment>
+  </data>
+  <data name="QueryZoomStatusTextFormat" xml:space="preserve">
+    <value>Query Zoom: {0}%</value>
+    <comment>Text format used in the Query Editor tool to display the current zoom level</comment>
+  </data>
+  <data name="ByteArraysNotSupportedErrorMessage" xml:space="preserve">
+    <value>Unfortunately byte[] types are currently unsupported in query results. Values will be shown as null.</value>
+    <comment>Shown when a byte[] type is in the results in the Query Editor window. As these types are currently not supported by DuckDB.</comment>
+  </data>
+  <data name="ByteArraysNotSupportedErrorTitle" xml:space="preserve">
+    <value>Byte arrays not supported</value>
+    <comment>Shown when a byte[] type is in the results in the Query Editor window. As these types are currently not supported by DuckDB.</comment>
   </data>
 </root>

@@ -19,7 +19,7 @@ namespace ParquetViewer.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Strings {
@@ -77,6 +77,24 @@ namespace ParquetViewer.Resources {
         internal static string AnalyticsConsentPromptTitle {
             get {
                 return ResourceManager.GetString("AnalyticsConsentPromptTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unfortunately byte[] types are currently unsupported in query results. Values will be shown as null..
+        /// </summary>
+        internal static string ByteArraysNotSupportedErrorMessage {
+            get {
+                return ResourceManager.GetString("ByteArraysNotSupportedErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Byte arrays not supported.
+        /// </summary>
+        internal static string ByteArraysNotSupportedErrorTitle {
+            get {
+                return ResourceManager.GetString("ByteArraysNotSupportedErrorTitle", resourceCulture);
             }
         }
         
@@ -460,6 +478,24 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Finished in:.
+        /// </summary>
+        internal static string QueryFinishedStatusText {
+            get {
+                return ResourceManager.GetString("QueryFinishedStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Running:.
+        /// </summary>
+        internal static string QueryRunningStatusText {
+            get {
+                return ResourceManager.GetString("QueryRunningStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to NULL CHECK: 
         ///    WHERE field_name IS NULL
         ///    WHERE field_name IS NOT NULL
@@ -491,6 +527,15 @@ namespace ParquetViewer.Resources {
         internal static string QuerySyntaxHelpTitle {
             get {
                 return ResourceManager.GetString("QuerySyntaxHelpTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Query Zoom: {0}%.
+        /// </summary>
+        internal static string QueryZoomStatusTextFormat {
+            get {
+                return ResourceManager.GetString("QueryZoomStatusTextFormat", resourceCulture);
             }
         }
         
@@ -592,15 +637,6 @@ namespace ParquetViewer.Resources {
         internal static string UnsupportedFieldCountTextFormat {
             get {
                 return ResourceManager.GetString("UnsupportedFieldCountTextFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to (Unsupported).
-        /// </summary>
-        internal static string UnsupportedFieldText {
-            get {
-                return ResourceManager.GetString("UnsupportedFieldText", resourceCulture);
             }
         }
     }

@@ -1,19 +1,13 @@
-﻿using System.Collections;
+﻿using ParquetViewer.Engine.Types;
+using System.Collections;
 
-namespace ParquetViewer.Engine.Types
+namespace ParquetViewer.Engine
 {
-    public class ListValue : IComparable<ListValue>, IComparable, IEnumerable<object>
+    public class ListValue : IListValue
     {
         public IList Data { get; }
-        public Type? Type { get; private set; }
 
-        public int Length => Data.Count;
-
-        public ListValue(Array data)
-        {
-            Data = data ?? throw new ArgumentNullException(nameof(data));
-            Type = Data.GetType().GetElementType();
-        }
+        public Type Type { get; }
 
         public ListValue(ArrayList data, Type type)
         {
@@ -35,14 +29,14 @@ namespace ParquetViewer.Engine.Types
             using var ms = new MemoryStream();
             using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
             {
-                StructValue.WriteValue(jsonWriter, this, false);
+                Helpers.WriteValue(jsonWriter, this, false);
             }
             ms.Position = 0;
             using var sr = new StreamReader(ms);
             return sr.ReadToEnd();
         }
 
-        public int CompareTo(ListValue? other)
+        public int CompareTo(IListValue? other)
         {
             if (other is null)
                 return 1;
@@ -72,7 +66,7 @@ namespace ParquetViewer.Engine.Types
 
         public int CompareTo(object? obj)
         {
-            if (obj is ListValue list)
+            if (obj is IListValue list)
                 return CompareTo(list);
             else
                 return 1;

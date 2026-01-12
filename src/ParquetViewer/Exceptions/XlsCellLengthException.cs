@@ -3,7 +3,7 @@ using System;
 
 namespace ParquetViewer.Exceptions
 {
-    public class XlsCellLengthException: Exception
+    public class XlsCellLengthException : Exception
     {
         public readonly FileType FileType = FileType.XLS;
 

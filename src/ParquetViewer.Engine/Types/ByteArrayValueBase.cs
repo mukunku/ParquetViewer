@@ -1,41 +1,39 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
+using static ParquetViewer.Engine.Types.IByteArrayValue;
 
 namespace ParquetViewer.Engine.Types
 {
-    public class ByteArrayValue : IComparable<ByteArrayValue>, IComparable
+    public class ByteArrayValue : IByteArrayValue
     {
-        public string Name { get; }
         public byte[] Data { get; }
+
 
         private DisplayFormat[]? _possibleDisplayFormats;
         public DisplayFormat[] PossibleDisplayFormats =>
-            _possibleDisplayFormats ??= this.CalculatePossibleDisplayFormats();
+            _possibleDisplayFormats ??= CalculatePossibleDisplayFormats();
 
-        public ByteArrayValue(string name, byte[] data)
+        public ByteArrayValue(byte[] data)
         {
-            this.Name = name;
-            this.Data = data;
+            Data = data;
         }
 
-        public override string ToString() => BitConverter.ToString(this.Data);
+        public override string ToString() => BitConverter.ToString(Data);
 
-        public int CompareTo(ByteArrayValue? other)
+        public int CompareTo(IByteArrayValue? other)
         {
             if (other?.Data is null)
                 return 1;
-            else if (this.Data is null)
+            else if (Data is null)
                 return -1;
             else
-                return ByteArraysEqual(this.Data, other.Data);
+                return Helpers.ByteArraysEqual(Data, other.Data);
         }
-
-        private static int ByteArraysEqual(ReadOnlySpan<byte> a1, ReadOnlySpan<byte> a2) => a1.SequenceCompareTo(a2);
 
         public int CompareTo(object? obj)
         {
-            if (obj is ByteArrayValue byteArray)
+            if (obj is IByteArrayValue byteArray)
                 return CompareTo(byteArray);
             else
                 return 1;
@@ -82,22 +80,6 @@ namespace ParquetViewer.Engine.Types
             possibleDisplayFormats.Add(DisplayFormat.Size);
 
             return possibleDisplayFormats.ToArray();
-        }
-
-        public enum DisplayFormat
-        {
-            Hex = 0,    //Default hexadecimal format
-            IPv6,       // 16 bytes
-            IPv4,       // 4 bytes
-            Guid,       // 16 bytes
-            Short,      // 2 bytes
-            Integer,    // 4 bytes
-            Long,       // 8 bytes
-            Float,      // 4 bytes
-            Double,     // 8 bytes
-            ASCII,      // ASCII text if printable (any size)
-            Base64,     // Base64 encoded string (any size)
-            Size        // Size information (any size)
         }
 
         #region Type Conversions
@@ -165,7 +147,7 @@ namespace ParquetViewer.Engine.Types
             if (Data.Length == 0)
                 return false;
 
-            var printableCount = this.Data.Sum(@byte =>
+            var printableCount = Data.Sum(@byte =>
                 @byte >= ' ' /*32*/ && @byte <= '~' /*126*/ //Printable ASCII range
                 ? 1 : 0);
 

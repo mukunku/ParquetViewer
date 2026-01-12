@@ -168,9 +168,9 @@ namespace ParquetViewer
                 }
                 else if (success == false)
                 {
-                    MessageBox.Show(this, 
-                        Resources.Errors.FileAssociationFailedErrorMessageFormat.Format(exitCode), 
-                        Resources.Errors.FileAssociationFailedErrorTitle, 
+                    MessageBox.Show(this,
+                        Resources.Errors.FileAssociationFailedErrorMessageFormat.Format(exitCode),
+                        Resources.Errors.FileAssociationFailedErrorTitle,
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     SetCheckboxSilent(!associateFileExtensionCheckBox.Checked);
                 }
@@ -209,7 +209,7 @@ namespace ParquetViewer
                     this.newVersionLabel.Image = Resources.Icons.external_link_icon;
                 }
                 else if (latestRelease.Version == Env.AssemblyVersion)
-                {   
+                {
                     this.newVersionLabel.Enabled = false;
                 }
             }

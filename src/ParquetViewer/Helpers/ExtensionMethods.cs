@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers
@@ -17,7 +17,9 @@ namespace ParquetViewer.Helpers
     public static class ExtensionMethods
     {
         private const string DefaultDateTimeFormat = "g";
+        private const string DefaultDateOnlyFormat = "d";
         public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
+        public const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
 
         /// <summary>
         /// Returns a list of all column names within a given datatable
@@ -47,6 +49,15 @@ namespace ParquetViewer.Helpers
             _ => string.Empty
         };
 
+        public static string GetDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
+        {
+            DateFormat.ISO8601 => ISO8601DateOnlyFormat,
+            DateFormat.Default => DefaultDateOnlyFormat,
+            DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
+                UtilityMethods.StripTimeComponentsFromDateFormat(AppSettings.CustomDateFormat) : DefaultDateOnlyFormat,
+            _ => string.Empty
+        };
+
         public static string GetExtension(this FileType fileType)
             => Enum.IsDefined(fileType)
             ? $".{fileType.ToString().ToLowerInvariant()}"
@@ -56,7 +67,7 @@ namespace ParquetViewer.Helpers
 
         public static Size RenderedSize(this PictureBox pictureBox)
         {
-            var wfactor = (double)pictureBox.Image.Width / pictureBox.ClientSize.Width;
+            var wfactor = (double)pictureBox.Image!.Width / pictureBox.ClientSize.Width;
             var hfactor = (double)pictureBox.Image.Height / pictureBox.ClientSize.Height;
 
             var resizeFactor = Math.Max(wfactor, hfactor);
@@ -86,12 +97,6 @@ namespace ParquetViewer.Helpers
         public static bool IsSimple(this Type type)
             => TypeDescriptor.GetConverter(type).CanConvertFrom(typeof(string));
 
-        /// <summary>
-        /// Returns true if the type is a number type.
-        /// </summary>
-        public static bool IsNumber(this Type type) =>
-            System.Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
-
         public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
         {
             if (Enum.IsDefined(typeof(T), value))
@@ -108,54 +113,6 @@ namespace ParquetViewer.Helpers
                 key.DeleteSubKeyTree(name);
             }
         }
-
-        public static Array GetColumnValues(this DataTable dataTable, Type type, string columnName, int skipCount, int fetchCount)
-        {
-            ArgumentNullException.ThrowIfNull(dataTable);
-            ArgumentNullException.ThrowIfNull(type);
-            ArgumentOutOfRangeException.ThrowIfLessThan(skipCount, 0);
-            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
-
-            if (!dataTable.Columns.Contains(columnName))
-                throw new ArgumentException($"Column `{columnName}` does not exist in the datatable");
-
-            var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
-            var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
-            var values = Array.CreateInstance(type, recordCountToRead);
-            var index = 0;
-            foreach(DataRow row in dataTable.Rows)
-            {
-                if (skipCount-- > 0)
-                {
-                    continue;
-                }
-
-                var value = row[columnName];
-                if (value == DBNull.Value)
-                    value = null;
-                else if (value is ByteArrayValue byteArray)
-                    value = byteArray.Data;
-                else if (value is ListValue || value is MapValue || value is StructValue)
-                    throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
-
-                values.SetValue(value, index++);
-
-                if (--fetchCount <= 0)
-                {
-                    break;
-                }
-            }
-
-            return values;
-        }
-
-        public static Type GetNullableVersion(this Type sourceType) => sourceType == null
-                ? throw new ArgumentNullException(nameof(sourceType))
-                : !sourceType.IsValueType
-                    || (sourceType.IsGenericType
-                        && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                ? sourceType
-                : typeof(Nullable<>).MakeGenericType(sourceType);
 
         /// <summary>
         /// Converts a float to a string without using the scientific notation, if possible
@@ -232,8 +189,8 @@ namespace ParquetViewer.Helpers
                 return enumerable;
         }
 
-        /// <remarks>Can't put this into ByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
-        public static bool ToImage(this ByteArrayValue byteArrayValue, out Image? image)
+        /// <remarks>Can't put this into IByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
+        public static bool ToImage(this IByteArrayValue byteArrayValue, [NotNullWhen(true)] out Image? image)
         {
             ArgumentNullException.ThrowIfNull(byteArrayValue);
 
@@ -259,7 +216,33 @@ namespace ParquetViewer.Helpers
             catch { /*swallow*/ }
         }
 
-        public static string Format(this string formatString, params object?[] args) 
+        public static bool ImplementsInterface<T>(this Type? type)
+        {
+            if (type is null)
+                return false;
+            else
+                return typeof(T).IsAssignableFrom(type);
+        }
+
+        public static string Format(this string formatString, params object?[] args)
             => string.Format(formatString, args);
+
+        /// <summary>
+        /// https://huggingface.co/docs/hub/en/datasets-image#parquet-format
+        /// </summary>
+        /// <returns>True if this is a struct with "bytes" and "path" fields</returns>
+        public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
+        {
+            if (structValue.Data.ColumnNames.Count == 2
+                && structValue.Data.ColumnNames.Contains("bytes")
+                && structValue.Data.ColumnNames.Contains("path")
+                && structValue.Data.GetValue("bytes") is ByteArrayValue byteArrayValue)
+            {
+                data = byteArrayValue.Data;
+                return true;
+            }
+            data = null;
+            return false;
+        }
     }
 }

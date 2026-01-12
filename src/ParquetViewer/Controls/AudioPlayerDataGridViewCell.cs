@@ -62,7 +62,7 @@ namespace ParquetViewer.Controls
                 try
                 {
                     //Prepare audio stream
-                    if (this.Value is ByteArrayValue byteArray)
+                    if (this.Value is IByteArrayValue byteArray)
                     {
                         this._audioStream = GetAudioStream(byteArray.Data, out var audioFormat);
                         this._audioFormat = audioFormat;
@@ -79,7 +79,7 @@ namespace ParquetViewer.Controls
                     }
                     else
                     {
-                        throw new InvalidDataException($"{this.ValueType.Name} was not the expected type {nameof(ByteArrayValue)}");
+                        throw new InvalidDataException($"{this.ValueType.Name} was not the expected type {nameof(IByteArrayValue)}");
                     }
                 }
                 catch (Exception ex)
@@ -112,7 +112,7 @@ namespace ParquetViewer.Controls
             this.RedrawCell();
         }
 
-        protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
+        protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object? value, object? formattedValue, string? errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
         {
             InitializePlayerAsync(); //Trigger initialization if it wasn't performed yet
 
@@ -359,7 +359,7 @@ namespace ParquetViewer.Controls
             if (this.DataGridView is null) //just in case
                 return;
 
-            if (this.Value is not ByteArrayValue byteArrayValue)
+            if (this.Value is not IByteArrayValue byteArrayValue)
                 return;
 
             if (this._audioFormat is null || this._audioFormat == AudioFormat.Invalid)
@@ -380,7 +380,7 @@ namespace ParquetViewer.Controls
 
                 CleanupFile(saveFileDialog.FileName); //Delete any existing file (user already confirmed any overwrite)
 
-                if (this.Value is not ByteArrayValue byteArray)
+                if (this.Value is not IByteArrayValue byteArray)
                     throw new InvalidDataException("Audio data was not found");
 
                 await File.WriteAllBytesAsync(saveFileDialog.FileName, byteArray.Data);
@@ -484,7 +484,7 @@ namespace ParquetViewer.Controls
                 }
             }
         }
-    
+
         public enum AudioFormat
         {
             Invalid,

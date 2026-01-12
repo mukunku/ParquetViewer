@@ -6,7 +6,7 @@
 
         public List<SkippedFile> SkippedFiles { get; private set; }
 
-        internal AllFilesSkippedException(IEnumerable<KeyValuePair<string, Exception>> skippedFiles) : base("Could not open any files in directory.")
+        public AllFilesSkippedException(IEnumerable<KeyValuePair<string, Exception>> skippedFiles) : base("Could not open any files in directory.")
         {
             SkippedFiles = new List<SkippedFile>();
             if (skippedFiles is not null)

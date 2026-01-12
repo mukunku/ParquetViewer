@@ -5,6 +5,8 @@
   <ItemGroup>
     <PackageVersion Include="Apache.Arrow" Version="22.1.0" />
     <PackageVersion Include="dotnet-file-associator" Version="0.1.4" />
+    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.4.3" />
+    <PackageVersion Include="FCTB" Version="2.16.24" />
     <PackageVersion Include="MiniExcel" Version="2.0.0-preview.2" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.0.2" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.0.2" />

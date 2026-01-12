@@ -1,14 +1,20 @@
-﻿using System.Collections;
+﻿using ParquetViewer.Engine.Types;
+using System.Collections;
 using System.Text;
 
-namespace ParquetViewer.Engine.Types
+namespace ParquetViewer.Engine
 {
-    public class MapValue : IComparable<MapValue>, IComparable, IEnumerable<(object Key, object Value)>
+    public class MapValue : IMapValue
     {
         public ArrayList Keys { get; }
+
         public Type KeyType { get; }
+
         public ArrayList Values { get; }
+
         public Type ValueType { get; }
+
+        public int Length => Math.Max(Keys.Count, Values.Count);
 
         public MapValue(ArrayList keys, Type keyType, ArrayList values, Type valueType)
         {
@@ -36,49 +42,10 @@ namespace ParquetViewer.Engine.Types
             ValueType = valueType;
         }
 
-        public int Length => Keys.Count;
-
-        public override string ToString()
-        {
-            var mapValuesStringBuilder = new StringBuilder("[");
-            for (var i = 0; i < Length; i++)
-            {
-                if (i != 0)
-                {
-                    mapValuesStringBuilder.Append(',');
-                }
-
-                mapValuesStringBuilder.Append(FormatString(GetMapValue(i)));
-            }
-
-            mapValuesStringBuilder.Append(']');
-            return mapValuesStringBuilder.ToString();
-
-            static string FormatString((object Key, object Value) map)
-            {
-                string key;
-                if (map.Key is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
-                    key = dt.ToString(ParquetEngineSettings.DateDisplayFormat);
-                else
-                    key = map.Key?.ToString() ?? string.Empty;
-
-                string value;
-                if (map.Value is DateTime dt2 && ParquetEngineSettings.DateDisplayFormat is not null)
-                    value = dt2.ToString(ParquetEngineSettings.DateDisplayFormat);
-                else
-                    value = map.Value?.ToString() ?? string.Empty;
-
-                return $"({key},{value})";
-            }
-        }
-
-        private (object Key, object Value) GetMapValue(int index)
-            => (Keys[index] ?? DBNull.Value, Values[index] ?? DBNull.Value);
-
         /// <summary>
         /// Sorts by Key first, then Value.
         /// </summary>
-        public int CompareTo(MapValue? other)
+        public int CompareTo(IMapValue? other)
         {
             if (other is null)
                 return 1;
@@ -113,7 +80,7 @@ namespace ParquetViewer.Engine.Types
 
         public int CompareTo(object? obj)
         {
-            if (obj is MapValue mapValue)
+            if (obj is IMapValue mapValue)
                 return CompareTo(mapValue);
             else
                 return 1;
@@ -127,6 +94,47 @@ namespace ParquetViewer.Engine.Types
             }
         }
 
+        public (object Key, object Value) GetMapValue(int index)
+            => (Keys[index] ?? DBNull.Value, Values[index] ?? DBNull.Value);
+
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public override string ToString()
+        {
+            var mapValuesStringBuilder = new StringBuilder("[");
+            for (var i = 0; i < Length; i++)
+            {
+                if (i != 0)
+                {
+                    mapValuesStringBuilder.Append(',');
+                }
+
+                mapValuesStringBuilder.Append(FormatString(GetMapValue(i)));
+            }
+
+            mapValuesStringBuilder.Append(']');
+            return mapValuesStringBuilder.ToString();
+
+            static string FormatString((object Key, object Value) map)
+            {
+                string key;
+                if (map.Key is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
+                    key = dt.ToString(ParquetEngineSettings.DateDisplayFormat);
+                else if (map.Key is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                    key = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
+                else
+                    key = map.Key?.ToString() ?? string.Empty;
+
+                string value;
+                if (map.Value is DateTime dt2 && ParquetEngineSettings.DateDisplayFormat is not null)
+                    value = dt2.ToString(ParquetEngineSettings.DateDisplayFormat);
+                else if (map.Value is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                    value = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
+                else
+                    value = map.Value?.ToString() ?? string.Empty;
+
+                return $"({key},{value})";
+            }
+        }
     }
 }
