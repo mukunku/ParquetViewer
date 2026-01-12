@@ -1,10 +1,8 @@
-﻿using Parquet.Schema;
-using ParquetViewer.Controls;
+﻿using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;

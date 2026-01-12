@@ -386,7 +386,7 @@ namespace ParquetViewer
                     jsonWriter.WriteEndArray();
                 }, cancellationToken);
 
-        private static Task WriteDataToParquetFile(IParquetEngine engine, DataTable dataTable, string path, 
+        private static Task WriteDataToParquetFile(IParquetEngine engine, DataTable dataTable, string path,
             CancellationToken cancellationToken, IProgress<int> progress, string engineName)
             => Task.Run(async () =>
                 {

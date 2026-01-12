@@ -12,7 +12,7 @@ namespace ParquetViewer
     public partial class CustomDateFormatInputForm : FormBase
     {
         public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
-        
+
         public CustomDateFormatInputForm()
         {
             InitializeComponent();

@@ -456,7 +456,7 @@ namespace ParquetViewer.Engine.DuckDB
             return $"\"{safeName}\"";
         }
 
-        public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, 
+        public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken,
             IProgress<int> progress, Dictionary<string, string>? customMetadata)
             => throw new NotImplementedException();
     }
