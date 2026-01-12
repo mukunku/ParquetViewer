@@ -264,14 +264,30 @@ namespace ParquetViewer.Controls
 
                 if (rowIndex >= 0 && columnIndex >= 0
                     && this[columnIndex, rowIndex].Value is IStructValue structValue
-                    && structValue.IsHuggingFaceImageFormat(out var data))
+                    && structValue.IsHuggingFaceFormat(out var data))
                 {
-                    using var ms = new System.IO.MemoryStream(data);
-                    var image = Image.FromStream(ms); //quick peek form will dispose of this image when closed
+                    Image? image;
+                    try
+                    {
+                        using var ms = new System.IO.MemoryStream(data);
+                        image = Image.FromStream(ms); //quick peek form will dispose of this image when closed
+                    }
+                    catch (ArgumentException)
+                    {
+                        //Data is not an image
+                        image = null;
+                    }
+                    catch
+                    {
+                        throw;
+                    }
 
-                    var uniqueCellTag = Guid.NewGuid();
-                    var quickPeekForm = new QuickPeekForm(this.Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
-                    ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
+                    if (image is not null)
+                    {
+                        var uniqueCellTag = Guid.NewGuid();
+                        var quickPeekForm = new QuickPeekForm(this.Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
+                        ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
+                    }
                 }
             }
 
@@ -910,7 +926,7 @@ namespace ParquetViewer.Controls
             }
 
             var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy, this.ColumnNameEscapeFormat, this.DateValueEscapeFormat);
-            if (filterQuery.Length < new TextBox().MaxLength) 
+            if (filterQuery.Length < new TextBox().MaxLength)
             {
                 Clipboard.SetText(filterQuery, TextDataFormat.Text);
             }
@@ -927,12 +943,12 @@ namespace ParquetViewer.Controls
         public static string GenerateFilterQuery(string columnName, Type valueType, object value)
             => GenerateFilterQuery(new() { (columnName, valueType, [value]) });
 
-        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy, 
+        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy,
             string columnNameEscapeFormat = "[{0}]", string dateValueEscapeFormat = "#{0}#")
         {
             if (columnNameEscapeFormat.Length < 5)
                 throw new ArgumentException("Column name escape format is too short.", nameof(columnNameEscapeFormat));
-            if(dateValueEscapeFormat.Length < 5)
+            if (dateValueEscapeFormat.Length < 5)
                 throw new ArgumentException("Date value escape format is too short.", nameof(dateValueEscapeFormat));
 
             var queryBuilder = new StringBuilder();

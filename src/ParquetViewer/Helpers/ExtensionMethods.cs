@@ -230,8 +230,8 @@ namespace ParquetViewer.Helpers
         /// <summary>
         /// https://huggingface.co/docs/hub/en/datasets-image#parquet-format
         /// </summary>
-        /// <returns>True if this is a struct named "image" with "bytes" and "path" fields</returns>
-        public static bool IsHuggingFaceImageFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
+        /// <returns>True if this is a struct with "bytes" and "path" fields</returns>
+        public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
         {
             if (structValue.Data.ColumnNames.Count == 2
                 && structValue.Data.ColumnNames.Contains("bytes")
