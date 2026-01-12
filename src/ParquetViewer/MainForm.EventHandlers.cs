@@ -307,7 +307,8 @@ namespace ParquetViewer
                 {
                     this._openQueryEditor.QueryText = this._queryEditorSavedQueryText;
                 }
-                this._openQueryEditor.Show(this);
+                this._openQueryEditor.Show(); //don't assign parent so the window can be handled separately by the user
+                this._openQueryEditor.Location = this.Location + new Size(30, 30);
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.QueryEditor);
             }
             else

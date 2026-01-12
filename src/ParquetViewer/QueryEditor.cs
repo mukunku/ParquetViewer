@@ -345,8 +345,8 @@ OFFSET {3} ";
                 var valuesList = new ArrayList(dictionary.Values.Count);
                 var keysType = typeof(object);
                 var valuesType = typeof(object);
-                foreach(var keyValuePair in Engine.Helpers.PairEnumerables(
-                    dictionary.Keys.OfType<object?>(), 
+                foreach (var keyValuePair in Engine.Helpers.PairEnumerables(
+                    dictionary.Keys.OfType<object?>(),
                     dictionary.Values.OfType<object?>(),
                     DBNull.Value))
                 {
@@ -444,6 +444,16 @@ OFFSET {3} ";
             }
 
             this.statusStrip.Renderer = theme.ToolStripRenderer;
+        }
+
+        private void copyTextMenuItem_Click(object sender, EventArgs e)
+        {
+            this.queryRichTextBox.Copy();
+        }
+
+        private void pasteTextMenuItem_Click(object sender, EventArgs e)
+        {
+            this.queryRichTextBox.Paste();
         }
     }
 }

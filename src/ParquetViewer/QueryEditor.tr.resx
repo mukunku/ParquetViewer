@@ -132,6 +132,13 @@
   <data name="mainSplitContainer.ToolTip" xml:space="preserve">
     <value />
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="queryEditorContextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 48</value>
+  </data>
+  <data name="queryEditorContextMenuStrip.ToolTip" xml:space="preserve">
+    <value />
+  </data>
   <data name="queryRichTextBox.ServiceColors" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAERGYXN0Q29sb3JlZFRleHRCb3gsIEN1bHR1cmU9bmV1dHJhbCwg
@@ -153,6 +160,37 @@
   <data name="queryRichTextBox.ToolTip" xml:space="preserve">
     <value />
   </data>
+  <data name="copyTextMenuItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        wQAADsEBuJFr7QAAAw9JREFUWEftVs1PE0EU7x9AgvGmBsO+mW6d3e6WphjxiwIS/wRuHPSiR/4Cs+3y
+        UZVvotGTN24EjCa6uzTY8FksRCySKPHgQf8DuI6+tdM0UygtNOiBX/Ky2Xlv3vx25rfzXiBwhioQS+Ua
+        meXN6JaT1ZLu0mHGLGdDs9P35PknhmmnuyJT29wc3eSRyTyPTG5Llufm+CduDK9zc3SDh/vdh3KOE8Gw
+        F7pbnn/luuXsGkPp9ojtdZSaMeS06/3zffpghocfr/hkNHv+gZzn2IiOZa8bIznO7PQb2SfQmvSi4Sdr
+        nCXcfZ/ExOf6kjgK/m5M5rmWdObMQbfXnNjyj6ZmErFYrJEQMgMAWULIEhooSkZpuvAOLl/yxBildINS
+        el/Mi9jpu9GX3zmzXAffw8l0D+6IOb5VmyY0TesKhUJcVVWOz4MMfcFgUMT4yVufrTdpAx84s7yfLXb6
+        RiS5qLOEN22MfPTFWzUJQkgnJqaUbgeDwfZQKNRRajgGAH2EEIwRZPxtvjqYVVnC5dEXuxyPIJxa9kXp
+        P5+ucSPpGfJ6ZSgshMkXZJ8ApTSKOwAA+0gC4wWJ2HDuipZwN1nSyTHLWdYsN6NZzh6KWE+875RzlUEQ
+        UBRlUfYJlJCcU1W1VxyXICEDLyn/rkh5t2RfGURyFJrsExAxAODiu6qqPUVNAJSdNUs6K3UlIHRCCMmr
+        qnqTMaYTQqZlYQowy1utKwHGWHfpn1IQbdEK+igKru4E2traziuK8hbvAgBYI4SsUkqXASADAHtIAHdJ
+        xNedQCXgvII+ioudKgFK6co/JYDHcUbgvyCANUOM6Za7iJ3TKRJQebC5+Vp06sdF03a6tIS3g10Ss50i
+        qUNRDwJ4MamBgGJO7TyKvfrFzbG/vWTLgBuX48tQLwK0oUELT3zp0RLeN6yOmuXMxlJeoxxfhmqqYSUc
+        pIGaUFJqD+0HKgGJ43zG2G3ZVxVKKx3+SrUaIWSn0CUdbwcA4A5+QaWesJKJeZTSowV3EOLx+DlK6evS
+        SletYXyhW54FgKMFd4Y/+A3rSyMPm3Pf6gAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="copyTextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>116, 22</value>
+  </data>
+  <data name="copyTextMenuItem.Text" xml:space="preserve">
+    <value>Kopyala</value>
+  </data>
+  <data name="pasteTextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>116, 22</value>
+  </data>
+  <data name="pasteTextMenuItem.Text" xml:space="preserve">
+    <value>Yapıştır</value>
+  </data>
   <data name="executeQueryButton.Text" xml:space="preserve">
     <value>İşle</value>
   </data>
@@ -165,7 +203,6 @@
   <data name="statusStrip.ToolTip" xml:space="preserve">
     <value />
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="toolStripStatusLabel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>63, 17</value>
   </data>

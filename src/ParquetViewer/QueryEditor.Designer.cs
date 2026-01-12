@@ -37,6 +37,9 @@ namespace ParquetViewer
             mainSplitContainer = new SplitContainer();
             mainTableLayoutPanel = new TableLayoutPanel();
             queryRichTextBox = new FastColoredTextBox();
+            queryEditorContextMenuStrip = new ContextMenuStrip(components);
+            copyTextMenuItem = new ToolStripMenuItem();
+            pasteTextMenuItem = new ToolStripMenuItem();
             executeQueryButton = new Button();
             querySyntaxDocsButton = new Button();
             resultsGridView = new ParquetGridView();
@@ -61,6 +64,7 @@ namespace ParquetViewer
             mainSplitContainer.SuspendLayout();
             mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)queryRichTextBox).BeginInit();
+            queryEditorContextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)resultsGridView).BeginInit();
             statusStrip.SuspendLayout();
             SuspendLayout();
@@ -117,6 +121,7 @@ namespace ParquetViewer
             queryRichTextBox.CharWidth = 9;
             mainTableLayoutPanel.SetColumnSpan(queryRichTextBox, 2);
             queryRichTextBox.CommentPrefix = "--";
+            queryRichTextBox.ContextMenuStrip = queryEditorContextMenuStrip;
             queryRichTextBox.DisabledColor = System.Drawing.Color.FromArgb(100, 180, 180, 180);
             queryRichTextBox.Hotkeys = resources.GetString("queryRichTextBox.Hotkeys");
             queryRichTextBox.IsReplaceMode = false;
@@ -131,6 +136,26 @@ namespace ParquetViewer
             queryRichTextBox.Zoom = 100;
             queryRichTextBox.TextChanged += queryRichTextBox_TextChanged;
             queryRichTextBox.KeyDown += queryRichTextBox_KeyDown;
+            // 
+            // queryEditorContextMenuStrip
+            // 
+            resources.ApplyResources(queryEditorContextMenuStrip, "queryEditorContextMenuStrip");
+            queryEditorContextMenuStrip.Items.AddRange(new ToolStripItem[] { copyTextMenuItem, pasteTextMenuItem });
+            queryEditorContextMenuStrip.Name = "queryEditorContextMenuStrip";
+            executeQueryKeyboardShortcutToolTip.SetToolTip(queryEditorContextMenuStrip, resources.GetString("queryEditorContextMenuStrip.ToolTip"));
+            // 
+            // copyTextMenuItem
+            // 
+            resources.ApplyResources(copyTextMenuItem, "copyTextMenuItem");
+            copyTextMenuItem.Name = "copyTextMenuItem";
+            copyTextMenuItem.Click += copyTextMenuItem_Click;
+            // 
+            // pasteTextMenuItem
+            // 
+            resources.ApplyResources(pasteTextMenuItem, "pasteTextMenuItem");
+            pasteTextMenuItem.Image = Resources.Icons.paste_icon_24x24;
+            pasteTextMenuItem.Name = "pasteTextMenuItem";
+            pasteTextMenuItem.Click += pasteTextMenuItem_Click;
             // 
             // executeQueryButton
             // 
@@ -162,6 +187,7 @@ namespace ParquetViewer
             resultsGridView.ColumnNameEscapeFormat = "[{0}]";
             resultsGridView.CopyAsWhereIcon = null;
             resultsGridView.CopyToClipboardIcon = null;
+            resultsGridView.DateValueEscapeFormat = "#{0}#";
             resultsGridView.EnableHeadersVisualStyles = false;
             resultsGridView.Name = "resultsGridView";
             resultsGridView.ReadOnly = true;
@@ -282,6 +308,7 @@ namespace ParquetViewer
             mainSplitContainer.ResumeLayout(false);
             mainTableLayoutPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)queryRichTextBox).EndInit();
+            queryEditorContextMenuStrip.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)resultsGridView).EndInit();
             statusStrip.ResumeLayout(false);
             statusStrip.PerformLayout();
@@ -312,5 +339,8 @@ namespace ParquetViewer
         private Button querySyntaxDocsButton;
         private Button closeButton;
         private ToolTip executeQueryKeyboardShortcutToolTip;
+        private ContextMenuStrip queryEditorContextMenuStrip;
+        private ToolStripMenuItem copyTextMenuItem;
+        private ToolStripMenuItem pasteTextMenuItem;
     }
 }

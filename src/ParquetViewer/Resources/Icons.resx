@@ -169,4 +169,8 @@
   <data name="localization_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>localization-icon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="paste-icon_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>paste-icon_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <comment>24x24</comment>
+  </data>
 </root>
