@@ -162,6 +162,7 @@ OFFSET {3} ";
             try
             {
                 this.resultsGridView.DataSource = ConvertValues(result);
+                this.showingCountLabel.Text = result.Rows.Count.ToString();
             }
             catch (Exception ex)
             {
