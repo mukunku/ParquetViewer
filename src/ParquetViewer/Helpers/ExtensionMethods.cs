@@ -16,8 +16,10 @@ namespace ParquetViewer.Helpers
     {
         private const string DefaultDateTimeFormat = "g";
         private const string DefaultDateOnlyFormat = "d";
+        private const string DefaultTimeOnlyFormat = "T";
         public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
         public const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
+        public const string ISO8601TimeOnlyFormat = "HH:mm:ss.FFFFFFF";
 
         /// <summary>
         /// Returns a list of all column names within a given datatable
@@ -52,7 +54,16 @@ namespace ParquetViewer.Helpers
             DateFormat.ISO8601 => ISO8601DateOnlyFormat,
             DateFormat.Default => DefaultDateOnlyFormat,
             DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
-                UtilityMethods.StripTimeComponentsFromDateFormat(AppSettings.CustomDateFormat) : DefaultDateOnlyFormat,
+                UtilityMethods.StripTimeComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DefaultDateOnlyFormat,
+            _ => string.Empty
+        };
+
+        public static string GetTimeOnlyFormat(this DateFormat dateFormat) => dateFormat switch
+        {
+            DateFormat.ISO8601 => ISO8601TimeOnlyFormat,
+            DateFormat.Default => DefaultTimeOnlyFormat,
+            DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
+                UtilityMethods.StripDateComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DefaultTimeOnlyFormat,
             _ => string.Empty
         };
 

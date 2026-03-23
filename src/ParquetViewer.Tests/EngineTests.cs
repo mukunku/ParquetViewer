@@ -44,6 +44,7 @@ namespace ParquetViewer.Tests
             //Set a consistent date format for all tests
             ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
             ParquetEngineSettings.DateOnlyDisplayFormat = "yyyy-MM-dd";
+            ParquetEngineSettings.TimeOnlyDisplayFormat = "HH:mm:ss";
 
             this._useDuckDBEngine = useDuckDBEngine;
             this._canHandleNullComplexTypes = canHandleNullComplexTypes;
@@ -725,7 +726,7 @@ namespace ParquetViewer.Tests
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.AreEqual(new DateOnly(2024, 1, 1), dataTable.Rows[0][0]);
-            Assert.AreEqual(new TimeSpan(215720000000), dataTable.Rows[0][1]);
+            Assert.AreEqual(new TimeOnly(215720000000), dataTable.Rows[0][1]);
         }
     }
 }

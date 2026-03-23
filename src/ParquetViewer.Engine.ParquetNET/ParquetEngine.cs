@@ -9,6 +9,7 @@ namespace ParquetViewer.Engine.ParquetNET
 {
     public partial class ParquetEngine : IParquetEngine, IDisposable
     {
+        private static readonly ParquetOptions _defaultParquetOptions = new () { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
         private readonly ParquetReader[] _parquetFiles;
         private long? _recordCount;
 
@@ -95,7 +96,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
             try
             {
-                var parquetReader = await ParquetReader.CreateAsync(parquetFilePath, new() { UseDateOnlyTypeForDates = true }, cancellationToken);
+                var parquetReader = await ParquetReader.CreateAsync(parquetFilePath, _defaultParquetOptions, cancellationToken);
                 return new ParquetEngine(parquetFilePath, parquetReader);
             }
             catch (Exception ex)
@@ -119,7 +120,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
                 try
                 {
-                    var parquetReader = await ParquetReader.CreateAsync(file, new() { UseDateOnlyTypeForDates = true }, cancellationToken);
+                    var parquetReader = await ParquetReader.CreateAsync(file, _defaultParquetOptions, cancellationToken);
                     if (!fileGroups.ContainsKey(parquetReader.Schema))
                     {
                         fileGroups.Add(parquetReader.Schema, new List<ParquetReader>());

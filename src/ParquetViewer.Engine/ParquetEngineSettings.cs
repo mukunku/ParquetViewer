@@ -13,5 +13,6 @@ namespace ParquetViewer.Engine
         /// <see cref="IStructValue"/>, and <see cref="IMapValue"/> types to string.</remarks>
         public static string? DateDisplayFormat { get; set; }
         public static string? DateOnlyDisplayFormat { get; set; }
+        public static string? TimeOnlyDisplayFormat { get; set; }
     }
 }

@@ -134,6 +134,7 @@ namespace ParquetViewer.Controls
         {
             string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
             string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
+            string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
 
             foreach (DataGridViewColumn column in this.Columns)
             {
@@ -141,11 +142,14 @@ namespace ParquetViewer.Controls
                     column.DefaultCellStyle.Format = dateFormat;
                 else if (column.ValueType == typeof(DateOnly))
                     column.DefaultCellStyle.Format = dateOnlyFormat;
+                else if (column.ValueType == typeof(TimeOnly))
+                    column.DefaultCellStyle.Format = timeOnlyFormat;
             }
 
             //Need to tell the parquet engine how to render date values
             ParquetEngineSettings.DateDisplayFormat = dateFormat;
             ParquetEngineSettings.DateOnlyDisplayFormat = dateOnlyFormat;
+            ParquetEngineSettings.TimeOnlyDisplayFormat = timeOnlyFormat;
         }
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
@@ -731,7 +735,7 @@ namespace ParquetViewer.Controls
                     //We can just measure a few without going through all of them.
                     colStringCollection = nonNullColumnValues
                         .Select(row => row.Field<DateTime>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()))
-                        .Take(50);
+                        .Take(25);
                 }
                 else if (gridTable.Columns[i].DataType == typeof(DateOnly))
                 {
@@ -740,6 +744,14 @@ namespace ParquetViewer.Controls
                     colStringCollection = nonNullColumnValues
                         .Select(row => row.Field<DateOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat()))
                         .Take(10);
+                }
+                else if (gridTable.Columns[i].DataType == typeof(TimeOnly))
+                {
+                    //All date only's will probably have the same string length so no need to go through all values.
+                    //We can just measure a few without going through all of them.
+                    colStringCollection = nonNullColumnValues
+                        .Select(row => row.Field<TimeOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat()))
+                        .Take(25);
                 }
                 else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
                 {

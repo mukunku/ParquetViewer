@@ -100,11 +100,11 @@ namespace ParquetViewer.Helpers
         }
 
         /// <summary>
-        /// Best effort attempt at stripping time components from a date format string.
+        /// Best effort attempt at stripping time components from a datetime format string.
         /// </summary>
         /// <param name="dateFormat">Date format with potential time components</param>
         /// <returns>Date format with no time components</returns>
-        public static string StripTimeComponentsFromDateFormat(string dateFormat)
+        public static string StripTimeComponentsFromDateTimeFormat(string dateFormat)
         {
             var timeComponents = new string[] { "H", "h", "m", "s", "f", "F", "t", "z", "K" };
             foreach (var component in timeComponents)
@@ -113,6 +113,23 @@ namespace ParquetViewer.Helpers
             }
             dateFormat = dateFormat.Replace("  ", " ");
             dateFormat = dateFormat.TrimEnd('/', '-', '.', ' ', ',', '_');
+            return dateFormat.Trim();
+        }
+
+        /// <summary>
+        /// Best effort attempt at stripping date components from a datetime format string.
+        /// </summary>
+        /// <param name="dateFormat">Date format with potential date components</param>
+        /// <returns>Time format with no date components</returns>
+        public static string StripDateComponentsFromDateTimeFormat(string dateFormat)
+        {
+            var dateComponents = new string[] { "y", "M", "d", "g" };
+            foreach (var component in dateComponents)
+            {
+                dateFormat = dateFormat.Replace(component, string.Empty);
+            }
+            dateFormat = dateFormat.Replace("  ", " ");
+            dateFormat = dateFormat.TrimStart('/', '-', '.', ' ', ',', '_');
             return dateFormat.Trim();
         }
     }

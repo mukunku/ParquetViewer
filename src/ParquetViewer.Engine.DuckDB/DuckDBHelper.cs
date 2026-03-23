@@ -74,7 +74,7 @@ namespace ParquetViewer.Engine.DuckDB
                 "FLOAT" or "REAL" => (DuckDBType.Float, typeof(float)),
                 "BLOB" => (DuckDBType.Blob, typeof(ByteArrayValue)),
                 "DATE" => (DuckDBType.Date, typeof(DateOnly)),
-                "TIME" => (DuckDBType.Time, typeof(TimeSpan)),
+                "TIME" => (DuckDBType.Time, typeof(TimeOnly)),
                 "INTERVAL" => (DuckDBType.Interval, typeof(TimeSpan)),
                 "UUID" => (DuckDBType.Uuid, typeof(Guid)),
                 _ => throw new ArgumentOutOfRangeException(nameof(duckDBTypeName), $"Unsupported DuckDB type: {duckDBTypeName}({columnTypeName})")

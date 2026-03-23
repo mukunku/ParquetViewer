@@ -122,6 +122,8 @@ namespace ParquetViewer.Engine
                     key = dt.ToString(ParquetEngineSettings.DateDisplayFormat);
                 else if (map.Key is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
                     key = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
+                else if (map.Key is TimeOnly timeOnly && ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
+                    key = timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat);
                 else
                     key = map.Key?.ToString() ?? string.Empty;
 
@@ -130,6 +132,8 @@ namespace ParquetViewer.Engine
                     value = dt2.ToString(ParquetEngineSettings.DateDisplayFormat);
                 else if (map.Value is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
                     value = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
+                else if (map.Value is TimeOnly timeOnly && ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
+                    value = timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat);
                 else
                     value = map.Value?.ToString() ?? string.Empty;
 

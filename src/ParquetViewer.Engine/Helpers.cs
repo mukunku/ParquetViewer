@@ -149,6 +149,14 @@ namespace ParquetViewer.Engine
                 else
                     jsonWriter.WriteStringValue(dateOnly.ToString());
             }
+            else if (value is TimeOnly timeOnly)
+            {
+                //Write time as string
+                if (ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat));
+                else
+                    jsonWriter.WriteStringValue(timeOnly.ToString());
+            }
             else
             {
                 //Everything else just try to write it as string
