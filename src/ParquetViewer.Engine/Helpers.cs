@@ -125,7 +125,7 @@ namespace ParquetViewer.Engine
                 }
                 jsonWriter.WriteEndArray();
             }
-            else if (value is IByteArrayValue byteArray /*&& truncateForDisplay //should use the entire byte array if 
+            else if (value is IByteArrayValue byteArray /*&& truncateForDisplay //should we use the entire byte array if 
                                                         * we're not truncating for display? Seems kind of unreasonable 
                                                         * for users to rely on binary data within a Struct value preview.*/)
             {

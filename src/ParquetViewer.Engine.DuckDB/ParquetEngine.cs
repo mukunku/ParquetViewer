@@ -24,7 +24,7 @@ namespace ParquetViewer.Engine.DuckDB
 
         public IParquetMetadata Metadata => this._metadatas.First();
 
-        private List<DuckDBField> _fields;
+        private readonly List<DuckDBField> _fields;
 
         private static int GetFieldsHashCode(List<DuckDBField> fields)
         {
@@ -134,7 +134,7 @@ namespace ParquetViewer.Engine.DuckDB
                     var fieldsHashCode = GetFieldsHashCode(fileFields);
                     if (!fileGroups.ContainsKey(fieldsHashCode))
                     {
-                        fileGroups.Add(fieldsHashCode, new List<DuckDBHandle>());
+                        fileGroups.Add(fieldsHashCode, []);
                     }
 
                     fileGroups[fieldsHashCode].Add(db);
