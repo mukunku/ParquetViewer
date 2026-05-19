@@ -117,6 +117,25 @@ namespace ParquetViewer.Tests
         }
 
         [TestMethod]
+        public void APP_SETTINGS_WORD_WRAP_CELLS_ROUND_TRIP_TEST()
+        {
+            var originalValue = AppSettings.WordWrapCells;
+
+            try
+            {
+                AppSettings.WordWrapCells = true;
+                Assert.IsTrue(AppSettings.WordWrapCells);
+
+                AppSettings.WordWrapCells = false;
+                Assert.IsFalse(AppSettings.WordWrapCells);
+            }
+            finally
+            {
+                AppSettings.WordWrapCells = originalValue;
+            }
+        }
+
+        [TestMethod]
         [DataRow("1.0", null)]
         [DataRow("1.0.0", "1.0.0.0")]
         [DataRow("1.0.0.0", "1.0.0.0")]

@@ -19,6 +19,7 @@ namespace ParquetViewer
         private const string OpenedFileCountKey = "OpenedFileCount";
         private const string CustomDateFormatKey = "CustomDateFormat";
         private const string DarkModeKey = "DarkMode";
+        private const string WordWrapCellsKey = "WordWrapCells";
         private const string UserSelectedCultureKey = "UserSelectedCulture";
         private const string QueryEditorZoomLevelKey = "QueryEditorZoomLevel";
 
@@ -103,6 +104,12 @@ namespace ParquetViewer
                     form.SetTheme(theme);
                 }
             }
+        }
+
+        public static bool WordWrapCells
+        {
+            get => ReadRegistryValue(WordWrapCellsKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+            set => SetRegistryValue(WordWrapCellsKey, value.ToString());
         }
 
         public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;

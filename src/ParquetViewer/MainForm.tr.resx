@@ -375,6 +375,12 @@
   <data name="darkModeToolStripMenuItem.Text" xml:space="preserve">
     <value>Gece Modu</value>
   </data>
+  <data name="wordWrapCellsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="wordWrapCellsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Hücrelerde Metni Kaydır</value>
+  </data>
   <data name="toolsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 20</value>
   </data>

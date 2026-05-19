@@ -750,6 +750,12 @@
   <data name="darkModeToolStripMenuItem.Text" xml:space="preserve">
     <value>Dark Mode</value>
   </data>
+  <data name="wordWrapCellsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>217, 22</value>
+  </data>
+  <data name="wordWrapCellsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Word Wrap Cells</value>
+  </data>
   <data name="editToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>39, 20</value>
   </data>

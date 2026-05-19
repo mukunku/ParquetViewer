@@ -178,6 +178,8 @@ namespace ParquetViewer
             this.RefreshDateFormatMenuItemSelection();
             this.alwaysLoadAllRecordsToolStripMenuItem.Checked = AppSettings.AlwaysLoadAllRecords;
             this.darkModeToolStripMenuItem.Checked = AppSettings.DarkMode;
+            this.wordWrapCellsToolStripMenuItem.Checked = AppSettings.WordWrapCells;
+            SetCellWordWrapEnabled(this.wordWrapCellsToolStripMenuItem.Checked);
             this.RefreshExperimentalFeatureToolStrips();
             this.SetLanguageCheckmark();
 
@@ -274,6 +276,24 @@ namespace ParquetViewer
             {
                 ShowError(Resources.Errors.NoFieldsFoundErrorMessage, Resources.Errors.NoFieldsFoundErrorTitle);
                 return null;
+            }
+        }
+
+        private void SetCellWordWrapEnabled(bool isEnabled)
+        {
+            this.mainGridView.DefaultCellStyle.WrapMode = isEnabled ? DataGridViewTriState.True : DataGridViewTriState.False;
+            this.mainGridView.AutoSizeRowsMode = isEnabled ? DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders : DataGridViewAutoSizeRowsMode.None;
+
+            if (isEnabled)
+            {
+                this.mainGridView.AutoResizeRows(DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders);
+            }
+            else
+            {
+                foreach (DataGridViewRow row in this.mainGridView.Rows)
+                {
+                    row.Height = this.mainGridView.RowTemplate.Height;
+                }
             }
         }
 

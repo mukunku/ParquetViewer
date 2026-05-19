@@ -65,6 +65,7 @@ namespace ParquetViewer
             customDateFormatToolStripMenuItem = new ToolStripMenuItem();
             alwaysLoadAllRecordsToolStripMenuItem = new ToolStripMenuItem();
             darkModeToolStripMenuItem = new ToolStripMenuItem();
+            wordWrapCellsToolStripMenuItem = new ToolStripMenuItem();
             toolsToolStripMenuItem = new ToolStripMenuItem();
             getSQLCreateTableScriptToolStripMenuItem = new ToolStripMenuItem();
             metadataViewerToolStripMenuItem = new ToolStripMenuItem();
@@ -271,7 +272,7 @@ namespace ParquetViewer
             // 
             // editToolStripMenuItem
             // 
-            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem, darkModeToolStripMenuItem });
+            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { changeFieldsMenuStripButton, changeDateFormatToolStripMenuItem, alwaysLoadAllRecordsToolStripMenuItem, darkModeToolStripMenuItem, wordWrapCellsToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
             resources.ApplyResources(editToolStripMenuItem, "editToolStripMenuItem");
             // 
@@ -321,6 +322,12 @@ namespace ParquetViewer
             darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
             resources.ApplyResources(darkModeToolStripMenuItem, "darkModeToolStripMenuItem");
             darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
+            // 
+            // wordWrapCellsToolStripMenuItem
+            // 
+            wordWrapCellsToolStripMenuItem.Name = "wordWrapCellsToolStripMenuItem";
+            resources.ApplyResources(wordWrapCellsToolStripMenuItem, "wordWrapCellsToolStripMenuItem");
+            wordWrapCellsToolStripMenuItem.Click += wordWrapCellsToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem
             // 
@@ -526,9 +533,9 @@ namespace ParquetViewer
         private ToolTip loadAllRowsButtonTooltip;
         private ToolStripMenuItem customDateFormatToolStripMenuItem;
         private ToolStripMenuItem darkModeToolStripMenuItem;
+        private ToolStripMenuItem wordWrapCellsToolStripMenuItem;
         private ToolStripMenuItem languageToolStripMenuItem;
         private ToolStripMenuItem englishToolStripMenuItem;
         private ToolStripMenuItem turkishToolStripMenuItem;
     }
 }
-

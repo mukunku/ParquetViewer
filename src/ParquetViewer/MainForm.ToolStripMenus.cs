@@ -230,5 +230,12 @@ namespace ParquetViewer
             AppSettings.DarkMode = this.darkModeToolStripMenuItem.Checked; // Will trigger SetTheme()
             RefreshExperimentalFeatureToolStrips();
         }
+
+        private void wordWrapCellsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.wordWrapCellsToolStripMenuItem.Checked = !this.wordWrapCellsToolStripMenuItem.Checked;
+            AppSettings.WordWrapCells = this.wordWrapCellsToolStripMenuItem.Checked;
+            SetCellWordWrapEnabled(this.wordWrapCellsToolStripMenuItem.Checked);
+        }
     }
 }
