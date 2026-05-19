@@ -290,10 +290,12 @@ namespace ParquetViewer
             }
             else
             {
+                this.mainGridView.SuspendLayout();
                 foreach (DataGridViewRow row in this.mainGridView.Rows)
                 {
                     row.Height = this.mainGridView.RowTemplate.Height;
                 }
+                this.mainGridView.ResumeLayout();
             }
         }
 
