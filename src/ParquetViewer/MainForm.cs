@@ -290,7 +290,7 @@ namespace ParquetViewer
             }
             else
             {
-                this.mainGridView.AutoResizeRows(DataGridViewAutoSizeRowsMode.AllCellsExceptHeaders);
+                this.mainGridView.AutoResizeRows(DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders);
             }
         }
 
