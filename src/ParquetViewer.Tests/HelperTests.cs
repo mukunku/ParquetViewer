@@ -117,7 +117,7 @@ namespace ParquetViewer.Tests
         }
 
         [TestMethod]
-        public void APP_SETTINGS_WORD_WRAP_CELLS_ROUND_TRIP_TEST()
+        public void AppSettingsWordWrapCellsRoundTripTest()
         {
             var originalValue = AppSettings.WordWrapCells;
 
