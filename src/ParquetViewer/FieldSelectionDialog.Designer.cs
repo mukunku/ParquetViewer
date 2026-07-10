@@ -1,4 +1,6 @@
-﻿namespace ParquetViewer
+﻿using ParquetViewer.Controls;
+
+namespace ParquetViewer
 {
     partial class FieldsToLoadForm
     {
@@ -35,7 +37,7 @@
             showSelectedFieldsRadioButton = new System.Windows.Forms.RadioButton();
             allFieldsRadioButton = new System.Windows.Forms.RadioButton();
             rememberMyChoiceCheckBox = new StylableCheckBox();
-            filterColumnsTextbox = new System.Windows.Forms.TextBox();
+            filterColumnsTextbox = new DelayedOnChangedTextBox();
             fieldsPanel = new System.Windows.Forms.Panel();
             mainTableLayoutPanel.SuspendLayout();
             SuspendLayout();
@@ -96,8 +98,9 @@
             // 
             resources.ApplyResources(filterColumnsTextbox, "filterColumnsTextbox");
             mainTableLayoutPanel.SetColumnSpan(filterColumnsTextbox, 3);
+            filterColumnsTextbox.DelayedTextChangedTimeout = 275;
             filterColumnsTextbox.Name = "filterColumnsTextbox";
-            filterColumnsTextbox.TextChanged += filterColumnsTextbox_TextChanged;
+            filterColumnsTextbox.DelayedTextChanged += filterColumnsTextbox_DelayedTextChanged;
             // 
             // fieldsPanel
             // 
@@ -126,7 +129,7 @@
         private System.Windows.Forms.TableLayoutPanel mainTableLayoutPanel;
         private System.Windows.Forms.Button doneButton;
         private System.Windows.Forms.Panel fieldsPanel;
-        private System.Windows.Forms.TextBox filterColumnsTextbox;
+        private DelayedOnChangedTextBox filterColumnsTextbox;
         private System.Windows.Forms.Button clearfilterColumnsButton;
         private System.Windows.Forms.RadioButton showSelectedFieldsRadioButton;
         private System.Windows.Forms.RadioButton allFieldsRadioButton;
