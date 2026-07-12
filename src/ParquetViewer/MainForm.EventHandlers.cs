@@ -3,10 +3,12 @@ using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -287,6 +289,104 @@ namespace ParquetViewer
 
             AppSettings.UserSelectedCulture = newCultureInfo;
             UtilityMethods.RestartApplication();
+        }
+
+        private void fileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
+        {
+            if (this.fileIntegrityCheckingTimer.Tag is not null)
+                return; //already handled
+
+            if (this.OpenFileOrFolderPath is null)
+                return; //no file open
+
+            this.fileIntegrityCheckingTimer.Stop();
+            try
+            {
+                var fileDeletedSuffix = $" ({Resources.Strings.OpenFileNoLongerExistsTitleSuffix})";
+                var alreadyHasDeletedSuffix = this.Text.EndsWith(fileDeletedSuffix);
+                var lastModifiedInfo = TryGetLastModifiedInfo(this.OpenFileOrFolderPath);
+                if (lastModifiedInfo is null && !alreadyHasDeletedSuffix)
+                {
+                    //File or folder no longer exists. In this case lets not mark this timer as handled
+                    //and let it keep running in case the file/folder is restored later.
+                    this.Text += fileDeletedSuffix;
+                }
+                else if (lastModifiedInfo is not null && alreadyHasDeletedSuffix)
+                {
+                    this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
+                }
+
+                var fileModifiedSuffix = $" ({Resources.Strings.OpenFileWasModifiedTitleSuffix})";
+                if (lastModifiedInfo is not null)
+                {
+                    if (_lastModifiedInfo is null)
+                    {
+                        _lastModifiedInfo = lastModifiedInfo;
+
+                        if (this.Text.EndsWith(fileModifiedSuffix))
+                            this.Text = this.Text.Replace(fileModifiedSuffix, string.Empty);
+                    }
+                    else if (_lastModifiedInfo != lastModifiedInfo && !this.Text.EndsWith(fileModifiedSuffix))
+                    {
+                        this.Text += fileModifiedSuffix;
+                    }
+                }
+            }
+            finally
+            {
+                this.fileIntegrityCheckingTimer.Start();
+            }
+
+            /// <summary>
+            /// Returns the last modified date and size of a file, or the most recent last modified
+            /// date and total combined size of all files in a folder (including subfolders).
+            /// </summary>
+            (DateTime LastModifiedUtc, long Length)? TryGetLastModifiedInfo(string fileOrFolderPath)
+            {
+                if (File.Exists(fileOrFolderPath))
+                {
+                    var info = new FileInfo(fileOrFolderPath);
+                    return (info.LastWriteTimeUtc, info.Length);
+                }
+
+                if (Directory.Exists(fileOrFolderPath))
+                {
+                    DateTime latest = Directory.GetCreationTimeUtc(fileOrFolderPath);
+                    long totalLength = 0;
+                    bool foundAny = false;
+                    
+                    foreach (var filePath in EnumerateFilesSafely(fileOrFolderPath))
+                    {
+                        var info = new FileInfo(filePath);
+                        totalLength += info.Length;
+
+                        if (!foundAny || info.LastWriteTimeUtc > latest)
+                        {
+                            latest = info.LastWriteTimeUtc;
+                            foundAny = true;
+                        }
+                    }
+
+                    return (latest, totalLength);
+                }
+
+                return null; //file or folder does not exist;
+            }
+
+            /// <summary>
+            /// Enumerates files recursively, skipping subfolders that throw
+            /// UnauthorizedAccessException or similar IO errors instead of failing the whole scan.
+            /// </summary>
+            static IEnumerable<string> EnumerateFilesSafely(string rootPath)
+            {
+                var options = new EnumerationOptions
+                {
+                    RecurseSubdirectories = true,
+                    IgnoreInaccessible = true
+                };
+
+                return Directory.EnumerateFiles(rootPath, "*", options);
+            }
         }
     }
 }

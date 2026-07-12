@@ -140,6 +140,8 @@ namespace ParquetViewer
         }
 
         private IParquetEngine? _openParquetEngine = null;
+
+        private (DateTime LastWriteTimeUtc, long Length)? _lastModifiedInfo;
         #endregion
 
         public MainForm()
@@ -315,6 +317,8 @@ namespace ParquetViewer
 #else
             await this.LoadFileToGridviewImpl(this._openParquetEngine);
 #endif
+
+            this._lastModifiedInfo = null;
         }
 
         private async Task LoadFileToGridviewImpl(IParquetEngine engine)
@@ -455,6 +459,7 @@ namespace ParquetViewer
             if (fieldList is not null)
             {
                 this.SelectedFields = fieldList; //triggers a file load
+                this.fileIntegrityCheckingTimer.Tag = null; //reset the timer tag so we start checking for file integrity again
                 AppSettings.OpenedFileCount++;
                 Program.AskUserForFileExtensionAssociation();
             }

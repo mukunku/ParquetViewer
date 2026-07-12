@@ -96,7 +96,8 @@ namespace ParquetViewer.Engine.ParquetNET
 
             try
             {
-                var parquetReader = await ParquetReader.CreateAsync(parquetFilePath, _defaultParquetOptions, cancellationToken);
+                var readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
                 return new ParquetEngine(parquetFilePath, parquetReader);
             }
             catch (Exception ex)
@@ -120,7 +121,8 @@ namespace ParquetViewer.Engine.ParquetNET
 
                 try
                 {
-                    var parquetReader = await ParquetReader.CreateAsync(file, _defaultParquetOptions, cancellationToken);
+                    var readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
                     if (!fileGroups.ContainsKey(parquetReader.Schema))
                     {
                         fileGroups.Add(parquetReader.Schema, new List<ParquetReader>());

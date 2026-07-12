@@ -336,4 +336,10 @@ Tercihinizi Düzen menüsünden istediğiniz zaman değiştirebilirsiniz.</value
   <data name="FrozenColumnText" xml:space="preserve">
     <value>Dondur</value>
   </data>
+  <data name="OpenFileNoLongerExistsTitleSuffix" xml:space="preserve">
+    <value>SİLİNDİ</value>
+  </data>
+  <data name="OpenFileWasModifiedTitleSuffix" xml:space="preserve">
+    <value>DEĞİŞTİRİLMİŞ</value>
+  </data>
 </root>

@@ -478,6 +478,24 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DELETED.
+        /// </summary>
+        internal static string OpenFileNoLongerExistsTitleSuffix {
+            get {
+                return ResourceManager.GetString("OpenFileNoLongerExistsTitleSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MODIFIED.
+        /// </summary>
+        internal static string OpenFileWasModifiedTitleSuffix {
+            get {
+                return ResourceManager.GetString("OpenFileWasModifiedTitleSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Privacy policy.
         /// </summary>
         internal static string PrivacyPolicyLabelText {
