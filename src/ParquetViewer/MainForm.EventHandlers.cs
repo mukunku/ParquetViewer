@@ -387,7 +387,8 @@ namespace ParquetViewer
                         }
                         catch
                         {
-                            return null;
+                            //We can't figure out what happened to the file, so act like nothing happened by returning the last modified info.
+                            return this._lastModifiedInfo;
                         }
                     }
 
