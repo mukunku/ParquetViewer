@@ -452,7 +452,7 @@ namespace ParquetViewer
             // fileIntegrityCheckingTimer
             // 
             fileIntegrityCheckingTimer.Enabled = true;
-            fileIntegrityCheckingTimer.Interval = 2500;
+            fileIntegrityCheckingTimer.Interval = 1000;
             fileIntegrityCheckingTimer.Tick += fileIntegrityCheckingTimer_Tick;
             // 
             // MainForm

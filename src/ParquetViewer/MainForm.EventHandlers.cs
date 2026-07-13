@@ -296,6 +296,10 @@ namespace ParquetViewer
             if (this.OpenFileOrFolderPath is null || this._openParquetEngine is null)
                 return; //no file open
 
+            if (!this._didFilesChange)
+                return;
+
+            this._didFilesChange = false; //reset the flag so we don't keep checking until the next change
             this.fileIntegrityCheckingTimer.Stop();            
             try
             {
