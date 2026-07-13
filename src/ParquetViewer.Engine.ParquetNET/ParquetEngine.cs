@@ -13,7 +13,7 @@ namespace ParquetViewer.Engine.ParquetNET
         private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
         private long? _recordCount;
 
-        private ParquetReader _defaultReader => _parquetFiles.First().Reader;
+        private ParquetReader _defaultReader => _parquetFiles.Length > 0 ? _parquetFiles[0].Reader : throw new ParquetEngineException("No parquet readers available");
 
         private FileMetaData _thriftMetadata => _defaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
 
