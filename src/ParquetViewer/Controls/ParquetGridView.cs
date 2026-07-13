@@ -75,6 +75,7 @@ namespace ParquetViewer.Controls
             SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
             ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             ShowCellToolTips = false; //tooltips for columns with very long strings cause performance issues. This was the easiest solution
+            AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None; //Leave as the default None as I'm concerned about performance to change the default. Needz moar testing to see if we can set to `DisplayedCells` by default
         }
 
         protected override void OnDataSourceChanged(EventArgs e)
@@ -1232,8 +1233,19 @@ namespace ParquetViewer.Controls
 
             menuItem.Click += (object? _, EventArgs _) =>
             {
-                var isWordWrapEnabled = column.DefaultCellStyle.WrapMode == DataGridViewTriState.True;
-                column.DefaultCellStyle.WrapMode = isWordWrapEnabled ? DataGridViewTriState.False : DataGridViewTriState.True;
+                var isWordWrapCurrentlyEnabled = column.DefaultCellStyle.WrapMode == DataGridViewTriState.True;
+                column.DefaultCellStyle.WrapMode = isWordWrapCurrentlyEnabled ? DataGridViewTriState.False : DataGridViewTriState.True;
+
+                var doesAnyColumnHaveWordWrapEnabled = !isWordWrapCurrentlyEnabled || this.Columns.Cast<DataGridViewColumn>()
+                    .Any(col => col.DefaultCellStyle.WrapMode == DataGridViewTriState.True);
+                if (doesAnyColumnHaveWordWrapEnabled)
+                {
+                    AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
+                }
+                else
+                {
+                    AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+                }
             };
 
             items.Add(menuItem);
@@ -1471,8 +1483,6 @@ namespace ParquetViewer.Controls
         /// <summary>
         /// Returns the row indexes for rows that are currently visible
         /// </summary>
-        /// <param name="grid"></param>
-        /// <returns></returns>
         private IEnumerable<int> GetVisibleRowIndexes()
         {
             int firstIndex = this.FirstDisplayedScrollingRowIndex;

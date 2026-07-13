@@ -293,7 +293,7 @@ namespace ParquetViewer
 
         private void fileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
         {
-            if (this.OpenFileOrFolderPath is null)
+            if (this.OpenFileOrFolderPath is null || this._openParquetEngine is null)
                 return; //no file open
 
             this.fileIntegrityCheckingTimer.Stop();            
@@ -318,6 +318,11 @@ namespace ParquetViewer
                     //File or folder no longer exists. In this case lets not mark this timer as handled
                     //and let it keep running in case the file/folder is restored later.
                     this.Text += fileDeletedSuffix;
+                    return;
+                }
+                else if (lastModifiedInfo is not null && alreadyHasDeletedSuffix)
+                {
+                    this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
                 }
 
                 if (lastModifiedInfo is not null)
@@ -357,12 +362,19 @@ namespace ParquetViewer
                             return null; //file was deleted
                         }
 
-                        totalLength += info.Length;
-
-                        if (!foundAny || info.LastWriteTimeUtc > latest)
+                        try
                         {
-                            latest = info.LastWriteTimeUtc;
-                            foundAny = true;
+                            totalLength += info.Length;
+
+                            if (!foundAny || info.LastWriteTimeUtc > latest)
+                            {
+                                latest = info.LastWriteTimeUtc;
+                                foundAny = true;
+                            }
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            return null;
                         }
                     }
 
