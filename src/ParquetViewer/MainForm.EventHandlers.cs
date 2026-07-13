@@ -161,6 +161,10 @@ namespace ParquetViewer
             {
                 this.loadAllRowsButton_Click(null, null);
             }
+            else if (e.Control && e.KeyCode == Keys.R && this._openParquetEngine is not null) //Reload shortcut
+            {
+                LoadFileToGridview();
+            }
         }
 
         private void runQueryButton_Click(object sender, EventArgs? e)
