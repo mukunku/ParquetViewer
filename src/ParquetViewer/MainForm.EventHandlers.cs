@@ -3,7 +3,6 @@ using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -308,17 +307,14 @@ namespace ParquetViewer
 
                 if (this._lastModifiedInfo is null)
                 {
-                    //reset
-                    if (this.Text.EndsWith(fileModifiedSuffix))
-                        this.Text = this.Text.Replace(fileModifiedSuffix, string.Empty);
-                    else if (this.Text.EndsWith(fileDeletedSuffix))
-                        this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
+                    ResetTitle();
                 }
 
                 var alreadyHasDeletedSuffix = this.Text.EndsWith(fileDeletedSuffix);
                 var lastModifiedInfo = TryGetLastModifiedInfo();
                 if (lastModifiedInfo is null && !alreadyHasDeletedSuffix)
                 {
+                    ResetTitle();
                     //File or folder no longer exists. In this case lets not mark this timer as handled
                     //and let it keep running in case the file/folder is restored later.
                     this.Text += fileDeletedSuffix;
@@ -326,7 +322,7 @@ namespace ParquetViewer
                 }
                 else if (lastModifiedInfo is not null && alreadyHasDeletedSuffix)
                 {
-                    this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
+                    ResetTitle();
                 }
 
                 if (lastModifiedInfo is not null)
@@ -337,8 +333,17 @@ namespace ParquetViewer
                     }
                     else if (_lastModifiedInfo != lastModifiedInfo && !this.Text.EndsWith(fileModifiedSuffix))
                     {
+                        ResetTitle();
                         this.Text += fileModifiedSuffix;
                     }
+                }
+
+                void ResetTitle()
+                {
+                    if (this.Text.EndsWith(fileModifiedSuffix))
+                        this.Text = this.Text.Replace(fileModifiedSuffix, string.Empty);
+                    else if (this.Text.EndsWith(fileDeletedSuffix))
+                        this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
                 }
             }
             finally
@@ -354,7 +359,7 @@ namespace ParquetViewer
             {
                 if (this._openParquetEngine is not null)
                 {
-                    DateTime latest = this._isDirectoryOpen ? Directory.GetCreationTimeUtc(this.OpenFileOrFolderPath) : DateTime.MinValue;
+                    DateTime latest = Directory.Exists(this.OpenFileOrFolderPath) ? Directory.GetCreationTimeUtc(this.OpenFileOrFolderPath) : DateTime.MinValue;
                     long totalLength = 0;
                     bool foundAny = false;
 

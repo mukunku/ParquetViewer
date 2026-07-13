@@ -22,7 +22,6 @@ namespace ParquetViewer
 
         #region Members
         private readonly string? fileToLoadOnLaunch = null;
-        private bool _isDirectoryOpen = false;
         private FileSystemWatcher? _fileSystemWatcher = null;
         private volatile bool _didFilesChange = false; //We update this in a background thread and check it in the UI thread, so we need to mark it volatile to avoid caching issues in the CPU
 
@@ -53,7 +52,6 @@ namespace ParquetViewer
                 this.mainGridView.ClearQuickPeekForms();
                 this.mainGridView.ClearColumnFormatOverrides();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
-                this._isDirectoryOpen = false;
                 this._fileSystemWatcher?.DisposeSafely();
                 this._fileSystemWatcher = null;
                 this._didFilesChange = false;
@@ -79,7 +77,6 @@ namespace ParquetViewer
                     else
                     {
                         this.Text = string.Format(Resources.Strings.MainWindowOpenFolderTitleFormat, this._openFileOrFolderPath);
-                        this._isDirectoryOpen = true;
 
                         this._fileSystemWatcher = new FileSystemWatcher
                         {
@@ -107,13 +104,6 @@ namespace ParquetViewer
                     this.metadataViewerToolStripMenuItem.Enabled = true;
                 }
             }
-        }
-
-        private enum FileIntegrityEnum
-        {
-            None = 0,
-            Deleted,
-            Modified
         }
 
         private List<string>? selectedFields = null;
@@ -468,7 +458,7 @@ namespace ParquetViewer
                         : FileOpenEvent.ParquetEngineTypeId.DuckDB;
 
                     FileOpenEvent.FireAndForget(
-                        this._isDirectoryOpen,
+                        Directory.Exists(this.OpenFileOrFolderPath),
                         engine.NumberOfPartitions,
                         engine.RecordCount,
                         engine.Metadata.RowGroups.Count,
