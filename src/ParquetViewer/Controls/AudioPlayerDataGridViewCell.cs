@@ -265,24 +265,29 @@ namespace ParquetViewer.Controls
         protected override void OnMouseClick(DataGridViewCellMouseEventArgs e)
         {
             base.OnMouseClick(e);
-            if (e.Button != MouseButtons.Left)
-                return;
-
-            if (ContainsCursor(this._playPauseButtonBounds, e.Location) && !this._isCellTooSmall)
+            if (e.Button == MouseButtons.Left)
             {
+                if (ContainsCursor(this._playPauseButtonBounds, e.Location) && !this._isCellTooSmall)
+                {
+                    TogglePlayPause();
+                }
+                else if (ContainsCursor(this._stopButtonBounds, e.Location) && !this._isCellTooSmall)
+                {
+                    StopPlayback();
+                }
+                else if (ContainsCursor(this._contextMenuButtonBounds, e.Location) && !this._isCellTooSmall)
+                {
+                    ShowContextMenu(e.Location);
+                }
+                else if (ContainsCursor(this._trackBarBounds, e.Location))
+                {
+                    Seek(e.Location);
+                }
+            }
+            else if (e.Button == MouseButtons.Right)
+            {
+                // Allow play/pause even when no ui buttons are rendered
                 TogglePlayPause();
-            }
-            else if (ContainsCursor(this._stopButtonBounds, e.Location) && !this._isCellTooSmall)
-            {
-                StopPlayback();
-            }
-            else if (ContainsCursor(this._contextMenuButtonBounds, e.Location) && !this._isCellTooSmall)
-            {
-                ShowContextMenu(e.Location);
-            }
-            else if (ContainsCursor(this._trackBarBounds, e.Location))
-            {
-                Seek(e.Location);
             }
         }
 
