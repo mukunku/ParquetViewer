@@ -395,7 +395,7 @@ namespace ParquetViewer
 
                 foreach (var filePath in engine.GetOpenParquetFilePaths())
                 {
-                    if (counter > 250)
+                    if (counter >= 250)
                     {
                         //We don't want to check too many files in case the user has a folder with a lot of files open.
                         //This is a safeguard against performance issues.
@@ -421,7 +421,7 @@ namespace ParquetViewer
                     catch (Exception ex)
                     {
                         //Throw an IOException to be caught by the caller's try/catch
-                        throw new FileLoadException($"Failed to get file info for {filePath}.", ex);
+                        throw new IOException($"Failed to get file info for {filePath}.", ex);
                     }
 
                     counter++;
