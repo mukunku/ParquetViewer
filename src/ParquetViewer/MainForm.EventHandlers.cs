@@ -295,8 +295,8 @@ namespace ParquetViewer
             if (this.OpenFileOrFolderPath is null || this._openParquetEngine is null)
                 return; //no file open
 
-            if (!this._didFilesChange)
-                return;
+            if (!this._didFilesChange && this._lastModifiedInfo is not null)
+                return; //Nothing to do
 
             this._didFilesChange = false; //reset the flag so we don't keep checking until the next change
             this.fileIntegrityCheckingTimer.Stop();            
@@ -315,7 +315,7 @@ namespace ParquetViewer
                 if (lastModifiedInfo is null && !alreadyHasDeletedSuffix)
                 {
                     ResetTitle();
-                    //File or folder no longer exists. In this case lets not mark this timer as handled
+                    //File or folder no longer exists. In this case let's not mark this timer as handled
                     //and let it keep running in case the file/folder is restored later.
                     this.Text += fileDeletedSuffix;
                     return;

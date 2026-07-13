@@ -68,10 +68,9 @@ namespace ParquetViewer
 
                         this._fileSystemWatcher = new FileSystemWatcher
                         {
-                            Path = Path.GetDirectoryName(this._openFileOrFolderPath) ?? string.Empty,
+                            Path = Path.GetDirectoryName(Path.GetFullPath(this._openFileOrFolderPath)) ?? string.Empty,
                             Filter = Path.GetFileName(this._openFileOrFolderPath),
                             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
-                            EnableRaisingEvents = true
                         };
                     }
                     else
@@ -84,14 +83,14 @@ namespace ParquetViewer
                             IncludeSubdirectories = true,
                             Filter = "*.parquet", //TODO: We're not handling all the extension cases in Helpers.ListParquetFiles()
                             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
-                            EnableRaisingEvents = true
                         };
                     }
 
-                    this._fileSystemWatcher?.Changed += TriggerFileIntegrityCheck;
-                    this._fileSystemWatcher?.Deleted += TriggerFileIntegrityCheck;
-                    this._fileSystemWatcher?.Renamed += TriggerFileIntegrityCheck;
-                    this._fileSystemWatcher?.Created += TriggerFileIntegrityCheck;
+                    this._fileSystemWatcher.Changed += TriggerFileIntegrityCheck;
+                    this._fileSystemWatcher.Deleted += TriggerFileIntegrityCheck;
+                    this._fileSystemWatcher.Renamed += TriggerFileIntegrityCheck;
+                    this._fileSystemWatcher.Created += TriggerFileIntegrityCheck;
+                    this._fileSystemWatcher.EnableRaisingEvents = true;
 
                     void TriggerFileIntegrityCheck(object sender, FileSystemEventArgs e)
                     {
