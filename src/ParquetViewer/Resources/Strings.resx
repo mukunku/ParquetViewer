@@ -398,4 +398,16 @@ You can always toggle this on/off from the Edit menu.</value>
     <value>Frozen</value>
     <comment>When the user right-clicks on a column header this is the text shown for freezing the column. Freezing a column makes it so it is always visible no matter how much you scroll horizontally.</comment>
   </data>
+  <data name="OpenFileNoLongerExistsTitleSuffix" xml:space="preserve">
+    <value>DELETED</value>
+    <comment>We don't lock opened files anymore. So if the source file/folder disappears we will append this suffix to the main form title as a visual indicator for the user that the data source no longer exists.</comment>
+  </data>
+  <data name="OpenFileWasModifiedTitleSuffix" xml:space="preserve">
+    <value>MODIFIED</value>
+    <comment>We don't lock opened files anymore. So if the source file/folder is modified we will append this suffix to the main form title as a visual indicator for the user that the data they are looking at is stale.</comment>
+  </data>
+  <data name="WordWrapContextMenuItemText" xml:space="preserve">
+    <value>Wrap Text</value>
+    <comment>Right click context menu item shown when a column has cut off text and the user right clicks the column header.</comment>
+  </data>
 </root>

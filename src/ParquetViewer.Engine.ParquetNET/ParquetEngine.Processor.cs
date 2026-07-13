@@ -564,6 +564,11 @@ namespace ParquetViewer.Engine.ParquetNET
 
                 throw;
             }
+            catch (ParquetException ex)
+            {
+                var maskedExMessage = ex.Message.Replace($"'{field.Path}'", $"`{field.Path}`");
+                throw new ParquetEngineException(maskedExMessage, ex);
+            }
         }
     }
 }

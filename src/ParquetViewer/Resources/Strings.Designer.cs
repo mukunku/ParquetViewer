@@ -478,6 +478,24 @@ namespace ParquetViewer.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DELETED.
+        /// </summary>
+        internal static string OpenFileNoLongerExistsTitleSuffix {
+            get {
+                return ResourceManager.GetString("OpenFileNoLongerExistsTitleSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MODIFIED.
+        /// </summary>
+        internal static string OpenFileWasModifiedTitleSuffix {
+            get {
+                return ResourceManager.GetString("OpenFileWasModifiedTitleSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Privacy policy.
         /// </summary>
         internal static string PrivacyPolicyLabelText {
@@ -646,6 +664,15 @@ namespace ParquetViewer.Resources {
         internal static string UnsupportedFieldCountTextFormat {
             get {
                 return ResourceManager.GetString("UnsupportedFieldCountTextFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrap Text.
+        /// </summary>
+        internal static string WordWrapContextMenuItemText {
+            get {
+                return ResourceManager.GetString("WordWrapContextMenuItemText", resourceCulture);
             }
         }
     }

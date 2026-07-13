@@ -975,6 +975,9 @@
   <data name="openFolderDialog.Description" xml:space="preserve">
     <value>Select a folder with parquet files</value>
   </data>
+  <metadata name="fileIntegrityCheckingTimer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>943, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -1220,6 +1223,12 @@
   </data>
   <data name="&gt;&gt;loadAllRowsButtonTooltip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;fileIntegrityCheckingTimer.Name" xml:space="preserve">
+    <value>fileIntegrityCheckingTimer</value>
+  </data>
+  <data name="&gt;&gt;fileIntegrityCheckingTimer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Timer, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MainForm</value>

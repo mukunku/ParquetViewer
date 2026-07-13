@@ -3,10 +3,12 @@ using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -287,6 +289,88 @@ namespace ParquetViewer
 
             AppSettings.UserSelectedCulture = newCultureInfo;
             UtilityMethods.RestartApplication();
+        }
+
+        private void fileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
+        {
+            if (this.OpenFileOrFolderPath is null)
+                return; //no file open
+
+            this.fileIntegrityCheckingTimer.Stop();            
+            try
+            {
+                var fileDeletedSuffix = $" ({Resources.Strings.OpenFileNoLongerExistsTitleSuffix})";
+                var fileModifiedSuffix = $" ({Resources.Strings.OpenFileWasModifiedTitleSuffix})";
+
+                if (this._lastModifiedInfo is null)
+                {
+                    //reset
+                    if (this.Text.EndsWith(fileModifiedSuffix))
+                        this.Text = this.Text.Replace(fileModifiedSuffix, string.Empty);
+                    else if (this.Text.EndsWith(fileDeletedSuffix))
+                        this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
+                }
+
+                var alreadyHasDeletedSuffix = this.Text.EndsWith(fileDeletedSuffix);
+                var lastModifiedInfo = TryGetLastModifiedInfo();
+                if (lastModifiedInfo is null && !alreadyHasDeletedSuffix)
+                {
+                    //File or folder no longer exists. In this case lets not mark this timer as handled
+                    //and let it keep running in case the file/folder is restored later.
+                    this.Text += fileDeletedSuffix;
+                }
+
+                if (lastModifiedInfo is not null)
+                {
+                    if (_lastModifiedInfo is null)
+                    {
+                        _lastModifiedInfo = lastModifiedInfo;
+                    }
+                    else if (_lastModifiedInfo != lastModifiedInfo && !this.Text.EndsWith(fileModifiedSuffix))
+                    {
+                        this.Text += fileModifiedSuffix;
+                    }
+                }
+            }
+            finally
+            {
+                this.fileIntegrityCheckingTimer.Start();
+            }
+
+            /// <summary>
+            /// Returns the last modified date and size of the open file, or the most recent last modified
+            /// date and total combined size of all open files in the folder.
+            /// </summary>
+            (DateTime LastModifiedUtc, long Length)? TryGetLastModifiedInfo()
+            {
+                if (this._openParquetEngine is not null)
+                {
+                    DateTime latest = Directory.Exists(this.OpenFileOrFolderPath) ? Directory.GetCreationTimeUtc(this.OpenFileOrFolderPath) : DateTime.MinValue;
+                    long totalLength = 0;
+                    bool foundAny = false;
+
+                    foreach (var filePath in this._openParquetEngine.GetOpenParquetFilePaths())
+                    {
+                        var info = new FileInfo(filePath);
+                        if (!info.Exists)
+                        {
+                            return null; //file was deleted
+                        }
+
+                        totalLength += info.Length;
+
+                        if (!foundAny || info.LastWriteTimeUtc > latest)
+                        {
+                            latest = info.LastWriteTimeUtc;
+                            foundAny = true;
+                        }
+                    }
+
+                    return (latest, totalLength);
+                }
+
+                return null; //no open file;
+            }
         }
     }
 }

@@ -87,6 +87,7 @@ namespace ParquetViewer
             exportFileDialog = new SaveFileDialog();
             openFolderDialog = new FolderBrowserDialog();
             loadAllRowsButtonTooltip = new ToolTip(components);
+            fileIntegrityCheckingTimer = new Timer(components);
             mainTableLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)mainGridView).BeginInit();
             mainMenuStrip.SuspendLayout();
@@ -448,6 +449,12 @@ namespace ParquetViewer
             resources.ApplyResources(openFolderDialog, "openFolderDialog");
             openFolderDialog.ShowNewFolderButton = false;
             // 
+            // fileIntegrityCheckingTimer
+            // 
+            fileIntegrityCheckingTimer.Enabled = true;
+            fileIntegrityCheckingTimer.Interval = 2500;
+            fileIntegrityCheckingTimer.Tick += fileIntegrityCheckingTimer_Tick;
+            // 
             // MainForm
             // 
             AllowDrop = true;
@@ -529,6 +536,7 @@ namespace ParquetViewer
         private ToolStripMenuItem languageToolStripMenuItem;
         private ToolStripMenuItem englishToolStripMenuItem;
         private ToolStripMenuItem turkishToolStripMenuItem;
+        private Timer fileIntegrityCheckingTimer;
     }
 }
 

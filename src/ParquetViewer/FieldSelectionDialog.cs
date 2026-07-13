@@ -280,7 +280,7 @@ namespace ParquetViewer
             MessageBox.Show(string.Concat(customMessage ?? $"{Resources.Errors.GenericErrorMessage}:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        private void filterColumnsTextbox_TextChanged(object sender, EventArgs e)
+        private void filterColumnsTextbox_DelayedTextChanged(object sender, EventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text))
             {

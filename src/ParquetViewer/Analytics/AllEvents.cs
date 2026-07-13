@@ -132,11 +132,10 @@ namespace ParquetViewer.Analytics
     public class ExceptionEvent : AmplitudeEvent
     {
         public const string MASK_SENTINEL = "*****";
-
         private const string EVENT_TYPE = "exception.thrown";
 
         [JsonIgnore]
-        public System.Exception Exception { get; }
+        public Exception Exception { get; }
 
         public string Message
         {
