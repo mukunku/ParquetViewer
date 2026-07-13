@@ -408,20 +408,14 @@ namespace ParquetViewer
                         return null; //file was deleted
                     }
 
-                    try
-                    {
-                        totalLength += info.Length;
+                    //There's a chance the file could be deleted between the time we check for existence above and when we access .Length and .LastWriteTimeUtc below.
+                    //This is fine as the caller has a try-catch block that catches IOException types.
+                    totalLength += info.Length;
 
-                        if (!foundAny || info.LastWriteTimeUtc > latest)
-                        {
-                            latest = info.LastWriteTimeUtc;
-                            foundAny = true;
-                        }
-                    }
-                    catch (Exception ex)
+                    if (!foundAny || info.LastWriteTimeUtc > latest)
                     {
-                        //Throw an IOException to be caught by the caller's try/catch
-                        throw new IOException($"Failed to get file info for {filePath}.", ex);
+                        latest = info.LastWriteTimeUtc;
+                        foundAny = true;
                     }
 
                     counter++;
