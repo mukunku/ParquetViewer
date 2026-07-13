@@ -1227,7 +1227,7 @@ namespace ParquetViewer.Controls
                     return;
             }
 
-            var menuItem = new ToolStripMenuItem("Word Wrap")
+            var menuItem = new ToolStripMenuItem(Resources.Strings.WordWrapContextMenuItemText)
             { Checked = isWordWrapEnabled };
 
             menuItem.Click += (object? _, EventArgs _) =>
@@ -1457,8 +1457,10 @@ namespace ParquetViewer.Controls
         private bool IsCellTextCutOff(int rowIndex, int columnIndex)
         {
             var cell = this.Rows[rowIndex].Cells[columnIndex];
-            var text = cell.FormattedValue?.ToString() ?? string.Empty;
+            if (cell.OwningColumn?.ValueType != typeof(string))
+                return false; //Only show word wrap for string columns
 
+            var text = cell.FormattedValue?.ToString() ?? string.Empty;
             if (string.IsNullOrEmpty(text))
                 return false;
 

@@ -340,6 +340,9 @@ Tercihinizi Düzen menüsünden istediğiniz zaman değiştirebilirsiniz.</value
     <value>SİLİNDİ</value>
   </data>
   <data name="OpenFileWasModifiedTitleSuffix" xml:space="preserve">
-    <value>DEĞİŞTİRİLMİŞ</value>
+    <value>DEĞİŞTİRİLDİ</value>
+  </data>
+  <data name="WordWrapContextMenuItemText" xml:space="preserve">
+    <value>Metni Kaydır</value>
   </data>
 </root>

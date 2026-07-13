@@ -666,5 +666,14 @@ namespace ParquetViewer.Resources {
                 return ResourceManager.GetString("UnsupportedFieldCountTextFormat", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrap Text.
+        /// </summary>
+        internal static string WordWrapContextMenuItemText {
+            get {
+                return ResourceManager.GetString("WordWrapContextMenuItemText", resourceCulture);
+            }
+        }
     }
 }
