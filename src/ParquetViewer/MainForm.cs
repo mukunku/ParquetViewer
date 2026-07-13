@@ -22,9 +22,6 @@ namespace ParquetViewer
 
         #region Members
         private readonly string? fileToLoadOnLaunch = null;
-        private FileSystemWatcher? _fileSystemWatcher = null;
-        private volatile bool _didFilesChange = false; //We update this in a background thread and check it in the UI thread, so we need to mark it volatile to avoid caching issues in the CPU
-
         private string? _openFileOrFolderPath;
         private string? OpenFileOrFolderPath
         {
@@ -52,9 +49,6 @@ namespace ParquetViewer
                 this.mainGridView.ClearQuickPeekForms();
                 this.mainGridView.ClearColumnFormatOverrides();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
-                this._fileSystemWatcher?.DisposeSafely();
-                this._fileSystemWatcher = null;
-                this._didFilesChange = false;
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {
@@ -63,39 +57,9 @@ namespace ParquetViewer
                 else
                 {
                     if (File.Exists(this._openFileOrFolderPath))
-                    {
                         this.Text = string.Format(Resources.Strings.MainWindowOpenFileTitleFormat, this._openFileOrFolderPath);
-
-                        this._fileSystemWatcher = new FileSystemWatcher
-                        {
-                            Path = Path.GetDirectoryName(Path.GetFullPath(this._openFileOrFolderPath)) ?? string.Empty,
-                            Filter = Path.GetFileName(this._openFileOrFolderPath),
-                            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
-                        };
-                    }
                     else
-                    {
                         this.Text = string.Format(Resources.Strings.MainWindowOpenFolderTitleFormat, this._openFileOrFolderPath);
-
-                        this._fileSystemWatcher = new FileSystemWatcher
-                        {
-                            Path = this._openFileOrFolderPath,
-                            IncludeSubdirectories = true,
-                            Filter = "*.parquet", //TODO: We're not handling all the extension cases in Helpers.ListParquetFiles()
-                            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
-                        };
-                    }
-
-                    this._fileSystemWatcher.Changed += TriggerFileIntegrityCheck;
-                    this._fileSystemWatcher.Deleted += TriggerFileIntegrityCheck;
-                    this._fileSystemWatcher.Renamed += TriggerFileIntegrityCheck;
-                    this._fileSystemWatcher.Created += TriggerFileIntegrityCheck;
-                    this._fileSystemWatcher.EnableRaisingEvents = true;
-
-                    void TriggerFileIntegrityCheck(object sender, FileSystemEventArgs e)
-                    {
-                        this._didFilesChange = true;
-                    }
 
                     this.changeFieldsMenuStripButton.Enabled = true;
                     this.saveAsToolStripMenuItem.Enabled = true;
@@ -178,7 +142,7 @@ namespace ParquetViewer
 
         private IParquetEngine? _openParquetEngine = null;
 
-        private (DateTime LastWriteTimeUtc, long Length)? _lastModifiedInfo;
+        private (DateTime LastWriteTimeUtc, long Length)? _originalModifiedInfo;
         #endregion
 
         public MainForm()
@@ -355,7 +319,7 @@ namespace ParquetViewer
             await this.LoadFileToGridviewImpl(this._openParquetEngine);
 #endif
 
-            this._lastModifiedInfo = null;
+            this._originalModifiedInfo = null;
         }
 
         private async Task LoadFileToGridviewImpl(IParquetEngine engine)

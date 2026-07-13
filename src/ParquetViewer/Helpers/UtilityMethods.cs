@@ -9,7 +9,7 @@ namespace ParquetViewer.Helpers
     public static class UtilityMethods
     {
         /// <summary>
-        /// Formats a value to make it is RFC-4180 compliant
+        /// Formats a value to make it RFC-4180 compliant
         /// </summary>
         /// <param name="value">Raw string value to be added to a CSV file</param>
         /// <returns>Possibly formatted value</returns>

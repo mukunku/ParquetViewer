@@ -1240,15 +1240,23 @@ namespace ParquetViewer.Controls
 
                 column.DefaultCellStyle.WrapMode = isWordWrapCurrentlyEnabled ? DataGridViewTriState.False : DataGridViewTriState.True;
 
-                var doesAnyColumnHaveWordWrapEnabled = !isWordWrapCurrentlyEnabled || this.Columns.Cast<DataGridViewColumn>()
-                    .Any(col => col.DefaultCellStyle.WrapMode == DataGridViewTriState.True);
-                if (doesAnyColumnHaveWordWrapEnabled)
+                var didWeJustEnableWordWrap = !isWordWrapCurrentlyEnabled;
+                if (didWeJustEnableWordWrap)
                 {
                     AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
                 }
                 else
                 {
-                    AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+                    var doesAnyColumnHaveWordWrapEnabled = this.Columns.Cast<DataGridViewColumn>()
+                        .Any(col => col.DefaultCellStyle.WrapMode == DataGridViewTriState.True);
+                    if (doesAnyColumnHaveWordWrapEnabled)
+                    {
+                        AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
+                    }
+                    else
+                    {
+                        AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+                    }
                 }
             };
 
@@ -1469,6 +1477,7 @@ namespace ParquetViewer.Controls
 
         /// <summary>
         /// Simple tool to guess if text is long enough to be cut off in a cell.
+        /// Returns false for all non-string columns.
         /// </summary>
         private bool IsCellTextCutOff(int rowIndex, int columnIndex)
         {

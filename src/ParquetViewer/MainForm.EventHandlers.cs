@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -294,28 +295,30 @@ namespace ParquetViewer
             UtilityMethods.RestartApplication();
         }
 
-        private void fileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
+        /// <remarks>Originally I implemented a FileSystemWatcher but it seems network drives are not reliable with that.
+        /// Not sure how common that is but this implementation without it is simpler and I'm hoping not too IO intensive</remarks>
+        private async void fileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
         {
             if (this.OpenFileOrFolderPath is null || this._openParquetEngine is null)
                 return; //no file open
 
-            if (!this._didFilesChange && this._lastModifiedInfo is not null)
-                return; //Nothing to do
-
-            this._didFilesChange = false; //reset the flag so we don't keep checking until the next change
             this.fileIntegrityCheckingTimer.Stop();            
             try
             {
                 var fileDeletedSuffix = $" ({Resources.Strings.OpenFileNoLongerExistsTitleSuffix})";
                 var fileModifiedSuffix = $" ({Resources.Strings.OpenFileWasModifiedTitleSuffix})";
 
-                if (this._lastModifiedInfo is null)
+                if (this._originalModifiedInfo is null)
                 {
                     ResetTitle();
                 }
 
                 var alreadyHasDeletedSuffix = this.Text.EndsWith(fileDeletedSuffix);
-                var lastModifiedInfo = TryGetLastModifiedInfo();
+
+                //Perform file system checks in a background thread avoid blocking the UI thread.
+                //Only really relevant when opening a folder with many files on a network drive.
+                var lastModifiedInfo = await Task.Run(TryGetLastModifiedInfo);
+
                 if (lastModifiedInfo is null && !alreadyHasDeletedSuffix)
                 {
                     ResetTitle();
@@ -331,11 +334,11 @@ namespace ParquetViewer
 
                 if (lastModifiedInfo is not null)
                 {
-                    if (_lastModifiedInfo is null)
+                    if (_originalModifiedInfo is null)
                     {
-                        _lastModifiedInfo = lastModifiedInfo;
+                        _originalModifiedInfo = lastModifiedInfo;
                     }
-                    else if (_lastModifiedInfo != lastModifiedInfo && !this.Text.EndsWith(fileModifiedSuffix))
+                    else if (_originalModifiedInfo != lastModifiedInfo && !this.Text.EndsWith(fileModifiedSuffix))
                     {
                         ResetTitle();
                         this.Text += fileModifiedSuffix;
@@ -350,15 +353,26 @@ namespace ParquetViewer
                         this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
                 }
             }
+            catch (IOException)
+            {
+                //swallow to not overload the user with error message dialogs
+            }
+            catch (UnauthorizedAccessException)
+            {
+                //swallow to not overload the user with error message dialogs
+            }
+            catch (Exception ex)
+            {
+                //swallow to not overload the user with error message dialogs but log it as this is unexpected
+                ExceptionEvent.FireAndForget(ex);
+            }
             finally
             {
                 this.fileIntegrityCheckingTimer.Start();
             }
 
-            /// <summary>
-            /// Returns the last modified date and size of the open file, or the most recent last modified
-            /// date and total combined size of all open files in the folder.
-            /// </summary>
+            //Returns the last modified date and size of the open file, or the most recent last modified
+            //date and total combined size of all open files in the folder.
             (DateTime LastModifiedUtc, long Length)? TryGetLastModifiedInfo()
             {
                 if (this._openParquetEngine is not null)
@@ -366,9 +380,17 @@ namespace ParquetViewer
                     DateTime latest = Directory.Exists(this.OpenFileOrFolderPath) ? Directory.GetCreationTimeUtc(this.OpenFileOrFolderPath) : DateTime.MinValue;
                     long totalLength = 0;
                     bool foundAny = false;
+                    var counter = 0;
 
                     foreach (var filePath in this._openParquetEngine.GetOpenParquetFilePaths())
                     {
+                        if (counter > 250)
+                        {
+                            //We don't want to check too many files in case the user has a folder with a lot of files open.
+                            //This is a safeguard against performance issues.
+                            break;
+                        }
+
                         var info = new FileInfo(filePath);
                         if (!info.Exists)
                         {
@@ -388,8 +410,10 @@ namespace ParquetViewer
                         catch
                         {
                             //We can't figure out what happened to the file, so act like nothing happened by returning the last modified info.
-                            return this._lastModifiedInfo;
+                            return this._originalModifiedInfo;
                         }
+
+                        counter++;
                     }
 
                     return (latest, totalLength);
