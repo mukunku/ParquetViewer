@@ -1150,7 +1150,7 @@ namespace ParquetViewer.Controls
                 { Checked = displayFormat == FloatDisplayFormat.Scientific };
                 scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
-                    ColumnFormattedEvent.FireAndForget(scientificNotationMenuItem.Text);
+                    ColumnFormattedEvent.FireAndForget("Scientific");
 
                     if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
                         floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
@@ -1166,7 +1166,7 @@ namespace ParquetViewer.Controls
                 { Checked = displayFormat == FloatDisplayFormat.Decimal };
                 decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
                 {
-                    ColumnFormattedEvent.FireAndForget(decimalNotationMenuItem.Text);
+                    ColumnFormattedEvent.FireAndForget("Decimal");
 
                     if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
                         floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
@@ -1234,6 +1234,10 @@ namespace ParquetViewer.Controls
             menuItem.Click += (object? _, EventArgs _) =>
             {
                 var isWordWrapCurrentlyEnabled = column.DefaultCellStyle.WrapMode == DataGridViewTriState.True;
+
+                if (!isWordWrapCurrentlyEnabled)
+                    ColumnFormattedEvent.FireAndForget("WordWrap");
+
                 column.DefaultCellStyle.WrapMode = isWordWrapCurrentlyEnabled ? DataGridViewTriState.False : DataGridViewTriState.True;
 
                 var doesAnyColumnHaveWordWrapEnabled = !isWordWrapCurrentlyEnabled || this.Columns.Cast<DataGridViewColumn>()
