@@ -1,4 +1,5 @@
 ﻿using ParquetViewer.Analytics;
+using ParquetViewer.Engine;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Exceptions;
 using ParquetViewer.Helpers;
@@ -19,6 +20,8 @@ namespace ParquetViewer
     {
         [GeneratedRegex("^WHERE ")]
         private static partial Regex QueryUselessPartRegex();
+
+        private int _failedFileIntegrityCheckCount = 0;
 
         private void offsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -302,7 +305,7 @@ namespace ParquetViewer
             if (this.OpenFileOrFolderPath is null || this._openParquetEngine is null)
                 return; //no file open
 
-            this.fileIntegrityCheckingTimer.Stop();            
+            this.fileIntegrityCheckingTimer.Stop();
             try
             {
                 var fileDeletedSuffix = $" ({Resources.Strings.OpenFileNoLongerExistsTitleSuffix})";
@@ -317,7 +320,10 @@ namespace ParquetViewer
 
                 //Perform file system checks in a background thread avoid blocking the UI thread.
                 //Only really relevant when opening a folder with many files on a network drive.
-                var lastModifiedInfo = await Task.Run(TryGetLastModifiedInfo);
+                var engineSnapshot = this._openParquetEngine;
+                var lastModifiedInfo = await Task.Run(() => TryGetLastModifiedInfo(engineSnapshot, this.OpenFileOrFolderPath));
+                if (!ReferenceEquals(engineSnapshot, this._openParquetEngine))
+                    return; //the user has opened a different file/folder while we were checking the file system, so ignore this result
 
                 if (lastModifiedInfo is null && !alreadyHasDeletedSuffix)
                 {
@@ -345,6 +351,8 @@ namespace ParquetViewer
                     }
                 }
 
+                this._failedFileIntegrityCheckCount = 0;
+
                 void ResetTitle()
                 {
                     if (this.Text.EndsWith(fileModifiedSuffix))
@@ -353,18 +361,18 @@ namespace ParquetViewer
                         this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
                 }
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
-                //swallow to not overload the user with error message dialogs
-            }
-            catch (UnauthorizedAccessException)
-            {
-                //swallow to not overload the user with error message dialogs
+                //swallow expected exceptions to not overload the user with error message dialogs
             }
             catch (Exception ex)
             {
-                //swallow to not overload the user with error message dialogs but log it as this is unexpected
-                ExceptionEvent.FireAndForget(ex);
+                //Swallow to not overload the user with error message dialogs but log it as this is unexpected.
+                //Also make sure we don't spam exception events for repeated failures.
+                if (++this._failedFileIntegrityCheckCount == 1)
+                {
+                    ExceptionEvent.FireAndForget(ex);
+                }
             }
             finally
             {
@@ -373,53 +381,53 @@ namespace ParquetViewer
 
             //Returns the last modified date and size of the open file, or the most recent last modified
             //date and total combined size of all open files in the folder.
-            (DateTime LastModifiedUtc, long Length)? TryGetLastModifiedInfo()
+            static (DateTime LastModifiedUtc, long Length)? TryGetLastModifiedInfo(IParquetEngine engine, string openFileOrFolderPath)
             {
-                if (this._openParquetEngine is not null)
+                if (engine is null)
                 {
-                    DateTime latest = Directory.Exists(this.OpenFileOrFolderPath) ? Directory.GetCreationTimeUtc(this.OpenFileOrFolderPath) : DateTime.MinValue;
-                    long totalLength = 0;
-                    bool foundAny = false;
-                    var counter = 0;
-
-                    foreach (var filePath in this._openParquetEngine.GetOpenParquetFilePaths())
-                    {
-                        if (counter > 250)
-                        {
-                            //We don't want to check too many files in case the user has a folder with a lot of files open.
-                            //This is a safeguard against performance issues.
-                            break;
-                        }
-
-                        var info = new FileInfo(filePath);
-                        if (!info.Exists)
-                        {
-                            return null; //file was deleted
-                        }
-
-                        try
-                        {
-                            totalLength += info.Length;
-
-                            if (!foundAny || info.LastWriteTimeUtc > latest)
-                            {
-                                latest = info.LastWriteTimeUtc;
-                                foundAny = true;
-                            }
-                        }
-                        catch
-                        {
-                            //We can't figure out what happened to the file, so act like nothing happened by returning the last modified info.
-                            return this._originalModifiedInfo;
-                        }
-
-                        counter++;
-                    }
-
-                    return (latest, totalLength);
+                    return null; //no open file;
                 }
 
-                return null; //no open file;
+                DateTime latest = Directory.Exists(openFileOrFolderPath) ? Directory.GetCreationTimeUtc(openFileOrFolderPath) : DateTime.MinValue;
+                long totalLength = 0;
+                bool foundAny = false;
+                var counter = 0;
+
+                foreach (var filePath in engine.GetOpenParquetFilePaths())
+                {
+                    if (counter > 250)
+                    {
+                        //We don't want to check too many files in case the user has a folder with a lot of files open.
+                        //This is a safeguard against performance issues.
+                        break;
+                    }
+
+                    var info = new FileInfo(filePath);
+                    if (!info.Exists)
+                    {
+                        return null; //file was deleted
+                    }
+
+                    try
+                    {
+                        totalLength += info.Length;
+
+                        if (!foundAny || info.LastWriteTimeUtc > latest)
+                        {
+                            latest = info.LastWriteTimeUtc;
+                            foundAny = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        //Throw an IOException to be caught by the caller's try/catch
+                        throw new FileLoadException($"Failed to get file info for {filePath}.", ex);
+                    }
+
+                    counter++;
+                }
+
+                return (latest, totalLength);
             }
         }
     }
