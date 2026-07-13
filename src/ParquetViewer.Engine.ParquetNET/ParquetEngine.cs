@@ -94,14 +94,16 @@ namespace ParquetViewer.Engine.ParquetNET
                 throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
             }
 
+            Stream? readOnlyNonLockingStream = null;
             try
             {
-                var readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
                 return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
             }
             catch (Exception ex)
             {
+                readOnlyNonLockingStream?.Dispose();
                 throw new FileReadException(ex);
             }
         }
@@ -119,9 +121,10 @@ namespace ParquetViewer.Engine.ParquetNET
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                Stream? readOnlyNonLockingStream = null;
                 try
                 {
-                    var readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                     var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
                     if (!fileGroups.ContainsKey(parquetReader.Schema))
                     {
@@ -132,6 +135,7 @@ namespace ParquetViewer.Engine.ParquetNET
                 }
                 catch (Exception ex)
                 {
+                    readOnlyNonLockingStream?.Dispose();
                     skippedFiles.Add(System.IO.Path.GetRelativePath(folderPath, file), ex);
                 }
             }

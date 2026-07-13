@@ -350,7 +350,7 @@ namespace ParquetViewer
             {
                 if (this._openParquetEngine is not null)
                 {
-                    DateTime latest = Directory.Exists(this.OpenFileOrFolderPath) ? Directory.GetCreationTimeUtc(this.OpenFileOrFolderPath) : DateTime.MinValue;
+                    DateTime latest = this._isDirectoryOpen ? Directory.GetCreationTimeUtc(this.OpenFileOrFolderPath) : DateTime.MinValue;
                     long totalLength = 0;
                     bool foundAny = false;
 
@@ -372,7 +372,7 @@ namespace ParquetViewer
                                 foundAny = true;
                             }
                         }
-                        catch (FileNotFoundException)
+                        catch
                         {
                             return null;
                         }

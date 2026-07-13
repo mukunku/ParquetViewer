@@ -22,6 +22,7 @@ namespace ParquetViewer
 
         #region Members
         private readonly string? fileToLoadOnLaunch = null;
+        private bool _isDirectoryOpen = false;
 
         private string? _openFileOrFolderPath;
         private string? OpenFileOrFolderPath
@@ -50,6 +51,7 @@ namespace ParquetViewer
                 this.mainGridView.ClearQuickPeekForms();
                 this.mainGridView.ClearColumnFormatOverrides();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
+                this._isDirectoryOpen = false;
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {
@@ -57,9 +59,15 @@ namespace ParquetViewer
                 }
                 else
                 {
-                    this.Text = string.Format(
-                        File.Exists(this._openFileOrFolderPath) ? Resources.Strings.MainWindowOpenFileTitleFormat : Resources.Strings.MainWindowOpenFolderTitleFormat,
-                        this._openFileOrFolderPath);
+                    if (File.Exists(this._openFileOrFolderPath))
+                    {
+                        this.Text = string.Format(Resources.Strings.MainWindowOpenFileTitleFormat, this._openFileOrFolderPath);
+                    }
+                    else
+                    {
+                        this.Text = string.Format(Resources.Strings.MainWindowOpenFolderTitleFormat, this._openFileOrFolderPath);
+                        this._isDirectoryOpen = true;
+                    }
                     this.changeFieldsMenuStripButton.Enabled = true;
                     this.saveAsToolStripMenuItem.Enabled = true;
                     this.getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
@@ -420,7 +428,7 @@ namespace ParquetViewer
                         : FileOpenEvent.ParquetEngineTypeId.DuckDB;
 
                     FileOpenEvent.FireAndForget(
-                        Directory.Exists(this.OpenFileOrFolderPath),
+                        this._isDirectoryOpen,
                         engine.NumberOfPartitions,
                         engine.RecordCount,
                         engine.Metadata.RowGroups.Count,
