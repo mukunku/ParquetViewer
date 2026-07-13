@@ -459,5 +459,7 @@ namespace ParquetViewer.Engine.DuckDB
         public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken,
             IProgress<int> progress, Dictionary<string, string>? customMetadata)
             => throw new NotImplementedException();
+
+        public IEnumerable<string> GetOpenParquetFilePaths() => this._dbs.Select(db => db.ParquetFilePath);
     }
 }

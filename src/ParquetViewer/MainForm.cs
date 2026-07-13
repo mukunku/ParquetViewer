@@ -459,7 +459,6 @@ namespace ParquetViewer
             if (fieldList is not null)
             {
                 this.SelectedFields = fieldList; //triggers a file load
-                this.fileIntegrityCheckingTimer.Tag = null; //reset the timer tag so we start checking for file integrity again
                 AppSettings.OpenedFileCount++;
                 Program.AskUserForFileExtensionAssociation();
             }

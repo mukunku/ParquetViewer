@@ -16,5 +16,7 @@ namespace ParquetViewer.Engine
 
         Task WriteDataToParquetFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken,
             IProgress<int> progress, Dictionary<string, string>? customMetadata);
+
+        IEnumerable<string> GetOpenParquetFilePaths();
     }
 }

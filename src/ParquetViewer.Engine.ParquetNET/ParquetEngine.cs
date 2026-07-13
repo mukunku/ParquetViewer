@@ -10,10 +10,10 @@ namespace ParquetViewer.Engine.ParquetNET
     public partial class ParquetEngine : IParquetEngine, IDisposable
     {
         private static readonly ParquetOptions _defaultParquetOptions = new () { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
-        private readonly ParquetReader[] _parquetFiles;
+        private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
         private long? _recordCount;
 
-        private ParquetReader _defaultReader => _parquetFiles.FirstOrDefault() ?? throw new ParquetEngineException("No parquet readers available");
+        private ParquetReader _defaultReader => _parquetFiles.FirstOrDefault().Reader;
 
         private FileMetaData _thriftMetadata => _defaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
 
@@ -21,7 +21,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
         public Dictionary<string, string> CustomMetadata => _defaultReader.CustomMetadata;
 
-        public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Metadata?.NumRows ?? 0);
+        public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Reader.Metadata?.NumRows ?? 0);
 
         public int NumberOfPartitions => _parquetFiles.Length;
 
@@ -32,7 +32,7 @@ namespace ParquetViewer.Engine.ParquetNET
         ParquetMetadata? _metadata = null;
         public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(_thriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
 
-        private ParquetEngine(string fileOrFolderPath, params ParquetReader[] parquetFiles)
+        private ParquetEngine(string fileOrFolderPath, params (string FilePath, ParquetReader Reader)[] parquetFiles)
         {
             _parquetFiles = parquetFiles ?? throw new ArgumentNullException(nameof(parquetFiles), "No parquet readers provided");
             Path = fileOrFolderPath;
@@ -98,7 +98,7 @@ namespace ParquetViewer.Engine.ParquetNET
             {
                 var readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
-                return new ParquetEngine(parquetFilePath, parquetReader);
+                return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
             }
             catch (Exception ex)
             {
@@ -114,7 +114,7 @@ namespace ParquetViewer.Engine.ParquetNET
             }
 
             var skippedFiles = new Dictionary<string, Exception>();
-            var fileGroups = new Dictionary<ParquetSchema, List<ParquetReader>>();
+            var fileGroups = new Dictionary<ParquetSchema, List<(string FilePath, ParquetReader Reader)>>();
             foreach (var file in Engine.Helpers.ListParquetFiles(folderPath))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -125,10 +125,10 @@ namespace ParquetViewer.Engine.ParquetNET
                     var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
                     if (!fileGroups.ContainsKey(parquetReader.Schema))
                     {
-                        fileGroups.Add(parquetReader.Schema, new List<ParquetReader>());
+                        fileGroups.Add(parquetReader.Schema, new List<(string, ParquetReader)>());
                     }
 
-                    fileGroups[parquetReader.Schema].Add(parquetReader);
+                    fileGroups[parquetReader.Schema].Add((file, parquetReader));
                 }
                 catch (Exception ex)
                 {
@@ -152,7 +152,7 @@ namespace ParquetViewer.Engine.ParquetNET
                 //We found more than one type of schema.
                 foreach (var fileGroupList in fileGroups.Values)
                 {
-                    Engine.Helpers.EZDispose(fileGroupList);
+                    Engine.Helpers.EZDispose(fileGroupList.Select(f => f.Reader));
                 }
 
                 throw new MultipleSchemasFoundException(fileGroups.Keys.ToList()
@@ -161,7 +161,7 @@ namespace ParquetViewer.Engine.ParquetNET
             else if (skippedFiles.Count > 0)
             {
                 //We found one schema but some files couldn't be read
-                Engine.Helpers.EZDispose(fileGroups.Values.First());
+                Engine.Helpers.EZDispose(fileGroups.Values.First().Select(f => f.Reader));
                 throw new SomeFilesSkippedException(skippedFiles);
             }
 
@@ -174,13 +174,13 @@ namespace ParquetViewer.Engine.ParquetNET
         {
             foreach (var parquetFile in _parquetFiles)
             {
-                if (offset >= parquetFile.Metadata?.NumRows)
+                if (offset >= parquetFile.Reader.Metadata?.NumRows)
                 {
-                    offset -= parquetFile.Metadata.NumRows;
+                    offset -= parquetFile.Reader.Metadata.NumRows;
                     continue;
                 }
 
-                yield return (offset, parquetFile);
+                yield return (offset, parquetFile.Reader);
                 offset = 0;
             }
         }
@@ -232,7 +232,7 @@ namespace ParquetViewer.Engine.ParquetNET
             }
         }
 
-        public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles);
+        public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles.Select(f => f.Reader));
 
         private static System.Type GetNullableVersion(System.Type sourceType) => sourceType == null
                 ? throw new ArgumentNullException(nameof(sourceType))
@@ -281,5 +281,7 @@ namespace ParquetViewer.Engine.ParquetNET
 
             return values;
         }
+
+        public IEnumerable<string> GetOpenParquetFilePaths() => this._parquetFiles.Select(db => db.ParquetFilePath);
     }
 }
