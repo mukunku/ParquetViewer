@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -1050,12 +1051,18 @@ namespace ParquetViewer.Controls
                     {
                         if (valueType == typeof(DateTime))
                         {
-                            //Use a standard date format so the query is always syntactically correct
-                            queryBuilder.AppendFormat(dateValueEscapeFormat, ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF"));
+                            //Use a standard date format so the query is always syntactically correct.
+                            //Invariant culture is required: custom format strings still resolve the calendar from
+                            //the current culture, so locales like th-TH would emit a non-Gregorian year.
+                            queryBuilder.AppendFormat(CultureInfo.InvariantCulture, dateValueEscapeFormat,
+                                ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture));
                         }
                         else if (valueType.IsNumber())
                         {
-                            var stringValue = value.ToString();
+                            //DataView.RowFilter syntax is culture invariant: it always expects '.' as the decimal
+                            //separator. Formatting with the current culture would emit ',' in locales like de-DE,
+                            //which silently corrupts the filter since ',' separates values inside an `IN (...)` clause.
+                            var stringValue = Convert.ToString(value, CultureInfo.InvariantCulture);
                             if ((valueType == typeof(float) || valueType == typeof(double))
                                 && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
                                 stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
