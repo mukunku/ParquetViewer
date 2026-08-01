@@ -20,7 +20,11 @@ namespace ParquetViewer.Controls
         private Timer _updateTimer = new() { Interval = 100 };
         private Timer _initializationTimer = new() { Interval = 100 };
 
-        private bool _isInitialized = false;
+        //Written by the background initialization task and read by the UI thread while painting.
+        //volatile gives the release/acquire ordering that makes the writes above it visible: without it
+        //the UI thread could observe _isInitialized as true while _audioStream was still null, which is
+        //what the defensive null check in Paint is working around.
+        private volatile bool _isInitialized = false;
         private AudioFormat? _audioFormat = AudioFormat.Invalid;
         private string _errorMessage = "loading...";
         private bool _isCellTooSmall = false;
@@ -31,7 +35,6 @@ namespace ParquetViewer.Controls
         private Rectangle _trackBarBounds;
         private Rectangle _contextMenuButtonBounds;
 
-        private string? _debugText = null;
         private bool _isCursorHoveringPlayPauseButton;
         private bool _isCursorHoveringStopButton;
         private bool _isCursorHoveringMenuButton;
@@ -56,13 +59,27 @@ namespace ParquetViewer.Controls
         private void RedrawCell() => DataGridView?.InvalidateCell(this);
 
         private Task? _initializationTask = null;
+
+        /// <summary>
+        /// Kicks off audio initialization on a background thread, once per cell.
+        /// </summary>
+        /// <remarks>Must be called from the UI thread: it reads the cell's Value before dispatching.</remarks>
         private Task InitializePlayerAsync()
-            => _initializationTask ??= Task.Run(() =>
+        {
+            if (_initializationTask is not null)
+                return _initializationTask;
+
+            //Read the cell state here rather than inside the task. Value and ValueType reach into the
+            //grid's data binding, which is not safe to touch from a background thread.
+            var cellValue = this.Value;
+            var cellValueTypeName = this.ValueType?.Name ?? "null";
+
+            return _initializationTask = Task.Run(() =>
             {
                 try
                 {
                     //Prepare audio stream
-                    if (this.Value is IByteArrayValue byteArray)
+                    if (cellValue is IByteArrayValue byteArray)
                     {
                         this._audioStream = GetAudioStream(byteArray.Data, out var audioFormat);
                         this._audioFormat = audioFormat;
@@ -73,13 +90,13 @@ namespace ParquetViewer.Controls
                         this._audioPlayer.Init(this._audioStream);
                         this._audioPlayer.PlaybackStopped += OnPlaybackStopped;
                     }
-                    else if (this.Value == DBNull.Value)
+                    else if (cellValue == DBNull.Value)
                     {
                         this._audioFormat = null;
                     }
                     else
                     {
-                        throw new InvalidDataException($"{this.ValueType.Name} was not the expected type {nameof(IByteArrayValue)}");
+                        throw new InvalidDataException($"{cellValueTypeName} was not the expected type {nameof(IByteArrayValue)}");
                     }
                 }
                 catch (Exception ex)
@@ -89,9 +106,11 @@ namespace ParquetViewer.Controls
                 }
                 finally
                 {
+                    //Set last: the volatile write publishes every field assigned above to the UI thread.
                     this._isInitialized = true;
                 }
             });
+        }
 
         private void OnPlaybackStopped(object? source, StoppedEventArgs args)
         {
@@ -202,15 +221,13 @@ namespace ParquetViewer.Controls
             timeFormat += this._audioStream.TotalTime.TotalSeconds < 0 ? @"\.fff" : string.Empty; //show milliseconds if the audio is less than 1 second
             string currentTime = this._audioStream.CurrentTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
             string totalTime = this._audioStream.TotalTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
-            TextRenderer.DrawText(graphics, _debugText ?? $"{currentTime} / {totalTime}", cellStyle.Font, _trackBarBounds, Theme.LightModeTheme.TextColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+            TextRenderer.DrawText(graphics, $"{currentTime} / {totalTime}", cellStyle.Font, _trackBarBounds, Theme.LightModeTheme.TextColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
         }
 
         protected override void OnMouseMove(DataGridViewCellMouseEventArgs e)
         {
             base.OnMouseMove(e);
 
-            Rectangle translatedBounds = this._playPauseButtonBounds;
-            translatedBounds.Offset(-this._cellBounds.Location.X, -this._cellBounds.Location.Y);
             this._isCursorHoveringPlayPauseButton = ContainsCursor(this._playPauseButtonBounds, e.Location);
             this._isCursorHoveringStopButton = ContainsCursor(this._stopButtonBounds, e.Location);
             this._isCursorHoveringMenuButton = ContainsCursor(this._contextMenuButtonBounds, e.Location);
@@ -322,7 +339,7 @@ namespace ParquetViewer.Controls
 
         private void StopPlayback()
         {
-            if (this._audioPlayer == null || this._audioPlayer == null)
+            if (this._audioPlayer == null)
                 return;
 
             if (this._audioPlayer.PlaybackState != PlaybackState.Stopped)
@@ -410,6 +427,10 @@ namespace ParquetViewer.Controls
                     isFirst = false;
                 }
             }
+
+            //Show() is modeless, so the menu can't be disposed inline. Dispose it once it closes instead,
+            //otherwise every right click leaks a strip and its items for the lifetime of the grid.
+            menu.Closed += (_, _) => menu.BeginInvoke(menu.Dispose);
 
             menu.Show(this.DataGridView, location + (Size)this._cellBounds.Location);
             menu.PerformLayout();
