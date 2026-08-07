@@ -2,8 +2,6 @@
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.ParquetNET.Types;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 
 namespace ParquetViewer.Engine.ParquetNET
 {

@@ -1,5 +1,4 @@
-﻿using ParquetViewer.Engine.ParquetNET.Types;
-using ParquetViewer.Engine.Types;
+﻿using ParquetViewer.Engine.Types;
 using System.Collections;
 
 namespace ParquetViewer.Engine.ParquetNET

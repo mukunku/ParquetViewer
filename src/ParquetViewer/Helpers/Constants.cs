@@ -22,9 +22,6 @@ namespace ParquetViewer.Helpers
         public static bool IsAdministrator =>
             new WindowsPrincipal(WindowsIdentity.GetCurrent())
                 .IsInRole(WindowsBuiltInRole.Administrator);
-
-        public static char NumberDecimalSeparator =
-            Thread.CurrentThread.CurrentUICulture.NumberFormat.NumberDecimalSeparator.ToCharArray()[0];
     }
 
     public static class Env
