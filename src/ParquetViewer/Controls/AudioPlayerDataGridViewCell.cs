@@ -20,11 +20,8 @@ namespace ParquetViewer.Controls
         private Timer _updateTimer = new() { Interval = 100 };
         private Timer _initializationTimer = new() { Interval = 100 };
 
-        //Written by the background initialization task and read by the UI thread while painting.
-        //volatile gives the release/acquire ordering that makes the writes above it visible: without it
-        //the UI thread could observe _isInitialized as true while _audioStream was still null, which is
-        //what the defensive null check in Paint is working around.
-        private volatile bool _isInitialized = false;
+        
+        private volatile bool _isInitialized = false; //volatile because written by the background initialization task and read by the UI thread while painting.
         private AudioFormat? _audioFormat = AudioFormat.Invalid;
         private string _errorMessage = "loading...";
         private bool _isCellTooSmall = false;
@@ -428,8 +425,7 @@ namespace ParquetViewer.Controls
                 }
             }
 
-            //Show() is modeless, so the menu can't be disposed inline. Dispose it once it closes instead,
-            //otherwise every right click leaks a strip and its items for the lifetime of the grid.
+            //No way to dispose the context menu properly so we dispose it on Close instead.            
             menu.Closed += (_, _) => menu.BeginInvoke(menu.Dispose);
 
             menu.Show(this.DataGridView, location + (Size)this._cellBounds.Location);

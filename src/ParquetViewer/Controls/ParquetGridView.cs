@@ -83,6 +83,7 @@ namespace ParquetViewer.Controls
             this.clickableColumnIndexes.Clear();
             base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
 
+            ConvertAudioCells();
             SetColumnCellStyles();
             AutoSizeColumns();
         }
@@ -1401,7 +1402,7 @@ namespace ParquetViewer.Controls
             }
         }
 
-        protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
+        private void ConvertAudioCells()
         {
             if (this.DataSource is not DataTable dataTable)
                 return;
@@ -1441,12 +1442,15 @@ namespace ParquetViewer.Controls
                         //Only other alternative is to stop using AutoGenerateColumns :/
                         column.CellTemplate = new AudioPlayerDataGridViewCell();
 
-                        //Assigning the template only affects cells created from this point on, and binding
-                        //has already created every cell in the column by the time this event fires. Without
-                        //replacing them the column keeps its text box cells and renders the raw bytes.
-                        foreach (DataGridViewRow row in this.Rows)
+                        //If the form isn't visible yet, the cells will be recreated when the form is showing,
+                        //allowing the new cell template to be used. If the form is already visible, we need
+                        //to manually replace the cells with the new cell type.
+                        if (this.FindForm()?.Visible == true)
                         {
-                            row.Cells[column.Index] = new AudioPlayerDataGridViewCell();
+                            foreach (DataGridViewRow row in this.Rows)
+                            {
+                                row.Cells[column.Index] = new AudioPlayerDataGridViewCell();
+                            }
                         }
                     }
                 }
