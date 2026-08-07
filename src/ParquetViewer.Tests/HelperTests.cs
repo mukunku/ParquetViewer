@@ -286,6 +286,46 @@ namespace ParquetViewer.Tests
         }
 
         [TestMethod]
+        [DataRow("de-DE")] //comma decimal separator
+        [DataRow("fr-FR")] //comma decimal separator + narrow no-break group separator
+        [DataRow("th-TH")] //non-Gregorian calendar by default
+        public void NumericAndDateFilters_AreCultureInvariant(string cultureName)
+        {
+            //DataView.RowFilter always expects '.' as the decimal separator and a Gregorian date,
+            //regardless of the user's locale. Without invariant formatting, a culture that uses ','
+            //would corrupt the filter since ',' also separates values inside an `IN (...)` clause.
+            var originalCulture = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = new CultureInfo(cultureName);
+
+                Assert.AreEqual("Value = 1.5", ParquetGridView.GenerateFilterQuery(new()
+                {
+                    ("Value", typeof(double), new object[] { 1.5d })
+                }));
+
+                Assert.AreEqual("Value = '1.23E+20'", ParquetGridView.GenerateFilterQuery(new()
+                {
+                    ("Value", typeof(double), new object[] { 1.23e20 })
+                }));
+
+                Assert.AreEqual("Value IN (1.5,2.5)", ParquetGridView.GenerateFilterQuery(new()
+                {
+                    ("Value", typeof(double), new object[] { 1.5d, 2.5d })
+                }));
+
+                Assert.AreEqual("Value = #2024-01-31 13:45:30#", ParquetGridView.GenerateFilterQuery(new()
+                {
+                    ("Value", typeof(DateTime), new object[] { new DateTime(2024, 1, 31, 13, 45, 30) })
+                }));
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = originalCulture;
+            }
+        }
+
+        [TestMethod]
         public void ByteArrayValue_IsCorrectlyTruncated()
         {
             var byteArrayValue = new Engine.Types.ByteArrayValue([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10]);
