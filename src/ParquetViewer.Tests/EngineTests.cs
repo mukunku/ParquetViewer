@@ -52,15 +52,15 @@ namespace ParquetViewer.Tests
             this._schemaPathSeperator = schemaPathSeperator;
         }
 
-        private async Task<IParquetEngine> OpenFileOrFolderAsync(string path, CancellationToken cancellationToken)
+        private async Task<IParquetEngine> OpenFileOrFolderAsync(string path)
         {
             if (this._useDuckDBEngine)
             {
-                return await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(path, cancellationToken);
+                return await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(path);
             }
             else
             {
-                return await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(path, cancellationToken);
+                return await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(path);
 
             }
         }
@@ -68,7 +68,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task DECIMALS_AND_BOOLS_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_AND_BOOLS_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_AND_BOOLS_TEST.parquet");
 
             Assert.AreEqual(30, parquetEngine.RecordCount);
             Assert.HasCount(337, parquetEngine.Fields);
@@ -84,7 +84,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task DATETIME_TEST1()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/DATETIME_TEST1.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/DATETIME_TEST1.parquet");
 
             Assert.AreEqual(10, parquetEngine.RecordCount);
             Assert.HasCount(3, parquetEngine.Fields);
@@ -98,7 +98,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task DATETIME_TEST2()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/DATETIME_TEST2.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/DATETIME_TEST2.parquet");
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(11, parquetEngine.Fields);
@@ -120,7 +120,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task RANDOM_TEST_FILE_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/RANDOM_TEST_FILE.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/RANDOM_TEST_FILE.parquet");
 
             Assert.AreEqual(5, parquetEngine.RecordCount);
             Assert.HasCount(42, parquetEngine.Fields);
@@ -139,7 +139,7 @@ namespace ParquetViewer.Tests
         [SkipWhen(typeof(DuckDBEngineTests), "DuckDB automatically appends _1 to the dupe column name")]
         public async Task SAME_COLUMN_NAME_DIFFERENT_CASING_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/SAME_COLUMN_NAME_DIFFERENT_CASING.parquet");
 
             Assert.AreEqual(14610, parquetEngine.RecordCount);
             Assert.HasCount(12, parquetEngine.Fields);
@@ -152,14 +152,14 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task MULTIPLE_SCHEMAS_DETECTED_TEST()
         {
-            var ex = await Assert.ThrowsAsync<MultipleSchemasFoundException>(() => OpenFileOrFolderAsync("Data", default));
+            var ex = await Assert.ThrowsAsync<MultipleSchemasFoundException>(() => OpenFileOrFolderAsync("Data"));
             Assert.AreEqual("Multiple schemas found in directory.", ex.Message);
         }
 
         [SkippableTestMethod]
         public async Task PARTITIONED_PARQUET_FILE_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/PARTITIONED_PARQUET_FILE_TEST");
 
             Assert.AreEqual(2000, parquetEngine.RecordCount);
             Assert.HasCount(9, parquetEngine.Fields);
@@ -184,7 +184,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task COLUMN_ENDING_IN_PERIOD_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/COLUMN_ENDING_IN_PERIOD_TEST.parquet");
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(11, parquetEngine.Fields);
@@ -199,7 +199,7 @@ namespace ParquetViewer.Tests
         [SkipWhen(typeof(DuckDBEngineTests), "DuckDB can't handle lists with null in them?")]
         public async Task LIST_TYPE_TEST1()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet");
 
             Assert.AreEqual(3, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
@@ -226,7 +226,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task LIST_TYPE_TEST2()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST2.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST2.parquet");
 
             Assert.AreEqual(8, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
@@ -252,7 +252,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task MAP_TYPE_TEST1()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/MAP_TYPE_TEST1.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/MAP_TYPE_TEST1.parquet");
 
             Assert.AreEqual(2, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
@@ -279,7 +279,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task MAP_TYPE_TEST2()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/MAP_TYPE_TEST2.parquet");
 
             Assert.AreEqual(8, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
@@ -310,7 +310,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task STRUCT_TYPE_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/STRUCT_TYPE_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/STRUCT_TYPE_TEST.parquet");
 
             Assert.AreEqual(10, parquetEngine.RecordCount);
             Assert.HasCount(6, parquetEngine.Fields);
@@ -335,7 +335,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task NULLABLE_GUID_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/NULLABLE_GUID_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/NULLABLE_GUID_TEST.parquet");
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(33, parquetEngine.Fields);
@@ -349,7 +349,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task MALFORMED_DATETIME_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST.parquet");
 
             var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
             Assert.IsInstanceOfType<DateTime>(dataTable.Rows[0]["ds"]);
@@ -359,7 +359,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task COLUMN_NAME_WITH_FORWARD_SLASH_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/COLUMN_NAME_WITH_FORWARD_SLASH.parquet");
 
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(320, parquetEngine.Fields);
@@ -371,7 +371,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task ORACLE_MALFORMED_INT64_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/ORACLE_MALFORMED_INT64_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/ORACLE_MALFORMED_INT64_TEST.parquet");
 
             Assert.AreEqual(126, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
@@ -384,7 +384,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task LIST_OF_STRUCTS_TEST1()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS1.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS1.parquet");
             Assert.AreEqual(2, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
 
@@ -402,7 +402,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task LIST_OF_STRUCTS_TEST2()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS2.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCTS2.parquet");
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(29, parquetEngine.Fields);
 
@@ -415,7 +415,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task EMPTY_LIST_OF_STRUCTS_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/EMPTY_LIST_OF_STRUCTS.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/EMPTY_LIST_OF_STRUCTS.parquet");
             Assert.AreEqual(2, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
 
@@ -433,7 +433,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task PARQUET_MR_BREAKING_CHANGE_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/PARQUET-MR_1.15.0.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/PARQUET-MR_1.15.0.parquet");
             Assert.AreEqual(5, parquetEngine.RecordCount);
             Assert.HasCount(7, parquetEngine.Fields);
 
@@ -453,7 +453,7 @@ namespace ParquetViewer.Tests
         [SkipWhen(typeof(DuckDBEngineTests), "DuckDB can't open this file")]
         public async Task DECIMALS_WITH_NO_SCALE_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_WITH_NO_SCALE_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_WITH_NO_SCALE_TEST.parquet");
             Assert.AreEqual(10589, parquetEngine.RecordCount);
             Assert.HasCount(8, parquetEngine.Fields);
 
@@ -471,7 +471,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task LIST_OF_LIST_OF_INT()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_LIST_OF_INT.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_LIST_OF_INT.parquet");
             Assert.AreEqual(3, parquetEngine.RecordCount);
             Assert.HasCount(1, parquetEngine.Fields);
 
@@ -490,7 +490,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task LIST_OF_LIST_OF_LIST_OF_STRING()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_LIST_OF_LIST_OF_STRING.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_LIST_OF_LIST_OF_STRING.parquet");
             Assert.AreEqual(3, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);
 
@@ -509,7 +509,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT.parquet");
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(1, parquetEngine.Fields);
 
@@ -522,7 +522,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task TWO_TIER_REPEATED_LIST_FIELDS_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/TWO_TIER_TEPEATED_LIST_FIELDS_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/TWO_TIER_TEPEATED_LIST_FIELDS_TEST.parquet");
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(8, parquetEngine.Fields);
 
@@ -545,7 +545,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task CUSTOM_METADATA_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_TYPE_TEST1.parquet");
 
             Assert.Contains("pandas", parquetEngine.CustomMetadata.Keys);
             const string expectedPandas = "{\"index_columns\":[{\"kind\":\"range\",\"name\":null,\"start\":0,\"stop\":3,\"step\":1}],\"column_indexes\":[{\"name\":null,\"field_name\":null,\"pandas_type\":\"unicode\",\"numpy_type\":\"object\",\"metadata\":{\"encoding\":\"UTF-8\"}}],\"columns\":[{\"name\":\"int64_list\",\"field_name\":\"int64_list\",\"pandas_type\":\"list[int64]\",\"numpy_type\":\"object\",\"metadata\":null},{\"name\":\"utf8_list\",\"field_name\":\"utf8_list\",\"pandas_type\":\"list[unicode]\",\"numpy_type\":\"object\",\"metadata\":null}],\"creator\":{\"library\":\"pyarrow\",\"version\":\"0.15.1\"},\"pandas_version\":\"0.25.3\"}";
@@ -559,7 +559,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task DECIMALS_OUTOFRANGE_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_OUTOFRANGE_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/DECIMALS_OUTOFRANGE_TEST.parquet");
             Assert.AreEqual(12, parquetEngine.RecordCount);
             Assert.HasCount(51, parquetEngine.Fields);
 
@@ -571,7 +571,7 @@ namespace ParquetViewer.Tests
         [SkipWhen(typeof(ParquetNETEngineTests), "Our implementation can't open this file")]
         public async Task LIST_OF_NESTED_STRUCTS_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_NESTED_STRUCTS_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_NESTED_STRUCTS_TEST.parquet");
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(1, parquetEngine.Fields);
 
@@ -584,7 +584,7 @@ namespace ParquetViewer.Tests
         [SkipWhen(typeof(ParquetNETEngineTests), "Nested Maps not supported")]
         public async Task NESTED_MAPS_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_MAPS_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_MAPS_TEST.parquet");
             Assert.AreEqual(6, parquetEngine.RecordCount);
             Assert.HasCount(3, parquetEngine.Fields);
 
@@ -618,7 +618,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task BYTEARRAY_VALUE_TEST()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/BYTEARRAY_VALUE_TEST.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/BYTEARRAY_VALUE_TEST.parquet");
             Assert.AreEqual(1, parquetEngine.RecordCount);
             Assert.HasCount(1, parquetEngine.Fields);
 
@@ -633,7 +633,7 @@ namespace ParquetViewer.Tests
         [SkipWhen(typeof(ParquetNETEngineTests), "List field is causing issues")]
         public async Task NESTED_STRUCTS_AND_LISTS()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet");
             Assert.AreEqual(552, parquetEngine.RecordCount);
             Assert.HasCount(20, parquetEngine.Fields);
 
@@ -652,7 +652,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task METADATA_TEST1()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet");
             Assert.AreEqual(1, parquetEngine.Metadata.ParquetVersion);
             Assert.AreEqual(552, parquetEngine.Metadata.RowCount);
             Assert.AreEqual(1, parquetEngine.Metadata.RowGroupCount);
@@ -719,7 +719,7 @@ namespace ParquetViewer.Tests
         [SkippableTestMethod]
         public async Task DATETTIME_ONLY_TYPE_PYARROW_V22()
         {
-            using var parquetEngine = await OpenFileOrFolderAsync("Data/TIME_ONLY_TYPE_PYARROW_V22.parquet", default);
+            using var parquetEngine = await OpenFileOrFolderAsync("Data/TIME_ONLY_TYPE_PYARROW_V22.parquet");
 
             Assert.AreEqual(4626, parquetEngine.RecordCount);
             Assert.HasCount(2, parquetEngine.Fields);

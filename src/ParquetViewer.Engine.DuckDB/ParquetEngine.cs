@@ -76,15 +76,15 @@ namespace ParquetViewer.Engine.DuckDB
             return fieldsThatExist;
         }
 
-        public static Task<ParquetEngine> OpenFileOrFolderAsync(string parquetFilePath, CancellationToken cancellationToken)
+        public static Task<ParquetEngine> OpenFileOrFolderAsync(string parquetFilePath)
         {
             if (File.Exists(parquetFilePath)) //Handles null
             {
-                return OpenFileAsync(parquetFilePath, cancellationToken);
+                return OpenFileAsync(parquetFilePath);
             }
             else if (Directory.Exists(parquetFilePath)) //Handles null
             {
-                return OpenFolderAsync(parquetFilePath, cancellationToken);
+                return OpenFolderAsync(parquetFilePath);
             }
             else
             {
@@ -92,7 +92,7 @@ namespace ParquetViewer.Engine.DuckDB
             }
         }
 
-        public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath, CancellationToken cancellationToken)
+        public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath)
         {
             if (!File.Exists(parquetFilePath)) //Handles null
             {
@@ -114,7 +114,7 @@ namespace ParquetViewer.Engine.DuckDB
             }
         }
 
-        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath, CancellationToken cancellationToken)
+        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath)
         {
             if (!Directory.Exists(folderPath)) //Handles null
             {
@@ -125,8 +125,6 @@ namespace ParquetViewer.Engine.DuckDB
             var fileGroups = new Dictionary<int, List<DuckDBHandle>>();
             foreach (var file in Helpers.ListParquetFiles(folderPath))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 try
                 {
                     var db = await DuckDBHandle.OpenAsync(file);
@@ -179,8 +177,6 @@ namespace ParquetViewer.Engine.DuckDB
                 Helpers.EZDispose(fileGroups.Values.First());
                 throw new SomeFilesSkippedException(skippedFiles);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             //We have only one schema across all files and are good to go
             List<DuckDBHandle> dbs = fileGroups.Values.First();

@@ -203,7 +203,7 @@ namespace ParquetViewer
             {
                 try
                 {
-                    this._openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath, default);
+                    this._openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath);
                 }
                 catch (Exception ex)
                 {
@@ -299,7 +299,7 @@ namespace ParquetViewer
 
                 try
                 {
-                    var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath!, default);
+                    var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath!);
                     await LoadFileToGridviewImpl(duckDbEngine);
                     SwapEngines(duckDbEngine);
                 }

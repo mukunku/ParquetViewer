@@ -71,15 +71,15 @@ namespace ParquetViewer.Engine.ParquetNET
             return parquetSchemaElement;
         }
 
-        public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath, CancellationToken cancellationToken)
+        public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath)
         {
             if (File.Exists(fileOrFolderPath)) //Handles null
             {
-                return OpenFileAsync(fileOrFolderPath, cancellationToken);
+                return OpenFileAsync(fileOrFolderPath);
             }
             else if (Directory.Exists(fileOrFolderPath)) //Handles null
             {
-                return OpenFolderAsync(fileOrFolderPath, cancellationToken);
+                return OpenFolderAsync(fileOrFolderPath);
             }
             else
             {
@@ -87,7 +87,7 @@ namespace ParquetViewer.Engine.ParquetNET
             }
         }
 
-        public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath, CancellationToken cancellationToken)
+        public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath)
         {
             if (!File.Exists(parquetFilePath)) //Handles null
             {
@@ -98,7 +98,7 @@ namespace ParquetViewer.Engine.ParquetNET
             try
             {
                 readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
+                var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false);
                 return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
             }
             catch (Exception ex)
@@ -108,7 +108,7 @@ namespace ParquetViewer.Engine.ParquetNET
             }
         }
 
-        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath, CancellationToken cancellationToken)
+        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath)
         {
             if (!Directory.Exists(folderPath)) //Handles null
             {
@@ -119,13 +119,11 @@ namespace ParquetViewer.Engine.ParquetNET
             var fileGroups = new Dictionary<ParquetSchema, List<(string FilePath, ParquetReader Reader)>>();
             foreach (var file in Engine.Helpers.ListParquetFiles(folderPath))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 Stream? readOnlyNonLockingStream = null;
                 try
                 {
                     readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                    var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
+                    var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false);
                     if (!fileGroups.ContainsKey(parquetReader.Schema))
                     {
                         fileGroups.Add(parquetReader.Schema, new List<(string, ParquetReader)>());
@@ -168,8 +166,6 @@ namespace ParquetViewer.Engine.ParquetNET
                 Engine.Helpers.EZDispose(fileGroups.Values.First().Select(f => f.Reader));
                 throw new SomeFilesSkippedException(skippedFiles);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
 
             return new ParquetEngine(folderPath, fileGroups.Values.First().ToArray());
         }
