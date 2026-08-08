@@ -160,7 +160,7 @@ namespace ParquetViewer.Controls
 
             if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
             {
-                var bitmap = new Bitmap(this.mainPictureBox.Image);
+                using var bitmap = new Bitmap(this.mainPictureBox.Image);
                 bitmap.Save(saveFileDialog.FileName, this.mainPictureBox.Image.RawFormat);
 
                 MessageBox.Show(this,

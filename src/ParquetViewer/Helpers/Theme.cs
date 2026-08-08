@@ -117,7 +117,6 @@ namespace ParquetViewer.Helpers
             hashcode.Add(this.TextColor);
             hashcode.Add(this.AlternateRowsCellBackgroundColor);
             hashcode.Add(this.ColumnHeaderColor);
-            hashcode.Add(this.ColumnHeaderColor);
             hashcode.Add(this.RowHeaderColor);
             hashcode.Add(this.RowHeaderBorderStyle);
             hashcode.Add(this.GridBackgroundColor);
@@ -127,6 +126,9 @@ namespace ParquetViewer.Helpers
             hashcode.Add(this.SelectionBackColor);
             hashcode.Add(this.FormBackgroundColor);
             hashcode.Add(this.ActiveHyperlinkColor);
+            hashcode.Add(this.DisabledTextColor);
+            hashcode.Add(this.FrozenColumnHeaderColor);
+            hashcode.Add(this.FrozenCellBackgroundColor);
             return hashcode.ToHashCode();
         }
     }

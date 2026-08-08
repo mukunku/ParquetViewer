@@ -20,7 +20,6 @@ namespace ParquetViewer
         private const string CustomDateFormatKey = "CustomDateFormat";
         private const string DarkModeKey = "DarkMode";
         private const string UserSelectedCultureKey = "UserSelectedCulture";
-        private const string QueryEditorZoomLevelKey = "QueryEditorZoomLevel";
 
         public static DateFormat DateTimeDisplayFormat
         {

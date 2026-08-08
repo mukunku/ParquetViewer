@@ -353,14 +353,15 @@ namespace ParquetViewer
                     }
 
                     bool IsIntCastSafe(object value) => value.GetType() == typeof(int)
-                        || value.GetType() == typeof(uint)
+                        || (value.GetType() == typeof(uint) && (uint)value < int.MaxValue)
                         || value.GetType() == typeof(sbyte)
                         || value.GetType() == typeof(byte);
 
                     bool IsDoubleCastSafe(object value) => value.GetType() == typeof(double)
                         || value.GetType() == typeof(decimal)
                         || value.GetType() == typeof(float)
-                        || value.GetType() == typeof(long);
+                        || value.GetType() == typeof(long)
+                        || value.GetType() == typeof(uint);
 
                     excelWriter.EndWrite();
                 }, cancellationToken);
@@ -464,12 +465,6 @@ namespace ParquetViewer
                         break;
 
                     sb.AppendLine($"  {schema.ElementAt(i)}");
-                }
-
-                if (schemaIndex > maxSchemasLimit)
-                {
-                    sb.AppendLine("...");
-                    break;
                 }
 
                 if (schemaIndex > maxSchemasLimit)

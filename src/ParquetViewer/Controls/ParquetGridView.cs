@@ -795,7 +795,7 @@ namespace ParquetViewer.Controls
                 else if (this.Columns[i].CellTemplate!.GetType() == typeof(AudioPlayerDataGridViewCell))
                 {
                     this.Columns[i].Width = Math.Min(Math.Max(240, newColumnSize), maxWidth);
-                    return;
+                    continue;
                 }
                 else if (gridTable.Columns[i].DataType.ImplementsInterface<IByteArrayValue>()
                     && this.byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
@@ -1069,6 +1069,10 @@ namespace ParquetViewer.Controls
                                 stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
 
                             queryBuilder.Append(stringValue);
+                        }
+                        else if (value is string stringValue)
+                        {
+                            queryBuilder.Append($"'{stringValue.Replace("'", "''")}'");
                         }
                         else
                         {

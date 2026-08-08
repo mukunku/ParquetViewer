@@ -147,7 +147,6 @@ namespace ParquetViewer
 
         public MainForm()
         {
-            this.ForeColor = System.Drawing.Color.Red;
             InitializeComponent();
             this.DefaultFormTitle = this.Text;
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());

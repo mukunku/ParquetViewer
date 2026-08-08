@@ -7,7 +7,8 @@ using System.Windows.Forms;
 
 namespace ParquetViewer.Controls
 {
-    public abstract class FormBase : Form
+    //Can't be made abstract as that breaks the visual studio designer
+    public class FormBase : Form
     {
         private static readonly List<FormBase> _openForms = new();
         public static IEnumerable<FormBase> OpenForms => _openForms.Where(form => form?.IsDisposed == false);
