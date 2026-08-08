@@ -10,7 +10,7 @@ namespace ParquetViewer.Controls
     /// </summary>
     public class CheckboxWithTooltip : StylableCheckBox
     {
-        private ToolTip _tooltip = new();
+        private readonly ToolTip _tooltip = new();
         private bool _tooltipShown = false;
 
         public CheckboxWithTooltip(Control parent) : base()

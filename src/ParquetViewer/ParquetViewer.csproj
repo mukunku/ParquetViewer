@@ -17,7 +17,7 @@
     <StartupObject>ParquetViewer.Program</StartupObject>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>

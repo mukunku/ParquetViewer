@@ -9,10 +9,10 @@ namespace ParquetViewer.Helpers
     /// </summary>
     public class ExcelWriter
     {
-        private BinaryWriter writer;
+        private readonly BinaryWriter writer;
 
-        private ushort[] clBegin = { 0x0809, 8, 0, 0x10, 0, 0 };
-        private ushort[] clEnd = { 0x0A, 00 };
+        private readonly ushort[] clBegin = { 0x0809, 8, 0, 0x10, 0, 0 };
+        private readonly ushort[] clEnd = { 0x0A, 00 };
 
         private void WriteUshortArray(ushort[] value)
         {

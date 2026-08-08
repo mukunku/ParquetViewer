@@ -4,8 +4,6 @@ using ParquetViewer.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Text.Json;
 using System.Windows.Forms;
 
 namespace ParquetViewer
@@ -15,7 +13,7 @@ namespace ParquetViewer
         private static readonly string THRIFT_METADATA = "Thrift Metadata";
         private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
         private static readonly string PANDAS_SCHEMA = "pandas";
-        private IParquetEngine? _parquetEngine;
+        private readonly IParquetEngine? _parquetEngine;
 
         public MetadataViewer(IParquetEngine parquetEngine) : this()
         {

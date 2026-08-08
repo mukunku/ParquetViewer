@@ -5,10 +5,10 @@ namespace ParquetViewer.Engine.ParquetNET
 {
     public class ListValueBuilder
     {
-        private int[] _repetitionLevels;
-        private int[] _definitionLevels;
-        private IEnumerable<object> _data;
-        private Type _type;
+        private readonly int[] _repetitionLevels;
+        private readonly int[] _definitionLevels;
+        private readonly IEnumerable<object> _data;
+        private readonly Type _type;
 
         public ListValueBuilder(int[] repetitionLevels, int[] definitionLevels, IEnumerable<object> data, Type type)
         {

@@ -116,7 +116,7 @@ namespace ParquetViewer
             this._panel.Dispose();
         }
 
-        private object _lock = new();
+        private readonly object _lock = new();
         public void Report(int progress)
         {
             if (this._loadingBarMax <= 0)

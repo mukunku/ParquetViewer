@@ -22,7 +22,7 @@ namespace ParquetViewer
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<string> NewSelectedFields { get; set; }
 
-        private string _selectedFieldsOnlyLabelTemplate;
+        private readonly string _selectedFieldsOnlyLabelTemplate;
 
         public FieldsToLoadForm()
         {

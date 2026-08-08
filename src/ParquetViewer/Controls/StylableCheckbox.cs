@@ -16,7 +16,7 @@ public class StylableCheckBox : CheckBox
     /// </summary>
     internal const int WM_ERASEBKGND = 0x14;
 
-    private bool _disableCustomRendering;
+    private readonly bool _disableCustomRendering;
     private Rectangle _textRectangleValue;
 
     /// <summary>

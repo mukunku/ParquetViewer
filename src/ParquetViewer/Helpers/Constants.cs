@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Security.Principal;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ParquetViewer.Helpers

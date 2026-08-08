@@ -66,17 +66,17 @@ namespace ParquetViewer.Engine.DuckDB
 
         public string? Type => this._underlyingType;
 
-        private string? _underlyingType;
+        private readonly string? _underlyingType;
         public int? TypeLength { get; }
-        private RepetitionTypeId? _repetitionType;
+        private readonly RepetitionTypeId? _repetitionType;
         public int? NumChildren { get; }
         public string? ConvertedType { get; }
         public int? Scale { get; }
         public int? Precision { get; }
-        private string? _fieldId;
+        private readonly string? _fieldId;
         public object? LogicalType { get; }
-        private DuckDBType? _duckDbType;
-        private Type? _clrType;
+        private readonly DuckDBType? _duckDbType;
+        private readonly Type? _clrType;
 
         public ParquetSchemaElement(
             string path,

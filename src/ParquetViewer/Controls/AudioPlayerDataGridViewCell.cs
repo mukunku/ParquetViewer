@@ -17,10 +17,10 @@ namespace ParquetViewer.Controls
         private Stream? _memoryStream;
         private WaveStream? _audioStream;
         private IWavePlayer? _audioPlayer;
-        private Timer _updateTimer = new() { Interval = 100 };
-        private Timer _initializationTimer = new() { Interval = 100 };
+        private readonly Timer _updateTimer = new() { Interval = 100 };
+        private readonly Timer _initializationTimer = new() { Interval = 100 };
 
-        
+
         private volatile bool _isInitialized = false; //volatile because written by the background initialization task and read by the UI thread while painting.
         private AudioFormat? _audioFormat = AudioFormat.Invalid;
         private string _errorMessage = "loading...";

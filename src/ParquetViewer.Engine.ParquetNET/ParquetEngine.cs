@@ -9,7 +9,7 @@ namespace ParquetViewer.Engine.ParquetNET
 {
     public partial class ParquetEngine : IParquetEngine, IDisposable
     {
-        private static readonly ParquetOptions _defaultParquetOptions = new () { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
+        private static readonly ParquetOptions _defaultParquetOptions = new() { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
         private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
         private long? _recordCount;
 

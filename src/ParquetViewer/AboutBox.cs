@@ -17,14 +17,14 @@ namespace ParquetViewer
 #if RELEASE_SELFCONTAINED
         private bool _isSelfContainedExe = true;
 #else
-        private bool _isSelfContainedExe = false;
+        private readonly bool _isSelfContainedExe = false;
 #endif
 
         private bool isLoading = false;
 
         private static string _exePath => Application.ExecutablePath;
 
-        private static FileAssociator _fileAssociator;
+        private static readonly FileAssociator _fileAssociator;
 
         public static bool IsDefaultViewerForParquetFiles => _fileAssociator.IsFileAssociationSet(new(".parquet"));
 

@@ -34,10 +34,10 @@ namespace ParquetViewer.Tests
 
     public abstract class EngineTests
     {
-        private bool _useDuckDBEngine;
-        private bool _canHandleNullComplexTypes;
-        private bool _treatsTwoTierListAsStruct;
-        private string _schemaPathSeperator;
+        private readonly bool _useDuckDBEngine;
+        private readonly bool _canHandleNullComplexTypes;
+        private readonly bool _treatsTwoTierListAsStruct;
+        private readonly string _schemaPathSeperator;
 
         public EngineTests(bool useDuckDBEngine, bool canHandleNullComplexTypes, bool treatsTwoTierListAsStruct, string schemaPathSeperator)
         {
