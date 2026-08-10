@@ -1,7 +1,4 @@
-﻿
-using NAudio.FileFormats.Wav;
-using NAudio.Wave;
-using ParquetViewer.Analytics;
+﻿using ParquetViewer.Analytics;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
 using System;
@@ -14,16 +11,13 @@ namespace ParquetViewer.Controls
 {
     internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
-        private Stream? _memoryStream;
-        private WaveStream? _audioStream;
-        private IWavePlayer? _audioPlayer;
+        private AudioPlayer? _audioPlayer;
         private readonly Timer _updateTimer = new() { Interval = 100 };
         private readonly Timer _initializationTimer = new() { Interval = 100 };
 
 
         private volatile bool _isInitialized = false; //volatile because written by the background initialization task and read by the UI thread while painting.
-        private AudioFormat? _audioFormat = AudioFormat.Invalid;
-        private string _errorMessage = "loading...";
+        private readonly string _errorMessage = "loading...";
         private bool _isCellTooSmall = false;
 
         private Rectangle _cellBounds;
@@ -36,8 +30,6 @@ namespace ParquetViewer.Controls
         private bool _isCursorHoveringStopButton;
         private bool _isCursorHoveringMenuButton;
         private bool _isPlaying = false;
-
-        private TimeSpan? _postStopSeekLocation;
 
         public AudioPlayerDataGridViewCell()
         {
@@ -73,59 +65,30 @@ namespace ParquetViewer.Controls
 
             return _initializationTask = Task.Run(() =>
             {
-                try
+                //Prepare audio stream
+                if (cellValue is IByteArrayValue byteArray)
                 {
-                    //Prepare audio stream
-                    if (cellValue is IByteArrayValue byteArray)
-                    {
-                        this._audioStream = GetAudioStream(byteArray.Data, out var audioFormat);
-                        this._audioFormat = audioFormat;
-
-                        //Prepare output device
-                        this._audioPlayer = new WaveOutEvent();
-
-                        this._audioPlayer.Init(this._audioStream);
-                        this._audioPlayer.PlaybackStopped += OnPlaybackStopped;
-                    }
-                    else if (cellValue == DBNull.Value)
-                    {
-                        this._audioFormat = null;
-                    }
-                    else
-                    {
-                        throw new InvalidDataException($"{cellValueTypeName} was not the expected type {nameof(IByteArrayValue)}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this._audioFormat = AudioFormat.Invalid;
-                    this._errorMessage = ex.Message.Left(50);
-                }
-                finally
-                {
-                    //Set last: the volatile write publishes every field assigned above to the UI thread.
+                    this._audioPlayer = new AudioPlayer(byteArray.Data);
+                    this._audioPlayer.PlaybackStopped += OnPlaybackStopped;
                     this._isInitialized = true;
                 }
+                else if (cellValue == DBNull.Value)
+                {
+                    this._audioPlayer = null;
+                }
+                else
+                {
+                    throw new InvalidDataException($"{cellValueTypeName} was not the expected type {nameof(IByteArrayValue)}");
+                }
+
+                this._isInitialized = true;
             });
         }
 
-        private void OnPlaybackStopped(object? source, StoppedEventArgs args)
+        private void OnPlaybackStopped(object? source, EventArgs args)
         {
             this._updateTimer.Stop();
             this._isPlaying = false;
-
-            if (this._audioStream is not null)
-            {
-                this._audioStream.Position = 0;
-
-                if (this._postStopSeekLocation is not null)
-                {
-                    this._audioStream.CurrentTime = this._postStopSeekLocation.Value;
-                    this._postStopSeekLocation = null;
-                }
-            }
-
-            this.RedrawCell();
         }
 
         protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object? value, object? formattedValue, string? errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
@@ -136,19 +99,16 @@ namespace ParquetViewer.Controls
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
                 paintParts & ~DataGridViewPaintParts.ContentForeground & ~DataGridViewPaintParts.SelectionBackground);
 
-            if (value is null || value == DBNull.Value || this._audioFormat is null)
+            if (value is null || value == DBNull.Value || this._audioPlayer is null)
             {
                 return;
             }
 
-            if (this._audioFormat == AudioFormat.Invalid || !this._isInitialized)
+            if (this._audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid || !this._isInitialized)
             {
                 TextRenderer.DrawText(graphics, this._errorMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
                 return;
             }
-
-            if (this._audioStream is null || this._audioPlayer is null)
-                return; //this shouldn't happen if we're initialized
 
             // Define UI element bounds
             var buttonHeight = Math.Max(cellBounds.Height - 4, 18);
@@ -207,17 +167,17 @@ namespace ParquetViewer.Controls
 
             // Draw Track Bar
             using var trackBarBrush = new SolidBrush(Color.FromArgb(185, Color.DodgerBlue));
-            double progress = this._audioStream.CurrentTime.TotalSeconds / this._audioStream.TotalTime.TotalSeconds;
+            double progress = this._audioPlayer.CurrentTime.TotalSeconds / this._audioPlayer.TotalTime.TotalSeconds;
             int progressWidth = (int)(_trackBarBounds.Width * progress);
             graphics.FillRectangle(Brushes.LightGray, _trackBarBounds);
             graphics.FillRectangle(trackBarBrush, _trackBarBounds.X, _trackBarBounds.Y, progressWidth, _trackBarBounds.Height); //Brushes.DodgerBlue
             ControlPaint.DrawBorder3D(graphics, _trackBarBounds, Border3DStyle.Sunken);
 
             // Draw Time
-            string timeFormat = this._audioStream.TotalTime.TotalHours >= 1 ? @"hh\:mm\:ss" : @"mm\:ss";
-            timeFormat += this._audioStream.TotalTime.TotalSeconds < 0 ? @"\.fff" : string.Empty; //show milliseconds if the audio is less than 1 second
-            string currentTime = this._audioStream.CurrentTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
-            string totalTime = this._audioStream.TotalTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
+            string timeFormat = this._audioPlayer.TotalTime.TotalHours >= 1 ? @"hh\:mm\:ss" : @"mm\:ss";
+            timeFormat += this._audioPlayer.TotalTime.TotalSeconds < 0 ? @"\.fff" : string.Empty; //show milliseconds if the audio is less than 1 second
+            string currentTime = this._audioPlayer.CurrentTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
+            string totalTime = this._audioPlayer.TotalTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
             TextRenderer.DrawText(graphics, $"{currentTime} / {totalTime}", cellStyle.Font, _trackBarBounds, Theme.LightModeTheme.TextColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
         }
 
@@ -287,7 +247,7 @@ namespace ParquetViewer.Controls
                 }
                 else if (ContainsCursor(this._stopButtonBounds, e.Location) && !this._isCellTooSmall)
                 {
-                    StopPlayback();
+                    this._audioPlayer?.Stop();
                 }
                 else if (ContainsCursor(this._contextMenuButtonBounds, e.Location) && !this._isCellTooSmall)
                 {
@@ -308,7 +268,7 @@ namespace ParquetViewer.Controls
         private bool _sentQuickPeekEvent = false;
         private void TogglePlayPause()
         {
-            if (this._audioPlayer is null || this._audioStream is null)
+            if (this._audioPlayer is null)
                 return;
 
             if (this._isPlaying)
@@ -334,23 +294,9 @@ namespace ParquetViewer.Controls
             this.RedrawCell();
         }
 
-        private void StopPlayback()
-        {
-            if (this._audioPlayer == null)
-                return;
-
-            if (this._audioPlayer.PlaybackState != PlaybackState.Stopped)
-                this._audioPlayer.Stop(); //Triggers playback stopped event
-            else
-            {
-                //If we're already stopped, trigger the playback stopped event ourselves
-                this.OnPlaybackStopped(null, new StoppedEventArgs());
-            }
-        }
-
         private void Seek(Point location)
         {
-            if (this._audioPlayer is null || this._audioStream is null)
+            if (this._audioPlayer is null)
                 return;
 
             var trackbarWidth = this._trackBarBounds.Right - this._trackBarBounds.Left;
@@ -358,17 +304,8 @@ namespace ParquetViewer.Controls
             var clickLocation = location.X - cellboundsLeft;
 
             var seekPercentage = (double)clickLocation / trackbarWidth;
-            var seekLocation = TimeSpan.FromSeconds(this._audioStream.TotalTime.TotalSeconds * seekPercentage);
-            if (this._audioPlayer.PlaybackState == PlaybackState.Stopped)
-            {
-                this._postStopSeekLocation = null;
-                this._audioStream.CurrentTime = seekLocation;
-            }
-            else
-            {
-                this._postStopSeekLocation = seekLocation;
-                this.StopPlayback(); //Stopping is recommended before seeking
-            }
+            var seekLocation = TimeSpan.FromSeconds(this._audioPlayer.TotalTime.TotalSeconds * seekPercentage);
+            this._audioPlayer.CurrentTime = seekLocation;
 
             DataGridView?.InvalidateCell(this);
         }
@@ -381,16 +318,16 @@ namespace ParquetViewer.Controls
             if (this.Value is not IByteArrayValue byteArrayValue)
                 return;
 
-            if (this._audioFormat is null || this._audioFormat == AudioFormat.Invalid)
+            if (this._audioPlayer is null || this._audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
                 return;
 
             var menu = new ContextMenuStrip();
-            menu.Items.Add($"Save as {this._audioFormat.ToString()}", Resources.Icons.save_icon, async (s, a) =>
+            menu.Items.Add($"Save as {this._audioPlayer.AudioFormat.ToString()}", Resources.Icons.save_icon, async (s, a) =>
             {
                 using var saveFileDialog = new SaveFileDialog
                 {
-                    Filter = $"{this._audioFormat?.ToString().ToUpperInvariant()} file|*.{this._audioFormat?.ToString().ToLowerInvariant()}",
-                    Title = $"Save audio as {this._audioFormat?.ToString().ToUpperInvariant()}"
+                    Filter = $"{this._audioPlayer.AudioFormat.ToString().ToUpperInvariant()} file|*.{this._audioPlayer.AudioFormat.ToString().ToLowerInvariant()}",
+                    Title = $"Save audio as {this._audioPlayer.AudioFormat.ToString().ToUpperInvariant()}"
                 };
                 saveFileDialog.ShowDialog();
 
@@ -407,22 +344,19 @@ namespace ParquetViewer.Controls
                 MessageBox.Show($"Audio saved to {saveFileDialog.FileName}", "Save complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             });
 
-            if (this._audioStream is not null) //just in case
-            {
-                //Show additional metadata about the audio in the context menu
-                menu.Items.Add(new ToolStripSeparator());
+            //Show additional metadata about the audio in the context menu
+            menu.Items.Add(new ToolStripSeparator());
 
-                var isFirst = true;
-                foreach (var text in this._audioStream.WaveFormat.ToString().Split(":"))
+            var isFirst = true;
+            foreach (var text in this._audioPlayer.WaveFormat.ToString().Split(":"))
+            {
+                var waveFormatItem = new ToolStripButton((isFirst ? "Format: " : string.Empty) + text.Trim())
                 {
-                    var waveFormatItem = new ToolStripButton((isFirst ? "Format: " : string.Empty) + text.Trim())
-                    {
-                        Enabled = false,
-                        AutoToolTip = false,
-                    };
-                    menu.Items.Add(waveFormatItem);
-                    isFirst = false;
-                }
+                    Enabled = false,
+                    AutoToolTip = false,
+                };
+                menu.Items.Add(waveFormatItem);
+                isFirst = false;
             }
 
             //No way to dispose the context menu properly so we dispose it on Close instead.            
@@ -446,72 +380,12 @@ namespace ParquetViewer.Controls
         {
             if (disposing)
             {
-                this._audioPlayer?.DisposeSafely();
-                this._audioStream?.DisposeSafely();
+                this._audioPlayer.DisposeSafely();
                 this._updateTimer.DisposeSafely();
                 this._initializationTimer.DisposeSafely();
-                this._memoryStream?.DisposeSafely();
             }
 
             base.Dispose(disposing);
-        }
-
-        private WaveStream GetAudioStream(byte[] data, out AudioFormat audioFormat)
-        {
-            this._memoryStream?.DisposeSafely(); //just in case
-            this._memoryStream = new MemoryStream(data);
-
-            try
-            {
-                audioFormat = AudioFormat.Wav;
-                return new WaveFileReader(this._memoryStream);
-            }
-            catch
-            {
-                try
-                {
-                    audioFormat = AudioFormat.Mp3;
-                    return new Mp3FileReader(this._memoryStream);
-                }
-                catch
-                {
-                    throw new InvalidDataException("Invalid audio data: not a valid .wav or .mp3 file.");
-                }
-            }
-        }
-
-        public static bool IsAudio(byte[] data, out AudioFormat audioFormat)
-        {
-            using var ms = new MemoryStream(data);
-            try
-            {
-                var wavReader = new WaveFileChunkReader();
-                wavReader.ReadWaveHeader(ms);
-                audioFormat = AudioFormat.Wav;
-                return true;
-            }
-            catch
-            {
-                try
-                {
-                    using var mp3Reader = new Mp3FileReaderBase(ms, Mp3FileReader.CreateAcmFrameDecompressor);
-                    audioFormat = AudioFormat.Mp3;
-                    return true;
-
-                }
-                catch
-                {
-                    audioFormat = AudioFormat.Invalid;
-                    return false;
-                }
-            }
-        }
-
-        public enum AudioFormat
-        {
-            Invalid,
-            Wav,
-            Mp3,
         }
     }
 }

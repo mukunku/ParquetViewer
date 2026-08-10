@@ -1435,7 +1435,7 @@ namespace ParquetViewer.Controls
                             continue;
 
                         var byteArray = (IByteArrayValue)value;
-                        if (AudioPlayerDataGridViewCell.IsAudio(byteArray.Data, out var _)
+                        if (AudioPlayer.IsAudio(byteArray.Data, out var _)
                             && !byteArray.ToImage(out _)) //help prevent false positives by checking for image data
                         {
                             isAudioColumn = true;
