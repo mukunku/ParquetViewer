@@ -17,7 +17,8 @@ namespace ParquetViewer.Controls
 
 
         private volatile bool _isInitialized = false; //volatile because written by the background initialization task and read by the UI thread while painting.
-        private readonly string _errorMessage = "loading...";
+        private readonly string _loadingMessage = "loading...";
+        private readonly string _errorMessage = "#ERR";
         private bool _isCellTooSmall = false;
 
         private Rectangle _cellBounds;
@@ -58,11 +59,8 @@ namespace ParquetViewer.Controls
             if (_initializationTask is not null)
                 return _initializationTask;
 
-            //Read the cell state here rather than inside the task. Value and ValueType reach into the
-            //grid's data binding, which is not safe to touch from a background thread.
+            //Read the cell state here rather than inside the task.
             var cellValue = this.Value;
-            var cellValueTypeName = this.ValueType?.Name ?? "null";
-
             return _initializationTask = Task.Run(() =>
             {
                 //Prepare audio stream
@@ -70,15 +68,10 @@ namespace ParquetViewer.Controls
                 {
                     this._audioPlayer = new AudioPlayer(byteArray.Data);
                     this._audioPlayer.PlaybackStopped += OnPlaybackStopped;
-                    this._isInitialized = true;
-                }
-                else if (cellValue == DBNull.Value)
-                {
-                    this._audioPlayer = null;
                 }
                 else
                 {
-                    throw new InvalidDataException($"{cellValueTypeName} was not the expected type {nameof(IByteArrayValue)}");
+                    this._audioPlayer = null;
                 }
 
                 this._isInitialized = true;
@@ -87,8 +80,16 @@ namespace ParquetViewer.Controls
 
         private void OnPlaybackStopped(object? source, EventArgs args)
         {
-            this._updateTimer.Stop();
-            this._isPlaying = false;
+            if (this.DataGridView?.InvokeRequired == true) //NAudio captures the synchronization context so this check isn't needed actually...
+            {
+                this.DataGridView.Invoke(OnPlaybackStopped);
+            }
+            else
+            {
+                this._updateTimer.Stop();
+                this._isPlaying = false;
+                this.RedrawCell(); //Convert pause button to play button
+            }
         }
 
         protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object? value, object? formattedValue, string? errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
@@ -104,7 +105,12 @@ namespace ParquetViewer.Controls
                 return;
             }
 
-            if (this._audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid || !this._isInitialized)
+            if (!this._isInitialized)
+            {
+                TextRenderer.DrawText(graphics, this._loadingMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+                return;
+            }
+            if (this._audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
             {
                 TextRenderer.DrawText(graphics, this._errorMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
                 return;

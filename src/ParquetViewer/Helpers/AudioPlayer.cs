@@ -11,7 +11,6 @@ internal class AudioPlayer : IDisposable
 
     private readonly MemoryStream _inputStream;
     private readonly WaveStream? _audioStream;
-
     private TimeSpan? _postStopSeekLocation;
 
     public AudioFormatType AudioFormat { get; private set; }
@@ -30,6 +29,9 @@ internal class AudioPlayer : IDisposable
                 throw new InvalidDataException(INVALID_AUDIO_ERROR_MESSAGE);
 
             var audioPlayer = GetOrCreateAudioPlayer();
+            if (audioPlayer is null)
+                return;
+
             if (audioPlayer.PlaybackState == PlaybackState.Stopped)
             {
                 this._postStopSeekLocation = null;
@@ -73,18 +75,21 @@ internal class AudioPlayer : IDisposable
     public void Pause()
     {
         var audioPlayer = GetOrCreateAudioPlayer();
-        audioPlayer.Pause();
+        audioPlayer?.Pause();
     }
 
     public void Play()
     {
         var audioPlayer = GetOrCreateAudioPlayer();
-        audioPlayer.Play();
+        audioPlayer?.Play();
     }
 
     public void Stop()
     {
         var audioPlayer = GetOrCreateAudioPlayer();
+        if (audioPlayer is null)
+            return;
+
         if (audioPlayer.PlaybackState != PlaybackState.Stopped)
         {
             audioPlayer.Stop(); //Triggers playback stopped event
@@ -97,10 +102,10 @@ internal class AudioPlayer : IDisposable
     }
 
     private WaveOutEvent? _audioPlayer;
-    private WaveOutEvent GetOrCreateAudioPlayer()
+    private WaveOutEvent? GetOrCreateAudioPlayer()
     {
         if (this._audioStream is null)
-            throw new InvalidDataException(INVALID_AUDIO_ERROR_MESSAGE);
+            return null;
 
         if (this._audioPlayer == null)
         {
