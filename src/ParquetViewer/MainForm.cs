@@ -447,8 +447,12 @@ namespace ParquetViewer
 
             if (wasOpenSuccess && AppSettings.AlwaysLoadAllRecords)
             {
-                this.currentMaxRowCount = (int)this._openParquetEngine!.RecordCount;
-                this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
+                var recordCount = this._openParquetEngine!.RecordCount;
+                if (recordCount == 0 || recordCount > int.MaxValue)
+                    recordCount = DefaultRowCount;
+
+                this.currentMaxRowCount = (int)recordCount;
+                this.recordCountTextBox.SetTextQuiet(recordCount.ToString());
             }
             else
             {
