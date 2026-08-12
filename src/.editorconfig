@@ -22,6 +22,7 @@ dotnet_sort_system_directives_first = false
 file_header_template = unset
 dotnet_diagnostic.IDE0005.severity = warning # Unnecessary using directive
 dotnet_diagnostic.IDE0003.severity = warning # Disallow `this.` qualifiers
+dotnet_diagnostic.IDE1006.severity = warning # All caps constants
 
 # this. and Me. preferences (IDE0003 )
 dotnet_style_qualification_for_event = false

@@ -14,12 +14,12 @@ namespace ParquetViewer.Helpers;
 
 public static class ExtensionMethods
 {
-    private const string DefaultDateTimeFormat = "g";
-    private const string DefaultDateOnlyFormat = "d";
-    private const string DefaultTimeOnlyFormat = "T";
-    public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
-    public const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
-    public const string ISO8601TimeOnlyFormat = "HH:mm:ss.FFFFFFF";
+    private const string DEFAULT_DATE_TIME_FORMAT = "g";
+    private const string DEFAULT_DATE_ONLY_FORMAT = "d";
+    private const string DEFAULT_TIME_ONLY_FORMAT = "T";
+    public const string ISO_8601_DATE_TIME_FORMAT = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
+    public const string ISO_8601_DATE_ONLY_FORMAT = "yyyy-MM-dd";
+    public const string ISO_8601_TIME_ONLY_FORMAT = "HH:mm:ss.FFFFFFF";
 
     /// <summary>
     /// Returns a list of all column names within a given datatable
@@ -43,27 +43,27 @@ public static class ExtensionMethods
     /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
     public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
     {
-        DateFormat.ISO8601 => ISO8601DateTimeFormat,
-        DateFormat.Default => DefaultDateTimeFormat,
-        DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
+        DateFormat.ISO8601 => ISO_8601_DATE_TIME_FORMAT,
+        DateFormat.Default => DEFAULT_DATE_TIME_FORMAT,
+        DateFormat.Custom => AppSettings.CustomDateFormat ?? DEFAULT_DATE_TIME_FORMAT,
         _ => string.Empty
     };
 
     public static string GetDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
     {
-        DateFormat.ISO8601 => ISO8601DateOnlyFormat,
-        DateFormat.Default => DefaultDateOnlyFormat,
+        DateFormat.ISO8601 => ISO_8601_DATE_ONLY_FORMAT,
+        DateFormat.Default => DEFAULT_DATE_ONLY_FORMAT,
         DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
-            UtilityMethods.StripTimeComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DefaultDateOnlyFormat,
+            UtilityMethods.StripTimeComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DEFAULT_DATE_ONLY_FORMAT,
         _ => string.Empty
     };
 
     public static string GetTimeOnlyFormat(this DateFormat dateFormat) => dateFormat switch
     {
-        DateFormat.ISO8601 => ISO8601TimeOnlyFormat,
-        DateFormat.Default => DefaultTimeOnlyFormat,
+        DateFormat.ISO8601 => ISO_8601_TIME_ONLY_FORMAT,
+        DateFormat.Default => DEFAULT_TIME_ONLY_FORMAT,
         DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
-            UtilityMethods.StripDateComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DefaultTimeOnlyFormat,
+            UtilityMethods.StripDateComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DEFAULT_TIME_ONLY_FORMAT,
         _ => string.Empty
     };
 

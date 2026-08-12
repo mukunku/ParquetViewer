@@ -7,8 +7,8 @@ namespace ParquetViewer;
 
 public class LoadingIcon : IDisposable, IProgress<int>
 {
-    private const int LoadingPanelWidth = 200;
-    private const int LoadingPanelHeight = 200;
+    private const int LOADING_PANEL_WIDTH = 200;
+    private const int LOADING_PANEL_HEIGHT = 200;
 
     private readonly Form _form;
     private readonly Panel _panel;
@@ -30,7 +30,7 @@ public class LoadingIcon : IDisposable, IProgress<int>
         _form = form;
         _panel = new Panel();
         _panel.BorderStyle = BorderStyle.FixedSingle;
-        _panel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
+        _panel.Size = new Size(LOADING_PANEL_WIDTH, LOADING_PANEL_HEIGHT);
         _panel.Location = GetFormCenter();
         _loadingBarMax = loadingBarMax;
 
@@ -108,7 +108,7 @@ public class LoadingIcon : IDisposable, IProgress<int>
     }
 
     private Point GetFormCenter()
-        => new((_form.Width / 2) - (LoadingPanelWidth / 2), (_form.Height / 2) - (LoadingPanelHeight / 2));
+        => new((_form.Width / 2) - (LOADING_PANEL_WIDTH / 2), (_form.Height / 2) - (LOADING_PANEL_HEIGHT / 2));
 
     public void Dispose()
     {

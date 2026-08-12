@@ -154,7 +154,7 @@ public partial class MainForm : FormBase
 
         //Have to set these here because it gets deleted from the .Designer.cs file for some reason
         metadataViewerToolStripMenuItem.Image = Resources.Icons.text_file_icon_16x16.ToBitmap();
-        iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO8601DateTimeFormat;
+        iSO8601ToolStripMenuItem.ToolTipText = ExtensionMethods.ISO_8601_DATE_TIME_FORMAT;
     }
 
     public MainForm(string? fileToOpenPath) : this()

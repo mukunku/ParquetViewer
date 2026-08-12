@@ -23,12 +23,12 @@ public partial class MainForm
     public LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
     {
         var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
-        loadingIcon.OnShow += (object? sender, EventArgs e) =>
+        loadingIcon.OnShow += (sender, e) =>
         {
             mainTableLayoutPanel.Enabled = false;
             mainMenuStrip.Enabled = false;
         };
-        loadingIcon.OnHide += (object? sender, EventArgs e) =>
+        loadingIcon.OnHide += (sender, e) =>
         {
             mainTableLayoutPanel.Enabled = true;
             mainMenuStrip.Enabled = true;
@@ -67,10 +67,7 @@ public partial class MainForm
                     CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
 
                     var fileExtension = Path.GetExtension(filePath);
-                    FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
-                    if (selectedFileType is null)
-                        throw new ArgumentOutOfRangeException(fileExtension);
-
+                    FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
                     var stopWatch = Stopwatch.StartNew();
                     loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
                     await ExportResultsImpl(MainDataSource!, selectedFileType.Value, _openParquetEngine,

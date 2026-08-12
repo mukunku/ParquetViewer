@@ -16,13 +16,13 @@ public partial class MainForm
 
     private string? _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText;
 
-    private void newToolStripMenuItem_Click(object sender, EventArgs e)
+    private void NewToolStripMenuItem_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileNew);
         OpenFileOrFolderPath = null;
     }
 
-    private async void openToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void OpenToolStripMenuItem_Click(object sender, EventArgs e)
     {
         try
         {
@@ -39,7 +39,7 @@ public partial class MainForm
         }
     }
 
-    private async void openFolderToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void OpenFolderToolStripMenuItem_Click(object sender, EventArgs e)
     {
         try
         {
@@ -56,16 +56,16 @@ public partial class MainForm
         }
     }
 
-    private void saveAsToolStripMenuItem_Click(object sender, EventArgs e) => ExportResults(default);
+    private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e) => ExportResults(default);
 
-    private async void exitToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void ExitToolStripMenuItem_Click(object sender, EventArgs e)
     {
         var exitEventTask = new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
         await Task.WhenAny(exitEventTask, Task.Delay(3000)); //don't prevent the app from closing for too long
         Close();
     }
 
-    private async void changeFieldsMenuStripButton_Click(object sender, EventArgs e)
+    private async void ChangeFieldsMenuStripButton_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.ChangeFields);
         var fieldList = await OpenFieldSelectionDialog(true);
@@ -73,7 +73,7 @@ public partial class MainForm
             SelectedFields = fieldList; //triggers a file load
     }
 
-    private void getSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
+    private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
     {
         var openFileOrFolderPath = OpenFileOrFolderPath;
         if (openFileOrFolderPath?.EndsWith('/') == true)
@@ -103,7 +103,7 @@ public partial class MainForm
             MessageBox.Show(this, Resources.Strings.CreateTableScriptFailedWithNoFieldsMessage, "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
-    private void metadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
+    private void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
     {
         if (IsAnyFileOpen)
         {
@@ -113,23 +113,23 @@ public partial class MainForm
         }
     }
 
-    private void alwaysLoadAllRecordsToolStripMenuItem_Click(object sender, EventArgs e)
+    private void AlwaysLoadAllRecordsToolStripMenuItem_Click(object sender, EventArgs e)
     {
         alwaysLoadAllRecordsToolStripMenuItem.Checked = !alwaysLoadAllRecordsToolStripMenuItem.Checked;
         AppSettings.AlwaysLoadAllRecords = alwaysLoadAllRecordsToolStripMenuItem.Checked;
     }
 
-    private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+    private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.AboutBox);
         using var aboutForm = new AboutBox();
         aboutForm.ShowDialog(this);
     }
 
-    private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
+    private void UserGuideToolStripMenuItem_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.UserGuide);
-        Process.Start(new ProcessStartInfo(Constants.WikiURL) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(Constants.WIKI_URL) { UseShellExecute = true });
     }
 
     private void DateFormatMenuItem_Click(object sender, EventArgs e)
@@ -164,14 +164,14 @@ public partial class MainForm
         }
     }
 
-    private void shareAnonymousUsageDataToolStripMenuItem_Click(object sender, EventArgs e)
+    private void ShareAnonymousUsageDataToolStripMenuItem_Click(object sender, EventArgs e)
     {
         shareAnonymousUsageDataToolStripMenuItem.Checked = !shareAnonymousUsageDataToolStripMenuItem.Checked;
         AppSettings.AnalyticsDataGatheringConsent = shareAnonymousUsageDataToolStripMenuItem.Checked;
         AppSettings.ConsentLastAskedOnVersion = Env.AssemblyVersion;
     }
 
-    private void shareAnonymousUsageDataToolStripMenuItem_CheckedChanged(object sender, System.EventArgs e)
+    private void ShareAnonymousUsageDataToolStripMenuItem_CheckedChanged(object sender, System.EventArgs e)
     {
         RefreshExperimentalFeatureToolStrips();
     }
@@ -224,7 +224,7 @@ public partial class MainForm
             getSQLCreateTableScriptToolStripMenuItem.ToolTipText = _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText;
     }
 
-    private void darkModeToolStripMenuItem_Click(object sender, EventArgs e)
+    private void DarkModeToolStripMenuItem_Click(object sender, EventArgs e)
     {
         darkModeToolStripMenuItem.Checked = !darkModeToolStripMenuItem.Checked;
         AppSettings.DarkMode = darkModeToolStripMenuItem.Checked; // Will trigger SetTheme()

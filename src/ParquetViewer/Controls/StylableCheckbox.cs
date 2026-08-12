@@ -52,7 +52,7 @@ public class StylableCheckBox : CheckBox
         }
         else
         {
-            drawCheckBox(e.Graphics);
+            DrawCheckBox(e.Graphics);
         }
     }
 
@@ -73,12 +73,12 @@ public class StylableCheckBox : CheckBox
         base.WndProc(ref m);
     }
 
-    private void drawCheckBox(Graphics graphics)
+    private void DrawCheckBox(Graphics graphics)
     {
-        Size glyphSize = CheckBoxRenderer.GetGlyphSize(graphics, getCheckBoxState());
+        Size glyphSize = CheckBoxRenderer.GetGlyphSize(graphics, GetCheckBoxState());
 
         // Calculate the text bounds, excluding the check box.
-        Rectangle textRectangle = getTextRectangle(glyphSize);
+        Rectangle textRectangle = GetTextRectangle(glyphSize);
 
         // center box vertically with text, especially necessary for multiline,
         // but align if disabled because the glyph looks slightly different then.
@@ -103,11 +103,11 @@ public class StylableCheckBox : CheckBox
 
         if (CheckState == CheckState.Indeterminate)
         {
-            ControlPaint.DrawMixedCheckBox(graphics, glyphBounds, getButtonState() | ButtonState.Flat);
+            ControlPaint.DrawMixedCheckBox(graphics, glyphBounds, GetButtonState() | ButtonState.Flat);
         }
         else
         {
-            ControlPaint.DrawCheckBox(graphics, glyphBounds, getButtonState() | ButtonState.Flat);
+            ControlPaint.DrawCheckBox(graphics, glyphBounds, GetButtonState() | ButtonState.Flat);
         }
 
         Color textColor = Enabled ? ForeColor : DisabledForeColor;
@@ -127,7 +127,7 @@ public class StylableCheckBox : CheckBox
     private Size _oldGlyphSize = Size.Empty;
     private Rectangle _textRectangle = Rectangle.Empty;
 
-    private Rectangle getTextRectangle(Size glyphSize)
+    private Rectangle GetTextRectangle(Size glyphSize)
     {
         // don't spend unnecessary time on PInvokes
         if (_oldClientRectangle == ClientRectangle && _oldGlyphSize == glyphSize)
@@ -152,7 +152,7 @@ public class StylableCheckBox : CheckBox
     /// <summary>
     /// gets the <see cref="ButtonState"/> based on the current <see cref="CheckState"/>
     /// </summary>
-    private ButtonState getButtonState()
+    private ButtonState GetButtonState()
     {
         return CheckState switch
         {
@@ -166,7 +166,7 @@ public class StylableCheckBox : CheckBox
     /// <summary>
     /// gets the <see cref="CheckBoxState"/> based on the current <see cref="CheckState"/>
     /// </summary>
-    private CheckBoxState getCheckBoxState()
+    private CheckBoxState GetCheckBoxState()
     {
         return CheckState switch
         {

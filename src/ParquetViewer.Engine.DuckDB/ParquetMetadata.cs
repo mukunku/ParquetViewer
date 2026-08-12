@@ -100,7 +100,7 @@ public class ParquetMetadata : IParquetMetadata
             rowGroupColumns.Add((rowGroupMetadataResult, rowGroupColumnMetadata));
         }
 
-        List<IRowGroupMetadata> rowGroups = rowGroupColumns.GroupBy(rgc => rgc.RowGroup.rowGroupId).Select(group =>
+        List<IRowGroupMetadata> rowGroups = rowGroupColumns.GroupBy(rgc => rgc.RowGroup.RowGroupId).Select(group =>
         {
             var rowGroupId = group.Key;
             long? firstFileOffset = null;
@@ -108,7 +108,7 @@ public class ParquetMetadata : IParquetMetadata
             List<RowGroupColumnMetadata> columnMetadatas = new();
             foreach (var column in group)
             {
-                firstFileOffset ??= column.RowGroup.fileOffset;
+                firstFileOffset ??= column.RowGroup.FileOffset;
                 rowGroupMetadataResult = column.RowGroup;
                 columnMetadatas.Add(column.Column);
             }
@@ -118,10 +118,10 @@ public class ParquetMetadata : IParquetMetadata
 
             return new RowGroupMetadata(
                 (int)rowGroupId,
-                (int)rowGroupMetadataResult.rowGroupNumRows,
-                (int)rowGroupMetadataResult.rowGroupNumColumns,
+                (int)rowGroupMetadataResult.RowGroupNumRows,
+                (int)rowGroupMetadataResult.RowGroupNumColumns,
                 firstFileOffset ?? -1,
-                rowGroupMetadataResult.rowGroupBytes,
+                rowGroupMetadataResult.RowGroupBytes,
                 columnMetadatas.Sum(cm => cm.TotalCompressedSize ?? 0),
                 columnMetadatas);
         }).Where(rg => rg is not null)!.ToList<IRowGroupMetadata>();
@@ -142,7 +142,7 @@ public class ParquetMetadata : IParquetMetadata
         return metadata;
     }
 
-    private record RowGroupMetadataResult(long rowGroupId, long rowGroupNumRows, long rowGroupNumColumns, long rowGroupBytes, long rowGroupCompressedBytes, long fileOffset);
+    private record RowGroupMetadataResult(long RowGroupId, long RowGroupNumRows, long RowGroupNumColumns, long RowGroupBytes, long RowGroupCompressedBytes, long FileOffset);
 }
 
 public class RowGroupMetadata : IRowGroupMetadata

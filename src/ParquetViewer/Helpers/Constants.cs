@@ -12,8 +12,8 @@ namespace ParquetViewer.Helpers;
 
 public static class Constants
 {
-    public const string WikiURL = "https://github.com/mukunku/ParquetViewer/wiki";
-    public const string DuckDBSqlSyntaxURL = "https://duckdb.org/docs/stable/sql/query_syntax/select";
+    public const string WIKI_URL = "https://github.com/mukunku/ParquetViewer/wiki";
+    public const string DUCK_DB_SQL_SYNTAX_URL = "https://duckdb.org/docs/stable/sql/query_syntax/select";
 }
 
 public static class User

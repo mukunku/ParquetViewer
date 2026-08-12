@@ -13,24 +13,24 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
     private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
     private long? _recordCount;
 
-    private ParquetReader _defaultReader => _parquetFiles.Length > 0 ? _parquetFiles[0].Reader : throw new ParquetEngineException("No parquet readers available");
+    private ParquetReader DefaultReader => _parquetFiles.Length > 0 ? _parquetFiles[0].Reader : throw new ParquetEngineException("No parquet readers available");
 
-    private FileMetaData _thriftMetadata => _defaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
+    private FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
 
-    private ParquetSchema _schema => _defaultReader.Schema;
+    private ParquetSchema Schema => DefaultReader.Schema;
 
-    public Dictionary<string, string> CustomMetadata => _defaultReader.CustomMetadata;
+    public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata;
 
     public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Reader.Metadata?.NumRows ?? 0);
 
     public int NumberOfPartitions => _parquetFiles.Length;
 
-    public List<string> Fields => _defaultReader.Schema.Fields.Select(f => f.Name).ToList();
+    public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList();
 
     public string Path { get; }
 
     ParquetMetadata? _metadata = null;
-    public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(_thriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
+    public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(ThriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
 
     private ParquetEngine(string fileOrFolderPath, params (string FilePath, ParquetReader Reader)[] parquetFiles)
     {
@@ -40,11 +40,11 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
 
     private ParquetSchemaElement BuildParquetSchemaTree()
     {
-        var thriftSchema = _thriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
+        var thriftSchema = ThriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
         var schemaElements = thriftSchema.GetEnumerator();
         var thriftSchemaTree = ReadSchemaTree(ref schemaElements);
 
-        foreach (var dataField in _schema.GetDataFields())
+        foreach (var dataField in Schema.GetDataFields())
         {
             var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new MalformedFieldException($"Field has no schema path: `{dataField.Name}`"));
             for (var i = 1; i < dataField.Path.Length; i++)
@@ -191,7 +191,7 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
         var fields = new List<Field>(dataTable.Columns.Count);
         foreach (DataColumn column in dataTable.Columns)
         {
-            fields.Add(_schema.Fields
+            fields.Add(Schema.Fields
                 .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
                 .First());
         }

@@ -149,7 +149,7 @@ public partial class AboutBox : FormBase
             _fileAssociator.RemoveFileAssociation(new(".parquet"));
     }
 
-    private void associateFileExtensionCheckBox_CheckedChanged(object? sender, EventArgs? e)
+    private void AssociateFileExtensionCheckBox_CheckedChanged(object? sender, EventArgs? e)
     {
         if (_isLoading)
         {
@@ -283,7 +283,7 @@ public partial class AboutBox : FormBase
         okButton.ForeColor = Color.Black;
     }
 
-    private void newVersionLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+    private void NewVersionLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
     {
         if (newVersionLabel.Tag is Uri url)
             Process.Start(new ProcessStartInfo(url.ToString()) { UseShellExecute = true });

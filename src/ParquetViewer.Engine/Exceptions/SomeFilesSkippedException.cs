@@ -8,7 +8,7 @@ public class SomeFilesSkippedException : Exception
 
     public SomeFilesSkippedException(IEnumerable<KeyValuePair<string, Exception>> skippedFiles) : base("Some files could not be opened.")
     {
-        SkippedFiles = new List<SkippedFile>();
+        SkippedFiles = new();
 
         if (skippedFiles is not null)
         {

@@ -11,9 +11,9 @@ namespace ParquetViewer;
 
 public partial class FieldsToLoadForm : FormBase
 {
-    private const string SelectAllCheckboxName = "checkbox_selectallfields";
-    private const int DynamicFieldCheckboxYIncrement = 30;
-    private const int MaxNumberOfFieldsWeCanRender = 5000;
+    private const string SELECT_ALL_CHECKBOX_NAME = "checkbox_selectallfields";
+    private const int DYNAMIC_FIELD_CHECKBOX_Y_INCREMENT = 30;
+    private const int MAX_NUMBER_OF_FIELDS_WE_CAN_RENDER = 5000;
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public List<string> PreSelectedFields { get; set; }
@@ -57,7 +57,7 @@ public partial class FieldsToLoadForm : FormBase
             if (availableFields is null)
                 return;
 
-            if (availableFields.Count > MaxNumberOfFieldsWeCanRender)
+            if (availableFields.Count > MAX_NUMBER_OF_FIELDS_WE_CAN_RENDER)
             {
                 showSelectedFieldsRadioButton.Enabled = false;
                 filterColumnsTextbox.PlaceholderText = Resources.Strings.TooManyFieldsErrorFormat.Format(availableFields.Count);
@@ -87,9 +87,9 @@ public partial class FieldsToLoadForm : FormBase
                     string deselectAllCheckBoxText = Resources.Strings.DeselectAllCheckmarkTextFormat.Format(totalFieldCount);
                     var selectAllCheckbox = new CheckboxWithTooltip(fieldsPanel)
                     {
-                        Name = SelectAllCheckboxName,
+                        Name = SELECT_ALL_CHECKBOX_NAME,
                         Text = selectAllCheckBoxText,
-                        Tag = SelectAllCheckboxName,
+                        Tag = SELECT_ALL_CHECKBOX_NAME,
                         Checked = false,
                         DisabledForeColor = _disabledTextColor,
                         Location = new Point(locationX, locationY),
@@ -109,7 +109,7 @@ public partial class FieldsToLoadForm : FormBase
                         {
                             foreach (Control control in fieldsPanel.Controls)
                             {
-                                var isSelectAllCheckbox = control.Tag?.Equals(SelectAllCheckboxName) == true;
+                                var isSelectAllCheckbox = control.Tag?.Equals(SELECT_ALL_CHECKBOX_NAME) == true;
                                 if (!isSelectAllCheckbox && control is CheckBox checkbox)
                                 {
                                     if (checkbox.Enabled)
@@ -122,7 +122,7 @@ public partial class FieldsToLoadForm : FormBase
                     };
 
                     fieldsPanel.Controls.Add(selectAllCheckbox);
-                    locationY += DynamicFieldCheckboxYIncrement;
+                    locationY += DYNAMIC_FIELD_CHECKBOX_Y_INCREMENT;
                 }
 
                 var fieldCheckbox = new CheckboxWithTooltip(fieldsPanel)
@@ -158,7 +158,7 @@ public partial class FieldsToLoadForm : FormBase
                     {
                         foreach (Control control in fieldsPanel.Controls)
                         {
-                            if (control.Tag!.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
+                            if (control.Tag!.Equals(SELECT_ALL_CHECKBOX_NAME) && control is CheckBox checkbox)
                             {
                                 if (checkbox.Enabled && checkbox.Checked)
                                 {
@@ -175,7 +175,7 @@ public partial class FieldsToLoadForm : FormBase
                 };
                 checkboxControls.Add(fieldCheckbox);
 
-                locationY += DynamicFieldCheckboxYIncrement;
+                locationY += DYNAMIC_FIELD_CHECKBOX_Y_INCREMENT;
             }
 
             //Disable fields with dupe names because we don't support case sensitive fields right now
@@ -214,7 +214,7 @@ public partial class FieldsToLoadForm : FormBase
         fieldsPanel.Controls.Clear();
     }
 
-    private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
+    private void AllFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
     {
         if (((RadioButton)sender).Checked)
         {
@@ -226,7 +226,7 @@ public partial class FieldsToLoadForm : FormBase
         }
     }
 
-    private void showSelectedFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
+    private void ShowSelectedFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
     {
         if (((RadioButton)sender).Checked)
         {
@@ -238,7 +238,7 @@ public partial class FieldsToLoadForm : FormBase
         }
     }
 
-    private void doneButton_Click(object sender, EventArgs e)
+    private void DoneButton_Click(object sender, EventArgs e)
     {
         try
         {
@@ -280,7 +280,7 @@ public partial class FieldsToLoadForm : FormBase
         MessageBox.Show(string.Concat(customMessage ?? $"{Resources.Errors.GenericErrorMessage}:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
-    private void filterColumnsTextbox_DelayedTextChanged(object sender, EventArgs e)
+    private void FilterColumnsTextbox_DelayedTextChanged(object sender, EventArgs e)
     {
         if (!string.IsNullOrWhiteSpace(filterColumnsTextbox.Text))
         {
@@ -307,7 +307,7 @@ public partial class FieldsToLoadForm : FormBase
         }
     }
 
-    private void clearfilterColumnsButton_Click(object? sender, EventArgs? e)
+    private void ClearfilterColumnsButton_Click(object? sender, EventArgs? e)
     {
         filterColumnsTextbox.Text = string.Empty;
     }

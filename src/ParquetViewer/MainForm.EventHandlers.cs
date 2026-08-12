@@ -23,7 +23,7 @@ public partial class MainForm
 
     private int _failedFileIntegrityCheckCount;
 
-    private void offsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
+    private void OffsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
     {
         if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
         {
@@ -31,7 +31,7 @@ public partial class MainForm
         }
     }
 
-    private void recordsToTextBox_KeyPress(object sender, KeyPressEventArgs e)
+    private void RecordsToTextBox_KeyPress(object sender, KeyPressEventArgs e)
     {
         if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
         {
@@ -39,7 +39,7 @@ public partial class MainForm
         }
     }
 
-    private void offsetTextBox_TextChanged(object sender, EventArgs e)
+    private void OffsetTextBox_TextChanged(object sender, EventArgs e)
     {
         var textbox = (TextBox)sender;
         if (int.TryParse(textbox.Text, out var offset))
@@ -48,7 +48,7 @@ public partial class MainForm
             textbox.Text = CurrentOffset.ToString();
     }
 
-    private void recordsToTextBox_TextChanged(object sender, EventArgs? e)
+    private void RecordsToTextBox_TextChanged(object sender, EventArgs? e)
     {
         var textbox = (TextBox)sender;
         if (int.TryParse(textbox.Text, out var recordCount) && recordCount > 0)
@@ -57,15 +57,15 @@ public partial class MainForm
             textbox.Text = CurrentMaxRowCount.ToString();
     }
 
-    private void searchFilterTextBox_KeyPress(object sender, KeyPressEventArgs e)
+    private void SearchFilterTextBox_KeyPress(object sender, KeyPressEventArgs e)
     {
         if (e.KeyChar == Convert.ToChar(Keys.Return))
         {
-            runQueryButton_Click(runQueryButton, null);
+            RunQueryButton_Click(runQueryButton, null);
         }
         else if (e.KeyChar == Convert.ToChar(Keys.Escape))
         {
-            clearFilterButton_Click(clearFilterButton, null);
+            ClearFilterButton_Click(clearFilterButton, null);
         }
     }
 
@@ -93,22 +93,22 @@ public partial class MainForm
             e.Effect = DragDropEffects.Copy;
     }
 
-    private void searchFilterLabel_Click(object sender, EventArgs e)
+    private void SearchFilterLabel_Click(object sender, EventArgs e)
     {
         MessageBox.Show(Resources.Strings.QuerySyntaxHelpText, Resources.Strings.QuerySyntaxHelpTitle);
     }
 
-    private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+    private void MainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
     {
         actualShownRecordCountLabel.Text = mainGridView.RowCount.ToString();
     }
 
-    private void showingStatusBarLabel_Click(object sender, EventArgs e)
+    private void ShowingStatusBarLabel_Click(object sender, EventArgs e)
     {
         //This is just here in case I want to add debug info
     }
 
-    private void searchFilterTextBox_Enter(object sender, EventArgs e)
+    private void SearchFilterTextBox_Enter(object sender, EventArgs e)
     {
         if (sender is TextBox searchBox)
         {
@@ -119,7 +119,7 @@ public partial class MainForm
         }
     }
 
-    private void searchFilterTextBox_Leave(object sender, EventArgs e)
+    private void SearchFilterTextBox_Leave(object sender, EventArgs e)
     {
         if (sender is TextBox searchBox)
         {
@@ -130,7 +130,7 @@ public partial class MainForm
         }
     }
 
-    private void loadAllRowsButton_EnabledChanged(object sender, EventArgs e)
+    private void LoadAllRowsButton_EnabledChanged(object sender, EventArgs e)
     {
         if (sender is Button loadAllRecordsButton)
         {
@@ -148,13 +148,13 @@ public partial class MainForm
         }
     }
 
-    private void loadAllRowsButton_Click(object? sender, EventArgs? e)
+    private void LoadAllRowsButton_Click(object? sender, EventArgs? e)
     {
         if (_openParquetEngine is not null)
         {
             //Force file reload to happen instantly by triggering the event handler ourselves
             recordCountTextBox.SetTextQuiet(_openParquetEngine.RecordCount.ToString());
-            recordsToTextBox_TextChanged(recordCountTextBox, null);
+            RecordsToTextBox_TextChanged(recordCountTextBox, null);
             MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.LoadAllRows);
         }
     }
@@ -163,7 +163,7 @@ public partial class MainForm
     {
         if (e.Control && e.KeyCode == Keys.E && loadAllRowsButton.Enabled)
         {
-            loadAllRowsButton_Click(null, null);
+            LoadAllRowsButton_Click(null, null);
         }
         else if (e.Control && e.KeyCode == Keys.R && _openParquetEngine is not null) //Reload shortcut
         {
@@ -171,7 +171,7 @@ public partial class MainForm
         }
     }
 
-    private void runQueryButton_Click(object sender, EventArgs? e)
+    private void RunQueryButton_Click(object sender, EventArgs? e)
     {
         try
         {
@@ -235,7 +235,7 @@ public partial class MainForm
         }
     }
 
-    private void clearFilterButton_Click(object sender, EventArgs? e)
+    private void ClearFilterButton_Click(object sender, EventArgs? e)
     {
         if (!string.IsNullOrEmpty(MainDataSource?.DefaultView.RowFilter))
         {
@@ -263,7 +263,7 @@ public partial class MainForm
         }
     }
 
-    private void languageToolStripMenuItem_Click(object sender, EventArgs e)
+    private void LanguageToolStripMenuItem_Click(object sender, EventArgs e)
     {
         if (sender is not ToolStripItem toolStripItem)
         {
@@ -300,7 +300,7 @@ public partial class MainForm
 
     /// <remarks>Originally I implemented a FileSystemWatcher but it seems network drives are not reliable with that.
     /// Not sure how common that is but this implementation without it is simpler and I'm hoping not too IO intensive</remarks>
-    private async void fileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
+    private async void FileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
     {
         if (OpenFileOrFolderPath is null || _openParquetEngine is null)
             return; //no file open

@@ -148,7 +148,7 @@ public partial class QuickPeekForm : FormBase
         Close();
     }
 
-    private void saveImageToFileButton_Click(object sender, EventArgs e)
+    private void SaveImageToFileButton_Click(object sender, EventArgs e)
     {
         using var saveFileDialog = new SaveFileDialog
         {
@@ -170,7 +170,7 @@ public partial class QuickPeekForm : FormBase
         }
     }
 
-    private async void copyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void CopyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
     {
         try
         {

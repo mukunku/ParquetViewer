@@ -21,18 +21,18 @@ public partial class CustomDateFormatInputForm : FormBase
         desiredDateFormatTextBox.Text = customDateFormat ?? string.Empty;
     }
 
-    public void dateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
+    public void DateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
     {
         Process.Start(new ProcessStartInfo(Resources.Strings.DotNetDateFormatHelpUrl) { UseShellExecute = true });
     }
 
-    private void cancelButton_Clicked(object sender, EventArgs e)
+    private void CancelButton_Clicked(object sender, EventArgs e)
     {
         DialogResult = DialogResult.Cancel;
         Close();
     }
 
-    private void desiredDateFormatTextBox_TextChanged(object sender, EventArgs e)
+    private void DesiredDateFormatTextBox_TextChanged(object sender, EventArgs e)
     {
         try
         {
@@ -61,7 +61,7 @@ public partial class CustomDateFormatInputForm : FormBase
     }
 
     //This timer exists to deal with visual bugs
-    private void timer_Tick(object sender, EventArgs e)
+    private void Timer_Tick(object sender, EventArgs e)
     {
         //We only wanted to run this once
         timer.Enabled = false;
@@ -73,7 +73,7 @@ public partial class CustomDateFormatInputForm : FormBase
         instructionsTableLayoutPanel.AutoScrollPosition = new System.Drawing.Point(0, 0);
     }
 
-    private void saveDateFormatButton_Click(object sender, EventArgs e)
+    private void SaveDateFormatButton_Click(object sender, EventArgs e)
     {
         if (UtilityMethods.IsValidDateFormat(desiredDateFormatTextBox.Text))
         {

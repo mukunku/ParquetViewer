@@ -16,7 +16,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
     private readonly Dictionary<string, ParquetSchemaElement> _children = new();
     public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
 
-    private IEnumerable<ParquetSchemaElement> _parentsExcludingRoot
+    private IEnumerable<ParquetSchemaElement> ParentsExcludingRoot
     {
         get
         {
@@ -171,9 +171,9 @@ public class ParquetSchemaElement : IParquetSchemaElement
     public bool BelongsToListField => _systemFieldType == SystemFieldTypeId.ListItemNode;
     public bool BelongsToListOfStructsField =>
         Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && Parent?.FieldType == FieldTypeId.Struct;
-    public int NumberOfListParents => _parentsExcludingRoot.Count(@field => @field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
+    public int NumberOfListParents => ParentsExcludingRoot.Count(@field => @field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
 
-    public int CurrentDefinitionLevel => _parentsExcludingRoot.Append(this)
+    public int CurrentDefinitionLevel => ParentsExcludingRoot.Append(this)
         .Count(
             @field => @field.SchemaElement.RepetitionType == FieldRepetitionType.OPTIONAL
             || (@field._systemFieldType == SystemFieldTypeId.ListNode && @field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
