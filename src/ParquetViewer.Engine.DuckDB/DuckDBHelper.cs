@@ -84,7 +84,7 @@ internal static class DuckDBHelper
     //DuckDB flattens the schema so we need to rebuild it into a tree structure.
     public static async Task<ParquetSchemaElement> GetParquetSchemaTreeAsync(DuckDBHandle db)
     {
-        var result = await db.Connection.QueryAsync($"SELECT * FROM parquet_schema('{db.ParquetFilePath}');");
+        await using var result = await db.Connection.QueryAsync($"SELECT * FROM parquet_schema('{db.ParquetFilePath}');");
         var enumerator = result.GetAsyncEnumerator();
 
         if (!await enumerator.MoveNextAsync())

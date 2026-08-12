@@ -6,6 +6,6 @@ public class MultipleSchemasFoundException : Exception
 
     public MultipleSchemasFoundException(List<List<string>> parquetSchemas) : base("Multiple schemas found in directory.")
     {
-        Schemas = parquetSchemas ?? [[]];
+        Schemas = parquetSchemas ?? [];
     }
 }
