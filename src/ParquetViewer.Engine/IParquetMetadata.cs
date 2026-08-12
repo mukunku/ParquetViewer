@@ -24,36 +24,36 @@
 
     public interface ISortingColumnMetadata
     {
-        public int ColumnIdx { get; }
-        public bool Descending { get; }
-        public bool NullsFirst { get; }
+        int ColumnIdx { get; }
+        bool Descending { get; }
+        bool NullsFirst { get; }
     }
 
     public interface IRowGroupColumnMetadata
     {
-        public int? ColumnId { get; }
-        public string? PathInSchema { get; }
-        public string? Type { get; }
-        public int? NumValues { get; }
-        public long? TotalUncompressedSize { get; }
-        public long? TotalCompressedSize { get; }
-        public long? DataPageOffset { get; }
-        public long? IndexPageOffset { get; }
-        public long? DictionaryPageOffset { get; }
-        public IRowGroupColumnStatistics? Statistics { get; }
-        public long? BloomFilterOffset { get; }
-        public long? BloomFilterLength { get; }
+        int? ColumnId { get; }
+        string? PathInSchema { get; }
+        string? Type { get; }
+        int? NumValues { get; }
+        long? TotalUncompressedSize { get; }
+        long? TotalCompressedSize { get; }
+        long? DataPageOffset { get; }
+        long? IndexPageOffset { get; }
+        long? DictionaryPageOffset { get; }
+        IRowGroupColumnStatistics? Statistics { get; }
+        long? BloomFilterOffset { get; }
+        long? BloomFilterLength { get; }
     }
 
     public interface IRowGroupColumnStatistics
     {
-        public object? Min { get; }
-        public object? Max { get; }
-        public long? NullCount { get; }
-        public long? DistinctCount { get; }
-        public object? MinValue { get; }
-        public object? MaxValue { get; }
-        public bool? IsMinValueExact { get; }
-        public bool? IsMaxValueExact { get; }
+        object? Min { get; }
+        object? Max { get; }
+        long? NullCount { get; }
+        long? DistinctCount { get; }
+        object? MinValue { get; }
+        object? MaxValue { get; }
+        bool? IsMinValueExact { get; }
+        bool? IsMaxValueExact { get; }
     }
 }
