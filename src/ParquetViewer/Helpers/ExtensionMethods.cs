@@ -253,7 +253,7 @@ public static class ExtensionMethods
         if (structValue.Data.ColumnNames.Count == 2
             && structValue.Data.ColumnNames.Contains("bytes")
             && structValue.Data.ColumnNames.Contains("path")
-            && structValue.Data.GetValue("bytes") is ByteArrayValue byteArrayValue)
+            && structValue.Data.GetValue("bytes") is IByteArrayValue byteArrayValue)
         {
             data = byteArrayValue.Data;
             return true;
