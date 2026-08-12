@@ -531,7 +531,6 @@ public partial class MainForm : FormBase
             searchFilterTextBox.PlaceholderText = $"WHERE {placeholder}";
     }
 
-
     private void SetLanguageCheckmark()
     {
         if (AppSettings.UserSelectedCulture is not null)
