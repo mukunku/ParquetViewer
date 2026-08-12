@@ -1,7 +1,6 @@
-﻿using ParquetViewer.Engine.Types;
-using System.Collections;
+﻿using System.Collections;
 
-namespace ParquetViewer.Engine;
+namespace ParquetViewer.Engine.Types;
 
 public class ListValue : IListValue
 {

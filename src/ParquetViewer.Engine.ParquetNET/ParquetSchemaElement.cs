@@ -2,6 +2,7 @@
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.ParquetNET.Types;
+using ParquetViewer.Engine.Types;
 
 namespace ParquetViewer.Engine.ParquetNET;
 
@@ -13,7 +14,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
     public DataField? DataField { get; set; }
     public ParquetSchemaElement? Parent { get; private set; }
 
-    private readonly Dictionary<string, ParquetSchemaElement> _children = new();
+    private readonly Dictionary<string, ParquetSchemaElement> _children = [];
     public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
 
     private IEnumerable<ParquetSchemaElement> ParentsExcludingRoot
@@ -60,8 +61,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     public ParquetSchemaElement(SchemaElement schemaElement)
     {
-        if (schemaElement is null)
-            throw new ArgumentNullException(nameof(schemaElement));
+        ArgumentNullException.ThrowIfNull(schemaElement);
 
         SchemaElement = schemaElement;
     }
@@ -114,8 +114,8 @@ public class ParquetSchemaElement : IParquetSchemaElement
         }
         else
         {
-            return _children.ContainsKey(name)
-                ? _children[name] : throw new MalformedFieldException($"Field `{Path}` has no child named '{name}'");
+            return _children.TryGetValue(name, out var value)
+                ? value : throw new MalformedFieldException($"Field `{Path}` has no child named '{name}'");
         }
     }
 
@@ -311,8 +311,8 @@ public class ParquetSchemaElement : IParquetSchemaElement
     object? IParquetSchemaElement.LogicalType => LogicalType;
     public string? Type => SchemaElement.Type?.ToString();
 
-    private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
-        => new InvalidOperationException($"Can't get {fieldType} node from '{Parent?._systemFieldType}' " +
+    private InvalidOperationException GetSystemFieldAccessException(SystemFieldTypeId fieldType)
+        => new($"Can't get {fieldType} node from '{Parent?._systemFieldType}' " +
                 $"for `{Parent?.Path + '/' + Path}` with types '{Parent?.FieldType.ToString() + '/' + FieldType.ToString()}'");
 
     IParquetSchemaElement IParquetSchemaElement.GetChildCI(string name)

@@ -145,11 +145,11 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
             }
             else // Draw Play
             {
-                Point[] triangle = {
+                Point[] triangle = [
                     new (_playPauseButtonBounds.Left + 6, _playPauseButtonBounds.Top + 5),
                     new (_playPauseButtonBounds.Right - 6, _playPauseButtonBounds.Top + (_playPauseButtonBounds.Height / 2)),
                     new (_playPauseButtonBounds.Left + 6, _playPauseButtonBounds.Bottom - 6)
-                };
+                ];
                 graphics.FillPolygon(foreColorBrush, triangle);
             }
 
@@ -327,7 +327,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
             return;
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add($"Save as {_audioPlayer.AudioFormat.ToString()}", Resources.Icons.save_icon, async (s, a) =>
+        menu.Items.Add($"Save as {_audioPlayer.AudioFormat}", Resources.Icons.save_icon, async (s, a) =>
         {
             using var saveFileDialog = new SaveFileDialog
             {
@@ -370,7 +370,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         menu.Show(DataGridView, location + (Size)_cellBounds.Location);
         menu.PerformLayout();
 
-        void CleanupFile(string filePath)
+        static void CleanupFile(string filePath)
         {
             try
             {

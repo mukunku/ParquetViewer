@@ -192,8 +192,7 @@ public partial class QuickPeekForm : FormBase
         }
 
         base.SetTheme(theme);
-        if (mainGridView is not null)
-            mainGridView.GridTheme = theme;
+        mainGridView?.GridTheme = theme;
 
         saveImageToFileButton.ForeColor = Color.Black;
         takeMeBackLinkLabel.LinkColor = theme.HyperlinkColor;

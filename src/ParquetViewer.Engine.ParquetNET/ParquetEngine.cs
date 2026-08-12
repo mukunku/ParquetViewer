@@ -7,7 +7,7 @@ using System.Data;
 
 namespace ParquetViewer.Engine.ParquetNET;
 
-public partial class ParquetEngine : IParquetEngine, IDisposable
+public sealed partial class ParquetEngine : IParquetEngine, IDisposable
 {
     private static readonly ParquetOptions _defaultParquetOptions = new() { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
     private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
@@ -124,12 +124,13 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
             {
                 readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false);
-                if (!fileGroups.ContainsKey(parquetReader.Schema))
+                if (!fileGroups.TryGetValue(parquetReader.Schema, out var value))
                 {
-                    fileGroups.Add(parquetReader.Schema, new List<(string, ParquetReader)>());
+                    value = [];
+                    fileGroups.Add(parquetReader.Schema, value);
                 }
 
-                fileGroups[parquetReader.Schema].Add((file, parquetReader));
+                value.Add((file, parquetReader));
             }
             catch (Exception ex)
             {
@@ -172,21 +173,21 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
 
     private IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)
     {
-        foreach (var parquetFile in _parquetFiles)
+        foreach (var (ParquetFilePath, Reader) in _parquetFiles)
         {
-            if (offset >= parquetFile.Reader.Metadata?.NumRows)
+            if (offset >= Reader.Metadata?.NumRows)
             {
-                offset -= parquetFile.Reader.Metadata.NumRows;
+                offset -= Reader.Metadata.NumRows;
                 continue;
             }
 
-            yield return (offset, parquetFile.Reader);
+            yield return (offset, Reader);
             offset = 0;
         }
     }
 
     public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path,
-        CancellationToken cancellationToken, IProgress<int> progress, Dictionary<string, string>? customMetadata)
+        IProgress<int> progress, Dictionary<string, string>? customMetadata, CancellationToken cancellationToken)
     {
         var fields = new List<Field>(dataTable.Columns.Count);
         foreach (DataColumn column in dataTable.Columns)

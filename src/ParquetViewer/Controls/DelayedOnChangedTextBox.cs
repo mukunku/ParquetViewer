@@ -25,7 +25,7 @@ public class DelayedOnChangedTextBox : TextBox
 
     protected override void Dispose(bool disposing)
     {
-        if (_delayedTextChangedTimer != null)
+        if (_delayedTextChangedTimer is not null)
         {
             _delayedTextChangedTimer.Stop();
             if (disposing)
@@ -72,8 +72,7 @@ public class DelayedOnChangedTextBox : TextBox
 
     private void InitializeDelayedTextChangedEvent()
     {
-        if (_delayedTextChangedTimer != null)
-            _delayedTextChangedTimer.Stop();
+        _delayedTextChangedTimer?.Stop();
 
         if (_delayedTextChangedTimer is null || _delayedTextChangedTimer.Interval != DelayedTextChangedTimeout)
         {

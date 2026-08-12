@@ -23,11 +23,11 @@ internal class SkippableTestMethodAttribute : TestMethodAttribute
             var result = new TestResult
             {
                 Outcome = UnitTestOutcome.Inconclusive, // treated as skipped in MSTest
-                TestFailureException = null
+                TestFailureException = null,
+                TestContextMessages
+                    = $"Test skipped for {testMethod.TestClassName}.{testMethod.TestMethodName}" +
+                    $"{(skipAttribute.Reason is not null ? $" {skipAttribute.Reason}" : string.Empty)}."
             };
-            result.TestContextMessages
-                = $"Test skipped for {testMethod.TestClassName}.{testMethod.TestMethodName}" +
-                $"{(skipAttribute.Reason is not null ? $" {skipAttribute.Reason}" : string.Empty)}.";
 
             return Task.FromResult(new[] { result });
         }

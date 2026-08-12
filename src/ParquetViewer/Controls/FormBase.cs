@@ -10,7 +10,7 @@ namespace ParquetViewer.Controls;
 //Can't be made abstract as that breaks the visual studio designer
 public class FormBase : Form
 {
-    private static readonly List<FormBase> _openForms = new();
+    private static readonly List<FormBase> _openForms = [];
     public static IEnumerable<FormBase> OpenForms => _openForms.Where(form => form?.IsDisposed == false);
 
     protected FormBase()
@@ -42,8 +42,10 @@ public class FormBase : Form
         ForeColor = theme.TextColor;
     }
 
+#pragma warning disable SYSLIB1054 // Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+#pragma warning restore SYSLIB1054 // Not worth the change: need to enable unsafe code
 
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;

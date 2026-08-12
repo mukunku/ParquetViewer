@@ -11,9 +11,9 @@ public readonly struct AmplitudeConfiguration
 
     public AmplitudeConfiguration(string apiKey, Func<HttpMessageHandler> httpMessageHandlerProvider, IConsentProvider consentProvider)
     {
-        if (apiKey is null) throw new ArgumentNullException(nameof(apiKey));
-        if (httpMessageHandlerProvider is null) throw new ArgumentNullException(nameof(httpMessageHandlerProvider));
-        if (consentProvider is null) throw new ArgumentNullException(nameof(consentProvider));
+        ArgumentNullException.ThrowIfNull(apiKey);
+        ArgumentNullException.ThrowIfNull(httpMessageHandlerProvider);
+        ArgumentNullException.ThrowIfNull(consentProvider);
 
         ApiKey = apiKey;
         HttpMessageHandlerProvider = httpMessageHandlerProvider;

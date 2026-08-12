@@ -27,17 +27,17 @@ public partial class FieldsToLoadForm : FormBase
     public FieldsToLoadForm()
     {
         InitializeComponent();
-        AvailableFields ??= new List<string>();
-        PreSelectedFields ??= new List<string>();
-        NewSelectedFields ??= new List<string>();
+        AvailableFields ??= [];
+        PreSelectedFields ??= [];
+        NewSelectedFields ??= [];
         _selectedFieldsOnlyLabelTemplate = showSelectedFieldsRadioButton.Text;
         SetSelectedFieldCount();
     }
 
     public FieldsToLoadForm(IEnumerable<string> availableFields, IEnumerable<string> preSelectedFields) : this()
     {
-        AvailableFields = availableFields?.ToList() ?? new();
-        PreSelectedFields = preSelectedFields?.ToList() ?? new();
+        AvailableFields = availableFields?.ToList() ?? [];
+        PreSelectedFields = preSelectedFields?.ToList() ?? [];
     }
 
     private void FieldsToLoadForm_Load(object sender, EventArgs e)
@@ -275,7 +275,7 @@ public partial class FieldsToLoadForm : FormBase
         }
     }
 
-    private void ShowError(Exception ex, string? customMessage = null, bool showStackTrace = true)
+    private static void ShowError(Exception ex, string? customMessage = null, bool showStackTrace = true)
     {
         MessageBox.Show(string.Concat(customMessage ?? $"{Resources.Errors.GenericErrorMessage}:", Environment.NewLine, showStackTrace ? ex.ToString() : ex.Message), ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
@@ -294,7 +294,7 @@ public partial class FieldsToLoadForm : FormBase
             }
             else
             {
-                char[] charsToTrim = { '"', ' ', '\'' };
+                char[] charsToTrim = ['"', ' ', '\''];
                 filteredColumnsNames = filteredColumnsNames.Select(s => s.Trim(charsToTrim)).ToList();
                 filteredFields = AvailableFields.Where(w => filteredColumnsNames.Contains(w));
             }

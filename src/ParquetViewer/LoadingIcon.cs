@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace ParquetViewer;
 
-public class LoadingIcon : IDisposable, IProgress<int>
+public sealed class LoadingIcon : IDisposable, IProgress<int>
 {
     private const int LOADING_PANEL_WIDTH = 200;
     private const int LOADING_PANEL_HEIGHT = 200;
@@ -28,10 +28,12 @@ public class LoadingIcon : IDisposable, IProgress<int>
         ArgumentNullException.ThrowIfNull(form);
 
         _form = form;
-        _panel = new Panel();
-        _panel.BorderStyle = BorderStyle.FixedSingle;
-        _panel.Size = new Size(LOADING_PANEL_WIDTH, LOADING_PANEL_HEIGHT);
-        _panel.Location = GetFormCenter();
+        _panel = new Panel
+        {
+            BorderStyle = BorderStyle.FixedSingle,
+            Size = new Size(LOADING_PANEL_WIDTH, LOADING_PANEL_HEIGHT),
+            Location = GetFormCenter()
+        };
         _loadingBarMax = loadingBarMax;
 
         _panel.Controls.Add(new Label()
@@ -116,7 +118,7 @@ public class LoadingIcon : IDisposable, IProgress<int>
         _panel.Dispose();
     }
 
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     public void Report(int progress)
     {
         if (_loadingBarMax <= 0)
@@ -134,13 +136,11 @@ public class LoadingIcon : IDisposable, IProgress<int>
                 var bitmap = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
                 using (var solidBrush = new SolidBrush(Color.FromArgb(160, 40, 160, 60)))
                 {
-                    using (Graphics graphics = Graphics.FromImage(bitmap))
-                    {
-                        float wid = bitmap.Width * _progressRatio / 100;
-                        float hgt = bitmap.Height;
-                        RectangleF rect = new RectangleF(0, 0, wid, hgt);
-                        graphics.FillRectangle(solidBrush, rect);
-                    }
+                    using var graphics = Graphics.FromImage(bitmap);
+                    float wid = bitmap.Width * _progressRatio / 100;
+                    float hgt = bitmap.Height;
+                    var rect = new RectangleF(0, 0, wid, hgt);
+                    graphics.FillRectangle(solidBrush, rect);
                 }
                 _cancelButton.BackgroundImage = bitmap;
                 _cancelButton.Invoke(_cancelButton.Refresh);

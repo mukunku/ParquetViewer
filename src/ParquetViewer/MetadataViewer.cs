@@ -33,7 +33,7 @@ public partial class MetadataViewer : FormBase
 
     private void AddTab(string tabName, string text)
     {
-        TabPage tab = new TabPage(tabName);
+        var tab = new TabPage(tabName);
         tab.Controls.Add(new TextBox()
         {
             Multiline = true,
@@ -56,7 +56,7 @@ public partial class MetadataViewer : FormBase
     private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
     {
         var metadataResult = new List<(string TabName, string Text)>();
-        if (_parquetEngine!.Metadata != null)
+        if (_parquetEngine!.Metadata is not null)
         {
             string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(_parquetEngine, _parquetEngine.RecordCount, _parquetEngine.Fields.Count);
             metadataResult.Add((THRIFT_METADATA, json));
@@ -64,7 +64,7 @@ public partial class MetadataViewer : FormBase
         else
             metadataResult.Add((THRIFT_METADATA, Resources.Errors.NoThriftMetadataAvailableErrorMessage));
 
-        if (_parquetEngine.CustomMetadata != null)
+        if (_parquetEngine.CustomMetadata is not null)
         {
             foreach (var _customMetadata in _parquetEngine.CustomMetadata)
             {
@@ -92,7 +92,7 @@ public partial class MetadataViewer : FormBase
 
     private void MainBackgroundWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
     {
-        if (e.Error != null)
+        if (e.Error is not null)
         {
             MessageBox.Show(this,
                 Resources.Errors.MetadataReadErrorMessage + Environment.NewLine + e.Error,

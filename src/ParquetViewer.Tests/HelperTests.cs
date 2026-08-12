@@ -43,11 +43,11 @@ public class HelperTests
         ""event_properties"": {{
             ""regularProperty"": ""yyy""
         }},
-        ""session_id"": {testEvent.SessionId},
+        ""session_id"": {TestAmplitudeEvent.SessionId},
         ""language"": ""{CultureInfo.CurrentUICulture.Name}"",
         ""os_name"": ""{Environment.OSVersion.Platform}"",
         ""os_version"": ""{Environment.OSVersion.VersionString}"",
-        ""app_version"": ""{Helpers.Env.AssemblyVersion.ToString()}""
+        ""app_version"": ""{Env.AssemblyVersion}""
     }}]
 }}";
 
@@ -158,26 +158,24 @@ public class HelperTests
     [TestMethod]
     public void ReturnsEmptyString_WhenInputIsEmpty()
     {
-        Assert.IsEmpty(ParquetGridView.GenerateFilterQuery(new()));
+        Assert.IsEmpty(ParquetGridView.GenerateFilterQuery([]));
     }
 
     [TestMethod]
     public void SingleStringValue_GeneratesEqualsClause()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery([
             ("Name", typeof(string), new object[] { "Alice" })
-        });
+        ]);
         Assert.AreEqual("Name = 'Alice'", query);
     }
 
     [TestMethod]
     public void SingleIntValue_GeneratesEqualsClause()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery([
             ("Age", typeof(int), new object[] { 42 })
-        });
+        ]);
         Assert.AreEqual("Age = 42", query);
     }
 
@@ -185,102 +183,102 @@ public class HelperTests
     public void SingleDateTimeValue_GeneratesEqualsClause()
     {
         var dt = new DateTime(2024, 1, 2, 3, 4, 5, 678);
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Created", typeof(DateTime), new object[] { dt })
-        });
+        ]);
         Assert.AreEqual($"Created = #{dt:yyyy-MM-dd HH:mm:ss.FFFFFFF}#", query);
     }
 
     [TestMethod]
     public void MultipleValues_GeneratesInClause()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Age", typeof(int), new object[] { 1, 2, 3 })
-        });
+        ]);
         Assert.AreEqual("Age IN (1,2,3)", query);
     }
 
     [TestMethod]
     public void MultipleStringValues_GeneratesInClauseWithQuotes()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("City", typeof(string), new object[] { "London", "Paris" })
-        });
+        ]);
         Assert.AreEqual("City IN ('London','Paris')", query);
     }
 
     [TestMethod]
     public void HandlesNullValue_GeneratesIsNull()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Name", typeof(string), new object[] { null! })
-        });
+        ]);
         Assert.AreEqual("Name IS NULL", query);
     }
 
     [TestMethod]
     public void HandlesDBNullValue_GeneratesIsNull()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Name", typeof(string), new object[] { DBNull.Value })
-        });
+        ]);
         Assert.AreEqual("Name IS NULL", query);
     }
 
     [TestMethod]
     public void HandlesNullAndNonNullValues_GeneratesOrIsNull()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Age", typeof(int), new object[] { 1, null! })
-        });
+        ]);
         Assert.AreEqual("(Age IN (1) OR Age IS NULL)", query);
     }
 
     [TestMethod]
     public void HandlesNullAndNonNullValues_GeneratesOrIsNullAndCombinesWithAnd()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Age", typeof(int), new object[] { 1, null! }),
             ("Name", typeof(string), new object[] { "Alice", "Alice" })
-        });
+        ]);
         Assert.AreEqual("(Age IN (1) OR Age IS NULL) AND Name = 'Alice'", query);
     }
 
     [TestMethod]
     public void HandlesMultipleColumns_CombinesWithAnd()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Name", typeof(string), new object[] { "Alice" }),
             ("Age", typeof(int), new object[] { 30 })
-        });
+        ]);
         Assert.AreEqual("Name = 'Alice' AND Age = 30", query);
     }
 
     [TestMethod]
     public void ColumnNameWithSpaces_IsWrappedInBrackets()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("First Name", typeof(string), new object[] { "Bob" })
-        });
+        ]);
         Assert.AreEqual("[First Name] = 'Bob'", query);
     }
 
     [TestMethod]
     public void FloatScientificNotation_IsWrappedInQuotes()
     {
-        var query = ParquetGridView.GenerateFilterQuery(new()
-        {
+        var query = ParquetGridView.GenerateFilterQuery(
+        [
             ("Value", typeof(double), new object[] { 1.23e20 })
-        });
+        ]);
         Assert.AreEqual("Value = '1.23E+20'", query);
     }
 
@@ -298,25 +296,25 @@ public class HelperTests
         {
             CultureInfo.CurrentCulture = new CultureInfo(cultureName);
 
-            Assert.AreEqual("Value = 1.5", ParquetGridView.GenerateFilterQuery(new()
-            {
+            Assert.AreEqual("Value = 1.5", ParquetGridView.GenerateFilterQuery(
+            [
                 ("Value", typeof(double), new object[] { 1.5d })
-            }));
+            ]));
 
-            Assert.AreEqual("Value = '1.23E+20'", ParquetGridView.GenerateFilterQuery(new()
-            {
+            Assert.AreEqual("Value = '1.23E+20'", ParquetGridView.GenerateFilterQuery(
+            [
                 ("Value", typeof(double), new object[] { 1.23e20 })
-            }));
+            ]));
 
-            Assert.AreEqual("Value IN (1.5,2.5)", ParquetGridView.GenerateFilterQuery(new()
-            {
+            Assert.AreEqual("Value IN (1.5,2.5)", ParquetGridView.GenerateFilterQuery(
+            [
                 ("Value", typeof(double), new object[] { 1.5d, 2.5d })
-            }));
+            ]));
 
-            Assert.AreEqual("Value = #2024-01-31 13:45:30#", ParquetGridView.GenerateFilterQuery(new()
-            {
+            Assert.AreEqual("Value = #2024-01-31 13:45:30#", ParquetGridView.GenerateFilterQuery(
+            [
                 ("Value", typeof(DateTime), new object[] { new DateTime(2024, 1, 31, 13, 45, 30) })
-            }));
+            ]));
         }
         finally
         {

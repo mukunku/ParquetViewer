@@ -73,7 +73,7 @@ public abstract class EngineTests
         Assert.AreEqual(30, parquetEngine.RecordCount);
         Assert.HasCount(337, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual((UInt16)156, dataTable.Rows[0][0]);
         Assert.AreEqual(60.7376101, dataTable.Rows[1][10]);
         Assert.IsFalse((bool)dataTable.Rows[19][332]);
@@ -89,7 +89,7 @@ public abstract class EngineTests
         Assert.AreEqual(10, parquetEngine.RecordCount);
         Assert.HasCount(3, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual("36/2015-16", dataTable.Rows[0][0]);
         Assert.AreEqual(new DateOnly(2015, 07, 14), dataTable.Rows[1][2]);
         Assert.AreEqual(new DateTime(2015, 07, 19, 18, 30, 0), dataTable.Rows[9][1]);
@@ -103,7 +103,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(11, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual((long)1, dataTable.Rows[0][0]);
         Assert.AreEqual(new DateOnly(1985, 12, 31), dataTable.Rows[0][1]);
         Assert.AreEqual(new DateOnly(1, 1, 2), dataTable.Rows[0][2]);
@@ -125,7 +125,7 @@ public abstract class EngineTests
         Assert.AreEqual(5, parquetEngine.RecordCount);
         Assert.HasCount(42, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual((long)798921, dataTable.Rows[0][0]);
         Assert.AreEqual("BW15", dataTable.Rows[1][2]);
         Assert.AreEqual((long)7155937, dataTable.Rows[2][3]);
@@ -145,7 +145,7 @@ public abstract class EngineTests
         Assert.HasCount(12, parquetEngine.Fields);
 
         var ex = await Assert.ThrowsAsync<NotSupportedException>(async ()
-            => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false));
+            => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false));
         Assert.AreEqual("Duplicate column 'schema/TransPlan_NORMAL_v2' detected. Column names are case insensitive and must be unique.", ex.Message);
     }
 
@@ -164,7 +164,7 @@ public abstract class EngineTests
         Assert.AreEqual(2000, parquetEngine.RecordCount);
         Assert.HasCount(9, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual("SHAPEFILE_JSON", dataTable.Rows[0][0]);
         Assert.AreEqual("5022121000", dataTable.Rows[200][2]);
         Assert.AreEqual((double)450, dataTable.Rows[500][3]);
@@ -189,7 +189,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(11, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual(202252, dataTable.Rows[0][0]);
         Assert.IsFalse((bool)dataTable.Rows[0]["Output as FP"]);
         Assert.AreEqual((byte)0, dataTable.Rows[0]["Preorder FP equi."]);
@@ -204,7 +204,7 @@ public abstract class EngineTests
         Assert.AreEqual(3, parquetEngine.RecordCount);
         Assert.HasCount(2, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][0]);
         Assert.AreEqual("[1,2,3]", dataTable.Rows[0][0].ToString());
         Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][1]);
@@ -315,7 +315,7 @@ public abstract class EngineTests
         Assert.AreEqual(10, parquetEngine.RecordCount);
         Assert.HasCount(6, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual(DBNull.Value, dataTable.Rows[0][0]);
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[2][0]);
         Assert.AreEqual("{\"appId\":\"e4a20b59-dd0e-4c50-b074-e8ae4786df30\",\"version\":0,\"lastUpdated\":1564524299648}", dataTable.Rows[2][0].ToString());
@@ -340,7 +340,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(33, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.IsFalse((bool)dataTable.Rows[0][22]);
         Assert.AreEqual(new Guid("fdcbf90c-20d3-d745-b29f-9c2de1baa979"), dataTable.Rows[0][1]);
         Assert.AreEqual(new DateTime(2019, 1, 1), dataTable.Rows[0][4]);
@@ -351,7 +351,7 @@ public abstract class EngineTests
     {
         using var parquetEngine = await OpenFileOrFolderAsync("Data/MALFORMED_DATETIME_TEST.parquet");
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.IsInstanceOfType<DateTime>(dataTable.Rows[0]["ds"]);
         Assert.AreEqual(new DateTime(2017, 1, 1), dataTable.Rows[0]["ds"]);
     }
@@ -376,7 +376,7 @@ public abstract class EngineTests
         Assert.AreEqual(126, parquetEngine.RecordCount);
         Assert.HasCount(2, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual("DEPOSIT", dataTable.Rows[0][0]);
         Assert.AreEqual((long)1, dataTable.Rows[0][1]);
     }
@@ -406,7 +406,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(29, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
 
         Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][28]);
         Assert.AreEqual("[{\"purposeId\":\"HF85PyyGFprJXJvh5Pk9tg\",\"status\":\"Granted\",\"externalId\":\"General\",\"date\":\"2025-06-05 14:30:33\"}]", dataTable.Rows[0][28].ToString());
@@ -419,7 +419,7 @@ public abstract class EngineTests
         Assert.AreEqual(2, parquetEngine.RecordCount);
         Assert.HasCount(2, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
 
         Assert.AreEqual("Product1", dataTable.Rows[0][0]);
         Assert.AreEqual("Product2", dataTable.Rows[1][0]);
@@ -437,7 +437,7 @@ public abstract class EngineTests
         Assert.AreEqual(5, parquetEngine.RecordCount);
         Assert.HasCount(7, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
 
         Assert.AreEqual(1, dataTable.Rows[0][0]);
         Assert.AreEqual(5, dataTable.Rows[4][0]);
@@ -457,7 +457,7 @@ public abstract class EngineTests
         Assert.AreEqual(10589, parquetEngine.RecordCount);
         Assert.HasCount(8, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
 
         Assert.AreEqual(0.7072m, dataTable.Rows[0][5]);
         Assert.AreEqual(0m, dataTable.Rows[0][6]);
@@ -475,7 +475,7 @@ public abstract class EngineTests
         Assert.AreEqual(3, parquetEngine.RecordCount);
         Assert.HasCount(1, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual("[[1],[1,2],[1,2,3],[1,2,3,4],[1,2,3,4,5]]", dataTable.Rows[0][0].ToString());
         Assert.AreEqual(DBNull.Value, dataTable.Rows[1][0]);
         Assert.AreEqual("[[1],[],[3],null,[5]]", dataTable.Rows[2][0].ToString());
@@ -494,7 +494,7 @@ public abstract class EngineTests
         Assert.AreEqual(3, parquetEngine.RecordCount);
         Assert.HasCount(2, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual("[[[\"a\",\"b\"],[\"c\"]],[null,[\"d\"]]]", dataTable.Rows[0][0].ToString());
         Assert.AreEqual("[[[\"a\",\"b\"],[\"c\",\"d\"]],[null,[\"e\"]]]", dataTable.Rows[1][0].ToString());
         Assert.AreEqual("[[[\"a\",\"b\"],[\"c\",\"d\"],[\"e\"]],[null,[\"f\"]]]", dataTable.Rows[2][0].ToString());
@@ -513,7 +513,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(1, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         const string expectedJson = @"[{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0710999965667725},{""Name"":""INSULT"",""Score"":0.113300003111362},{""Name"":""GRAPHIC"",""Score"":0.0186000000685453},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.0710999965667725},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0838999971747398},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0702999979257584},{""Name"":""HATE_SPEECH"",""Score"":0.0883999988436699},{""Name"":""INSULT"",""Score"":0.132699996232986},{""Name"":""GRAPHIC"",""Score"":0.0186000000685453},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.0239000003784895},{""Name"":""SEXUAL"",""Score"":0.0710999965667725},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.097900003194809},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0797000005841255},{""Name"":""INSULT"",""Score"":0.117499999701977},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.143399998545647},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0276999995112419}],""Toxicity"":0.10249999910593},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0604000017046928},{""Name"":""HATE_SPEECH"",""Score"":0.0874999985098839},{""Name"":""INSULT"",""Score"":0.127399995923042},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.142199993133545},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.10809999704361},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.047800000756979},{""Name"":""HATE_SPEECH"",""Score"":0.0797000005841255},{""Name"":""INSULT"",""Score"":0.120399996638298},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.133100003004074},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0949999988079071},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0710999965667725},{""Name"":""INSULT"",""Score"":0.119699999690056},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.1300999969244},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.089699998497963},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0693999975919724},{""Name"":""HATE_SPEECH"",""Score"":0.0785999968647957},{""Name"":""INSULT"",""Score"":0.12219999730587},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.146300002932549},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0276999995112419}],""Toxicity"":0.089699998497963},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0604000017046928},{""Name"":""HATE_SPEECH"",""Score"":0.0702999979257584},{""Name"":""INSULT"",""Score"":0.10249999910593},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.184000000357628},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0741999968886376}]";
 
         Assert.AreEqual(expectedJson, dataTable.Rows[0][0].ToString());
@@ -526,7 +526,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(8, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
 
         Assert.AreEqual(32, dataTable.Rows[0][0]);
         Assert.AreEqual((long)64, dataTable.Rows[0][1]);
@@ -564,7 +564,7 @@ public abstract class EngineTests
         Assert.HasCount(51, parquetEngine.Fields);
 
         await Assert.ThrowsAsync<DecimalOverflowException>(() =>
-            parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default));
+            parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue));
     }
 
     [SkippableTestMethod]
@@ -575,7 +575,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(1, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
 
         Assert.AreEqual("[{\"B\":{\"id\":1}},{\"B\":{\"id\":null}},{\"B\":null}]", dataTable.Rows[0][0].ToString());
     }
@@ -606,7 +606,9 @@ public abstract class EngineTests
         try
         {
             var jsonElement = JsonSerializer.Deserialize<JsonElement>(possibleJSON);
+#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
             return JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions { WriteIndented = true });
+#pragma warning restore CA1869 // This is a test class, not important
         }
         catch (Exception)
         {
@@ -622,7 +624,7 @@ public abstract class EngineTests
         Assert.AreEqual(1, parquetEngine.RecordCount);
         Assert.HasCount(1, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.IsInstanceOfType<IByteArrayValue>(dataTable.Rows[0][0]);
 
         const string expected = "67-33-73-68-61-72-70-5F-73-74-6C-20-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00";
@@ -724,7 +726,7 @@ public abstract class EngineTests
         Assert.AreEqual(4626, parquetEngine.RecordCount);
         Assert.HasCount(2, parquetEngine.Fields);
 
-        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
         Assert.AreEqual(new DateOnly(2024, 1, 1), dataTable.Rows[0][0]);
         Assert.AreEqual(new TimeOnly(215720000000), dataTable.Rows[0][1]);
     }

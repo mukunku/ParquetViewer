@@ -2,7 +2,7 @@
 
 namespace ParquetViewer.Engine.DuckDB;
 
-internal class QueryResult : IAsyncEnumerable<DuckDBDataReader>, IDisposable
+internal class QueryResult : IAsyncEnumerable<DuckDBDataReader>, IAsyncDisposable
 {
     private readonly DuckDBDataReader _reader;
 
@@ -11,11 +11,11 @@ internal class QueryResult : IAsyncEnumerable<DuckDBDataReader>, IDisposable
         _reader = reader;
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         try
         {
-            _reader.DisposeAsync();
+            await _reader.DisposeAsync();
         }
         catch { }
     }
@@ -31,14 +31,14 @@ internal class QueryResult : IAsyncEnumerable<DuckDBDataReader>, IDisposable
 
     public async IAsyncEnumerator<DuckDBDataReader> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        if (!await _reader.ReadAsync())
+        if (!await _reader.ReadAsync(cancellationToken))
         {
             yield break;
         }
 
         yield return _reader;
 
-        while (await _reader.ReadAsync())
+        while (await _reader.ReadAsync(cancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
 

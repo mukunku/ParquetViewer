@@ -71,7 +71,7 @@ public partial class MainForm
                     var stopWatch = Stopwatch.StartNew();
                     loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
                     await ExportResultsImpl(MainDataSource!, selectedFileType.Value, _openParquetEngine,
-                        filePath, loadingIcon.CancellationToken, loadingIcon, OpenFileOrFolderPath);
+                        filePath, loadingIcon, OpenFileOrFolderPath, loadingIcon.CancellationToken);
 
                     if (loadingIcon.CancellationToken.IsCancellationRequested)
                     {
@@ -142,7 +142,7 @@ public partial class MainForm
 
 
     private static Task ExportResultsImpl(DataTable dataTable, FileType selectedFileType, IParquetEngine? engine,
-        string filePath, CancellationToken cancellationToken, IProgress<int> progress, string? sourceFileOrFolderPath)
+        string filePath, IProgress<int> progress, string? sourceFileOrFolderPath, CancellationToken cancellationToken)
     {
         if (selectedFileType == FileType.CSV)
         {
@@ -187,7 +187,7 @@ public partial class MainForm
         {
             ArgumentNullException.ThrowIfNull(engine);
             var engineTypeName = engine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" : "DuckDB";
-            return WriteDataToParquetFile(engine, dataTable, filePath, cancellationToken, progress, engineTypeName);
+            return WriteDataToParquetFile(engine, dataTable, filePath, progress, engineTypeName, cancellationToken);
         }
         else
         {
@@ -393,7 +393,7 @@ public partial class MainForm
             }, cancellationToken);
 
     private static Task WriteDataToParquetFile(IParquetEngine engine, DataTable dataTable, string path,
-        CancellationToken cancellationToken, IProgress<int> progress, string engineName)
+        IProgress<int> progress, string engineName, CancellationToken cancellationToken)
         => Task.Run(async () =>
             {
                 var customMetadata = new Dictionary<string, string>
@@ -409,7 +409,7 @@ public partial class MainForm
 }"
                             }
                         };
-                await engine.WriteDataToParquetFileAsync(dataTable, path, cancellationToken, progress, customMetadata);
+                await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
             }, cancellationToken);
 
     private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)

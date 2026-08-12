@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace ParquetViewer.Engine;
 
-public class Utf8JsonWriterWithRunningLength : IDisposable
+public sealed class Utf8JsonWriterWithRunningLength : IDisposable
 {
     public int ApproximateStringLengthSoFar { get; private set; }
 

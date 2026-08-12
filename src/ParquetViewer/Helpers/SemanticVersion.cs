@@ -52,7 +52,7 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
         return true;
     }
 
-    public int CompareTo(SemanticVersion other)
+    public readonly int CompareTo(SemanticVersion other)
     {
         if (Major < other.Major)
             return -1;
@@ -81,7 +81,7 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
         return 0;
     }
 
-    public int CompareTo(object? obj)
+    public readonly int CompareTo(object? obj)
     {
         if (obj is SemanticVersion semanticVersion)
             return CompareTo(semanticVersion);
@@ -108,16 +108,16 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
         !left.Equals(right);
 
     // Override Equals and GetHashCode for value comparison
-    public override bool Equals(object? obj) =>
+    public override readonly bool Equals(object? obj) =>
         obj is SemanticVersion other && Equals(other);
 
-    public bool Equals(SemanticVersion other) =>
+    public readonly bool Equals(SemanticVersion other) =>
         Major == other.Major
         && Minor == other.Minor
         && Patch == other.Patch
         && Build == other.Build;
 
-    public override int GetHashCode()
+    public readonly override int GetHashCode()
     {
         var hashcode = new HashCode();
         hashcode.Add(Major);
@@ -127,6 +127,6 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
         return hashcode.ToHashCode();
     }
 
-    public override string ToString()
+    public readonly override string ToString()
         => $"{Major}.{Minor}.{Patch}.{Build}";
 }

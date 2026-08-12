@@ -2,7 +2,7 @@
 
 namespace ParquetViewer.Engine.DuckDB;
 
-public class DuckDBHandle : IDisposable
+public sealed class DuckDBHandle : IDisposable
 {
     public string ParquetFilePath { get; }
     public DuckDBConnection Connection { get; }

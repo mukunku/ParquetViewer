@@ -11,8 +11,8 @@ public class ExcelWriter
 {
     private readonly BinaryWriter _writer;
 
-    private readonly ushort[] _clBegin = { 0x0809, 8, 0, 0x10, 0, 0 };
-    private readonly ushort[] _clEnd = { 0x0A, 00 };
+    private readonly ushort[] _clBegin = [0x0809, 8, 0, 0x10, 0, 0];
+    private readonly ushort[] _clEnd = [0x0A, 00];
 
     private void WriteUshortArray(ushort[] value)
     {
@@ -37,7 +37,7 @@ public class ExcelWriter
     /// <param name="value">The string value.</param>
     public void WriteCell(int row, int col, string value)
     {
-        ushort[] clData = { 0x0204, 0, 0, 0, 0, 0 };
+        ushort[] clData = [0x0204, 0, 0, 0, 0, 0];
         int iLen = value.Length;
         byte[] plainText = Encoding.UTF8.GetBytes(value);
         clData[1] = (ushort)(8 + iLen);
@@ -56,7 +56,7 @@ public class ExcelWriter
     /// <param name="value">The value.</param>
     public void WriteCell(int row, int col, int value)
     {
-        ushort[] clData = { 0x027E, 10, 0, 0, 0 };
+        ushort[] clData = [0x027E, 10, 0, 0, 0];
         clData[2] = (ushort)row;
         clData[3] = (ushort)col;
         WriteUshortArray(clData);
@@ -72,7 +72,7 @@ public class ExcelWriter
     /// <param name="value">The value.</param>
     public void WriteCell(int row, int col, double value)
     {
-        ushort[] clData = { 0x0203, 14, 0, 0, 0 };
+        ushort[] clData = [0x0203, 14, 0, 0, 0];
         clData[2] = (ushort)row;
         clData[3] = (ushort)col;
         WriteUshortArray(clData);
@@ -86,7 +86,7 @@ public class ExcelWriter
     /// <param name="col">The column number.</param>
     public void WriteCell(int row, int col)
     {
-        ushort[] clData = { 0x0201, 6, 0, 0, 0x17 };
+        ushort[] clData = [0x0201, 6, 0, 0, 0x17];
         clData[2] = (ushort)row;
         clData[3] = (ushort)col;
         WriteUshortArray(clData);

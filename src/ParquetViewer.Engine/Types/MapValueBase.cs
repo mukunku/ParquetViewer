@@ -1,8 +1,7 @@
-﻿using ParquetViewer.Engine.Types;
-using System.Collections;
+﻿using System.Collections;
 using System.Text;
 
-namespace ParquetViewer.Engine;
+namespace ParquetViewer.Engine.Types;
 
 public class MapValue : IMapValue
 {
@@ -29,11 +28,11 @@ public class MapValue : IMapValue
         Values = values;
 
         var mismatchedType = keys.Cast<object?>().Where(key => key != DBNull.Value).FirstOrDefault(key => key!.GetType() != keyType);
-        if (mismatchedType != null)
+        if (mismatchedType is not null)
             throw new ArgumentException($"The key's type {mismatchedType} doesn't match the passed key-type {keyType}");
 
         mismatchedType = values.Cast<object?>().Where(value => value != DBNull.Value).FirstOrDefault(value => value!.GetType() != valueType);
-        if (mismatchedType != null)
+        if (mismatchedType is not null)
             throw new ArgumentException($"The value's type {mismatchedType} doesn't match the passed value-type {valueType}");
 
         //We need the types because if the key/value arraylists are empty

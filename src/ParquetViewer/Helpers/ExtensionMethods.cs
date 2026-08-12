@@ -28,8 +28,8 @@ public static class ExtensionMethods
     /// <returns></returns>
     public static IList<string> GetColumnNames(this DataTable datatable)
     {
-        List<string> columns = new List<string>(datatable.Columns.Count);
-        foreach (System.Data.DataColumn column in datatable.Columns)
+        var columns = new List<string>(datatable.Columns.Count);
+        foreach (DataColumn column in datatable.Columns)
         {
             columns.Add(column.ColumnName);
         }
@@ -164,7 +164,7 @@ public static class ExtensionMethods
             return value;
 
         maxLength = Math.Abs(maxLength);
-        return value.Length <= maxLength ? value : (value.Substring(0, maxLength) + truncateSuffix);
+        return value.Length <= maxLength ? value : string.Concat(value.AsSpan(0, maxLength), truncateSuffix);
     }
 
     public static IEnumerable<ToolStripItem> Children(this MenuStrip menuStrip)

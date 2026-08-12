@@ -24,13 +24,13 @@ public class ParquetMetadata : IParquetMetadata
         CreatedBy = thriftMetadata.CreatedBy ?? string.Empty;
         SchemaTree = schemaTree;
 
-        List<RowGroupMetadata> rowGroupMetadataList = new();
+        List<RowGroupMetadata> rowGroupMetadataList = [];
         var rowGroupIndex = -1;
         foreach (var rowGroup in thriftMetadata.RowGroups)
         {
             rowGroupIndex++;
 
-            List<RowGroupColumnMetadata> columnMetadataList = new();
+            List<RowGroupColumnMetadata> columnMetadataList = [];
             var columnIndex = -1;
             foreach (var column in rowGroup.Columns)
             {
@@ -226,7 +226,7 @@ public class RowGroupColumnStatistics : IRowGroupColumnStatistics
         IsMaxValueExact = isMaxValueExact;
     }
 
-    private object? TryDeserializeValue(byte[]? value, ParquetSchemaElement field)
+    private static object? TryDeserializeValue(byte[]? value, ParquetSchemaElement field)
     {
         try
         {

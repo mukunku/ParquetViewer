@@ -138,7 +138,9 @@ public partial class MainForm : FormBase
         }
     }
 
-    private IParquetEngine? _openParquetEngine = null;
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+    private IParquetEngine? _openParquetEngine;
+#pragma warning restore CA1859 // Self-Contained executable will assign DuckDB engines to this
 
     private (DateTime LastWriteTimeUtc, long Length)? _originalModifiedInfo;
     #endregion
@@ -345,7 +347,7 @@ public partial class MainForm : FormBase
 
             var intermediateResult = await Task.Run(async () =>
             {
-                return await engine.ReadRowsAsync(SelectedFields, CurrentOffset, CurrentMaxRowCount, loadingIcon.CancellationToken, loadingIcon);
+                return await engine.ReadRowsAsync(SelectedFields, CurrentOffset, CurrentMaxRowCount, loadingIcon, loadingIcon.CancellationToken);
             }, loadingIcon.CancellationToken);
 
             loadTime = stopwatch.Elapsed;

@@ -51,14 +51,14 @@ public partial class AboutBox : FormBase
 
     #region Assembly Attribute Accessors
 
-    public string AssemblyTitle
+    public static string AssemblyTitle
     {
         get
         {
             object[] attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTitleAttribute), false);
             if (attributes.Length > 0)
             {
-                AssemblyTitleAttribute titleAttribute = (AssemblyTitleAttribute)attributes[0];
+                var titleAttribute = (AssemblyTitleAttribute)attributes[0];
                 if (titleAttribute.Title != string.Empty)
                 {
                     return titleAttribute.Title;
@@ -68,9 +68,9 @@ public partial class AboutBox : FormBase
         }
     }
 
-    public string AssemblyVersion => Env.AssemblyVersion.ToString();
+    public static string AssemblyVersion => Env.AssemblyVersion.ToString();
 
-    public string AssemblyDescription
+    public static string AssemblyDescription
     {
         get
         {
@@ -83,7 +83,7 @@ public partial class AboutBox : FormBase
         }
     }
 
-    public string AssemblyProduct
+    public static string AssemblyProduct
     {
         get
         {
@@ -96,7 +96,7 @@ public partial class AboutBox : FormBase
         }
     }
 
-    public string AssemblyCopyright
+    public static string AssemblyCopyright
     {
         get
         {
@@ -109,7 +109,7 @@ public partial class AboutBox : FormBase
         }
     }
 
-    public string AssemblyCompany
+    public static string AssemblyCompany
     {
         get
         {

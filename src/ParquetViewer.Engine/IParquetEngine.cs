@@ -12,10 +12,10 @@ public interface IParquetEngine : IDisposable
     IParquetMetadata Metadata { get; }
 
     Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount,
-        CancellationToken cancellationToken, IProgress<int>? progress = null);
+        IProgress<int>? progress = null, CancellationToken cancellationToken = default);
 
-    Task WriteDataToParquetFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken,
-        IProgress<int> progress, Dictionary<string, string>? customMetadata);
+    Task WriteDataToParquetFileAsync(DataTable dataTable, string path, IProgress<int> progress,
+        Dictionary<string, string>? customMetadata, CancellationToken cancellationToken);
 
     IEnumerable<string> GetOpenParquetFilePaths();
 }

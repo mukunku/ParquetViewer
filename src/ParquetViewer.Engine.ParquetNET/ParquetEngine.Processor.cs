@@ -10,7 +10,7 @@ namespace ParquetViewer.Engine.ParquetNET;
 
 public partial class ParquetEngine
 {
-    public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
+    public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(recordCount, nameof(recordCount));
         ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
@@ -47,28 +47,26 @@ public partial class ParquetEngine
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using (ParquetRowGroupReader groupReader = parquetReader.OpenRowGroupReader(i))
-            {
-                if (groupReader.RowCount > int.MaxValue)
-                    throw new ArgumentOutOfRangeException(
-                        string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
+            using var groupReader = parquetReader.OpenRowGroupReader(i);
+            if (groupReader.RowCount > int.MaxValue)
+                throw new ArgumentOutOfRangeException(
+                    string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
 
-                int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
-                totalRecordCountSoFar += (int)groupReader.RowCount;
+            int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
+            totalRecordCountSoFar += (int)groupReader.RowCount;
 
-                if (offset >= totalRecordCountSoFar)
-                    continue;
+            if (offset >= totalRecordCountSoFar)
+                continue;
 
-                if (rowsLeftToRead <= 0)
-                    break;
+            if (rowsLeftToRead <= 0)
+                break;
 
-                long numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCountSoFar - offset, rowsLeftToRead), groupReader.RowCount);
-                rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
+            long numberOfRecordsToReadFromThisRowGroup = Math.Min(Math.Min(totalRecordCountSoFar - offset, rowsLeftToRead), groupReader.RowCount);
+            rowsLeftToRead -= numberOfRecordsToReadFromThisRowGroup;
 
-                long recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
+            long recordsToSkipInThisRowGroup = Math.Max(offset - rowsPassedUntilThisRowGroup, 0);
 
-                await ProcessRowGroup(dataTable, groupReader, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup, cancellationToken, progress);
-            }
+            await ProcessRowGroup(dataTable, groupReader, recordsToSkipInThisRowGroup, numberOfRecordsToReadFromThisRowGroup, cancellationToken, progress);
         }
 
         return rowsLeftToRead;
@@ -473,7 +471,7 @@ public partial class ParquetEngine
         }
     }
 
-    private SimpleProgress StructReadProgress(IProgress<int>? _progress, int fieldCount)
+    private static SimpleProgress StructReadProgress(IProgress<int>? _progress, int fieldCount)
     {
         var progress = new SimpleProgress();
         progress.ProgressChanged += (int progressSoFar) =>

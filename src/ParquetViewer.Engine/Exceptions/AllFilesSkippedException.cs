@@ -8,7 +8,7 @@ public class AllFilesSkippedException : Exception
 
     public AllFilesSkippedException(IEnumerable<KeyValuePair<string, Exception>> skippedFiles) : base("Could not open any files in directory.")
     {
-        SkippedFiles = new List<SkippedFile>();
+        SkippedFiles = [];
         if (skippedFiles is not null)
         {
             foreach (var skippedFile in skippedFiles)

@@ -9,7 +9,7 @@ public class DataTableLite
     public record ColumnLite(string Name, Type Type, IParquetSchemaElement ParentSchema, int Ordinal);
 
     private int _ordinal = 0;
-    private readonly Dictionary<string, ColumnLite> _columns = new();
+    private readonly Dictionary<string, ColumnLite> _columns = [];
     private readonly List<object[]> _rows;
 
     /// <summary>

@@ -23,6 +23,16 @@ file_header_template = unset
 dotnet_diagnostic.IDE0005.severity = warning # Unnecessary using directive
 dotnet_diagnostic.IDE0003.severity = warning # Disallow `this.` qualifiers
 dotnet_diagnostic.IDE1006.severity = warning # All caps constants
+dotnet_diagnostic.IDE0058.severity = none # Use discard variable
+dotnet_diagnostic.IDE0350.severity = none # Simplify lambda expression by removing variable type definitions
+dotnet_diagnostic.IDE0305.severity = none # Collection initialization can be simplified
+dotnet_diagnostic.SYSLIB1045.severity = none # Use GeneratedRegexAttribute instead
+dotnet_diagnostic.IDE0130.severity = warning # Namespace should match folder structure
+dotnet_diagnostic.IDE0028.severity = warning # Use collection initializers or expressions
+dotnet_diagnostic.IDE0042.severity = warning # Deconstruct variable declaration
+dotnet_diagnostic.CA1068.severity = warning # CancellationToken parameters must come last
+dotnet_diagnostic.MSTEST0049.severity = none # Flow TestContext cancellation token
+dotnet_diagnostic.IDE0076.severity = warning # Remove invalid global 'SuppressMessageAttribute'
 
 # this. and Me. preferences (IDE0003 )
 dotnet_style_qualification_for_event = false

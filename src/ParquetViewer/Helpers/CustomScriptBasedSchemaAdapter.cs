@@ -45,7 +45,7 @@ public class CustomScriptBasedSchemaAdapter
         {
             throw new ArgumentException("null is not a valid parameter value", nameof(dataSet));
         }
-        StringBuilder stringBuilder = new StringBuilder();
+        var stringBuilder = new StringBuilder();
         foreach (DataTable table in dataSet.Tables)
         {
             try
@@ -100,7 +100,7 @@ public class CustomScriptBasedSchemaAdapter
         return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
     }
 
-    private string MakeList(DataColumn[] columns)
+    private static string MakeList(DataColumn[] columns)
     {
         if (columns is null || columns.Length < 1)
         {
@@ -108,10 +108,9 @@ public class CustomScriptBasedSchemaAdapter
         }
         StringBuilder stringBuilder = new();
         bool flag = true;
-        DataColumn[] dataColumnArray = columns;
-        for (int i = 0; i < dataColumnArray.Length; i++)
+        for (int i = 0; i < columns.Length; i++)
         {
-            DataColumn dataColumn = dataColumnArray[i];
+            var dataColumn = columns[i];
             if (!flag)
             {
                 stringBuilder.Append(", ");
@@ -122,13 +121,13 @@ public class CustomScriptBasedSchemaAdapter
         return stringBuilder.ToString();
     }
 
-    private string MakeList(DataColumnCollection columns)
+    private static string MakeList(DataColumnCollection columns)
     {
         if (columns is null || columns.Count < 1)
         {
             throw new ArgumentException("Invalid column list!", nameof(columns));
         }
-        StringBuilder stringBuilder = new StringBuilder();
+        var stringBuilder = new StringBuilder();
         bool flag = true;
         foreach (DataColumn column in columns)
         {
@@ -162,7 +161,7 @@ public class CustomScriptBasedSchemaAdapter
             $"{(CascadeDeletes ? " ON DELETE CASCADE" : string.Empty)}; END\n";
     }
 
-    protected string MakeSafe(string inputValue)
+    private static string MakeSafe(string inputValue)
     {
         string str = inputValue.Trim();
         string str1 = string.Format("[{0}]", str[..Math.Min(128, str.Length)]);

@@ -7,7 +7,7 @@ using static ParquetViewer.Engine.DuckDB.DuckDBHelper;
 
 namespace ParquetViewer.Engine.DuckDB;
 
-public class ParquetEngine : IParquetEngine
+public sealed class ParquetEngine : IParquetEngine
 {
     private readonly List<DuckDBHandle> _dbs;
     private readonly List<ParquetMetadata> _metadatas;
@@ -130,12 +130,13 @@ public class ParquetEngine : IParquetEngine
                 var db = await DuckDBHandle.OpenAsync(file);
                 var fileFields = await DuckDBHelper.GetFields(db);
                 var fieldsHashCode = GetFieldsHashCode(fileFields);
-                if (!fileGroups.ContainsKey(fieldsHashCode))
+                if (!fileGroups.TryGetValue(fieldsHashCode, out var value))
                 {
-                    fileGroups.Add(fieldsHashCode, []);
+                    value = [];
+                    fileGroups.Add(fieldsHashCode, value);
                 }
 
-                fileGroups[fieldsHashCode].Add(db);
+                value.Add(db);
             }
             catch (Exception ex)
             {
@@ -223,7 +224,7 @@ public class ParquetEngine : IParquetEngine
 
             offset = 0;
 
-            using var result = await db.Connection.QueryAsync(query);
+            await using var result = await db.Connection.QueryAsync(query);
             await foreach (var row in result)
             {
                 yield return row;
@@ -232,7 +233,7 @@ public class ParquetEngine : IParquetEngine
         }
     }
 
-    public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, CancellationToken cancellationToken, IProgress<int>? progress = null)
+    public async Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(recordCount, nameof(recordCount));
         ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
@@ -284,7 +285,7 @@ public class ParquetEngine : IParquetEngine
             return result;
         };
 
-        object ConvertValueTypeIfNeeded(object? value, ParquetSchemaElement? parquetSchemaElement)
+        static object ConvertValueTypeIfNeeded(object? value, ParquetSchemaElement? parquetSchemaElement)
         {
             if (value is null || value == DBNull.Value || parquetSchemaElement is null)
                 return DBNull.Value;
@@ -452,8 +453,8 @@ public class ParquetEngine : IParquetEngine
         return $"\"{safeName}\"";
     }
 
-    public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken,
-        IProgress<int> progress, Dictionary<string, string>? customMetadata)
+    public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path, IProgress<int> progress,
+        Dictionary<string, string>? customMetadata, CancellationToken cancellationToken)
         => throw new NotImplementedException();
 
     public IEnumerable<string> GetOpenParquetFilePaths() => _dbs.Select(db => db.ParquetFilePath);

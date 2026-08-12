@@ -43,7 +43,7 @@ public static class UtilityMethods
     /// <returns>null if no matching file type is found</returns>
     public static FileType? ExtensionToFileType(string extension)
     {
-        foreach (FileType fileType in Enum.GetValues(typeof(FileType)))
+        foreach (FileType fileType in Enum.GetValues<FileType>())
         {
             if (fileType.GetExtension().Equals(extension))
                 return fileType;
@@ -90,9 +90,11 @@ public static class UtilityMethods
     public static void RestartApplication()
     {
         //Start a new ParquetViewer instance
-        ProcessStartInfo startInfo = new ProcessStartInfo();
-        startInfo.UseShellExecute = true; // Do not wait - make the process standalone
-        startInfo.FileName = Application.ExecutablePath;
+        var startInfo = new ProcessStartInfo
+        {
+            UseShellExecute = true, // Do not wait - make the process standalone
+            FileName = Application.ExecutablePath
+        };
         Process.Start(startInfo);
 
         //Terminate this instance

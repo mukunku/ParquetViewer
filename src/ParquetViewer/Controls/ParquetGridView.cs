@@ -49,8 +49,8 @@ public class ParquetGridView : DataGridView
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public string DateValueEscapeFormat { get; set; } = "#{0}#";
 
-    private readonly HashSet<int> _clickableColumnIndexes = new();
-    private readonly Dictionary<(int, int), QuickPeekForm> _openQuickPeekForms = new();
+    private readonly HashSet<int> _clickableColumnIndexes = [];
+    private readonly Dictionary<(int, int), QuickPeekForm> _openQuickPeekForms = [];
     private bool _isCopyingToClipboard;
     private DataGridViewCellStyle? _hyperlinkCellStyleCache;
     private bool _isLeftClickButtonDown;
@@ -59,8 +59,8 @@ public class ParquetGridView : DataGridView
     private static readonly Regex _validColumnNameRegex = new("^[a-zA-Z0-9_]+$");
 
     //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
-    private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
-    private readonly Dictionary<string, FloatDisplayFormat> _floatColumnsWithFormatOverrides = new();
+    private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = [];
+    private readonly Dictionary<string, FloatDisplayFormat> _floatColumnsWithFormatOverrides = [];
 
     public ParquetGridView() : base()
     {
@@ -421,7 +421,7 @@ public class ParquetGridView : DataGridView
         {
             if (Rows.Count > tag.SourceRowIndex && Columns.Count > tag.SourceColumnIndex) //Can't be too safe
             {
-                DataGridViewCell cellToReturnTo = this[tag.SourceColumnIndex, tag.SourceRowIndex];
+                var cellToReturnTo = this[tag.SourceColumnIndex, tag.SourceRowIndex];
 
                 //Check if the cell is still the same (user hasn't navigated the file since opening the popup)
                 if (cellToReturnTo.Tag is Guid t && t == tag.UniqueTag)
@@ -972,7 +972,7 @@ public class ParquetGridView : DataGridView
     }
 
     public static string GenerateFilterQuery(string columnName, Type valueType, object value)
-        => GenerateFilterQuery(new() { (columnName, valueType, [value]) });
+        => GenerateFilterQuery([(columnName, valueType, [value])]);
 
     public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy,
         string columnNameEscapeFormat = "[{0}]", string dateValueEscapeFormat = "#{0}#")
@@ -1135,10 +1135,9 @@ public class ParquetGridView : DataGridView
                 toolstripMenuItem.Click += (object? _, EventArgs _) =>
                 {
                     ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
-                    if (_byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
+
+                    if (!_byteArrayColumnsWithFormatOverrides.TryAdd(columnName, supportedFormat))
                         _byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
-                    else
-                        _byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
 
                     Refresh(); //Force a re-draw to render updated format
                     AutoSizeColumns(columnIndex); //Re-size the column
@@ -1164,10 +1163,8 @@ public class ParquetGridView : DataGridView
             {
                 ColumnFormattedEvent.FireAndForget("Scientific");
 
-                if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                if (!_floatColumnsWithFormatOverrides.TryAdd(columnName, FloatDisplayFormat.Scientific))
                     _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
-                else
-                    _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
 
                 Refresh(); //Force a re-draw to render updated format
                 AutoSizeColumns(columnIndex); //Re-size the column
@@ -1180,10 +1177,8 @@ public class ParquetGridView : DataGridView
             {
                 ColumnFormattedEvent.FireAndForget("Decimal");
 
-                if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                if (!_floatColumnsWithFormatOverrides.TryAdd(columnName, FloatDisplayFormat.Decimal))
                     _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
-                else
-                    _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
 
                 Refresh(); //Force a re-draw to render updated format
                 AutoSizeColumns(columnIndex); //Re-size the column

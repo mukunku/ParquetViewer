@@ -29,13 +29,13 @@ public static class AppSettings
 
     public static bool AlwaysSelectAllFields
     {
-        get => ReadRegistryValue(ALWAYS_SELECT_ALL_FIELDS, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+        get => ReadRegistryValue(ALWAYS_SELECT_ALL_FIELDS, out string? temp) && bool.TryParse(temp, out var value) && value;
         set => SetRegistryValue(ALWAYS_SELECT_ALL_FIELDS, value.ToString());
     }
 
     public static bool AlwaysLoadAllRecords
     {
-        get => ReadRegistryValue(ALWAYS_LOAD_ALL_RECORDS, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+        get => ReadRegistryValue(ALWAYS_LOAD_ALL_RECORDS, out string? temp) && bool.TryParse(temp, out var value) && value;
         set => SetRegistryValue(ALWAYS_LOAD_ALL_RECORDS, value.ToString());
     }
 
@@ -52,7 +52,7 @@ public static class AppSettings
     {
         try
         {
-            Guid newDeviceId = Guid.NewGuid();
+            var newDeviceId = Guid.NewGuid();
             SetRegistryValue(ANALYTICS_DEVICE_ID, newDeviceId);
             return newDeviceId;
         }
@@ -64,7 +64,7 @@ public static class AppSettings
 
     public static bool AnalyticsDataGatheringConsent
     {
-        get => ReadRegistryValue(ANALYTICS_DATA_GATHERING_CONSENT, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+        get => ReadRegistryValue(ANALYTICS_DATA_GATHERING_CONSENT, out string? temp) && bool.TryParse(temp, out var value) && value;
         set => SetRegistryValue(ANALYTICS_DATA_GATHERING_CONSENT, value.ToString());
     }
 
@@ -92,7 +92,7 @@ public static class AppSettings
 
     public static bool DarkMode
     {
-        get => ReadRegistryValue(DARK_MODE, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
+        get => ReadRegistryValue(DARK_MODE, out string? temp) && bool.TryParse(temp, out var value) && value;
         set
         {
             SetRegistryValue(DARK_MODE, value.ToString());
@@ -109,7 +109,7 @@ public static class AppSettings
     public static CultureInfo? UserSelectedCulture
     {
         get => ReadRegistryValue(USER_SELECTED_CULTURE, out string? value) ?
-            (UtilityMethods.TryParseCultureInfo(value, out CultureInfo? cultureInfo) ? cultureInfo : null)
+            (UtilityMethods.TryParseCultureInfo(value, out var cultureInfo) ? cultureInfo : null)
             : null;
         set => SetRegistryValue(USER_SELECTED_CULTURE, value?.ToString() ?? string.Empty);
     }

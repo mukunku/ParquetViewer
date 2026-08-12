@@ -13,7 +13,7 @@ internal static class DuckDBHelper
     public static async Task<List<DuckDBField>> GetFields(DuckDBHandle db)
     {
         var fields = new List<DuckDBField>();
-        using var result = await db.Connection.QueryAsync($"DESCRIBE TABLE '{db.ParquetFilePath}';");
+        await using var result = await db.Connection.QueryAsync($"DESCRIBE TABLE '{db.ParquetFilePath}';");
         await foreach (var row in result)
         {
             var columnName = row.GetString(0);
@@ -96,7 +96,7 @@ internal static class DuckDBHelper
         await ReadChildrenAsync(rootNode, enumerator);
         return rootNode;
 
-        async Task ReadChildrenAsync(ParquetSchemaElement parent, IAsyncEnumerator<DuckDBDataReader> enumerator)
+        static async Task ReadChildrenAsync(ParquetSchemaElement parent, IAsyncEnumerator<DuckDBDataReader> enumerator)
         {
             for (int i = 0; i < parent.NumChildren; i++)
             {
@@ -116,7 +116,7 @@ internal static class DuckDBHelper
     {
         var query = $"SELECT * FROM parquet_kv_metadata('{db.ParquetFilePath}');";
         var metadata = new Dictionary<string, string>();
-        using var result = await db.Connection.QueryAsync(query);
+        await using var result = await db.Connection.QueryAsync(query);
         await foreach (var row in result)
         {
             var keyStream = await row.GetFieldValueAsync<Stream>(1);

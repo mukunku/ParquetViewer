@@ -92,7 +92,7 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
         DuckDBType? duckDbType,
         Type? ClrType)
     {
-        Children = new List<ParquetSchemaElement>();
+        Children = [];
         Path = path;
         _underlyingType = underlyingType;
         TypeLength = typeLength;
@@ -138,7 +138,7 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
                 "REQUIRED" => RepetitionTypeId.Required,
                 "OPTIONAL" => RepetitionTypeId.Optional,
                 "REPEATED" => RepetitionTypeId.Repeated,
-                _ => throw new ArgumentOutOfRangeException(nameof(repetitionTypeName), $"Unsupported repetition type: {repetitionTypeName}")
+                _ => throw new UnsupportedFieldException($"{columnName} could not be read. Unsupported repetition type: {repetitionTypeName}")
             };
         }
 

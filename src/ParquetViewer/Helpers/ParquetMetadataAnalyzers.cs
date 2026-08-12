@@ -9,16 +9,23 @@ namespace ParquetViewer.Helpers;
 
 public static class ParquetMetadataAnalyzers
 {
+    private static readonly JsonSerializerOptions _writeIndentedWithIgnoreConditionOptions = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
+
+    private static readonly JsonSerializerOptions _writeIndentedOnlyOptions
+        = new() { WriteIndented = true };
+
     public static string ApacheArrowToJSON(string base64)
     {
         try
         {
             byte[] bytes = Convert.FromBase64String(base64);
-            using (ArrowStreamReader reader = new(bytes))
-            {
-                reader.ReadNextRecordBatch();
-                return JsonSerializer.Serialize(reader.Schema, new JsonSerializerOptions { WriteIndented = true });
-            }
+            using ArrowStreamReader reader = new(bytes);
+            reader.ReadNextRecordBatch();
+            return JsonSerializer.Serialize(reader.Schema, _writeIndentedOnlyOptions);
         }
         catch (Exception ex)
         {
@@ -55,7 +62,7 @@ public static class ParquetMetadataAnalyzers
                 }).ToArray()
             };
 
-            IEnumerable<object> ProcessChildren(IParquetSchemaElement schemaElement)
+            static IEnumerable<object> ProcessChildren(IParquetSchemaElement schemaElement)
             {
                 foreach (var child in (schemaElement.Children ?? Enumerable.Empty<IParquetSchemaElement>()))
                 {
@@ -75,11 +82,7 @@ public static class ParquetMetadataAnalyzers
                 }
             }
 
-            return JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-            });
+            return JsonSerializer.Serialize(jsonObject, _writeIndentedWithIgnoreConditionOptions);
         }
         catch (Exception ex)
         {
@@ -92,7 +95,7 @@ public static class ParquetMetadataAnalyzers
         try
         {
             var jsonElement = JsonSerializer.Deserialize<JsonElement>(possibleJSON);
-            return JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(jsonElement, _writeIndentedOnlyOptions);
         }
         catch (Exception)
         {

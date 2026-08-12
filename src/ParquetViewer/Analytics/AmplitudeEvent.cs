@@ -20,16 +20,16 @@ public abstract class AmplitudeEvent
     private readonly AmplitudeConfiguration _amplitudeConfiguration;
 
     [JsonIgnore]
-    public string DeviceId => AppSettings.AnalyticsDeviceId.ToString();
+    public static string DeviceId => AppSettings.AnalyticsDeviceId.ToString();
 
     [JsonIgnore]
     public string EventType { get; }
 
     [JsonIgnore]
-    public long SessionId => _sessionId;
+    public static long SessionId => _sessionId;
 
     [JsonIgnore]
-    public object UserProperties => new
+    public static object UserProperties => new
     {
         AppSettings.AlwaysLoadAllRecords,
         AppSettings.AlwaysSelectAllFields,

@@ -31,7 +31,7 @@ public class ParquetMetadata : IParquetMetadata
 
         #region RowGroups
         var rowGroupColumns = new List<(RowGroupMetadataResult RowGroup, RowGroupColumnMetadata Column)>();
-        using var result = await db.Connection.QueryAsync($"SELECT * FROM parquet_metadata('{db.ParquetFilePath}');");
+        await using var result = await db.Connection.QueryAsync($"SELECT * FROM parquet_metadata('{db.ParquetFilePath}');");
         await foreach (var row in result)
         {
             string fileName = row.GetString(0);
@@ -105,12 +105,12 @@ public class ParquetMetadata : IParquetMetadata
             var rowGroupId = group.Key;
             long? firstFileOffset = null;
             RowGroupMetadataResult? rowGroupMetadataResult = null;
-            List<RowGroupColumnMetadata> columnMetadatas = new();
-            foreach (var column in group)
+            List<RowGroupColumnMetadata> columnMetadatas = [];
+            foreach (var (RowGroup, Column) in group)
             {
-                firstFileOffset ??= column.RowGroup.FileOffset;
-                rowGroupMetadataResult = column.RowGroup;
-                columnMetadatas.Add(column.Column);
+                firstFileOffset ??= RowGroup.FileOffset;
+                rowGroupMetadataResult = RowGroup;
+                columnMetadatas.Add(Column);
             }
 
             if (rowGroupMetadataResult is null)
@@ -128,7 +128,7 @@ public class ParquetMetadata : IParquetMetadata
         #endregion
 
         #region File Metadata
-        using var metadataResult = await db.Connection.QueryAsync($"SELECT * FROM parquet_file_metadata('{db.ParquetFilePath}');");
+        await using var metadataResult = await db.Connection.QueryAsync($"SELECT * FROM parquet_file_metadata('{db.ParquetFilePath}');");
         var fileMetadata = await metadataResult.GetSingleAsync();
         var createdBy = fileMetadata.IsDBNull(1) ? null : fileMetadata.GetString(1);
         var numRows = fileMetadata.GetInt64(2);
