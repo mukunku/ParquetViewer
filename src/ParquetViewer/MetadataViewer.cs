@@ -10,9 +10,9 @@ namespace ParquetViewer
 {
     public partial class MetadataViewer : FormBase
     {
-        private static readonly string THRIFT_METADATA = "Thrift Metadata";
-        private static readonly string APACHE_ARROW_SCHEMA = "ARROW:schema";
-        private static readonly string PANDAS_SCHEMA = "pandas";
+        private const string THRIFT_METADATA = "Thrift Metadata";
+        private const string APACHE_ARROW_SCHEMA = "ARROW:schema";
+        private const string PANDAS_SCHEMA = "pandas";
         private readonly IParquetEngine? _parquetEngine;
 
         public MetadataViewer(IParquetEngine parquetEngine) : this()

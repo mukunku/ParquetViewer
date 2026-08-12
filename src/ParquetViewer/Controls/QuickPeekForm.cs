@@ -10,24 +10,24 @@ namespace ParquetViewer.Controls
 {
     public partial class QuickPeekForm : FormBase
     {
-        private readonly string originalTitle = string.Empty;
+        private readonly string _originalTitle = string.Empty;
 
-        private string titleSuffix = string.Empty;
+        private string _titleSuffix = string.Empty;
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string TitleSuffix
         {
-            get => titleSuffix;
+            get => _titleSuffix;
             set
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
-                    this.titleSuffix = value;
-                    this.Text = $"{originalTitle} - {titleSuffix}";
+                    this._titleSuffix = value;
+                    this.Text = $"{_originalTitle} - {_titleSuffix}";
                 }
                 else
                 {
-                    this.titleSuffix = string.Empty;
-                    this.Text = originalTitle;
+                    this._titleSuffix = string.Empty;
+                    this.Text = _originalTitle;
                 }
             }
         }
@@ -44,7 +44,7 @@ namespace ParquetViewer.Controls
         public QuickPeekForm()
         {
             InitializeComponent();
-            this.originalTitle = this.Text;
+            this._originalTitle = this.Text;
             this.closeWindowButton.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
             MaximumSize = new Size(Screen.FromControl(this).WorkingArea.Width, Screen.FromControl(this).WorkingArea.Height); //In case we have really large images
         }

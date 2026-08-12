@@ -18,10 +18,10 @@ namespace ParquetViewer
     {
         private const int DefaultOffset = 0;
         private const int DefaultRowCountValue = 1000;
-        private readonly string DefaultFormTitle;
+        private readonly string _defaultFormTitle;
 
         #region Members
-        private readonly string? fileToLoadOnLaunch = null;
+        private readonly string? _fileToLoadOnLaunch = null;
         private string? _openFileOrFolderPath;
         private string? OpenFileOrFolderPath
         {
@@ -45,14 +45,14 @@ namespace ParquetViewer
                 this.loadAllRowsButton.Enabled = false;
                 this.searchFilterTextBox.PlaceholderText = "WHERE ";
                 this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-                this.currentOffset = DefaultOffset;
+                this._currentOffset = DefaultOffset;
                 this.mainGridView.ClearQuickPeekForms();
                 this.mainGridView.ClearColumnFormatOverrides();
                 this.ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
 
                 if (string.IsNullOrWhiteSpace(this._openFileOrFolderPath))
                 {
-                    this.Text = this.DefaultFormTitle;
+                    this.Text = this._defaultFormTitle;
                 }
                 else
                 {
@@ -69,19 +69,19 @@ namespace ParquetViewer
             }
         }
 
-        private List<string>? selectedFields = null;
+        private List<string>? _selectedFields = null;
         private List<string>? SelectedFields
         {
-            get => this.selectedFields;
+            get => this._selectedFields;
             set
             {
-                this.selectedFields = value?.ToList();
+                this._selectedFields = value?.ToList();
 
                 //Check for duplicate fields (We don't support case sensitive field names unfortunately)
-                var duplicateFields = this.selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+                var duplicateFields = this._selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
                 if (duplicateFields?.Count > 0)
                 {
-                    this.selectedFields = this.selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
+                    this._selectedFields = this._selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
                     MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
                             $"{Environment.NewLine}{Environment.NewLine}Case sensitive field names are not currently supported.",
@@ -95,26 +95,26 @@ namespace ParquetViewer
             }
         }
 
-        private int currentOffset = DefaultOffset;
+        private int _currentOffset = DefaultOffset;
         private int CurrentOffset
         {
-            get => this.currentOffset;
+            get => this._currentOffset;
             set
             {
-                this.currentOffset = value;
+                this._currentOffset = value;
                 LoadFileToGridview();
             }
         }
 
         private static int DefaultRowCount => DefaultRowCountValue;
 
-        private int currentMaxRowCount = DefaultRowCount;
+        private int _currentMaxRowCount = DefaultRowCount;
         private int CurrentMaxRowCount
         {
-            get => this.currentMaxRowCount;
+            get => this._currentMaxRowCount;
             set
             {
-                this.currentMaxRowCount = value;
+                this._currentMaxRowCount = value;
                 LoadFileToGridview();
             }
         }
@@ -123,18 +123,18 @@ namespace ParquetViewer
             => !string.IsNullOrWhiteSpace(this.OpenFileOrFolderPath)
                 && this._openParquetEngine is not null;
 
-        private DataTable? mainDataSource;
+        private DataTable? _mainDataSource;
         private DataTable? MainDataSource
         {
-            get => this.mainDataSource;
+            get => this._mainDataSource;
             set
             {
-                this.mainDataSource = value;
-                this.mainGridView.DataSource = this.mainDataSource;
+                this._mainDataSource = value;
+                this.mainGridView.DataSource = this._mainDataSource;
 
-                if (this.mainDataSource is not null)
+                if (this._mainDataSource is not null)
                 {
-                    this.loadAllRowsButton.Enabled = this.mainDataSource.Rows.Count < (this._openParquetEngine?.RecordCount ?? default);
+                    this.loadAllRowsButton.Enabled = this._mainDataSource.Rows.Count < (this._openParquetEngine?.RecordCount ?? default);
                     SetSampleQueryAsPlaceHolder();
                 }
             }
@@ -148,7 +148,7 @@ namespace ParquetViewer
         public MainForm()
         {
             InitializeComponent();
-            this.DefaultFormTitle = this.Text;
+            this._defaultFormTitle = this.Text;
             this.offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
             this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             this.MainDataSource = new DataTable();
@@ -164,16 +164,16 @@ namespace ParquetViewer
             if (fileToOpenPath is not null)
             {
                 //The code below will be executed after the default constructor => this()
-                this.fileToLoadOnLaunch = fileToOpenPath;
+                this._fileToLoadOnLaunch = fileToOpenPath;
             }
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
             //Open existing file on first load. Usually this means user double-clicked a parquet file with this utility as the default program.
-            if (!string.IsNullOrWhiteSpace(this.fileToLoadOnLaunch))
+            if (!string.IsNullOrWhiteSpace(this._fileToLoadOnLaunch))
             {
-                await this.OpenNewFileOrFolder(this.fileToLoadOnLaunch);
+                await this.OpenNewFileOrFolder(this._fileToLoadOnLaunch);
             }
 
             //Check necessary toolstrip menu items
@@ -451,12 +451,12 @@ namespace ParquetViewer
                 if (recordCount == 0 || recordCount > int.MaxValue)
                     recordCount = DefaultRowCount;
 
-                this.currentMaxRowCount = (int)recordCount;
+                this._currentMaxRowCount = (int)recordCount;
                 this.recordCountTextBox.SetTextQuiet(recordCount.ToString());
             }
             else
             {
-                this.currentMaxRowCount = DefaultRowCount;
+                this._currentMaxRowCount = DefaultRowCount;
                 this.recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
             }
 

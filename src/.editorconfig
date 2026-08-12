@@ -193,6 +193,13 @@ csharp_preserve_single_line_statements = true
 
 # Naming rules
 
+# Naming rule overrides for generated WinForms designer files;
+# Visual Studio regenerates these without underscore-prefixed field names
+[*.Designer.cs]
+dotnet_naming_rule.private_fields_should_be_underscored_camelcase.severity = none
+dotnet_naming_rule.internal_fields_should_be_underscored_camelcase.severity = none
+
+[*.cs]
 dotnet_naming_rule.interface_should_be_begins_with_i.severity = suggestion
 dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
 dotnet_naming_rule.interface_should_be_begins_with_i.style = begins_with_i
@@ -204,6 +211,32 @@ dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
 dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
 dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
+
+dotnet_naming_rule.private_fields_should_be_underscored_camelcase.severity = warning
+dotnet_naming_rule.private_fields_should_be_underscored_camelcase.symbols = private_fields
+dotnet_naming_rule.private_fields_should_be_underscored_camelcase.style = underscored_camelcase
+
+dotnet_naming_rule.internal_fields_should_be_underscored_camelcase.severity = warning
+dotnet_naming_rule.internal_fields_should_be_underscored_camelcase.symbols = internal_fields
+dotnet_naming_rule.internal_fields_should_be_underscored_camelcase.style = underscored_camelcase
+
+dotnet_naming_rule.const_fields_should_be_all_caps.severity = suggestion
+dotnet_naming_rule.const_fields_should_be_all_caps.symbols = const_fields
+dotnet_naming_rule.const_fields_should_be_all_caps.style = all_caps
+
+# Symbol specifications
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_fields.required_modifiers = 
+
+dotnet_naming_symbols.internal_fields.applicable_kinds = field
+dotnet_naming_symbols.internal_fields.applicable_accessibilities = internal, private_protected
+dotnet_naming_symbols.internal_fields.required_modifiers = 
+
+dotnet_naming_symbols.const_fields.applicable_kinds = field
+dotnet_naming_symbols.const_fields.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.const_fields.required_modifiers = const 
 
 # Symbol specifications
 
@@ -230,3 +263,13 @@ dotnet_naming_style.begins_with_i.required_prefix = I
 dotnet_naming_style.begins_with_i.required_suffix = 
 dotnet_naming_style.begins_with_i.word_separator = 
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
+
+dotnet_naming_style.underscored_camelcase.required_prefix = _
+dotnet_naming_style.underscored_camelcase.required_suffix = 
+dotnet_naming_style.underscored_camelcase.word_separator = 
+dotnet_naming_style.underscored_camelcase.capitalization = camel_case
+
+dotnet_naming_style.all_caps.required_prefix = 
+dotnet_naming_style.all_caps.required_suffix = 
+dotnet_naming_style.all_caps.word_separator = _
+dotnet_naming_style.all_caps.capitalization = all_upper

@@ -9,15 +9,15 @@ namespace ParquetViewer.Helpers
     /// </summary>
     public class ExcelWriter
     {
-        private readonly BinaryWriter writer;
+        private readonly BinaryWriter _writer;
 
-        private readonly ushort[] clBegin = { 0x0809, 8, 0, 0x10, 0, 0 };
-        private readonly ushort[] clEnd = { 0x0A, 00 };
+        private readonly ushort[] _clBegin = { 0x0809, 8, 0, 0x10, 0, 0 };
+        private readonly ushort[] _clEnd = { 0x0A, 00 };
 
         private void WriteUshortArray(ushort[] value)
         {
             for (int i = 0; i < value.Length; i++)
-                writer.Write(value[i]);
+                _writer.Write(value[i]);
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace ParquetViewer.Helpers
         /// <param name="stream">The stream.</param>
         public ExcelWriter(Stream stream)
         {
-            writer = new BinaryWriter(stream);
+            _writer = new BinaryWriter(stream);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace ParquetViewer.Helpers
             clData[3] = (ushort)col;
             clData[5] = (ushort)iLen;
             WriteUshortArray(clData);
-            writer.Write(plainText);
+            _writer.Write(plainText);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace ParquetViewer.Helpers
             clData[3] = (ushort)col;
             WriteUshortArray(clData);
             int iValue = value << 2 | 2;
-            writer.Write(iValue);
+            _writer.Write(iValue);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace ParquetViewer.Helpers
             clData[2] = (ushort)row;
             clData[3] = (ushort)col;
             WriteUshortArray(clData);
-            writer.Write(value);
+            _writer.Write(value);
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace ParquetViewer.Helpers
         /// </summary>
         public void BeginWrite()
         {
-            WriteUshortArray(clBegin);
+            WriteUshortArray(_clBegin);
         }
 
         /// <summary>
@@ -105,8 +105,8 @@ namespace ParquetViewer.Helpers
         /// </summary>
         public void EndWrite()
         {
-            WriteUshortArray(clEnd);
-            writer.Flush();
+            WriteUshortArray(_clEnd);
+            _writer.Flush();
         }
     }
 }

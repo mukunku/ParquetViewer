@@ -20,10 +20,8 @@ namespace ParquetViewer
         private readonly bool _isSelfContainedExe = false;
 #endif
 
-        private bool isLoading = false;
-
-        private static string _exePath => Application.ExecutablePath;
-
+        private bool _isLoading = false;
+        private static readonly string _exePath = Application.ExecutablePath;
         private static readonly FileAssociator _fileAssociator;
 
         public static bool IsDefaultViewerForParquetFiles => _fileAssociator.IsFileAssociationSet(new(".parquet"));
@@ -153,7 +151,7 @@ namespace ParquetViewer
 
         private void associateFileExtensionCheckBox_CheckedChanged(object? sender, EventArgs? e)
         {
-            if (this.isLoading)
+            if (this._isLoading)
             {
                 return;
             }
@@ -268,9 +266,9 @@ namespace ParquetViewer
 
         private void SetCheckboxSilent(bool @checked)
         {
-            this.isLoading = true;
+            this._isLoading = true;
             this.associateFileExtensionCheckBox.Checked = @checked;
-            this.isLoading = false;
+            this._isLoading = false;
         }
 
         public override void SetTheme(Theme theme)

@@ -49,18 +49,18 @@ namespace ParquetViewer.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string DateValueEscapeFormat { get; set; } = "#{0}#";
 
-        private readonly HashSet<int> clickableColumnIndexes = new();
-        private readonly Dictionary<(int, int), QuickPeekForm> openQuickPeekForms = new();
-        private bool isCopyingToClipboard = false;
-        private DataGridViewCellStyle? hyperlinkCellStyleCache;
-        private bool isLeftClickButtonDown = false;
+        private readonly HashSet<int> _clickableColumnIndexes = new();
+        private readonly Dictionary<(int, int), QuickPeekForm> _openQuickPeekForms = new();
+        private bool _isCopyingToClipboard = false;
+        private DataGridViewCellStyle? _hyperlinkCellStyleCache;
+        private bool _isLeftClickButtonDown = false;
         private ContextMenuStrip? _contextMenu = null;
         private ContextMenuStrip? _headerContextMenu = null;
         private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
 
         //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
-        private readonly Dictionary<string, IByteArrayValue.DisplayFormat> byteArrayColumnsWithFormatOverrides = new();
-        private readonly Dictionary<string, FloatDisplayFormat> floatColumnsWithFormatOverrides = new();
+        private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
+        private readonly Dictionary<string, FloatDisplayFormat> _floatColumnsWithFormatOverrides = new();
 
         public ParquetGridView() : base()
         {
@@ -81,7 +81,7 @@ namespace ParquetViewer.Controls
 
         protected override void OnDataSourceChanged(EventArgs e)
         {
-            this.clickableColumnIndexes.Clear();
+            this._clickableColumnIndexes.Clear();
             base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
 
             ConvertAudioCells();
@@ -91,7 +91,7 @@ namespace ParquetViewer.Controls
 
         private void SetColumnCellStyles()
         {
-            this.hyperlinkCellStyleCache = null;
+            this._hyperlinkCellStyleCache = null;
             foreach (DataGridViewColumn column in this.Columns)
             {
                 //Handle NULLs for bool types
@@ -161,8 +161,8 @@ namespace ParquetViewer.Controls
             {
                 var columnName = this.Columns[e.ColumnIndex].Name;
                 //Draw a star '*' next to column headers that are using a non-default display format
-                if ((this.byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var dateFormat) && dateFormat != default)
-                    || (this.floatColumnsWithFormatOverrides.TryGetValue(columnName, out var floatFormat) && floatFormat != default))
+                if ((this._byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var dateFormat) && dateFormat != default)
+                    || (this._floatColumnsWithFormatOverrides.TryGetValue(columnName, out var floatFormat) && floatFormat != default))
                 {
                     e.PaintBackground(e.CellBounds, true);
                     e.PaintContent(e.CellBounds);
@@ -213,8 +213,8 @@ namespace ParquetViewer.Controls
                 return;
             }
 
-            var isUserSelectingCells = this.isLeftClickButtonDown; //Don't show the hand cursor if the user is selecting cells
-            if (!isUserSelectingCells && this.clickableColumnIndexes.Contains(e.ColumnIndex))
+            var isUserSelectingCells = this._isLeftClickButtonDown; //Don't show the hand cursor if the user is selecting cells
+            if (!isUserSelectingCells && this._clickableColumnIndexes.Contains(e.ColumnIndex))
             {
                 //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
                 if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
@@ -346,7 +346,7 @@ namespace ParquetViewer.Controls
 
             //Check if there's already a quick peek open for this cell
             if (clickedCell.Tag is Guid cellUniqueTag
-                && openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var existingQuickPeekForm)
+                && _openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var existingQuickPeekForm)
                 && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
             {
                 //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
@@ -454,15 +454,15 @@ namespace ParquetViewer.Controls
 
             quickPeekForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
             {
-                if (openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var quickPeekForm)
+                if (_openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var quickPeekForm)
                     && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
                 {
-                    openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex));
+                    _openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex));
                 }
             };
 
-            openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex)); //Remove any leftover value if the user navigated the file
-            openQuickPeekForms.Add((clickedCell.RowIndex, clickedCell.ColumnIndex), quickPeekForm);
+            _openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex)); //Remove any leftover value if the user navigated the file
+            _openQuickPeekForms.Add((clickedCell.RowIndex, clickedCell.ColumnIndex), quickPeekForm);
             quickPeekForm.Show(this.Parent ?? this);
             QuickPeekEvent.FireAndForget(dataType);
         }
@@ -497,9 +497,9 @@ namespace ParquetViewer.Controls
             base.OnCellFormatting(e);
 
             var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
-            if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
+            if (this._floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
             {
-                if (!this.floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
+                if (!this._floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
@@ -508,9 +508,9 @@ namespace ParquetViewer.Controls
                     e.FormattingApplied = true;
                 }
             }
-            else if (this.floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(double) && e.Value is double d)
+            else if (this._floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(double) && e.Value is double d)
             {
-                if (!this.floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
+                if (!this._floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
@@ -520,7 +520,7 @@ namespace ParquetViewer.Controls
                 }
             }
 
-            if (this.isCopyingToClipboard)
+            if (this._isCopyingToClipboard)
             {
                 //Temporarily replace checkboxes with true/false for better copy/paste experience.
                 //Otherwise you end up with: Indeterminate, Cleared, or Selected
@@ -542,10 +542,10 @@ namespace ParquetViewer.Controls
             if (cellValueType.ImplementsInterface<IByteArrayValue>() && e.Value is IByteArrayValue byteArrayValue)
             {
                 //Don't truncate the binary data if this is a copy to clipboard operation
-                int charLimit = this.isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
+                int charLimit = this._isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
 
                 //Figure out which format to show the binary data in
-                if (!this.byteArrayColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
+                if (!this._byteArrayColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
                     userSelectedDisplayFormat = default;
 
                 e.Value = FormatByteArrayString(byteArrayValue, userSelectedDisplayFormat, charLimit);
@@ -554,7 +554,7 @@ namespace ParquetViewer.Controls
 
             //In order to get full cell values into the clipboard during a copy to
             //clipboard operation we need to skip the truncation formatting below 
-            var skipTruncation = this.isCopyingToClipboard
+            var skipTruncation = this._isCopyingToClipboard
                 || e.FormattingApplied //Also exit early if we already formatted the value above
                 || e.Value == DBNull.Value; //Also exit if null as there's nothing to format
             if (skipTruncation)
@@ -660,7 +660,7 @@ namespace ParquetViewer.Controls
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
-                this.isLeftClickButtonDown = true;
+                this._isLeftClickButtonDown = true;
 
             base.OnMouseDown(e);
         }
@@ -668,14 +668,14 @@ namespace ParquetViewer.Controls
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
-                this.isLeftClickButtonDown = false;
+                this._isLeftClickButtonDown = false;
 
             base.OnMouseUp(e);
         }
 
         public void ClearQuickPeekForms()
         {
-            foreach (var form in this.openQuickPeekForms)
+            foreach (var form in this._openQuickPeekForms)
             {
                 try
                 {
@@ -690,8 +690,8 @@ namespace ParquetViewer.Controls
 
         public void ClearColumnFormatOverrides()
         {
-            this.byteArrayColumnsWithFormatOverrides.Clear();
-            this.floatColumnsWithFormatOverrides.Clear();
+            this._byteArrayColumnsWithFormatOverrides.Clear();
+            this._floatColumnsWithFormatOverrides.Clear();
         }
 
         /// <summary>
@@ -763,7 +763,7 @@ namespace ParquetViewer.Controls
                         .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
                 }
                 else if (gridTable.Columns[i].DataType == typeof(float)
-                    && this.floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
+                    && this._floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
                     && displayFormat == FloatDisplayFormat.Decimal)
                 {
                     colStringCollection = nonNullColumnValues
@@ -774,7 +774,7 @@ namespace ParquetViewer.Controls
                     maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
                 }
                 else if (gridTable.Columns[i].DataType == typeof(double)
-                    && this.floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out displayFormat)
+                    && this._floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out displayFormat)
                     && displayFormat == FloatDisplayFormat.Decimal)
                 {
                     colStringCollection = nonNullColumnValues
@@ -798,7 +798,7 @@ namespace ParquetViewer.Controls
                     continue;
                 }
                 else if (gridTable.Columns[i].DataType.ImplementsInterface<IByteArrayValue>()
-                    && this.byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
+                    && this._byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
                 {
                     colStringCollection = nonNullColumnValues
                         .Select(row => FormatByteArrayString(row.Field<IByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
@@ -853,7 +853,7 @@ namespace ParquetViewer.Controls
 
         private void CopySelectionToClipboard(bool withHeaders)
         {
-            this.isCopyingToClipboard = true;
+            this._isCopyingToClipboard = true;
             if (withHeaders)
             {
                 this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
@@ -883,7 +883,7 @@ namespace ParquetViewer.Controls
                     this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
                     this.RowHeadersVisible = true;
                 }
-                this.isCopyingToClipboard = false;
+                this._isCopyingToClipboard = false;
             }
         }
 
@@ -893,13 +893,13 @@ namespace ParquetViewer.Controls
         /// </remarks>
         private DataGridViewCellStyle GetHyperlinkCellStyle(DataGridViewColumn column)
         {
-            this.clickableColumnIndexes.Add(column.Index);
-            this.hyperlinkCellStyleCache ??= new DataGridViewCellStyle(column.DefaultCellStyle)
+            this._clickableColumnIndexes.Add(column.Index);
+            this._hyperlinkCellStyleCache ??= new DataGridViewCellStyle(column.DefaultCellStyle)
             {
                 Font = new(column.DefaultCellStyle.Font ?? column.InheritedStyle!.Font!, FontStyle.Underline),
                 ForeColor = this.GridTheme.HyperlinkColor
             };
-            return this.hyperlinkCellStyleCache;
+            return this._hyperlinkCellStyleCache;
         }
 
         private void SetTheme()
@@ -1135,17 +1135,17 @@ namespace ParquetViewer.Controls
                     toolstripMenuItem.Click += (object? _, EventArgs _) =>
                     {
                         ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
-                        if (byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
-                            byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
+                        if (_byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
+                            _byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
                         else
-                            byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
+                            _byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
 
                         this.Refresh(); //Force a re-draw to render updated format
                         this.AutoSizeColumns(columnIndex); //Re-size the column
                     };
                     contextMenu.Add(toolstripMenuItem);
 
-                    if (!byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
+                    if (!_byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                         displayFormat = default;
 
                     toolstripMenuItem.Checked = displayFormat == supportedFormat;
@@ -1155,7 +1155,7 @@ namespace ParquetViewer.Controls
             {
                 AddSeperatorIfNeeded();
                 var columnName = this.Columns[columnIndex].Name;
-                if (!floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
+                if (!_floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
                     displayFormat = default;
 
                 var scientificNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalScientificFormatting)
@@ -1164,10 +1164,10 @@ namespace ParquetViewer.Controls
                 {
                     ColumnFormattedEvent.FireAndForget("Scientific");
 
-                    if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
-                        floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
+                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                        _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
                     else
-                        floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
+                        _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
 
                     this.Refresh(); //Force a re-draw to render updated format
                     this.AutoSizeColumns(columnIndex); //Re-size the column
@@ -1180,10 +1180,10 @@ namespace ParquetViewer.Controls
                 {
                     ColumnFormattedEvent.FireAndForget("Decimal");
 
-                    if (floatColumnsWithFormatOverrides.ContainsKey(columnName))
-                        floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
+                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                        _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
                     else
-                        floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
+                        _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
 
                     this.Refresh(); //Force a re-draw to render updated format
                     this.AutoSizeColumns(columnIndex); //Re-size the column

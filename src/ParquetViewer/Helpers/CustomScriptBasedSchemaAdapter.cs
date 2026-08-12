@@ -8,7 +8,7 @@ namespace ParquetViewer.Helpers
 {
     public class CustomScriptBasedSchemaAdapter
     {
-        internal readonly static Hashtable TypeMap = new()
+        private static readonly Hashtable _typeMap = new()
             {
                 { typeof(ulong), "BIGINT {1}NULL" },
                 { typeof(long), "BIGINT {1}NULL" },
@@ -94,7 +94,7 @@ namespace ParquetViewer.Helpers
             else if (columnType.ImplementsInterface<IByteArrayValue>())
                 columnType = typeof(IByteArrayValue);
 
-            var item = TypeMap[columnType] as string
+            var item = _typeMap[columnType] as string
                 ?? throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
             bool useMaxKeyword = column.DataType == typeof(string) || column.DataType == typeof(byte[]) || column.DataType.ImplementsInterface<IByteArrayValue>();
             return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");

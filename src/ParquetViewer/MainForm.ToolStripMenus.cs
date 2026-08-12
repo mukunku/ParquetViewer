@@ -83,17 +83,17 @@ namespace ParquetViewer
             }
 
             string tableName = Path.GetFileNameWithoutExtension(openFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
-            if (this.mainDataSource?.Columns.Count > 0)
+            if (this._mainDataSource?.Columns.Count > 0)
             {
                 var dataset = new DataSet();
 
-                this.mainDataSource.TableName = tableName;
-                dataset.Tables.Add(this.mainDataSource);
+                this._mainDataSource.TableName = tableName;
+                dataset.Tables.Add(this._mainDataSource);
 
                 var scriptAdapter = new CustomScriptBasedSchemaAdapter();
                 string sql = scriptAdapter.GetSchemaScript(dataset, false);
 
-                dataset.Tables.Remove(this.mainDataSource); //If we don't remove it, we can get errors in rare cases
+                dataset.Tables.Remove(this._mainDataSource); //If we don't remove it, we can get errors in rare cases
 
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.SQLCreateTable);
                 Clipboard.SetText(sql);
