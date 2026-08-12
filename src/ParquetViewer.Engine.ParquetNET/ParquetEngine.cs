@@ -191,7 +191,7 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
         var fields = new List<Field>(dataTable.Columns.Count);
         foreach (DataColumn column in dataTable.Columns)
         {
-            fields.Add(this._schema.Fields
+            fields.Add(_schema.Fields
                 .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
                 .First());
         }
@@ -234,7 +234,7 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
 
     public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles.Select(f => f.Reader));
 
-    private static System.Type GetNullableVersion(System.Type sourceType) => sourceType == null
+    private static System.Type GetNullableVersion(System.Type sourceType) => sourceType is null
             ? throw new ArgumentNullException(nameof(sourceType))
             : !sourceType.IsValueType
                 || (sourceType.IsGenericType
@@ -282,5 +282,5 @@ public partial class ParquetEngine : IParquetEngine, IDisposable
         return values;
     }
 
-    public IEnumerable<string> GetOpenParquetFilePaths() => this._parquetFiles.Select(db => db.ParquetFilePath);
+    public IEnumerable<string> GetOpenParquetFilePaths() => _parquetFiles.Select(db => db.ParquetFilePath);
 }

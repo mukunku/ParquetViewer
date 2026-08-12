@@ -43,29 +43,29 @@ public partial class MainForm
     {
         var textbox = (TextBox)sender;
         if (int.TryParse(textbox.Text, out var offset))
-            this.CurrentOffset = offset;
+            CurrentOffset = offset;
         else
-            textbox.Text = this.CurrentOffset.ToString();
+            textbox.Text = CurrentOffset.ToString();
     }
 
     private void recordsToTextBox_TextChanged(object sender, EventArgs? e)
     {
         var textbox = (TextBox)sender;
         if (int.TryParse(textbox.Text, out var recordCount) && recordCount > 0)
-            this.CurrentMaxRowCount = recordCount;
+            CurrentMaxRowCount = recordCount;
         else
-            textbox.Text = this.CurrentMaxRowCount.ToString();
+            textbox.Text = CurrentMaxRowCount.ToString();
     }
 
     private void searchFilterTextBox_KeyPress(object sender, KeyPressEventArgs e)
     {
         if (e.KeyChar == Convert.ToChar(Keys.Return))
         {
-            this.runQueryButton_Click(this.runQueryButton, null);
+            runQueryButton_Click(runQueryButton, null);
         }
         else if (e.KeyChar == Convert.ToChar(Keys.Escape))
         {
-            this.clearFilterButton_Click(this.clearFilterButton, null);
+            clearFilterButton_Click(clearFilterButton, null);
         }
     }
 
@@ -77,12 +77,12 @@ public partial class MainForm
             if (files?.Length > 0)
             {
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.DragDrop);
-                await this.OpenNewFileOrFolder(files[0]);
+                await OpenNewFileOrFolder(files[0]);
             }
         }
         catch
         {
-            this.OpenFileOrFolderPath = null;
+            OpenFileOrFolderPath = null;
             throw;
         }
     }
@@ -100,7 +100,7 @@ public partial class MainForm
 
     private void mainGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
     {
-        this.actualShownRecordCountLabel.Text = this.mainGridView.RowCount.ToString();
+        actualShownRecordCountLabel.Text = mainGridView.RowCount.ToString();
     }
 
     private void showingStatusBarLabel_Click(object sender, EventArgs e)
@@ -150,22 +150,22 @@ public partial class MainForm
 
     private void loadAllRowsButton_Click(object? sender, EventArgs? e)
     {
-        if (this._openParquetEngine is not null)
+        if (_openParquetEngine is not null)
         {
             //Force file reload to happen instantly by triggering the event handler ourselves
-            this.recordCountTextBox.SetTextQuiet(this._openParquetEngine.RecordCount.ToString());
-            this.recordsToTextBox_TextChanged(this.recordCountTextBox, null);
+            recordCountTextBox.SetTextQuiet(_openParquetEngine.RecordCount.ToString());
+            recordsToTextBox_TextChanged(recordCountTextBox, null);
             MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.LoadAllRows);
         }
     }
 
     private void MainForm_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Control && e.KeyCode == Keys.E && this.loadAllRowsButton.Enabled)
+        if (e.Control && e.KeyCode == Keys.E && loadAllRowsButton.Enabled)
         {
-            this.loadAllRowsButton_Click(null, null);
+            loadAllRowsButton_Click(null, null);
         }
-        else if (e.Control && e.KeyCode == Keys.R && this._openParquetEngine is not null) //Reload shortcut
+        else if (e.Control && e.KeyCode == Keys.R && _openParquetEngine is not null) //Reload shortcut
         {
             LoadFileToGridview();
         }
@@ -175,14 +175,14 @@ public partial class MainForm
     {
         try
         {
-            if (!this.IsAnyFileOpen || this.MainDataSource is null)
+            if (!IsAnyFileOpen || MainDataSource is null)
                 return;
 
-            string queryText = this.searchFilterTextBox.Text ?? string.Empty;
+            string queryText = searchFilterTextBox.Text ?? string.Empty;
             queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
 
             //Treat list, map, and struct types as strings by casting them automatically
-            foreach (var complexField in this.mainGridView.Columns.OfType<DataGridViewColumn>()
+            foreach (var complexField in mainGridView.Columns.OfType<DataGridViewColumn>()
                 .Where(c => c.ValueType.ImplementsInterface<IListValue>() || c.ValueType.ImplementsInterface<IMapValue>()
                     || c.ValueType.ImplementsInterface<IStructValue>() || c.ValueType.ImplementsInterface<IByteArrayValue>())
                 .Select(c => c.Name))
@@ -192,7 +192,7 @@ public partial class MainForm
             }
 
             if (string.IsNullOrWhiteSpace(queryText)
-                || this.MainDataSource.DefaultView.RowFilter == queryText) //No need to execute the same query again
+                || MainDataSource.DefaultView.RowFilter == queryText) //No need to execute the same query again
             {
                 return;
             }
@@ -200,28 +200,28 @@ public partial class MainForm
             var stopwatch = Stopwatch.StartNew();
             var queryEvent = new ExecuteQueryEvent
             {
-                RecordCountTotal = this.MainDataSource.Rows.Count,
-                ColumnCount = this.MainDataSource.Columns.Count
+                RecordCountTotal = MainDataSource.Rows.Count,
+                ColumnCount = MainDataSource.Columns.Count
             };
 
             try
             {
-                this.Cursor = Cursors.WaitCursor;
-                this.MainDataSource.DefaultView.RowFilter = queryText;
+                Cursor = Cursors.WaitCursor;
+                MainDataSource.DefaultView.RowFilter = queryText;
                 queryEvent.IsValid = true;
-                queryEvent.RecordCountFiltered = this.MainDataSource.DefaultView.Count;
+                queryEvent.RecordCountFiltered = MainDataSource.DefaultView.Count;
             }
             catch (Exception ex)
             {
-                this.MainDataSource.DefaultView.RowFilter = null;
+                MainDataSource.DefaultView.RowFilter = null;
                 throw new InvalidQueryException(ex);
             }
             finally
             {
-                this.Cursor = Cursors.Default;
+                Cursor = Cursors.Default;
                 queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
                 var _ = queryEvent.Record(); //Fire and forget
-                this.actualShownRecordCountLabel.Text = this.MainDataSource.DefaultView.Count.ToString();
+                actualShownRecordCountLabel.Text = MainDataSource.DefaultView.Count.ToString();
             }
         }
         catch (InvalidQueryException ex)
@@ -237,17 +237,17 @@ public partial class MainForm
 
     private void clearFilterButton_Click(object sender, EventArgs? e)
     {
-        if (!string.IsNullOrEmpty(this.MainDataSource?.DefaultView.RowFilter))
+        if (!string.IsNullOrEmpty(MainDataSource?.DefaultView.RowFilter))
         {
             try
             {
-                this.Cursor = Cursors.WaitCursor;
-                this.MainDataSource.DefaultView.RowFilter = null;
+                Cursor = Cursors.WaitCursor;
+                MainDataSource.DefaultView.RowFilter = null;
             }
             finally
             {
-                this.Cursor = Cursors.Default;
-                this.actualShownRecordCountLabel.Text = this.MainDataSource.DefaultView.Count.ToString();
+                Cursor = Cursors.Default;
+                actualShownRecordCountLabel.Text = MainDataSource.DefaultView.Count.ToString();
 
             }
         }
@@ -255,11 +255,11 @@ public partial class MainForm
 
     private void MainForm_Resize(object sender, EventArgs e)
     {
-        if (this.WindowState == FormWindowState.Minimized)
+        if (WindowState == FormWindowState.Minimized)
         {
             //Hide context menu on minimize to avoid a glitch where
             //the context menu won't go away until you click on it.
-            this.mainGridView.CloseContextMenu();
+            mainGridView.CloseContextMenu();
         }
     }
 
@@ -302,27 +302,27 @@ public partial class MainForm
     /// Not sure how common that is but this implementation without it is simpler and I'm hoping not too IO intensive</remarks>
     private async void fileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
     {
-        if (this.OpenFileOrFolderPath is null || this._openParquetEngine is null)
+        if (OpenFileOrFolderPath is null || _openParquetEngine is null)
             return; //no file open
 
-        this.fileIntegrityCheckingTimer.Stop();
+        fileIntegrityCheckingTimer.Stop();
         try
         {
             var fileDeletedSuffix = $" ({Resources.Strings.OpenFileNoLongerExistsTitleSuffix})";
             var fileModifiedSuffix = $" ({Resources.Strings.OpenFileWasModifiedTitleSuffix})";
 
-            if (this._originalModifiedInfo is null)
+            if (_originalModifiedInfo is null)
             {
                 ResetTitle();
             }
 
-            var alreadyHasDeletedSuffix = this.Text.EndsWith(fileDeletedSuffix);
+            var alreadyHasDeletedSuffix = Text.EndsWith(fileDeletedSuffix);
 
             //Perform file system checks in a background thread avoid blocking the UI thread.
             //Only really relevant when opening a folder with many files on a network drive.
-            var engineSnapshot = this._openParquetEngine;
-            var lastModifiedInfo = await Task.Run(() => TryGetLastModifiedInfo(engineSnapshot, this.OpenFileOrFolderPath));
-            if (!ReferenceEquals(engineSnapshot, this._openParquetEngine))
+            var engineSnapshot = _openParquetEngine;
+            var lastModifiedInfo = await Task.Run(() => TryGetLastModifiedInfo(engineSnapshot, OpenFileOrFolderPath));
+            if (!ReferenceEquals(engineSnapshot, _openParquetEngine))
                 return; //the user has opened a different file/folder while we were checking the file system, so ignore this result
 
             if (lastModifiedInfo is null && !alreadyHasDeletedSuffix)
@@ -330,7 +330,7 @@ public partial class MainForm
                 ResetTitle();
                 //File or folder no longer exists. In this case let's not mark this timer as handled
                 //and let it keep running in case the file/folder is restored later.
-                this.Text += fileDeletedSuffix;
+                Text += fileDeletedSuffix;
                 return;
             }
             else if (lastModifiedInfo is not null && alreadyHasDeletedSuffix)
@@ -344,21 +344,21 @@ public partial class MainForm
                 {
                     _originalModifiedInfo = lastModifiedInfo;
                 }
-                else if (_originalModifiedInfo != lastModifiedInfo && !this.Text.EndsWith(fileModifiedSuffix))
+                else if (_originalModifiedInfo != lastModifiedInfo && !Text.EndsWith(fileModifiedSuffix))
                 {
                     ResetTitle();
-                    this.Text += fileModifiedSuffix;
+                    Text += fileModifiedSuffix;
                 }
             }
 
-            this._failedFileIntegrityCheckCount = 0;
+            _failedFileIntegrityCheckCount = 0;
 
             void ResetTitle()
             {
-                if (this.Text.EndsWith(fileModifiedSuffix))
-                    this.Text = this.Text.Replace(fileModifiedSuffix, string.Empty);
-                else if (this.Text.EndsWith(fileDeletedSuffix))
-                    this.Text = this.Text.Replace(fileDeletedSuffix, string.Empty);
+                if (Text.EndsWith(fileModifiedSuffix))
+                    Text = Text.Replace(fileModifiedSuffix, string.Empty);
+                else if (Text.EndsWith(fileDeletedSuffix))
+                    Text = Text.Replace(fileDeletedSuffix, string.Empty);
             }
         }
         catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
@@ -369,14 +369,14 @@ public partial class MainForm
         {
             //Swallow to not overload the user with error message dialogs but log it as this is unexpected.
             //Also make sure we don't spam exception events for repeated failures.
-            if (++this._failedFileIntegrityCheckCount == 1)
+            if (++_failedFileIntegrityCheckCount == 1)
             {
                 ExceptionEvent.FireAndForget(ex);
             }
         }
         finally
         {
-            this.fileIntegrityCheckingTimer.Start();
+            fileIntegrityCheckingTimer.Start();
         }
 
         //Returns the last modified date and size of the open file, or the most recent last modified

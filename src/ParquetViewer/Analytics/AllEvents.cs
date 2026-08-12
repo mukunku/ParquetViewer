@@ -30,7 +30,7 @@ public class FileOpenEvent : AmplitudeEvent
 
     public FileOpenEvent() : base(EVENT_TYPE)
     {
-        this.FieldTypes = [];
+        FieldTypes = [];
     }
 
     public static void FireAndForget(bool isFolder, int numPartitions, long numRows, int numRowGroups, int numFields,
@@ -162,7 +162,7 @@ public class ExceptionEvent : AmplitudeEvent
         get
         {
             var dictionary = new Dictionary<string, object>();
-            foreach (DictionaryEntry keyValuePair in this.Exception.Data)
+            foreach (DictionaryEntry keyValuePair in Exception.Data)
             {
                 if (keyValuePair.Key is string key && keyValuePair.Value is not null)
                 {
@@ -176,7 +176,7 @@ public class ExceptionEvent : AmplitudeEvent
     public ExceptionEvent(Exception ex, AmplitudeConfiguration? amplitudeConfiguration = null)
         : base(EVENT_TYPE, amplitudeConfiguration)
     {
-        this.Exception = ex ?? throw new ArgumentNullException(nameof(ex));
+        Exception = ex ?? throw new ArgumentNullException(nameof(ex));
     }
 
     public static void FireAndForget(Exception ex)
@@ -201,7 +201,7 @@ public class QuickPeekEvent : AmplitudeEvent
     [JsonIgnore]
     public DataTypeId DataType { get; set; }
 
-    public string DataTypeName => this.DataType.ToString();
+    public string DataTypeName => DataType.ToString();
 
     public QuickPeekEvent() : base(EVENT_TYPE)
     {

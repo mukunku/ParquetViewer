@@ -16,8 +16,8 @@ public class ThemableToolStripSeperator : ToolStripSeparator
     {
         if (BackColor != Color.Transparent)
         {
-            e.Graphics.FillRectangle(new SolidBrush(this.BackColor), 0, 0, this.Width, this.Height);
-            e.Graphics.DrawLine(new Pen(base.ForeColor), 30, this.Height / 2, this.Width - 4, this.Height / 2);
+            e.Graphics.FillRectangle(new SolidBrush(BackColor), 0, 0, Width, Height);
+            e.Graphics.DrawLine(new Pen(base.ForeColor), 30, Height / 2, Width - 4, Height / 2);
         }
         else
         {

@@ -9,7 +9,7 @@ namespace ParquetViewer;
 
 public partial class CustomDateFormatInputForm : FormBase
 {
-    public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
+    public string UserEnteredDateFormat => desiredDateFormatTextBox.Text;
 
     public CustomDateFormatInputForm()
     {
@@ -18,7 +18,7 @@ public partial class CustomDateFormatInputForm : FormBase
 
     public CustomDateFormatInputForm(string? customDateFormat) : this()
     {
-        this.desiredDateFormatTextBox.Text = customDateFormat ?? string.Empty;
+        desiredDateFormatTextBox.Text = customDateFormat ?? string.Empty;
     }
 
     public void dateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -28,57 +28,57 @@ public partial class CustomDateFormatInputForm : FormBase
 
     private void cancelButton_Clicked(object sender, EventArgs e)
     {
-        this.DialogResult = DialogResult.Cancel;
-        this.Close();
+        DialogResult = DialogResult.Cancel;
+        Close();
     }
 
     private void desiredDateFormatTextBox_TextChanged(object sender, EventArgs e)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(this.desiredDateFormatTextBox.Text))
+            if (string.IsNullOrWhiteSpace(desiredDateFormatTextBox.Text))
             {
-                this.livePreviewTextBox.Text = string.Empty;
-                this.saveDateFormatButton.Enabled = false;
+                livePreviewTextBox.Text = string.Empty;
+                saveDateFormatButton.Enabled = false;
             }
             else
             {
-                this.livePreviewTextBox.Text = DateTime.Now.ToString(this.desiredDateFormatTextBox.Text);
-                this.saveDateFormatButton.Enabled = true;
+                livePreviewTextBox.Text = DateTime.Now.ToString(desiredDateFormatTextBox.Text);
+                saveDateFormatButton.Enabled = true;
             }
         }
         catch (Exception)
         {
-            this.livePreviewTextBox.Text = Resources.Strings.InvalidDateFormatErrorText;
-            this.saveDateFormatButton.Enabled = false;
+            livePreviewTextBox.Text = Resources.Strings.InvalidDateFormatErrorText;
+            saveDateFormatButton.Enabled = false;
         }
     }
 
     private void CustomDateFormatInputForm_Load(object sender, EventArgs e)
     {
-        this.timer.Enabled = true;
-        this.saveDateFormatButton.Enabled = false; //always start disabled
+        timer.Enabled = true;
+        saveDateFormatButton.Enabled = false; //always start disabled
     }
 
     //This timer exists to deal with visual bugs
     private void timer_Tick(object sender, EventArgs e)
     {
         //We only wanted to run this once
-        this.timer.Enabled = false;
+        timer.Enabled = false;
 
         //HACK: need to widen the form a tiny bit to get rid of the horizontal scrollbar :shrug:
-        this.Width += 20;
+        Width += 20;
 
         //HACK: For some reason resetting the auto scroll position doesn't work in the Load event.
-        this.instructionsTableLayoutPanel.AutoScrollPosition = new System.Drawing.Point(0, 0);
+        instructionsTableLayoutPanel.AutoScrollPosition = new System.Drawing.Point(0, 0);
     }
 
     private void saveDateFormatButton_Click(object sender, EventArgs e)
     {
-        if (UtilityMethods.IsValidDateFormat(this.desiredDateFormatTextBox.Text))
+        if (UtilityMethods.IsValidDateFormat(desiredDateFormatTextBox.Text))
         {
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
         else
         {
@@ -97,8 +97,8 @@ public partial class CustomDateFormatInputForm : FormBase
         }
 
         base.SetTheme(theme);
-        this.saveDateFormatButton.ForeColor = Color.Black;
-        this.dateFormatDocsLinkLabel.LinkColor = theme.HyperlinkColor;
-        this.dateFormatDocsLinkLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
+        saveDateFormatButton.ForeColor = Color.Black;
+        dateFormatDocsLinkLabel.LinkColor = theme.HyperlinkColor;
+        dateFormatDocsLinkLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
     }
 }

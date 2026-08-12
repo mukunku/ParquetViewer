@@ -17,12 +17,12 @@ public class ParquetMetadata : IParquetMetadata
     private ParquetMetadata(IParquetSchemaElement schemaTree, ICollection<IRowGroupMetadata> rowGroups,
         int recordCount, int parquetVersion, string createdBy, int rowGroupCount)
     {
-        this.SchemaTree = schemaTree;
-        this.RowGroups = rowGroups;
-        this.RowCount = recordCount;
-        this.ParquetVersion = parquetVersion;
-        this.CreatedBy = createdBy;
-        this.RowGroupCount = rowGroupCount;
+        SchemaTree = schemaTree;
+        RowGroups = rowGroups;
+        RowCount = recordCount;
+        ParquetVersion = parquetVersion;
+        CreatedBy = createdBy;
+        RowGroupCount = rowGroupCount;
     }
 
     public static async Task<ParquetMetadata> FromDuckDBAsync(DuckDBHandle db)
@@ -158,14 +158,14 @@ public class RowGroupMetadata : IRowGroupMetadata
 
     public RowGroupMetadata(int ordinal, int rowCount, int columnCount, long fileOffset, long totalByteSize, long totalCompressedSize, List<RowGroupColumnMetadata> columnMetadatas)
     {
-        this.Ordinal = ordinal;
-        this.RowCount = rowCount;
-        this.ColumnCount = columnCount;
-        this.FileOffset = fileOffset;
-        this.TotalByteSize = totalByteSize;
-        this.TotalCompressedSize = totalCompressedSize;
-        this.SortingColumns = null; //DuckDB doesn't seem to have info on this
-        this.Columns = columnMetadatas.ToList<IRowGroupColumnMetadata>();
+        Ordinal = ordinal;
+        RowCount = rowCount;
+        ColumnCount = columnCount;
+        FileOffset = fileOffset;
+        TotalByteSize = totalByteSize;
+        TotalCompressedSize = totalCompressedSize;
+        SortingColumns = null; //DuckDB doesn't seem to have info on this
+        Columns = columnMetadatas.ToList<IRowGroupColumnMetadata>();
     }
 }
 

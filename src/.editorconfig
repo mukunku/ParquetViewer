@@ -21,8 +21,9 @@ dotnet_separate_import_directive_groups = false
 dotnet_sort_system_directives_first = false
 file_header_template = unset
 dotnet_diagnostic.IDE0005.severity = warning # Unnecessary using directive
+dotnet_diagnostic.IDE0003.severity = warning # Disallow `this.` qualifiers
 
-# this. and Me. preferences
+# this. and Me. preferences (IDE0003 )
 dotnet_style_qualification_for_event = false
 dotnet_style_qualification_for_field = false
 dotnet_style_qualification_for_method = false

@@ -28,7 +28,7 @@ public class StylableCheckBox : CheckBox
 
     public StylableCheckBox()
     {
-        this._disableCustomRendering = !AppSettings.DarkMode;
+        _disableCustomRendering = !AppSettings.DarkMode;
         if (!_disableCustomRendering)
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
@@ -101,7 +101,7 @@ public class StylableCheckBox : CheckBox
             graphics.FillRectangle(backBrush, ClientRectangle);
         }
 
-        if (this.CheckState == CheckState.Indeterminate)
+        if (CheckState == CheckState.Indeterminate)
         {
             ControlPaint.DrawMixedCheckBox(graphics, glyphBounds, getButtonState() | ButtonState.Flat);
         }

@@ -230,7 +230,7 @@ public class RowGroupColumnStatistics : IRowGroupColumnStatistics
     {
         try
         {
-            if (value == null || value.Length == 0)
+            if (value is null || value.Length == 0)
                 return value;
 
             var type = field.ClrType;

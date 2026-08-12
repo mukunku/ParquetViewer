@@ -37,7 +37,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         _updateTimer.Tick += (sender, e) => RedrawCell();
         _initializationTimer.Tick += (sender, e) =>
         {
-            if (this._isInitialized)
+            if (_isInitialized)
             {
                 _initializationTimer.Stop();
                 RedrawCell();
@@ -60,35 +60,35 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
             return _initializationTask;
 
         //Read the cell state here rather than inside the task.
-        var cellValue = this.Value;
+        var cellValue = Value;
         return _initializationTask = Task.Run(() =>
         {
             //Prepare audio stream
             if (cellValue is IByteArrayValue byteArray)
             {
-                this._audioPlayer = new AudioPlayer(byteArray.Data);
-                this._audioPlayer.PlaybackStopped += OnPlaybackStopped;
+                _audioPlayer = new AudioPlayer(byteArray.Data);
+                _audioPlayer.PlaybackStopped += OnPlaybackStopped;
             }
             else
             {
-                this._audioPlayer = null;
+                _audioPlayer = null;
             }
 
-            this._isInitialized = true;
+            _isInitialized = true;
         });
     }
 
     private void OnPlaybackStopped(object? source, EventArgs args)
     {
-        if (this.DataGridView?.InvokeRequired == true) //NAudio captures the synchronization context so this check isn't needed actually...
+        if (DataGridView?.InvokeRequired == true) //NAudio captures the synchronization context so this check isn't needed actually...
         {
-            this.DataGridView.Invoke(OnPlaybackStopped);
+            DataGridView.Invoke(OnPlaybackStopped);
         }
         else
         {
-            this._updateTimer.Stop();
-            this._isPlaying = false;
-            this.RedrawCell(); //Convert pause button to play button
+            _updateTimer.Stop();
+            _isPlaying = false;
+            RedrawCell(); //Convert pause button to play button
         }
     }
 
@@ -100,19 +100,19 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
             paintParts & ~DataGridViewPaintParts.ContentForeground & ~DataGridViewPaintParts.SelectionBackground);
 
-        if (value is null || value == DBNull.Value || this._audioPlayer is null)
+        if (value is null || value == DBNull.Value || _audioPlayer is null)
         {
             return;
         }
 
-        if (!this._isInitialized)
+        if (!_isInitialized)
         {
-            TextRenderer.DrawText(graphics, this._loadingMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+            TextRenderer.DrawText(graphics, _loadingMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
             return;
         }
-        if (this._audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
+        if (_audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
         {
-            TextRenderer.DrawText(graphics, this._errorMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+            TextRenderer.DrawText(graphics, _errorMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
             return;
         }
 
@@ -120,23 +120,23 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         var buttonHeight = Math.Max(cellBounds.Height - 4, 18);
         var buttonMaxWidth = ((cellBounds.Right - cellBounds.Left) * 25) / 100; // %25 of the cell width
         var buttonWidth = Math.Min(buttonHeight, buttonMaxWidth);
-        this._playPauseButtonBounds = new Rectangle(cellBounds.Left + 2, cellBounds.Top + 2, buttonWidth, buttonHeight);
-        this._stopButtonBounds = new Rectangle(_playPauseButtonBounds.Right + 2, cellBounds.Top + 2, buttonWidth, buttonHeight);
-        this._contextMenuButtonBounds = new Rectangle(cellBounds.Right - buttonWidth - 2, cellBounds.Top + 2, buttonWidth, buttonHeight);
-        this._trackBarBounds = new Rectangle(_stopButtonBounds.Right + 2, cellBounds.Top + 2, _contextMenuButtonBounds.Left - _stopButtonBounds.Right - 4, cellBounds.Height - 4);
-        this._cellBounds = cellBounds;
+        _playPauseButtonBounds = new Rectangle(cellBounds.Left + 2, cellBounds.Top + 2, buttonWidth, buttonHeight);
+        _stopButtonBounds = new Rectangle(_playPauseButtonBounds.Right + 2, cellBounds.Top + 2, buttonWidth, buttonHeight);
+        _contextMenuButtonBounds = new Rectangle(cellBounds.Right - buttonWidth - 2, cellBounds.Top + 2, buttonWidth, buttonHeight);
+        _trackBarBounds = new Rectangle(_stopButtonBounds.Right + 2, cellBounds.Top + 2, _contextMenuButtonBounds.Left - _stopButtonBounds.Right - 4, cellBounds.Height - 4);
+        _cellBounds = cellBounds;
 
-        this._isCellTooSmall = !(this._cellBounds.Height > 20 && this._cellBounds.Width > 90);
-        if (!this._isCellTooSmall)
+        _isCellTooSmall = !(_cellBounds.Height > 20 && _cellBounds.Width > 90);
+        if (!_isCellTooSmall)
         {
             using var foreColorBrush = new SolidBrush(Theme.LightModeTheme.TextColor);
 
             // Draw Buttons
-            ControlPaint.DrawButton(graphics, _playPauseButtonBounds, GetButtonState(this._isCursorHoveringPlayPauseButton));
-            ControlPaint.DrawButton(graphics, _stopButtonBounds, GetButtonState(this._isCursorHoveringStopButton));
-            ControlPaint.DrawButton(graphics, _contextMenuButtonBounds, GetButtonState(this._isCursorHoveringMenuButton));
+            ControlPaint.DrawButton(graphics, _playPauseButtonBounds, GetButtonState(_isCursorHoveringPlayPauseButton));
+            ControlPaint.DrawButton(graphics, _stopButtonBounds, GetButtonState(_isCursorHoveringStopButton));
+            ControlPaint.DrawButton(graphics, _contextMenuButtonBounds, GetButtonState(_isCursorHoveringMenuButton));
 
-            if (this._isPlaying) // Draw Pause
+            if (_isPlaying) // Draw Pause
             {
                 using var pen = new Pen(Theme.LightModeTheme.TextColor, buttonWidth / 9.8f);
                 var centerPoint = _playPauseButtonBounds.Left + (_playPauseButtonBounds.Right - _playPauseButtonBounds.Left) / 2;
@@ -168,22 +168,22 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         }
         else
         {
-            this._trackBarBounds = this._cellBounds;
+            _trackBarBounds = _cellBounds;
         }
 
         // Draw Track Bar
         using var trackBarBrush = new SolidBrush(Color.FromArgb(185, Color.DodgerBlue));
-        double progress = this._audioPlayer.CurrentTime.TotalSeconds / this._audioPlayer.TotalTime.TotalSeconds;
+        double progress = _audioPlayer.CurrentTime.TotalSeconds / _audioPlayer.TotalTime.TotalSeconds;
         int progressWidth = (int)(_trackBarBounds.Width * progress);
         graphics.FillRectangle(Brushes.LightGray, _trackBarBounds);
         graphics.FillRectangle(trackBarBrush, _trackBarBounds.X, _trackBarBounds.Y, progressWidth, _trackBarBounds.Height); //Brushes.DodgerBlue
         ControlPaint.DrawBorder3D(graphics, _trackBarBounds, Border3DStyle.Sunken);
 
         // Draw Time
-        string timeFormat = this._audioPlayer.TotalTime.TotalHours >= 1 ? @"hh\:mm\:ss" : @"mm\:ss";
-        timeFormat += this._audioPlayer.TotalTime.TotalSeconds < 0 ? @"\.fff" : string.Empty; //show milliseconds if the audio is less than 1 second
-        string currentTime = this._audioPlayer.CurrentTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
-        string totalTime = this._audioPlayer.TotalTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
+        string timeFormat = _audioPlayer.TotalTime.TotalHours >= 1 ? @"hh\:mm\:ss" : @"mm\:ss";
+        timeFormat += _audioPlayer.TotalTime.TotalSeconds < 0 ? @"\.fff" : string.Empty; //show milliseconds if the audio is less than 1 second
+        string currentTime = _audioPlayer.CurrentTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
+        string totalTime = _audioPlayer.TotalTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
         TextRenderer.DrawText(graphics, $"{currentTime} / {totalTime}", cellStyle.Font, _trackBarBounds, Theme.LightModeTheme.TextColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
     }
 
@@ -191,27 +191,27 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         base.OnMouseMove(e);
 
-        this._isCursorHoveringPlayPauseButton = ContainsCursor(this._playPauseButtonBounds, e.Location);
-        this._isCursorHoveringStopButton = ContainsCursor(this._stopButtonBounds, e.Location);
-        this._isCursorHoveringMenuButton = ContainsCursor(this._contextMenuButtonBounds, e.Location);
+        _isCursorHoveringPlayPauseButton = ContainsCursor(_playPauseButtonBounds, e.Location);
+        _isCursorHoveringStopButton = ContainsCursor(_stopButtonBounds, e.Location);
+        _isCursorHoveringMenuButton = ContainsCursor(_contextMenuButtonBounds, e.Location);
 
-        this.RedrawCell();
+        RedrawCell();
     }
 
     protected override void OnMouseLeave(int rowIndex)
     {
         base.OnMouseLeave(rowIndex);
 
-        this._isCursorHoveringPlayPauseButton = false;
-        this._isCursorHoveringStopButton = false;
-        this._isCursorHoveringMenuButton = false;
-        this._isLeftMouseButtonPressed = false; //better ux
-        this.RedrawCell();
+        _isCursorHoveringPlayPauseButton = false;
+        _isCursorHoveringStopButton = false;
+        _isCursorHoveringMenuButton = false;
+        _isLeftMouseButtonPressed = false; //better ux
+        RedrawCell();
     }
 
     private bool ContainsCursor(Rectangle elementRectangle, Point cursorLocation)
     {
-        elementRectangle.Offset(-this._cellBounds.Location.X, -this._cellBounds.Location.Y);
+        elementRectangle.Offset(-_cellBounds.Location.X, -_cellBounds.Location.Y);
         return elementRectangle.Contains(cursorLocation);
     }
 
@@ -234,12 +234,12 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     private bool _isLeftMouseButtonPressed = false;
     protected override void OnMouseDown(DataGridViewCellMouseEventArgs e)
     {
-        this._isLeftMouseButtonPressed = e.Button == MouseButtons.Left;
+        _isLeftMouseButtonPressed = e.Button == MouseButtons.Left;
     }
     protected override void OnMouseUp(DataGridViewCellMouseEventArgs e)
     {
         if (e.Button == MouseButtons.Left)
-            this._isLeftMouseButtonPressed = false;
+            _isLeftMouseButtonPressed = false;
     }
 
     protected override void OnMouseClick(DataGridViewCellMouseEventArgs e)
@@ -247,19 +247,19 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         base.OnMouseClick(e);
         if (e.Button == MouseButtons.Left)
         {
-            if (ContainsCursor(this._playPauseButtonBounds, e.Location) && !this._isCellTooSmall)
+            if (ContainsCursor(_playPauseButtonBounds, e.Location) && !_isCellTooSmall)
             {
                 TogglePlayPause();
             }
-            else if (ContainsCursor(this._stopButtonBounds, e.Location) && !this._isCellTooSmall)
+            else if (ContainsCursor(_stopButtonBounds, e.Location) && !_isCellTooSmall)
             {
-                this._audioPlayer?.Stop();
+                _audioPlayer?.Stop();
             }
-            else if (ContainsCursor(this._contextMenuButtonBounds, e.Location) && !this._isCellTooSmall)
+            else if (ContainsCursor(_contextMenuButtonBounds, e.Location) && !_isCellTooSmall)
             {
                 ShowContextMenu(e.Location);
             }
-            else if (ContainsCursor(this._trackBarBounds, e.Location))
+            else if (ContainsCursor(_trackBarBounds, e.Location))
             {
                 Seek(e.Location);
             }
@@ -274,66 +274,66 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     private bool _sentQuickPeekEvent = false;
     private void TogglePlayPause()
     {
-        if (this._audioPlayer is null)
+        if (_audioPlayer is null)
             return;
 
-        if (this._isPlaying)
+        if (_isPlaying)
         {
-            this._audioPlayer.Pause();
-            this._isPlaying = false;
-            this._updateTimer.Stop();
+            _audioPlayer.Pause();
+            _isPlaying = false;
+            _updateTimer.Stop();
         }
         else
         {
-            this._audioPlayer.Play();
-            this._isPlaying = true;
-            this._updateTimer.Start();
+            _audioPlayer.Play();
+            _isPlaying = true;
+            _updateTimer.Start();
 
             // Lets throttle events just in case. Not sure if it's necessary
-            if (!this._sentQuickPeekEvent)
+            if (!_sentQuickPeekEvent)
             {
                 QuickPeekEvent.FireAndForget(QuickPeekEvent.DataTypeId.Audio);
-                this._sentQuickPeekEvent = true;
+                _sentQuickPeekEvent = true;
             }
         }
 
-        this.RedrawCell();
+        RedrawCell();
     }
 
     private void Seek(Point location)
     {
-        if (this._audioPlayer is null)
+        if (_audioPlayer is null)
             return;
 
-        var trackbarWidth = this._trackBarBounds.Right - this._trackBarBounds.Left;
-        var cellboundsLeft = this._trackBarBounds.Left - this._cellBounds.X;
+        var trackbarWidth = _trackBarBounds.Right - _trackBarBounds.Left;
+        var cellboundsLeft = _trackBarBounds.Left - _cellBounds.X;
         var clickLocation = location.X - cellboundsLeft;
 
         var seekPercentage = (double)clickLocation / trackbarWidth;
-        var seekLocation = TimeSpan.FromSeconds(this._audioPlayer.TotalTime.TotalSeconds * seekPercentage);
-        this._audioPlayer.CurrentTime = seekLocation;
+        var seekLocation = TimeSpan.FromSeconds(_audioPlayer.TotalTime.TotalSeconds * seekPercentage);
+        _audioPlayer.CurrentTime = seekLocation;
 
         DataGridView?.InvalidateCell(this);
     }
 
     private void ShowContextMenu(Point location)
     {
-        if (this.DataGridView is null) //just in case
+        if (DataGridView is null) //just in case
             return;
 
-        if (this.Value is not IByteArrayValue byteArrayValue)
+        if (Value is not IByteArrayValue byteArrayValue)
             return;
 
-        if (this._audioPlayer is null || this._audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
+        if (_audioPlayer is null || _audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
             return;
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add($"Save as {this._audioPlayer.AudioFormat.ToString()}", Resources.Icons.save_icon, async (s, a) =>
+        menu.Items.Add($"Save as {_audioPlayer.AudioFormat.ToString()}", Resources.Icons.save_icon, async (s, a) =>
         {
             using var saveFileDialog = new SaveFileDialog
             {
-                Filter = $"{this._audioPlayer.AudioFormat.ToString().ToUpperInvariant()} file|*.{this._audioPlayer.AudioFormat.ToString().ToLowerInvariant()}",
-                Title = $"Save audio as {this._audioPlayer.AudioFormat.ToString().ToUpperInvariant()}"
+                Filter = $"{_audioPlayer.AudioFormat.ToString().ToUpperInvariant()} file|*.{_audioPlayer.AudioFormat.ToString().ToLowerInvariant()}",
+                Title = $"Save audio as {_audioPlayer.AudioFormat.ToString().ToUpperInvariant()}"
             };
             saveFileDialog.ShowDialog();
 
@@ -342,7 +342,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
 
             CleanupFile(saveFileDialog.FileName); //Delete any existing file (user already confirmed any overwrite)
 
-            if (this.Value is not IByteArrayValue byteArray)
+            if (Value is not IByteArrayValue byteArray)
                 throw new InvalidDataException("Audio data was not found");
 
             await File.WriteAllBytesAsync(saveFileDialog.FileName, byteArray.Data);
@@ -354,7 +354,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         menu.Items.Add(new ToolStripSeparator());
 
         var isFirst = true;
-        foreach (var text in this._audioPlayer.WaveFormat.ToString().Split(":"))
+        foreach (var text in _audioPlayer.WaveFormat.ToString().Split(":"))
         {
             var waveFormatItem = new ToolStripButton((isFirst ? "Format: " : string.Empty) + text.Trim())
             {
@@ -368,7 +368,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         //No way to dispose the context menu properly so we dispose it on Close instead.            
         menu.Closed += (_, _) => menu.BeginInvoke(menu.Dispose);
 
-        menu.Show(this.DataGridView, location + (Size)this._cellBounds.Location);
+        menu.Show(DataGridView, location + (Size)_cellBounds.Location);
         menu.PerformLayout();
 
         void CleanupFile(string filePath)
@@ -386,9 +386,9 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         if (disposing)
         {
-            this._audioPlayer.DisposeSafely();
-            this._updateTimer.DisposeSafely();
-            this._initializationTimer.DisposeSafely();
+            _audioPlayer.DisposeSafely();
+            _updateTimer.DisposeSafely();
+            _initializationTimer.DisposeSafely();
         }
 
         base.Dispose(disposing);

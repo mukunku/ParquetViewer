@@ -47,23 +47,23 @@ public readonly struct Theme : IEquatable<Theme>
         Color frozenColumnHeaderColor,
         Color frozenCellBackgroundColor)
     {
-        this.CellBackgroundColor = cellBackgroundColor;
-        this.TextColor = textColor;
-        this.AlternateRowsCellBackgroundColor = alternateRowsCellBackgroundColor;
-        this.ColumnHeaderColor = columnHeaderColor;
-        this.RowHeaderColor = rowHeaderColor;
-        this.RowHeaderBorderStyle = rowHeaderBorderStyle;
-        this.GridBackgroundColor = gridBackgroundColor;
-        this.GridColor = gridColor;
-        this.HyperlinkColor = hyperlinkColor;
-        this.CellPlaceholderTextColor = cellPlaceholderTextColor;
-        this.SelectionBackColor = selectionBackColor;
-        this.FormBackgroundColor = formBackgroundColor;
-        this._toolStripRendererProvider = toolStripRendererProvider;
-        this.ActiveHyperlinkColor = activeHyperlinkColor;
-        this.DisabledTextColor = disabledTextColor;
-        this.FrozenColumnHeaderColor = frozenColumnHeaderColor;
-        this.FrozenCellBackgroundColor = frozenCellBackgroundColor;
+        CellBackgroundColor = cellBackgroundColor;
+        TextColor = textColor;
+        AlternateRowsCellBackgroundColor = alternateRowsCellBackgroundColor;
+        ColumnHeaderColor = columnHeaderColor;
+        RowHeaderColor = rowHeaderColor;
+        RowHeaderBorderStyle = rowHeaderBorderStyle;
+        GridBackgroundColor = gridBackgroundColor;
+        GridColor = gridColor;
+        HyperlinkColor = hyperlinkColor;
+        CellPlaceholderTextColor = cellPlaceholderTextColor;
+        SelectionBackColor = selectionBackColor;
+        FormBackgroundColor = formBackgroundColor;
+        _toolStripRendererProvider = toolStripRendererProvider;
+        ActiveHyperlinkColor = activeHyperlinkColor;
+        DisabledTextColor = disabledTextColor;
+        FrozenColumnHeaderColor = frozenColumnHeaderColor;
+        FrozenCellBackgroundColor = frozenCellBackgroundColor;
     }
 
     public static Theme DarkModeTheme => new(
@@ -106,29 +106,29 @@ public readonly struct Theme : IEquatable<Theme>
         SystemColors.InactiveBorder
         );
 
-    public bool Equals(Theme other) => this.GetHashCode() == other.GetHashCode(); //Not perfect but good enough
+    public bool Equals(Theme other) => GetHashCode() == other.GetHashCode(); //Not perfect but good enough
     public static bool operator ==(Theme first, Theme second) => first.Equals(second);
     public static bool operator !=(Theme first, Theme second) => !first.Equals(second);
     public override bool Equals(object? obj) => obj is Theme theme && Equals(theme);
     public override int GetHashCode()
     {
         var hashcode = new HashCode();
-        hashcode.Add(this.CellBackgroundColor);
-        hashcode.Add(this.TextColor);
-        hashcode.Add(this.AlternateRowsCellBackgroundColor);
-        hashcode.Add(this.ColumnHeaderColor);
-        hashcode.Add(this.RowHeaderColor);
-        hashcode.Add(this.RowHeaderBorderStyle);
-        hashcode.Add(this.GridBackgroundColor);
-        hashcode.Add(this.GridColor);
-        hashcode.Add(this.HyperlinkColor);
-        hashcode.Add(this.CellPlaceholderTextColor);
-        hashcode.Add(this.SelectionBackColor);
-        hashcode.Add(this.FormBackgroundColor);
-        hashcode.Add(this.ActiveHyperlinkColor);
-        hashcode.Add(this.DisabledTextColor);
-        hashcode.Add(this.FrozenColumnHeaderColor);
-        hashcode.Add(this.FrozenCellBackgroundColor);
+        hashcode.Add(CellBackgroundColor);
+        hashcode.Add(TextColor);
+        hashcode.Add(AlternateRowsCellBackgroundColor);
+        hashcode.Add(ColumnHeaderColor);
+        hashcode.Add(RowHeaderColor);
+        hashcode.Add(RowHeaderBorderStyle);
+        hashcode.Add(GridBackgroundColor);
+        hashcode.Add(GridColor);
+        hashcode.Add(HyperlinkColor);
+        hashcode.Add(CellPlaceholderTextColor);
+        hashcode.Add(SelectionBackColor);
+        hashcode.Add(FormBackgroundColor);
+        hashcode.Add(ActiveHyperlinkColor);
+        hashcode.Add(DisabledTextColor);
+        hashcode.Add(FrozenColumnHeaderColor);
+        hashcode.Add(FrozenCellBackgroundColor);
         return hashcode.ToHashCode();
     }
 }
@@ -140,7 +140,7 @@ internal class DarkModeToolStripRenderer : ToolStripProfessionalRenderer
     public DarkModeToolStripRenderer(Theme theme, ProfessionalColorTable? colorTable = null)
         : base(colorTable ?? new DarkModeColorTable(theme))
     {
-        this._theme = theme;
+        _theme = theme;
     }
 
     /// <summary>
@@ -148,7 +148,7 @@ internal class DarkModeToolStripRenderer : ToolStripProfessionalRenderer
     /// </summary>
     protected override void OnRenderArrow(ToolStripArrowRenderEventArgs e)
     {
-        e.ArrowColor = this._theme.TextColor;
+        e.ArrowColor = _theme.TextColor;
         base.OnRenderArrow(e);
     }
 }
@@ -161,7 +161,7 @@ internal class DarkModeColorTable : ProfessionalColorTable
     public DarkModeColorTable(Theme theme)
     {
         base.UseSystemColors = false; //Not sure if this is needed but adding anyway
-        this._theme = theme;
+        _theme = theme;
     }
 
     #region Border color
@@ -174,16 +174,16 @@ internal class DarkModeColorTable : ProfessionalColorTable
     #endregion
 
     #region Highlighted and Selected background color
-    public override Color MenuItemSelectedGradientBegin => this._theme.SelectionBackColor;
-    public override Color MenuItemSelectedGradientEnd => this._theme.SelectionBackColor;
-    public override Color MenuItemPressedGradientBegin => this._theme.SelectionBackColor;
-    public override Color MenuItemPressedGradientMiddle => this._theme.SelectionBackColor;
-    public override Color MenuItemPressedGradientEnd => this._theme.SelectionBackColor;
+    public override Color MenuItemSelectedGradientBegin => _theme.SelectionBackColor;
+    public override Color MenuItemSelectedGradientEnd => _theme.SelectionBackColor;
+    public override Color MenuItemPressedGradientBegin => _theme.SelectionBackColor;
+    public override Color MenuItemPressedGradientMiddle => _theme.SelectionBackColor;
+    public override Color MenuItemPressedGradientEnd => _theme.SelectionBackColor;
     #endregion
 
     #region Dropdown hover colors
-    public override Color ButtonSelectedGradientBegin => this._theme.SelectionBackColor;
-    public override Color ButtonSelectedGradientMiddle => this._theme.SelectionBackColor;
-    public override Color ButtonSelectedGradientEnd => this._theme.SelectionBackColor;
+    public override Color ButtonSelectedGradientBegin => _theme.SelectionBackColor;
+    public override Color ButtonSelectedGradientMiddle => _theme.SelectionBackColor;
+    public override Color ButtonSelectedGradientEnd => _theme.SelectionBackColor;
     #endregion
 }

@@ -21,13 +21,13 @@ public partial class QuickPeekForm : FormBase
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
-                this._titleSuffix = value;
-                this.Text = $"{_originalTitle} - {_titleSuffix}";
+                _titleSuffix = value;
+                Text = $"{_originalTitle} - {_titleSuffix}";
             }
             else
             {
-                this._titleSuffix = string.Empty;
-                this.Text = _originalTitle;
+                _titleSuffix = string.Empty;
+                Text = _originalTitle;
             }
         }
     }
@@ -44,124 +44,124 @@ public partial class QuickPeekForm : FormBase
     public QuickPeekForm()
     {
         InitializeComponent();
-        this._originalTitle = this.Text;
-        this.closeWindowButton.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
+        _originalTitle = Text;
+        closeWindowButton.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
         MaximumSize = new Size(Screen.FromControl(this).WorkingArea.Width, Screen.FromControl(this).WorkingArea.Height); //In case we have really large images
     }
 
     public QuickPeekForm(string titleSuffix, DataTable data, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
     {
-        this.TitleSuffix = titleSuffix;
-        this.UniqueTag = uniqueTag;
-        this.SourceRowIndex = sourceRowIndex;
-        this.SourceColumnIndex = sourceColumnIndex;
+        TitleSuffix = titleSuffix;
+        UniqueTag = uniqueTag;
+        SourceRowIndex = sourceRowIndex;
+        SourceColumnIndex = sourceColumnIndex;
 
-        this.mainTableLayoutPanel.Controls.Remove(this.mainPictureBox);
-        this.mainTableLayoutPanel.Controls.Remove(this.saveImageToFileButton);
-        this.mainTableLayoutPanel.RowCount -= 1; //Remove the bottom row to get rid of the image save button
-        this.mainTableLayoutPanel.SetColumnSpan(this.mainGridView, 2);
-        this.mainPictureBox = null;
+        mainTableLayoutPanel.Controls.Remove(mainPictureBox);
+        mainTableLayoutPanel.Controls.Remove(saveImageToFileButton);
+        mainTableLayoutPanel.RowCount -= 1; //Remove the bottom row to get rid of the image save button
+        mainTableLayoutPanel.SetColumnSpan(mainGridView, 2);
+        mainPictureBox = null;
 
-        this.mainGridView.DataSource = data ?? throw new ArgumentNullException(nameof(data));
-        this.mainGridView.ClearSelection();
+        mainGridView.DataSource = data ?? throw new ArgumentNullException(nameof(data));
+        mainGridView.ClearSelection();
     }
 
     public QuickPeekForm(string titleSuffix, Image image, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
     {
-        this.TitleSuffix = titleSuffix;
-        this.UniqueTag = uniqueTag;
-        this.SourceRowIndex = sourceRowIndex;
-        this.SourceColumnIndex = sourceColumnIndex;
+        TitleSuffix = titleSuffix;
+        UniqueTag = uniqueTag;
+        SourceRowIndex = sourceRowIndex;
+        SourceColumnIndex = sourceColumnIndex;
 
-        this.mainTableLayoutPanel.Controls.Remove(this.mainGridView);
-        this.mainGridView = null;
+        mainTableLayoutPanel.Controls.Remove(mainGridView);
+        mainGridView = null;
 
-        this.mainPictureBox.Image = image ?? throw new ArgumentNullException(nameof(image));
-        this.mainTableLayoutPanel.SetColumn(this.mainPictureBox, 0);
-        this.mainTableLayoutPanel.SetColumnSpan(this.mainPictureBox, 2);
+        mainPictureBox.Image = image ?? throw new ArgumentNullException(nameof(image));
+        mainTableLayoutPanel.SetColumn(mainPictureBox, 0);
+        mainTableLayoutPanel.SetColumnSpan(mainPictureBox, 2);
     }
 
     private void QuickPeekForm_Load(object sender, EventArgs e)
     {
-        if (this.mainGridView is not null)
+        if (mainGridView is not null)
         {
             //Make the form as wide as the number of columns
-            var width = this.mainGridView.RowHeadersWidth + 26; // needed to add this magic number in my testing
-            foreach (DataGridViewColumn column in this.mainGridView.Columns)
+            var width = mainGridView.RowHeadersWidth + 26; // needed to add this magic number in my testing
+            foreach (DataGridViewColumn column in mainGridView.Columns)
             {
                 width += column.Width;
             }
-            if (this.mainGridView.Rows.Count > 8) //8 is a magic number... Better than nothing imo
+            if (mainGridView.Rows.Count > 8) //8 is a magic number... Better than nothing imo
             {
                 width += 24; //widen for scrollbar
             }
 
-            this.Width = Math.Min(Math.Max(width, 280), 900); //900 pixel max seems reasonable, right?
+            Width = Math.Min(Math.Max(width, 280), 900); //900 pixel max seems reasonable, right?
 
-            if (this.mainGridView.Rows.Count == 1)
+            if (mainGridView.Rows.Count == 1)
             {
-                this.Height = 200;
+                Height = 200;
             }
         }
-        else if (this.mainPictureBox is not null)
+        else if (mainPictureBox is not null)
         {
-            this.Text += $" ({Resources.Strings.DimensionsText}: {this.mainPictureBox.Image!.PhysicalDimension.Width} x {this.mainPictureBox.Image.PhysicalDimension.Height})";
-            this.Text += $" ({Resources.Strings.TypeText}: {this.mainPictureBox.Image.RawFormat})";
+            Text += $" ({Resources.Strings.DimensionsText}: {mainPictureBox.Image!.PhysicalDimension.Width} x {mainPictureBox.Image.PhysicalDimension.Height})";
+            Text += $" ({Resources.Strings.TypeText}: {mainPictureBox.Image.RawFormat})";
 
-            this.Width = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Width / 1.8), this.mainPictureBox.Image.Width), 400);
-            this.Height = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Height / 1.8), this.mainPictureBox.Image.Height), 400);
+            Width = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Width / 1.8), mainPictureBox.Image.Width), 400);
+            Height = Math.Max(Math.Min((int)(Screen.FromControl(this).WorkingArea.Height / 1.8), mainPictureBox.Image.Height), 400);
 
-            this.Size = this.mainPictureBox.RenderedSize() + new Size(0, 80);
+            Size = mainPictureBox.RenderedSize() + new Size(0, 80);
 
-            this.saveImageToFileButton.Text = Resources.Strings.SaveImageToFileButtonTextFormat.Format(this.mainPictureBox.Image.RawFormat);
+            saveImageToFileButton.Text = Resources.Strings.SaveImageToFileButtonTextFormat.Format(mainPictureBox.Image.RawFormat);
         }
         else
         {
             throw new ApplicationException("QuickPeek form was not created correctly");
         }
 
-        this.Location = new Point(Cursor.Position.X + 5, Cursor.Position.Y);
+        Location = new Point(Cursor.Position.X + 5, Cursor.Position.Y);
 
         //Keep the form on the screen
-        var xOverflow = this.Left + this.Width - Screen.FromControl(this).WorkingArea.Width;
+        var xOverflow = Left + Width - Screen.FromControl(this).WorkingArea.Width;
         if (xOverflow > 0)
-            this.Left -= xOverflow;
+            Left -= xOverflow;
 
-        var yOverflow = this.Top + this.Height - Screen.FromControl(this).WorkingArea.Height;
+        var yOverflow = Top + Height - Screen.FromControl(this).WorkingArea.Height;
         if (yOverflow > 0)
-            this.Top -= yOverflow;
+            Top -= yOverflow;
     }
 
     private void TakeMeBackLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
     {
         if (e.Button == MouseButtons.Left)
-            TakeMeBackEvent?.Invoke(this, new TakeMeBackEventArgs(this.UniqueTag, this.SourceRowIndex, this.SourceColumnIndex));
+            TakeMeBackEvent?.Invoke(this, new TakeMeBackEventArgs(UniqueTag, SourceRowIndex, SourceColumnIndex));
     }
 
     public void DisableTakeMeBackLink()
     {
-        this.takeMeBackLinkLabel.Text = $"<<< {Resources.Strings.CantGoBackLinkButtonText}";
+        takeMeBackLinkLabel.Text = $"<<< {Resources.Strings.CantGoBackLinkButtonText}";
     }
 
     private void CloseWindowButton_Click(object sender, EventArgs e)
     {
-        this.Close();
+        Close();
     }
 
     private void saveImageToFileButton_Click(object sender, EventArgs e)
     {
         using var saveFileDialog = new SaveFileDialog
         {
-            Filter = $"{this.mainPictureBox.Image!.RawFormat.ToString().ToUpperInvariant()} image|*.{this.mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
-            Title = Resources.Strings.SaveImageAsButtonText.Format(this.mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant())
+            Filter = $"{mainPictureBox.Image!.RawFormat.ToString().ToUpperInvariant()} image|*.{mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
+            Title = Resources.Strings.SaveImageAsButtonText.Format(mainPictureBox.Image.RawFormat.ToString().ToUpperInvariant())
         };
 
         saveFileDialog.ShowDialog();
 
         if (!string.IsNullOrWhiteSpace(saveFileDialog.FileName))
         {
-            using var bitmap = new Bitmap(this.mainPictureBox.Image);
-            bitmap.Save(saveFileDialog.FileName, this.mainPictureBox.Image.RawFormat);
+            using var bitmap = new Bitmap(mainPictureBox.Image);
+            bitmap.Save(saveFileDialog.FileName, mainPictureBox.Image.RawFormat);
 
             MessageBox.Show(this,
                 Resources.Strings.ImageSavedToDiskMessage.Format(saveFileDialog.FileName),
@@ -174,13 +174,13 @@ public partial class QuickPeekForm : FormBase
     {
         try
         {
-            this.mainPictureBox.Cursor = Cursors.WaitCursor;
-            Clipboard.SetImage(this.mainPictureBox.Image!);
+            mainPictureBox.Cursor = Cursors.WaitCursor;
+            Clipboard.SetImage(mainPictureBox.Image!);
             await Task.Delay(100); //allow cursor to change
         }
         finally
         {
-            this.mainPictureBox.Cursor = Cursors.Default;
+            mainPictureBox.Cursor = Cursors.Default;
         }
     }
 
@@ -192,12 +192,12 @@ public partial class QuickPeekForm : FormBase
         }
 
         base.SetTheme(theme);
-        if (this.mainGridView is not null)
-            this.mainGridView.GridTheme = theme;
+        if (mainGridView is not null)
+            mainGridView.GridTheme = theme;
 
-        this.saveImageToFileButton.ForeColor = Color.Black;
-        this.takeMeBackLinkLabel.LinkColor = theme.HyperlinkColor;
-        this.takeMeBackLinkLabel.ActiveLinkColor = theme.TextColor;
+        saveImageToFileButton.ForeColor = Color.Black;
+        takeMeBackLinkLabel.LinkColor = theme.HyperlinkColor;
+        takeMeBackLinkLabel.ActiveLinkColor = theme.TextColor;
     }
 }
 

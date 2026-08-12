@@ -75,7 +75,7 @@ public class DelayedOnChangedTextBox : TextBox
         if (_delayedTextChangedTimer != null)
             _delayedTextChangedTimer.Stop();
 
-        if (_delayedTextChangedTimer == null || _delayedTextChangedTimer.Interval != DelayedTextChangedTimeout)
+        if (_delayedTextChangedTimer is null || _delayedTextChangedTimer.Interval != DelayedTextChangedTimeout)
         {
             _delayedTextChangedTimer = new Timer();
             _delayedTextChangedTimer.Tick += new EventHandler(HandleDelayedTextChangedTimerTick);

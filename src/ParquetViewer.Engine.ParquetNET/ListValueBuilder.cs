@@ -211,11 +211,11 @@ public class ListValueBuilder
 
         public LinkedArrayList NextList()
         {
-            if (this.Parent is null)
+            if (Parent is null)
                 throw new InvalidOperationException();
 
-            var nextList = new LinkedArrayList(this.Level, this.Parent);
-            this.Parent.Add(nextList);
+            var nextList = new LinkedArrayList(Level, Parent);
+            Parent.Add(nextList);
             return nextList;
         }
     }

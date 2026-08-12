@@ -21,26 +21,26 @@ public class CheckboxWithTooltip : StylableCheckBox
             var control = parent?.GetChildAtPoint(e.Location);
             if (control == this)
             {
-                if (!this.Enabled && !this._tooltipShown)
+                if (!Enabled && !_tooltipShown)
                 {
                     //It's important the tooltip is outside the checkbox control's bounds; otherwise the MouseLeave event handler doesn't work very well.
-                    var point = new Point(e.Location.X, (int)(this.Height * 1.5));
+                    var point = new Point(e.Location.X, (int)(Height * 1.5));
 
-                    this._tooltip.Show(this._tooltip.GetToolTip(this), this, point);
-                    this._tooltipShown = true;
+                    _tooltip.Show(_tooltip.GetToolTip(this), this, point);
+                    _tooltipShown = true;
                 }
             }
-            else if (this._tooltipShown)
+            else if (_tooltipShown)
             {
-                this._tooltipShown = false;
-                this._tooltip.Hide(this);
+                _tooltipShown = false;
+                _tooltip.Hide(this);
             }
         };
         parent.MouseLeave += (_, _) =>
         {
-            this._tooltipShown = false;
-            if (!this.IsDisposed)
-                this._tooltip.Hide(this);
+            _tooltipShown = false;
+            if (!IsDisposed)
+                _tooltip.Hide(this);
         };
     }
 

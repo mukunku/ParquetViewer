@@ -25,13 +25,13 @@ public partial class MainForm
         var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
         loadingIcon.OnShow += (object? sender, EventArgs e) =>
         {
-            this.mainTableLayoutPanel.Enabled = false;
-            this.mainMenuStrip.Enabled = false;
+            mainTableLayoutPanel.Enabled = false;
+            mainMenuStrip.Enabled = false;
         };
         loadingIcon.OnHide += (object? sender, EventArgs e) =>
         {
-            this.mainTableLayoutPanel.Enabled = true;
-            this.mainMenuStrip.Enabled = true;
+            mainTableLayoutPanel.Enabled = true;
+            mainMenuStrip.Enabled = true;
         };
 
         loadingIcon.Show();
@@ -49,21 +49,21 @@ public partial class MainForm
         filePathWithExtension = string.IsNullOrWhiteSpace(filePathWithExtension) ? null : filePathWithExtension;
         try
         {
-            if (this.MainDataSource?.DefaultView.Count > 0)
+            if (MainDataSource?.DefaultView.Count > 0)
             {
-                this.exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(this.MainDataSource.DefaultView.Count);
-                this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
-                this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+                exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(MainDataSource.DefaultView.Count);
+                exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
+                exportFileDialog.FilterIndex = (int)defaultFileType + 1;
 
-                if (this._openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
-                    && this._openParquetEngine is Engine.ParquetNET.ParquetEngine)
+                if (_openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
+                    && _openParquetEngine is Engine.ParquetNET.ParquetEngine)
                 {
-                    this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+                    exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
                 }
 
-                if (filePathWithExtension is not null || this.exportFileDialog.ShowDialog() == DialogResult.OK)
+                if (filePathWithExtension is not null || exportFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    filePath = filePathWithExtension ?? this.exportFileDialog.FileName;
+                    filePath = filePathWithExtension ?? exportFileDialog.FileName;
                     CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
 
                     var fileExtension = Path.GetExtension(filePath);
@@ -72,9 +72,9 @@ public partial class MainForm
                         throw new ArgumentOutOfRangeException(fileExtension);
 
                     var stopWatch = Stopwatch.StartNew();
-                    loadingIcon = this.ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
-                    await ExportResultsImpl(this.MainDataSource!, selectedFileType.Value, this._openParquetEngine,
-                        filePath, loadingIcon.CancellationToken, loadingIcon, this.OpenFileOrFolderPath);
+                    loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
+                    await ExportResultsImpl(MainDataSource!, selectedFileType.Value, _openParquetEngine,
+                        filePath, loadingIcon.CancellationToken, loadingIcon, OpenFileOrFolderPath);
 
                     if (loadingIcon.CancellationToken.IsCancellationRequested)
                     {
@@ -88,8 +88,8 @@ public partial class MainForm
                         FileExportEvent.FireAndForget(
                             selectedFileType.Value,
                             fileSizeInBytes,
-                            this.mainGridView.RowCount,
-                            this.mainGridView.ColumnCount,
+                            mainGridView.RowCount,
+                            mainGridView.ColumnCount,
                             stopWatch.ElapsedMilliseconds);
 
                         MessageBox.Show(this,

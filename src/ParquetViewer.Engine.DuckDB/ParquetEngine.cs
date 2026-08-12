@@ -14,15 +14,15 @@ public class ParquetEngine : IParquetEngine
 
     public string Path { get; set; }
 
-    public List<string> Fields => this._fields.Select(f => f.Name).ToList();
+    public List<string> Fields => _fields.Select(f => f.Name).ToList();
 
     public long RecordCount { get; }
 
-    public int NumberOfPartitions => this._dbs.Count;
+    public int NumberOfPartitions => _dbs.Count;
 
     public Dictionary<string, string> CustomMetadata { get; }
 
-    public IParquetMetadata Metadata => this._metadatas.First();
+    public IParquetMetadata Metadata => _metadatas.First();
 
     private readonly List<DuckDBField> _fields;
 
@@ -40,22 +40,22 @@ public class ParquetEngine : IParquetEngine
 
     private ParquetEngine(string filePath, DuckDBHandle db, ParquetMetadata metadata, List<DuckDBField> fields, long recordCount, Dictionary<string, string> customMetadata)
     {
-        this._dbs = [db];
-        this.Path = filePath;
-        this._metadatas = [metadata];
-        this._fields = FilterOutFieldsThatDontExist(fields, metadata);
-        this.RecordCount = recordCount;
-        this.CustomMetadata = customMetadata;
+        _dbs = [db];
+        Path = filePath;
+        _metadatas = [metadata];
+        _fields = FilterOutFieldsThatDontExist(fields, metadata);
+        RecordCount = recordCount;
+        CustomMetadata = customMetadata;
     }
 
     private ParquetEngine(string folderPath, List<DuckDBHandle> dbs, List<ParquetMetadata> metadatas, List<DuckDBField> fields, long recordCount, Dictionary<string, string> customMetadata)
     {
-        this._dbs = dbs;
-        this.Path = folderPath;
-        this._metadatas = metadatas;
-        this._fields = FilterOutFieldsThatDontExist(fields, this._metadatas.First());
-        this.RecordCount = recordCount;
-        this.CustomMetadata = customMetadata;
+        _dbs = dbs;
+        Path = folderPath;
+        _metadatas = metadatas;
+        _fields = FilterOutFieldsThatDontExist(fields, _metadatas.First());
+        RecordCount = recordCount;
+        CustomMetadata = customMetadata;
     }
 
     /// <summary>
@@ -197,13 +197,13 @@ public class ParquetEngine : IParquetEngine
 
     public void Dispose()
     {
-        Helpers.EZDispose(this._dbs);
+        Helpers.EZDispose(_dbs);
     }
 
     private async IAsyncEnumerable<DuckDBDataReader> QueryDataAsync(List<string> selectedFields, int offset, int recordCount)
     {
         var fields = string.Join(", ", selectedFields.Select(MakeColumnSafe));
-        foreach ((DuckDBHandle db, ParquetMetadata metadata) in Helpers.PairEnumerables(this._dbs, this._metadatas))
+        foreach ((DuckDBHandle db, ParquetMetadata metadata) in Helpers.PairEnumerables(_dbs, _metadatas))
         {
             EnsureFileExists(db.ParquetFilePath);
 
@@ -239,7 +239,7 @@ public class ParquetEngine : IParquetEngine
 
         var result = CreateEmptyDataTable(selectedFields);
         result.BeginLoadData();
-        await foreach (var row in this.QueryDataAsync(selectedFields, offset, recordCount))
+        await foreach (var row in QueryDataAsync(selectedFields, offset, recordCount))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -263,7 +263,7 @@ public class ParquetEngine : IParquetEngine
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var fieldName = selectedFields.ElementAt(columnIndex);
-                var parquetSchemaElement = (ParquetSchemaElement)this._metadatas.First().SchemaTree.Children.First(f => f.Path == fieldName);
+                var parquetSchemaElement = (ParquetSchemaElement)_metadatas.First().SchemaTree.Children.First(f => f.Path == fieldName);
                 values[columnIndex] = ConvertValueTypeIfNeeded(values[columnIndex], parquetSchemaElement);
             }
 
@@ -407,12 +407,12 @@ public class ParquetEngine : IParquetEngine
     private DataTable CreateEmptyDataTable(List<string> selectedFields)
     {
         var dataTable = new DataTable();
-        foreach (var field in this._fields)
+        foreach (var field in _fields)
         {
             if (!selectedFields.Contains(field.Name))
                 continue;
 
-            var schemaField = (ParquetSchemaElement)this.Metadata.SchemaTree.GetChild(field.Name);
+            var schemaField = (ParquetSchemaElement)Metadata.SchemaTree.GetChild(field.Name);
             if (schemaField.FieldType == FieldTypeId.Struct)
             {
                 dataTable.Columns.Add(new DataColumn(field.Name, typeof(StructValue)));
@@ -441,7 +441,7 @@ public class ParquetEngine : IParquetEngine
     {
         if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException($"Parquet file no longer exists at: {this.Path}");
+            throw new FileNotFoundException($"Parquet file no longer exists at: {Path}");
         }
     }
 
@@ -456,5 +456,5 @@ public class ParquetEngine : IParquetEngine
         IProgress<int> progress, Dictionary<string, string>? customMetadata)
         => throw new NotImplementedException();
 
-    public IEnumerable<string> GetOpenParquetFilePaths() => this._dbs.Select(db => db.ParquetFilePath);
+    public IEnumerable<string> GetOpenParquetFilePaths() => _dbs.Select(db => db.ParquetFilePath);
 }

@@ -12,6 +12,6 @@ public class XlsCellLengthException : Exception
     public XlsCellLengthException(int maxLength, string? message = null, Exception? innerException = null)
        : base(message, innerException)
     {
-        this.MaxLength = maxLength;
+        MaxLength = maxLength;
     }
 }

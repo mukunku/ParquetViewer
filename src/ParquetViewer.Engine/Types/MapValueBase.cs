@@ -60,7 +60,7 @@ public class MapValue : IMapValue
                 return -1;
             }
 
-            var (key, value) = this.GetMapValue(i);
+            var (key, value) = GetMapValue(i);
             var (otherKey, otherValue) = other.GetMapValue(i);
 
             int comparison = Helpers.CompareTo(key, otherKey);
@@ -72,7 +72,7 @@ public class MapValue : IMapValue
                 return comparison;
         }
 
-        if (this.Length < other.Length)
+        if (Length < other.Length)
             return 1; //this map's records is a subset of the other's records so say it's 'more than' in sort order
 
         return 0; //the map records appear equal

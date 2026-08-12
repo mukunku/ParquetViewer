@@ -11,9 +11,9 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
 
     public ICollection<ParquetSchemaElement> Children { get; }
 
-    public bool IsPrimitive => this._clrType is not null;
+    public bool IsPrimitive => _clrType is not null;
 
-    public Type ClrType => this._clrType ?? this.FieldType switch
+    public Type ClrType => _clrType ?? FieldType switch
     {
         FieldTypeId.List => typeof(ListValue),
         FieldTypeId.Map => typeof(MapValue),
@@ -21,7 +21,7 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
         _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
     };
 
-    public FieldTypeId FieldType => this.ConvertedType switch
+    public FieldTypeId FieldType => ConvertedType switch
     {
         "LIST" => FieldTypeId.List,
         "MAP" => FieldTypeId.Map,
@@ -34,37 +34,37 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
     /// </summary>
     private FieldTypeId GuessFieldType()
     {
-        if (this._clrType is not null || (this.NumChildren ?? 0) <= 0)
+        if (_clrType is not null || (NumChildren ?? 0) <= 0)
         {
-            if (this._repetitionType == RepetitionTypeId.Repeated)
+            if (_repetitionType == RepetitionTypeId.Repeated)
                 return FieldTypeId.List;
             else
                 return FieldTypeId.Primitive;
         }
 
-        if (this.NumChildren == 2)
+        if (NumChildren == 2)
         {
             try
             {
-                this.GetMapKeyValueField();
+                GetMapKeyValueField();
                 return FieldTypeId.Map;
             }
             catch { }
         }
 
-        if (this.NumChildren == 1 && this._repetitionType == RepetitionTypeId.Repeated)
+        if (NumChildren == 1 && _repetitionType == RepetitionTypeId.Repeated)
             return FieldTypeId.List;
 
         return FieldTypeId.Struct;
     }
 
-    public RepetitionTypeId? RepetitionType => this._repetitionType;
+    public RepetitionTypeId? RepetitionType => _repetitionType;
 
     public bool IsByteArrayType => _clrType == typeof(ByteArrayValue);
 
-    ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => this.Children.ToList<IParquetSchemaElement>();
+    ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.ToList<IParquetSchemaElement>();
 
-    public string? Type => this._underlyingType;
+    public string? Type => _underlyingType;
 
     private readonly string? _underlyingType;
     public int? TypeLength { get; }
@@ -92,19 +92,19 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
         DuckDBType? duckDbType,
         Type? ClrType)
     {
-        this.Children = new List<ParquetSchemaElement>();
-        this.Path = path;
-        this._underlyingType = underlyingType;
-        this.TypeLength = typeLength;
-        this._repetitionType = repetitionType;
-        this.NumChildren = (int?)numChildren;
-        this.ConvertedType = convertedType;
-        this.Scale = (int?)scale;
-        this.Precision = (int?)precision;
-        this._fieldId = fieldId;
-        this.LogicalType = logicalType;
-        this._duckDbType = duckDbType;
-        this._clrType = ClrType;
+        Children = new List<ParquetSchemaElement>();
+        Path = path;
+        _underlyingType = underlyingType;
+        TypeLength = typeLength;
+        _repetitionType = repetitionType;
+        NumChildren = (int?)numChildren;
+        ConvertedType = convertedType;
+        Scale = (int?)scale;
+        Precision = (int?)precision;
+        _fieldId = fieldId;
+        LogicalType = logicalType;
+        _duckDbType = duckDbType;
+        _clrType = ClrType;
     }
 
     public static ParquetSchemaElement FromRow(DuckDBDataReader row)
@@ -161,59 +161,59 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
 
     public ParquetSchemaElement GetSingleOrByName(string name)
     {
-        if (this.Children.Count == 0)
+        if (Children.Count == 0)
         {
             throw new MalformedFieldException($"Field `{Path}` has no children. Expected '{name}'.");
         }
 
-        if (this.Children.Count == 1)
+        if (Children.Count == 1)
         {
-            return this.Children.First();
+            return Children.First();
         }
         else
         {
-            return this.Children.FirstOrDefault(c => c.Path == name)
+            return Children.FirstOrDefault(c => c.Path == name)
                 ?? throw new MalformedFieldException($"Field `{Path}` has no child named '{name}'");
         }
     }
 
     public ParquetSchemaElement GetListField()
     {
-        var field = this.GetSingleOrByName("list");
+        var field = GetSingleOrByName("list");
         return field;
     }
     public ParquetSchemaElement GetListItemField()
     {
         try
         {
-            if (this.Children.Count == 0)
+            if (Children.Count == 0)
             {
                 //Assume this is a 2-tier list...
                 return this;
             }
 
-            var field = this.GetSingleOrByName("item");
+            var field = GetSingleOrByName("item");
             return field;
         }
         catch (Exception ex)
         {
-            throw new UnsupportedFieldException($"Cannot load field `{this.Path}`. Invalid List type.", ex);
+            throw new UnsupportedFieldException($"Cannot load field `{Path}`. Invalid List type.", ex);
         }
     }
 
     public ParquetSchemaElement GetMapKeyValueField()
     {
-        var field = this.GetSingleOrByName("key_value");
+        var field = GetSingleOrByName("key_value");
         return field;
     }
     public ParquetSchemaElement GetMapKeyField()
     {
-        var field = this.GetChildCI("key");
+        var field = GetChildCI("key");
         return field;
     }
     public ParquetSchemaElement GetMapValueField()
     {
-        var field = this.GetChildCI("value");
+        var field = GetChildCI("value");
         return field;
     }
 

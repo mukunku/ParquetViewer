@@ -32,7 +32,7 @@ public class DataTableLite
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(expectedRowCount, 0);
 
-        this._rows = new(expectedRowCount);
+        _rows = new(expectedRowCount);
     }
 
     public ColumnLite AddColumn(string name, Type type, IParquetSchemaElement parent)
@@ -97,7 +97,7 @@ public class DataTableLite
                 {
                     //Try figure out where the mismatch is
                     var columnIndex = 0;
-                    foreach (var column in this._columns.Values)
+                    foreach (var column in _columns.Values)
                     {
                         if (values[columnIndex] != DBNull.Value && column.Type != values[columnIndex].GetType())
                         {
@@ -126,7 +126,7 @@ public class DataTableLite
     public DataTableLite Clone()
     {
         var clone = new DataTableLite();
-        foreach (var column in this.Columns.Values)
+        foreach (var column in Columns.Values)
         {
             clone.AddColumn(column.Name, column.Type, column.ParentSchema);
         }
@@ -156,17 +156,17 @@ public class DataRowLite : IDataRowLite
     }
     public object GetValue(string columnName)
     {
-        if (!this.Columns.ContainsKey(columnName))
+        if (!Columns.ContainsKey(columnName))
         {
             throw new IndexOutOfRangeException($"Column `{columnName}` not found");
         }
 
         var index = 0;
-        foreach (var column in this.Columns.Keys)
+        foreach (var column in Columns.Keys)
         {
             if (column.Equals(columnName))
             {
-                return this.Row[index];
+                return Row[index];
             }
             index++;
         }

@@ -18,7 +18,7 @@ public class LoadingIcon : IDisposable, IProgress<int>
     private long _progressSoFar = 0;
     private int _progressRatio = 0;
 
-    public CancellationToken CancellationToken => this._cancellationToken.Token;
+    public CancellationToken CancellationToken => _cancellationToken.Token;
 
     public event EventHandler? OnShow;
     public event EventHandler? OnHide;
@@ -27,14 +27,14 @@ public class LoadingIcon : IDisposable, IProgress<int>
     {
         ArgumentNullException.ThrowIfNull(form);
 
-        this._form = form;
-        this._panel = new Panel();
-        this._panel.BorderStyle = BorderStyle.FixedSingle;
-        this._panel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
-        this._panel.Location = this.GetFormCenter();
-        this._loadingBarMax = loadingBarMax;
+        _form = form;
+        _panel = new Panel();
+        _panel.BorderStyle = BorderStyle.FixedSingle;
+        _panel.Size = new Size(LoadingPanelWidth, LoadingPanelHeight);
+        _panel.Location = GetFormCenter();
+        _loadingBarMax = loadingBarMax;
 
-        this._panel.Controls.Add(new Label()
+        _panel.Controls.Add(new Label()
         {
             Name = "loadingmessagelabel",
             Text = message,
@@ -49,20 +49,20 @@ public class LoadingIcon : IDisposable, IProgress<int>
             Image = Resources.Icons.hourglass,
             Size = new Size(200, 200)
         };
-        this._panel.Controls.Add(pictureBox);
+        _panel.Controls.Add(pictureBox);
 
-        this._cancelButton = new Button()
+        _cancelButton = new Button()
         {
             Name = "cancelloadingbutton",
             Text = Resources.Strings.CancelButtonText,
             Dock = DockStyle.Bottom,
-            Enabled = this._cancellationToken.Token.CanBeCanceled,
+            Enabled = _cancellationToken.Token.CanBeCanceled,
             BackColor = Color.White,
             ForeColor = Color.Black
         };
-        this._cancelButton.Click += (object? buttonSender, EventArgs buttonClickEventArgs) =>
+        _cancelButton.Click += (object? buttonSender, EventArgs buttonClickEventArgs) =>
         {
-            this._cancellationToken.Cancel();
+            _cancellationToken.Cancel();
 
             if (buttonSender is Button button)
             {
@@ -70,13 +70,13 @@ public class LoadingIcon : IDisposable, IProgress<int>
                 button.Text = Resources.Strings.CancelInitiatedLabelText;
             }
         };
-        this._panel.Controls.Add(this._cancelButton);
-        this._cancelButton.BringToFront();
+        _panel.Controls.Add(_cancelButton);
+        _cancelButton.BringToFront();
 
         //Center on form resize
-        this._form.SizeChanged += (object? sender, EventArgs e) =>
+        _form.SizeChanged += (object? sender, EventArgs e) =>
         {
-            this._panel.Location = this.GetFormCenter();
+            _panel.Location = GetFormCenter();
         };
     }
 
@@ -84,49 +84,49 @@ public class LoadingIcon : IDisposable, IProgress<int>
     {
         if (newMessage is not null)
         {
-            foreach (Control control in this._panel.Controls.Find("loadingmessagelabel", false))
+            foreach (Control control in _panel.Controls.Find("loadingmessagelabel", false))
             {
                 control.Text = newMessage;
             }
         }
 
-        this._progressSoFar = 0;
-        this._progressRatio = 0;
-        this._cancelButton.BackgroundImage = null;
-        this._cancelButton.Invoke(this._cancelButton.Refresh);
+        _progressSoFar = 0;
+        _progressRatio = 0;
+        _cancelButton.BackgroundImage = null;
+        _cancelButton.Invoke(_cancelButton.Refresh);
     }
 
     public void Show()
     {
-        this._form.Controls.Add(this._panel);
-        this._panel.BringToFront();
-        this._panel.Show();
-        this._cancelButton.Focus();
+        _form.Controls.Add(_panel);
+        _panel.BringToFront();
+        _panel.Show();
+        _cancelButton.Focus();
 
-        this._cancelButton.BackgroundImage = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
-        this.OnShow?.Invoke(this, EventArgs.Empty);
+        _cancelButton.BackgroundImage = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
+        OnShow?.Invoke(this, EventArgs.Empty);
     }
 
     private Point GetFormCenter()
-        => new((this._form.Width / 2) - (LoadingPanelWidth / 2), (this._form.Height / 2) - (LoadingPanelHeight / 2));
+        => new((_form.Width / 2) - (LoadingPanelWidth / 2), (_form.Height / 2) - (LoadingPanelHeight / 2));
 
     public void Dispose()
     {
-        this.OnHide?.Invoke(this, EventArgs.Empty);
-        this._panel.Dispose();
+        OnHide?.Invoke(this, EventArgs.Empty);
+        _panel.Dispose();
     }
 
     private readonly object _lock = new();
     public void Report(int progress)
     {
-        if (this._loadingBarMax <= 0)
+        if (_loadingBarMax <= 0)
             return;
 
-        var progressSoFar = Interlocked.Add(ref this._progressSoFar, progress);
-        var progressRatio = (int)Math.Ceiling((progressSoFar * 100) / (double)this._loadingBarMax);
-        if (progressRatio != this._progressRatio)
+        var progressSoFar = Interlocked.Add(ref _progressSoFar, progress);
+        var progressRatio = (int)Math.Ceiling((progressSoFar * 100) / (double)_loadingBarMax);
+        if (progressRatio != _progressRatio)
         {
-            this._progressRatio = progressRatio;
+            _progressRatio = progressRatio;
 
             lock (_lock) //This part isn't thread-safe
             {
@@ -136,14 +136,14 @@ public class LoadingIcon : IDisposable, IProgress<int>
                 {
                     using (Graphics graphics = Graphics.FromImage(bitmap))
                     {
-                        float wid = bitmap.Width * this._progressRatio / 100;
+                        float wid = bitmap.Width * _progressRatio / 100;
                         float hgt = bitmap.Height;
                         RectangleF rect = new RectangleF(0, 0, wid, hgt);
                         graphics.FillRectangle(solidBrush, rect);
                     }
                 }
-                this._cancelButton.BackgroundImage = bitmap;
-                this._cancelButton.Invoke(this._cancelButton.Refresh);
+                _cancelButton.BackgroundImage = bitmap;
+                _cancelButton.Invoke(_cancelButton.Refresh);
             }
         }
     }

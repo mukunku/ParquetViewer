@@ -46,15 +46,15 @@ public abstract class EngineTests
         ParquetEngineSettings.DateOnlyDisplayFormat = "yyyy-MM-dd";
         ParquetEngineSettings.TimeOnlyDisplayFormat = "HH:mm:ss";
 
-        this._useDuckDBEngine = useDuckDBEngine;
-        this._canHandleNullComplexTypes = canHandleNullComplexTypes;
-        this._treatsTwoTierListAsStruct = treatsTwoTierListAsStruct;
-        this._schemaPathSeperator = schemaPathSeperator;
+        _useDuckDBEngine = useDuckDBEngine;
+        _canHandleNullComplexTypes = canHandleNullComplexTypes;
+        _treatsTwoTierListAsStruct = treatsTwoTierListAsStruct;
+        _schemaPathSeperator = schemaPathSeperator;
     }
 
     private async Task<IParquetEngine> OpenFileOrFolderAsync(string path)
     {
-        if (this._useDuckDBEngine)
+        if (_useDuckDBEngine)
         {
             return await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(path);
         }

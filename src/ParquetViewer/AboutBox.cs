@@ -35,17 +35,17 @@ public partial class AboutBox : FormBase
     public AboutBox()
     {
         InitializeComponent();
-        this.Text = this.Text.Format(AssemblyTitle);
-        this.labelProductName.Text = AssemblyProduct;
-        this.labelVersion.Text = this.labelVersion.Text.Format(AssemblyVersion, _isSelfContainedExe ? " SC" : string.Empty);
-        this.labelCopyright.Text = AssemblyCopyright;
-        this.textBoxDescription.Text = AssemblyDescription.Replace($"Privacy policy:", $"{Resources.Strings.PrivacyPolicyLabelText}:"); //HACK: to translate privacy policy text
-        this.newVersionLabel.Image = null;
+        Text = Text.Format(AssemblyTitle);
+        labelProductName.Text = AssemblyProduct;
+        labelVersion.Text = labelVersion.Text.Format(AssemblyVersion, _isSelfContainedExe ? " SC" : string.Empty);
+        labelCopyright.Text = AssemblyCopyright;
+        textBoxDescription.Text = AssemblyDescription.Replace($"Privacy policy:", $"{Resources.Strings.PrivacyPolicyLabelText}:"); //HACK: to translate privacy policy text
+        newVersionLabel.Image = null;
 
         if (!AmplitudeEvent.HasApiKey)
         {
-            this.textBoxDescription.Text = $"No Amplitude API Key!{Environment.NewLine}{Environment.NewLine}"
-                + this.textBoxDescription.Text;
+            textBoxDescription.Text = $"No Amplitude API Key!{Environment.NewLine}{Environment.NewLine}"
+                + textBoxDescription.Text;
         }
     }
 
@@ -127,7 +127,7 @@ public partial class AboutBox : FormBase
     {
         if (e.KeyCode == Keys.Escape)
         {
-            this.Close();
+            Close();
         }
     }
 
@@ -151,7 +151,7 @@ public partial class AboutBox : FormBase
 
     private void associateFileExtensionCheckBox_CheckedChanged(object? sender, EventArgs? e)
     {
-        if (this._isLoading)
+        if (_isLoading)
         {
             return;
         }
@@ -191,32 +191,32 @@ public partial class AboutBox : FormBase
         }
         catch
         {
-            this.associateFileExtensionCheckBox.Enabled = false;
+            associateFileExtensionCheckBox.Enabled = false;
         }
 
         try
         {
-            this.newVersionLabel.Visible = false;
+            newVersionLabel.Visible = false;
             var latestRelease = await Env.FetchLatestRelease();
-            this.newVersionLabel.Text = this.newVersionLabel.Text.Format(latestRelease.Version);
-            this.newVersionLabel.Visible = true;
+            newVersionLabel.Text = newVersionLabel.Text.Format(latestRelease.Version);
+            newVersionLabel.Visible = true;
 
             if (latestRelease.Version > Env.AssemblyVersion)
             {
-                this.newVersionLabel.Tag = latestRelease.Url;
-                this.newVersionLabel.Image = Resources.Icons.external_link_icon;
+                newVersionLabel.Tag = latestRelease.Url;
+                newVersionLabel.Image = Resources.Icons.external_link_icon;
             }
             else if (latestRelease.Version == Env.AssemblyVersion)
             {
-                this.newVersionLabel.Enabled = false;
+                newVersionLabel.Enabled = false;
             }
         }
         catch (Exception ex)
         {
             ExceptionEvent.FireAndForget(ex);
-            this.newVersionLabel.Text = string.Empty;
-            this.newVersionLabel.Tag = null;
-            this.newVersionLabel.Enabled = false;
+            newVersionLabel.Text = string.Empty;
+            newVersionLabel.Tag = null;
+            newVersionLabel.Enabled = false;
         }
     }
 
@@ -266,9 +266,9 @@ public partial class AboutBox : FormBase
 
     private void SetCheckboxSilent(bool @checked)
     {
-        this._isLoading = true;
-        this.associateFileExtensionCheckBox.Checked = @checked;
-        this._isLoading = false;
+        _isLoading = true;
+        associateFileExtensionCheckBox.Checked = @checked;
+        _isLoading = false;
     }
 
     public override void SetTheme(Theme theme)
@@ -279,13 +279,13 @@ public partial class AboutBox : FormBase
         }
 
         base.SetTheme(theme);
-        this.okButton.BackColor = Color.White;
-        this.okButton.ForeColor = Color.Black;
+        okButton.BackColor = Color.White;
+        okButton.ForeColor = Color.Black;
     }
 
     private void newVersionLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
     {
-        if (this.newVersionLabel.Tag is Uri url)
+        if (newVersionLabel.Tag is Uri url)
             Process.Start(new ProcessStartInfo(url.ToString()) { UseShellExecute = true });
     }
 }

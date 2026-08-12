@@ -6,8 +6,8 @@ public class RowsReadException : Exception
 {
     public RowsReadException(Exception parquetNetEx, Exception duckDbEx, string? message = null) : base(message, new AggregateException([parquetNetEx, duckDbEx]))
     {
-        this.ParquetNetException = parquetNetEx;
-        this.DuckDbException = duckDbEx;
+        ParquetNetException = parquetNetEx;
+        DuckDbException = duckDbEx;
     }
 
     public Exception ParquetNetException { get; }

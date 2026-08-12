@@ -15,7 +15,7 @@ public class FormBase : Form
 
     protected FormBase()
     {
-        this.Load += (object? _, EventArgs _) =>
+        Load += (object? _, EventArgs _) =>
         {
             _openForms.Add(this);
             SetTheme(AppSettings.GetTheme());
@@ -31,15 +31,15 @@ public class FormBase : Form
 
         if (theme == Theme.LightModeTheme)
         {
-            this.UseLightModeTitleBar();
+            UseLightModeTitleBar();
         }
         else
         {
-            this.UseDarkModeTitleBar();
+            UseDarkModeTitleBar();
         }
 
-        this.BackColor = theme.FormBackgroundColor;
-        this.ForeColor = theme.TextColor;
+        BackColor = theme.FormBackgroundColor;
+        ForeColor = theme.TextColor;
     }
 
     [DllImport("dwmapi.dll")]
@@ -48,8 +48,8 @@ public class FormBase : Form
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
-    private void UseDarkModeTitleBar() => UseImmersiveDarkMode(this.Handle, true);
-    private void UseLightModeTitleBar() => UseImmersiveDarkMode(this.Handle, false);
+    private void UseDarkModeTitleBar() => UseImmersiveDarkMode(Handle, true);
+    private void UseLightModeTitleBar() => UseImmersiveDarkMode(Handle, false);
 
     // Source: https://stackoverflow.com/a/62811758/1458738
     private static bool UseImmersiveDarkMode(IntPtr handle, bool enabled)

@@ -13,9 +13,9 @@ public class DecimalOverflowException : Exception
 
     public DecimalOverflowException(string fieldName, int precision, int scale, OverflowException overflowEx) : base(overflowEx.Message, overflowEx)
     {
-        this.FieldName = fieldName;
-        this.Precision = precision;
-        this.Scale = scale;
+        FieldName = fieldName;
+        Precision = precision;
+        Scale = scale;
     }
 
     public DecimalOverflowException(OverflowException overflowEx) : base(overflowEx.Message, overflowEx)

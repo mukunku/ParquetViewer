@@ -17,18 +17,18 @@ public partial class MetadataViewer : FormBase
 
     public MetadataViewer(IParquetEngine parquetEngine) : this()
     {
-        this._parquetEngine = parquetEngine;
+        _parquetEngine = parquetEngine;
     }
 
     public MetadataViewer()
     {
         InitializeComponent();
-        this.DoubleBuffered = true;
+        DoubleBuffered = true;
     }
 
     private void MetadataViewer_Load(object sender, EventArgs e)
     {
-        this.mainBackgroundWorker.RunWorkerAsync();
+        mainBackgroundWorker.RunWorkerAsync();
     }
 
     private void AddTab(string tabName, string text)
@@ -45,12 +45,12 @@ public partial class MetadataViewer : FormBase
             WordWrap = false //gives significant performance boost
         });
 
-        this.tabControl.TabPages.Add(tab);
+        tabControl.TabPages.Add(tab);
     }
 
     private void CloseButton_Click(object sender, EventArgs e)
     {
-        this.Close();
+        Close();
     }
 
     private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
@@ -101,16 +101,16 @@ public partial class MetadataViewer : FormBase
         }
         else
         {
-            this.tabControl.SuspendLayout();
-            this.tabControl.TabPages.Clear();
+            tabControl.SuspendLayout();
+            tabControl.TabPages.Clear();
             if (e.Result is List<(string TabName, string Text)> tabs)
             {
                 foreach (var tab in tabs)
                 {
-                    this.AddTab(tab.TabName, tab.Text);
+                    AddTab(tab.TabName, tab.Text);
                 }
             }
-            this.tabControl.ResumeLayout();
+            tabControl.ResumeLayout();
         }
     }
 
@@ -118,7 +118,7 @@ public partial class MetadataViewer : FormBase
     {
         if (e.KeyCode == Keys.Escape)
         {
-            this.Close();
+            Close();
         }
     }
 
@@ -130,6 +130,6 @@ public partial class MetadataViewer : FormBase
         }
 
         base.SetTheme(theme);
-        this.closeButton.ForeColor = Color.Black;
+        closeButton.ForeColor = Color.Black;
     }
 }

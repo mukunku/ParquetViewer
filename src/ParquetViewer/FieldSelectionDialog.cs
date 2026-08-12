@@ -27,30 +27,30 @@ public partial class FieldsToLoadForm : FormBase
     public FieldsToLoadForm()
     {
         InitializeComponent();
-        this.AvailableFields ??= new List<string>();
-        this.PreSelectedFields ??= new List<string>();
-        this.NewSelectedFields ??= new List<string>();
-        this._selectedFieldsOnlyLabelTemplate = this.showSelectedFieldsRadioButton.Text;
-        this.SetSelectedFieldCount();
+        AvailableFields ??= new List<string>();
+        PreSelectedFields ??= new List<string>();
+        NewSelectedFields ??= new List<string>();
+        _selectedFieldsOnlyLabelTemplate = showSelectedFieldsRadioButton.Text;
+        SetSelectedFieldCount();
     }
 
     public FieldsToLoadForm(IEnumerable<string> availableFields, IEnumerable<string> preSelectedFields) : this()
     {
-        this.AvailableFields = availableFields?.ToList() ?? new();
-        this.PreSelectedFields = preSelectedFields?.ToList() ?? new();
+        AvailableFields = availableFields?.ToList() ?? new();
+        PreSelectedFields = preSelectedFields?.ToList() ?? new();
     }
 
     private void FieldsToLoadForm_Load(object sender, EventArgs e)
     {
-        this.CenterToParent();
-        this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
+        CenterToParent();
+        RenderFieldsCheckboxes(AvailableFields, PreSelectedFields);
     }
 
     private void RenderFieldsCheckboxes(List<string> availableFields, List<string>? preSelectedFields)
     {
-        this.fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
-        this.ClearAndDisposeCheckboxes();
-        this.fieldsPanel.VerticalScroll.Value = 0; //Scroll to the top
+        fieldsPanel.SuspendLayout(); //Suspending the layout while dynamically adding controls adds significant performance improvement
+        ClearAndDisposeCheckboxes();
+        fieldsPanel.VerticalScroll.Value = 0; //Scroll to the top
 
         try
         {
@@ -59,8 +59,8 @@ public partial class FieldsToLoadForm : FormBase
 
             if (availableFields.Count > MaxNumberOfFieldsWeCanRender)
             {
-                this.showSelectedFieldsRadioButton.Enabled = false;
-                this.filterColumnsTextbox.PlaceholderText = Resources.Strings.TooManyFieldsErrorFormat.Format(availableFields.Count);
+                showSelectedFieldsRadioButton.Enabled = false;
+                filterColumnsTextbox.PlaceholderText = Resources.Strings.TooManyFieldsErrorFormat.Format(availableFields.Count);
                 return;
             }
 
@@ -78,14 +78,14 @@ public partial class FieldsToLoadForm : FormBase
 
                     if (preSelectedFields?.Count > 0)
                     {
-                        this.showSelectedFieldsRadioButton.Checked = true;
-                        this.SetSelectedFieldCount();
+                        showSelectedFieldsRadioButton.Checked = true;
+                        SetSelectedFieldCount();
                     }
 
                     var totalFieldCount = availableFields.Count;
                     string selectAllCheckBoxText = Resources.Strings.SelectAllCheckmarkTextFormat.Format(totalFieldCount);
                     string deselectAllCheckBoxText = Resources.Strings.DeselectAllCheckmarkTextFormat.Format(totalFieldCount);
-                    var selectAllCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
+                    var selectAllCheckbox = new CheckboxWithTooltip(fieldsPanel)
                     {
                         Name = SelectAllCheckboxName,
                         Text = selectAllCheckBoxText,
@@ -100,14 +100,14 @@ public partial class FieldsToLoadForm : FormBase
                     {
                         var selectAllCheckBox = checkboxSender as CheckBox ?? throw new ArgumentNullException(nameof(checkboxSender));
                         var isChecked = selectAllCheckBox.Enabled && selectAllCheckBox.Checked;
-                        var showFilterControls = !(isChecked && string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text));
-                        this.filterColumnsTextbox.Enabled = showFilterControls;
-                        this.clearfilterColumnsButton.Enabled = showFilterControls;
+                        var showFilterControls = !(isChecked && string.IsNullOrWhiteSpace(filterColumnsTextbox.Text));
+                        filterColumnsTextbox.Enabled = showFilterControls;
+                        clearfilterColumnsButton.Enabled = showFilterControls;
                         selectAllCheckbox.Text = isChecked ? deselectAllCheckBoxText : selectAllCheckBoxText;
 
                         if (!isClearingSelectAllCheckbox)
                         {
-                            foreach (Control control in this.fieldsPanel.Controls)
+                            foreach (Control control in fieldsPanel.Controls)
                             {
                                 var isSelectAllCheckbox = control.Tag?.Equals(SelectAllCheckboxName) == true;
                                 if (!isSelectAllCheckbox && control is CheckBox checkbox)
@@ -121,11 +121,11 @@ public partial class FieldsToLoadForm : FormBase
                         }
                     };
 
-                    this.fieldsPanel.Controls.Add(selectAllCheckbox);
+                    fieldsPanel.Controls.Add(selectAllCheckbox);
                     locationY += DynamicFieldCheckboxYIncrement;
                 }
 
-                var fieldCheckbox = new CheckboxWithTooltip(this.fieldsPanel)
+                var fieldCheckbox = new CheckboxWithTooltip(fieldsPanel)
                 {
                     Name = string.Concat("checkbox_", field),
                     Text = field,
@@ -145,18 +145,18 @@ public partial class FieldsToLoadForm : FormBase
 
                     if (fieldCheckBox.Checked)
                     {
-                        this.PreSelectedFields.Add((string)fieldCheckBox.Tag!);
+                        PreSelectedFields.Add((string)fieldCheckBox.Tag!);
                         SetSelectedFieldCount();
                     }
                     else
                     {
-                        this.PreSelectedFields.Remove((string)fieldCheckBox.Tag!);
+                        PreSelectedFields.Remove((string)fieldCheckBox.Tag!);
                         SetSelectedFieldCount();
                     }
 
                     if (!fieldCheckBox.Checked)
                     {
-                        foreach (Control control in this.fieldsPanel.Controls)
+                        foreach (Control control in fieldsPanel.Controls)
                         {
                             if (control.Tag!.Equals(SelectAllCheckboxName) && control is CheckBox checkbox)
                             {
@@ -164,7 +164,7 @@ public partial class FieldsToLoadForm : FormBase
                                 {
                                     isClearingSelectAllCheckbox = true;
                                     checkbox.Checked = false;
-                                    this.PreSelectedFields.Remove((string)fieldCheckBox.Tag!);
+                                    PreSelectedFields.Remove((string)fieldCheckBox.Tag!);
                                     isClearingSelectAllCheckbox = false;
                                     SetSelectedFieldCount();
                                     break;
@@ -185,15 +185,15 @@ public partial class FieldsToLoadForm : FormBase
                 duplicateField.Enabled = false;
             }
 
-            this.fieldsPanel.Controls.AddRange(checkboxControls.ToArray<Control>());
+            fieldsPanel.Controls.AddRange(checkboxControls.ToArray<Control>());
         }
         catch (Exception ex)
         {
-            this.ShowError(ex, Resources.Errors.FieldListGenerationError, true);
+            ShowError(ex, Resources.Errors.FieldListGenerationError, true);
         }
         finally
         {
-            this.fieldsPanel.ResumeLayout();
+            fieldsPanel.ResumeLayout();
         }
     }
 
@@ -204,25 +204,25 @@ public partial class FieldsToLoadForm : FormBase
     private void ClearAndDisposeCheckboxes()
     {
         //Dispose each control
-        foreach (var checkbox in this.fieldsPanel.Controls)
+        foreach (var checkbox in fieldsPanel.Controls)
         {
             if (checkbox is Control c)
                 c.DisposeSafely();
         }
 
         //Now we're safe to clear the panel
-        this.fieldsPanel.Controls.Clear();
+        fieldsPanel.Controls.Clear();
     }
 
     private void allFieldsRadioButton_CheckedChanged(object sender, EventArgs e)
     {
         if (((RadioButton)sender).Checked)
         {
-            this.fieldsPanel.Enabled = false;
-            this.filterColumnsTextbox.Enabled = false;
-            this.clearfilterColumnsButton.Enabled = false;
-            this.rememberMyChoiceCheckBox.Enabled = true;
-            this.showSelectedFieldsRadioButton.Checked = false;
+            fieldsPanel.Enabled = false;
+            filterColumnsTextbox.Enabled = false;
+            clearfilterColumnsButton.Enabled = false;
+            rememberMyChoiceCheckBox.Enabled = true;
+            showSelectedFieldsRadioButton.Checked = false;
         }
     }
 
@@ -230,11 +230,11 @@ public partial class FieldsToLoadForm : FormBase
     {
         if (((RadioButton)sender).Checked)
         {
-            this.fieldsPanel.Enabled = true;
-            this.filterColumnsTextbox.Enabled = true;
-            this.clearfilterColumnsButton.Enabled = true;
-            this.allFieldsRadioButton.Checked = false;
-            this.rememberMyChoiceCheckBox.Enabled = false;
+            fieldsPanel.Enabled = true;
+            filterColumnsTextbox.Enabled = true;
+            clearfilterColumnsButton.Enabled = true;
+            allFieldsRadioButton.Checked = false;
+            rememberMyChoiceCheckBox.Enabled = false;
         }
     }
 
@@ -242,19 +242,19 @@ public partial class FieldsToLoadForm : FormBase
     {
         try
         {
-            if (this.rememberMyChoiceCheckBox.Enabled && this.rememberMyChoiceCheckBox.Checked)
+            if (rememberMyChoiceCheckBox.Enabled && rememberMyChoiceCheckBox.Checked)
                 AppSettings.AlwaysSelectAllFields = true;
             else
                 AppSettings.AlwaysSelectAllFields = false;
 
-            this.NewSelectedFields.Clear();
-            if (this.allFieldsRadioButton.Checked)
+            NewSelectedFields.Clear();
+            if (allFieldsRadioButton.Checked)
             {
-                this.NewSelectedFields.AddRange(this.AvailableFields);
+                NewSelectedFields.AddRange(AvailableFields);
             }
-            else if (this.PreSelectedFields.Count > 0)
+            else if (PreSelectedFields.Count > 0)
             {
-                this.NewSelectedFields.AddRange(this.PreSelectedFields);
+                NewSelectedFields.AddRange(PreSelectedFields);
             }
             else
             {
@@ -266,8 +266,8 @@ public partial class FieldsToLoadForm : FormBase
                 return;
             }
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
         catch (Exception ex)
         {
@@ -282,34 +282,34 @@ public partial class FieldsToLoadForm : FormBase
 
     private void filterColumnsTextbox_DelayedTextChanged(object sender, EventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(this.filterColumnsTextbox.Text))
+        if (!string.IsNullOrWhiteSpace(filterColumnsTextbox.Text))
         {
             IEnumerable<string> filteredFields;
-            var filteredColumnsNames = this.filterColumnsTextbox.Text.Split(',').ToList();
+            var filteredColumnsNames = filterColumnsTextbox.Text.Split(',').ToList();
 
             if (filteredColumnsNames.Count == 1)
             {
                 var filter = filteredColumnsNames[0];
-                filteredFields = this.AvailableFields.Where(w => w.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
+                filteredFields = AvailableFields.Where(w => w.Contains(filter, StringComparison.InvariantCultureIgnoreCase));
             }
             else
             {
                 char[] charsToTrim = { '"', ' ', '\'' };
                 filteredColumnsNames = filteredColumnsNames.Select(s => s.Trim(charsToTrim)).ToList();
-                filteredFields = this.AvailableFields.Where(w => filteredColumnsNames.Contains(w));
+                filteredFields = AvailableFields.Where(w => filteredColumnsNames.Contains(w));
             }
 
-            this.RenderFieldsCheckboxes(filteredFields.ToList(), this.PreSelectedFields);
+            RenderFieldsCheckboxes(filteredFields.ToList(), PreSelectedFields);
         }
         else
         {
-            this.RenderFieldsCheckboxes(this.AvailableFields, this.PreSelectedFields);
+            RenderFieldsCheckboxes(AvailableFields, PreSelectedFields);
         }
     }
 
     private void clearfilterColumnsButton_Click(object? sender, EventArgs? e)
     {
-        this.filterColumnsTextbox.Text = string.Empty;
+        filterColumnsTextbox.Text = string.Empty;
     }
 
     private void FieldsToLoadForm_KeyDown(object sender, KeyEventArgs e)
@@ -318,14 +318,14 @@ public partial class FieldsToLoadForm : FormBase
         {
             //We need to do this on key down because if there's a message box on screen and the user hits 'esc'
             //the message box is closed on the key down. So if we listen on the key up we will also close the main window.
-            this.Close();
+            Close();
         }
     }
 
     private void SetSelectedFieldCount()
     {
-        this.showSelectedFieldsRadioButton.Text = this._selectedFieldsOnlyLabelTemplate
-            .Format(this.PreSelectedFields?.Count ?? this.AvailableFields.Count);
+        showSelectedFieldsRadioButton.Text = _selectedFieldsOnlyLabelTemplate
+            .Format(PreSelectedFields?.Count ?? AvailableFields.Count);
     }
 
     private Color _disabledTextColor;
@@ -337,9 +337,9 @@ public partial class FieldsToLoadForm : FormBase
         }
 
         base.SetTheme(theme);
-        this.doneButton.ForeColor = Color.Black;
-        this.clearfilterColumnsButton.ForeColor = Color.Black;
-        this._disabledTextColor = theme.DisabledTextColor;
-        this.rememberMyChoiceCheckBox.DisabledForeColor = this._disabledTextColor;
+        doneButton.ForeColor = Color.Black;
+        clearfilterColumnsButton.ForeColor = Color.Black;
+        _disabledTextColor = theme.DisabledTextColor;
+        rememberMyChoiceCheckBox.DisabledForeColor = _disabledTextColor;
     }
 }

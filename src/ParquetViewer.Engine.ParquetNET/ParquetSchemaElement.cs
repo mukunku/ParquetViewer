@@ -8,7 +8,7 @@ namespace ParquetViewer.Engine.ParquetNET;
 public class ParquetSchemaElement : IParquetSchemaElement
 {
     public string Path => SchemaElement.Name;
-    public string PathWithParent => string.Concat(this.Parent?.Parent is not null /*exclude root node*/ ? (this.Parent.Path + "/") : string.Empty, Path);
+    public string PathWithParent => string.Concat(Parent?.Parent is not null /*exclude root node*/ ? (Parent.Path + "/") : string.Empty, Path);
     public SchemaElement SchemaElement { get; set; }
     public DataField? DataField { get; set; }
     public ParquetSchemaElement? Parent { get; private set; }
@@ -20,7 +20,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
     {
         get
         {
-            var current = this.Parent;
+            var current = Parent;
             while (current is not null)
             {
                 //Don't return the root node
@@ -39,13 +39,13 @@ public class ParquetSchemaElement : IParquetSchemaElement
     {
         get
         {
-            if (this.DataField is not null)
+            if (DataField is not null)
                 return FieldTypeId.Primitive;
-            else if (this.SchemaElement.LogicalType?.LIST is not null || this.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
+            else if (SchemaElement.LogicalType?.LIST is not null || SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.LIST)
                 return FieldTypeId.List;
-            else if (this.SchemaElement.LogicalType?.MAP is not null || this.SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.MAP)
+            else if (SchemaElement.LogicalType?.MAP is not null || SchemaElement.ConvertedType == Parquet.Meta.ConvertedType.MAP)
                 return FieldTypeId.Map;
-            else if (this.SchemaElement.NumChildren > 0) //Struct
+            else if (SchemaElement.NumChildren > 0) //Struct
                 return FieldTypeId.Struct;
             else
                 throw new UnsupportedFieldException($"Could not determine field type for `{Path}`");
@@ -63,7 +63,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
         if (schemaElement is null)
             throw new ArgumentNullException(nameof(schemaElement));
 
-        this.SchemaElement = schemaElement;
+        SchemaElement = schemaElement;
     }
 
     public ParquetSchemaElement GetChild(string name)
@@ -119,58 +119,58 @@ public class ParquetSchemaElement : IParquetSchemaElement
         }
     }
 
-    public override string ToString() => this.Path;
+    public override string ToString() => Path;
 
     private SystemFieldTypeId? _systemFieldType = null;
     public ParquetSchemaElement GetListField()
     {
-        var field = this.GetSingleOrByName("list");
+        var field = GetSingleOrByName("list");
         field._systemFieldType = SystemFieldTypeId.ListNode;
         return field;
     }
     public ParquetSchemaElement GetListItemField()
     {
-        if (this._systemFieldType != SystemFieldTypeId.ListNode)
+        if (_systemFieldType != SystemFieldTypeId.ListNode)
             throw GetSystemFieldAccessException(SystemFieldTypeId.ListItemNode);
 
         try
         {
-            var field = this.GetSingleOrByName("item");
+            var field = GetSingleOrByName("item");
             field._systemFieldType = SystemFieldTypeId.ListItemNode;
             return field;
         }
         catch (Exception ex)
         {
-            throw new UnsupportedFieldException($"Cannot load field `{this.Path}`. Invalid List type.", ex);
+            throw new UnsupportedFieldException($"Cannot load field `{Path}`. Invalid List type.", ex);
         }
     }
     public ParquetSchemaElement GetMapKeyValueField()
     {
-        var field = this.GetSingleOrByName("key_value");
+        var field = GetSingleOrByName("key_value");
         field._systemFieldType = SystemFieldTypeId.MapKeyValueNode;
         return field;
     }
     public ParquetSchemaElement GetMapKeyField()
     {
-        if (this._systemFieldType != SystemFieldTypeId.MapKeyValueNode)
+        if (_systemFieldType != SystemFieldTypeId.MapKeyValueNode)
             throw GetSystemFieldAccessException(SystemFieldTypeId.MapKeyNode);
 
-        var field = this.GetChildCI("key");
+        var field = GetChildCI("key");
         field._systemFieldType = SystemFieldTypeId.MapKeyNode;
         return field;
     }
     public ParquetSchemaElement GetMapValueField()
     {
-        if (this._systemFieldType != SystemFieldTypeId.MapKeyValueNode)
+        if (_systemFieldType != SystemFieldTypeId.MapKeyValueNode)
             throw GetSystemFieldAccessException(SystemFieldTypeId.MapValueNode);
 
-        var field = this.GetChildCI("value");
+        var field = GetChildCI("value");
         field._systemFieldType = SystemFieldTypeId.MapValueNode;
         return field;
     }
-    public bool BelongsToListField => this._systemFieldType == SystemFieldTypeId.ListItemNode;
+    public bool BelongsToListField => _systemFieldType == SystemFieldTypeId.ListItemNode;
     public bool BelongsToListOfStructsField =>
-        this.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && this.Parent?.FieldType == FieldTypeId.Struct;
+        Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && Parent?.FieldType == FieldTypeId.Struct;
     public int NumberOfListParents => _parentsExcludingRoot.Count(@field => @field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
 
     public int CurrentDefinitionLevel => _parentsExcludingRoot.Append(this)
@@ -181,9 +181,9 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     public bool IsPrimitive => FieldType == FieldTypeId.Primitive;
 
-    ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => this.Children.ToList<IParquetSchemaElement>();
+    ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.ToList<IParquetSchemaElement>();
 
-    public System.Type ClrType => this.DataField?.ClrType ?? this.FieldType switch
+    public System.Type ClrType => DataField?.ClrType ?? FieldType switch
     {
         FieldTypeId.List => typeof(ListValue),
         FieldTypeId.Map => typeof(MapValue),
@@ -191,7 +191,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
         _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
     };
 
-    public object? LogicalType => LogicalTypeToJSONObject(this.SchemaElement.LogicalType);
+    public object? LogicalType => LogicalTypeToJSONObject(SchemaElement.LogicalType);
 
     private static object? LogicalTypeToJSONObject(LogicalType? logicalType)
     {
@@ -295,7 +295,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
         return timeUnitString;
     }
 
-    public RepetitionTypeId? RepetitionType => this.SchemaElement.RepetitionType switch
+    public RepetitionTypeId? RepetitionType => SchemaElement.RepetitionType switch
     {
         FieldRepetitionType.REQUIRED => RepetitionTypeId.Required,
         FieldRepetitionType.OPTIONAL => RepetitionTypeId.Optional,
@@ -303,17 +303,17 @@ public class ParquetSchemaElement : IParquetSchemaElement
         _ => null
     };
 
-    public int? TypeLength => this.SchemaElement.TypeLength;
-    public int? NumChildren => this.SchemaElement.NumChildren;
-    public string? ConvertedType => this.SchemaElement.ConvertedType?.ToString();
-    public int? Scale => this.SchemaElement.Scale;
-    public int? Precision => this.SchemaElement.Precision;
-    object? IParquetSchemaElement.LogicalType => this.LogicalType;
-    public string? Type => this.SchemaElement.Type?.ToString();
+    public int? TypeLength => SchemaElement.TypeLength;
+    public int? NumChildren => SchemaElement.NumChildren;
+    public string? ConvertedType => SchemaElement.ConvertedType?.ToString();
+    public int? Scale => SchemaElement.Scale;
+    public int? Precision => SchemaElement.Precision;
+    object? IParquetSchemaElement.LogicalType => LogicalType;
+    public string? Type => SchemaElement.Type?.ToString();
 
     private Exception GetSystemFieldAccessException(SystemFieldTypeId fieldType)
-        => new InvalidOperationException($"Can't get {fieldType} node from '{this.Parent?._systemFieldType}' " +
-                $"for `{this.Parent?.Path + '/' + this.Path}` with types '{this.Parent?.FieldType.ToString() + '/' + this.FieldType.ToString()}'");
+        => new InvalidOperationException($"Can't get {fieldType} node from '{Parent?._systemFieldType}' " +
+                $"for `{Parent?.Path + '/' + Path}` with types '{Parent?.FieldType.ToString() + '/' + FieldType.ToString()}'");
 
     IParquetSchemaElement IParquetSchemaElement.GetChildCI(string name)
         => GetChildCI(name);

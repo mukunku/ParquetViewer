@@ -19,10 +19,10 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
         ArgumentOutOfRangeException.ThrowIfLessThan(patchVersion, 0);
         ArgumentOutOfRangeException.ThrowIfLessThan(buildVersion, 0);
 
-        this.Major = majorVersion;
-        this.Minor = minorVersion;
-        this.Patch = patchVersion;
-        this.Build = buildVersion;
+        Major = majorVersion;
+        Minor = minorVersion;
+        Patch = patchVersion;
+        Build = buildVersion;
     }
 
     public static bool TryParse(string version, out SemanticVersion semanticVersion)
@@ -54,28 +54,28 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
 
     public int CompareTo(SemanticVersion other)
     {
-        if (this.Major < other.Major)
+        if (Major < other.Major)
             return -1;
 
-        if (this.Major > other.Major)
+        if (Major > other.Major)
             return 1;
 
-        if (this.Minor < other.Minor)
+        if (Minor < other.Minor)
             return -1;
 
-        if (this.Minor > other.Minor)
+        if (Minor > other.Minor)
             return 1;
 
-        if (this.Patch < other.Patch)
+        if (Patch < other.Patch)
             return -1;
 
-        if (this.Patch > other.Patch)
+        if (Patch > other.Patch)
             return 1;
 
-        if (this.Build < other.Build)
+        if (Build < other.Build)
             return -1;
 
-        if (this.Build > other.Build)
+        if (Build > other.Build)
             return 1;
 
         return 0;
@@ -109,24 +109,24 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
 
     // Override Equals and GetHashCode for value comparison
     public override bool Equals(object? obj) =>
-        obj is SemanticVersion other && this.Equals(other);
+        obj is SemanticVersion other && Equals(other);
 
     public bool Equals(SemanticVersion other) =>
-        this.Major == other.Major
-        && this.Minor == other.Minor
-        && this.Patch == other.Patch
-        && this.Build == other.Build;
+        Major == other.Major
+        && Minor == other.Minor
+        && Patch == other.Patch
+        && Build == other.Build;
 
     public override int GetHashCode()
     {
         var hashcode = new HashCode();
-        hashcode.Add(this.Major);
-        hashcode.Add(this.Minor);
-        hashcode.Add(this.Patch);
-        hashcode.Add(this.Build);
+        hashcode.Add(Major);
+        hashcode.Add(Minor);
+        hashcode.Add(Patch);
+        hashcode.Add(Build);
         return hashcode.ToHashCode();
     }
 
     public override string ToString()
-        => $"{this.Major}.{this.Minor}.{this.Patch}.{this.Build}";
+        => $"{Major}.{Minor}.{Patch}.{Build}";
 }

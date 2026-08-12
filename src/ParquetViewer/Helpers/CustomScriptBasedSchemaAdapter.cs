@@ -41,7 +41,7 @@ public class CustomScriptBasedSchemaAdapter
 
     public string GetSchemaScript(DataSet dataSet, bool markTablesAsLocalTemp)
     {
-        if (dataSet == null)
+        if (dataSet is null)
         {
             throw new ArgumentException("null is not a valid parameter value", nameof(dataSet));
         }
@@ -102,7 +102,7 @@ public class CustomScriptBasedSchemaAdapter
 
     private string MakeList(DataColumn[] columns)
     {
-        if (columns == null || columns.Length < 1)
+        if (columns is null || columns.Length < 1)
         {
             throw new ArgumentException("Invalid column list!", nameof(columns));
         }
@@ -124,7 +124,7 @@ public class CustomScriptBasedSchemaAdapter
 
     private string MakeList(DataColumnCollection columns)
     {
-        if (columns == null || columns.Count < 1)
+        if (columns is null || columns.Count < 1)
         {
             throw new ArgumentException("Invalid column list!", nameof(columns));
         }
@@ -146,7 +146,7 @@ public class CustomScriptBasedSchemaAdapter
 
     private string MakeRelation(DataRelation relation)
     {
-        if (relation == null)
+        if (relation is null)
         {
             throw new ArgumentException("Invalid argument value (null)", nameof(relation));
         }

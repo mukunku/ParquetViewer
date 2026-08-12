@@ -16,9 +16,9 @@ public partial class ParquetEngine
         ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
 
         long recordsLeftToRead = recordCount;
-        DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)this.RecordCount));
+        DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)RecordCount));
 
-        foreach (var reader in this.GetReaders(offset))
+        foreach (var reader in GetReaders(offset))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -28,7 +28,7 @@ public partial class ParquetEngine
             recordsLeftToRead = await PopulateDataTable(result, reader.ParquetReader, reader.RemainingOffset, recordsLeftToRead, cancellationToken, progress);
         }
 
-        result.DataSetSize = this.RecordCount;
+        result.DataSetSize = RecordCount;
 
         return (logProgress) =>
         {
@@ -497,7 +497,7 @@ public partial class ParquetEngine
 
     private DataTableLite BuildDataTable(ParquetSchemaElement? parent, List<string> fields, int expectedRecordCount)
     {
-        parent ??= (ParquetSchemaElement)this.Metadata.SchemaTree;
+        parent ??= (ParquetSchemaElement)Metadata.SchemaTree;
         DataTableLite dataTable = new(expectedRecordCount);
         foreach (var field in fields)
         {

@@ -15,9 +15,9 @@ public partial class MainForm
         }
 
         base.SetTheme(theme);
-        this.mainGridView.GridTheme = theme;
-        this.mainMenuStrip.BackColor = theme.FormBackgroundColor;
-        this.mainMenuStrip.ForeColor = theme.TextColor;
+        mainGridView.GridTheme = theme;
+        mainMenuStrip.BackColor = theme.FormBackgroundColor;
+        mainMenuStrip.ForeColor = theme.TextColor;
         foreach (ToolStripItem item in mainMenuStrip.Children())
         {
             //HACK: Small hack to determine if we're in light mode and should use the default paint event
@@ -30,14 +30,14 @@ public partial class MainForm
             item.BackColor = theme.FormBackgroundColor;
             item.ForeColor = theme.TextColor;
         }
-        this.mainStatusStrip.BackColor = theme.FormBackgroundColor;
-        this.mainStatusStrip.ForeColor = theme.TextColor;
-        this.mainGridView.BorderStyle = BorderStyle.Fixed3D;
-        this.searchFilterLabel.LinkColor = theme.HyperlinkColor;
-        this.searchFilterLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
-        this.runQueryButton.BackColor = Color.White;
-        this.clearFilterButton.BackColor = Color.White;
+        mainStatusStrip.BackColor = theme.FormBackgroundColor;
+        mainStatusStrip.ForeColor = theme.TextColor;
+        mainGridView.BorderStyle = BorderStyle.Fixed3D;
+        searchFilterLabel.LinkColor = theme.HyperlinkColor;
+        searchFilterLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
+        runQueryButton.BackColor = Color.White;
+        clearFilterButton.BackColor = Color.White;
 
-        this.mainMenuStrip.Renderer = theme.ToolStripRenderer;
+        mainMenuStrip.Renderer = theme.ToolStripRenderer;
     }
 }

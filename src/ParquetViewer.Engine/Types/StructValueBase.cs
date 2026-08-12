@@ -55,7 +55,7 @@ public class StructValue : IStructValue
     public DataTable ToDataTable()
     {
         var dt = new DataTable();
-        foreach (var pair in Helpers.PairEnumerables(this.Data.ColumnNames, this.Data.Row))
+        foreach (var pair in Helpers.PairEnumerables(Data.ColumnNames, Data.Row))
         {
             var columnName = pair.Item1;
             var value = pair.Item2;
@@ -63,7 +63,7 @@ public class StructValue : IStructValue
             dt.Columns.Add(new DataColumn(columnName, valueType));
         }
         var row = dt.NewRow();
-        row.ItemArray = this.Data.Row;
+        row.ItemArray = Data.Row;
         dt.Rows.Add(row);
         return dt;
     }

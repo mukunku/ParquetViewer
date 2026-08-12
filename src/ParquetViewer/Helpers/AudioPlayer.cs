@@ -15,7 +15,7 @@ internal class AudioPlayer : IDisposable
 
     public AudioFormatType AudioFormat { get; private set; }
     public event EventHandler? PlaybackStopped;
-    public WaveFormat WaveFormat => this._audioStream?.WaveFormat ?? throw new InvalidDataException(INVALID_AUDIO_ERROR_MESSAGE);
+    public WaveFormat WaveFormat => _audioStream?.WaveFormat ?? throw new InvalidDataException(INVALID_AUDIO_ERROR_MESSAGE);
 
     public TimeSpan CurrentTime
     {
@@ -25,7 +25,7 @@ internal class AudioPlayer : IDisposable
         }
         set
         {
-            if (this._audioStream is null)
+            if (_audioStream is null)
                 throw new InvalidDataException(INVALID_AUDIO_ERROR_MESSAGE);
 
             var audioPlayer = GetOrCreateAudioPlayer();
@@ -34,15 +34,15 @@ internal class AudioPlayer : IDisposable
 
             if (audioPlayer.PlaybackState == PlaybackState.Stopped)
             {
-                this._postStopSeekLocation = null;
-                this._audioStream.CurrentTime = value;
+                _postStopSeekLocation = null;
+                _audioStream.CurrentTime = value;
             }
             else
             {
                 //Stopping is recommended before seeking.
                 //The OnStopped event will set the CurrentTime
-                this._postStopSeekLocation = value;
-                this.Stop();
+                _postStopSeekLocation = value;
+                Stop();
             }
         }
     }
@@ -50,24 +50,24 @@ internal class AudioPlayer : IDisposable
 
     public AudioPlayer(byte[] data)
     {
-        this._inputStream = new MemoryStream(data);
+        _inputStream = new MemoryStream(data);
 
         try
         {
-            this.AudioFormat = AudioFormatType.Wav;
-            this._audioStream = new WaveFileReader(this._inputStream);
+            AudioFormat = AudioFormatType.Wav;
+            _audioStream = new WaveFileReader(_inputStream);
         }
         catch
         {
             try
             {
-                this.AudioFormat = AudioFormatType.Mp3;
-                this._audioStream = new Mp3FileReader(this._inputStream);
+                AudioFormat = AudioFormatType.Mp3;
+                _audioStream = new Mp3FileReader(_inputStream);
             }
             catch
             {
-                this.AudioFormat = AudioFormatType.Invalid;
-                this._audioStream = null;
+                AudioFormat = AudioFormatType.Invalid;
+                _audioStream = null;
             }
         }
     }
@@ -97,35 +97,35 @@ internal class AudioPlayer : IDisposable
         else
         {
             //If we're already stopped, trigger the playback stopped event ourselves
-            this.OnPlaybackStopped_Internal(null, new StoppedEventArgs());
+            OnPlaybackStopped_Internal(null, new StoppedEventArgs());
         }
     }
 
     private WaveOutEvent? _audioPlayer;
     private WaveOutEvent? GetOrCreateAudioPlayer()
     {
-        if (this._audioStream is null)
+        if (_audioStream is null)
             return null;
 
-        if (this._audioPlayer == null)
+        if (_audioPlayer is null)
         {
-            this._audioPlayer = new WaveOutEvent();
-            this._audioPlayer.Init(this._audioStream);
-            this._audioPlayer.PlaybackStopped += OnPlaybackStopped_Internal;
+            _audioPlayer = new WaveOutEvent();
+            _audioPlayer.Init(_audioStream);
+            _audioPlayer.PlaybackStopped += OnPlaybackStopped_Internal;
         }
-        return this._audioPlayer;
+        return _audioPlayer;
     }
 
     private void OnPlaybackStopped_Internal(object? source, StoppedEventArgs args)
     {
-        if (this._audioStream is null)
+        if (_audioStream is null)
             return;
 
-        this._audioStream.Position = 0;
-        if (this._postStopSeekLocation is not null)
+        _audioStream.Position = 0;
+        if (_postStopSeekLocation is not null)
         {
-            this._audioStream.CurrentTime = this._postStopSeekLocation.Value;
-            this._postStopSeekLocation = null;
+            _audioStream.CurrentTime = _postStopSeekLocation.Value;
+            _postStopSeekLocation = null;
         }
 
         PlaybackStopped?.Invoke(source, args);
@@ -133,9 +133,9 @@ internal class AudioPlayer : IDisposable
 
     public void Dispose()
     {
-        this._audioPlayer.DisposeSafely();
-        this._audioStream.DisposeSafely();
-        this._inputStream.DisposeSafely();
+        _audioPlayer.DisposeSafely();
+        _audioStream.DisposeSafely();
+        _inputStream.DisposeSafely();
     }
 
     public enum AudioFormatType

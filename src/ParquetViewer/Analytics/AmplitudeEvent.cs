@@ -81,7 +81,7 @@ public abstract class AmplitudeEvent
 
             //We're not reusing HttpClient instances because this is a very infrequent operation and implementing HttpClientFactory seems overkill for this.
             //Reference: https://medium.com/@asad99/httpclient-woes-avoiding-socket-leaks-and-boosting-performance-with-httpclientfactory-34a5c6b6c9b1
-            using var result = await new HttpClient(this._amplitudeConfiguration.HttpMessageHandlerProvider.Invoke())
+            using var result = await new HttpClient(_amplitudeConfiguration.HttpMessageHandlerProvider.Invoke())
                 .PostAsync("https://api2.amplitude.com/2/httpapi", JsonContent.Create(request));
 
             return result.IsSuccessStatusCode;
