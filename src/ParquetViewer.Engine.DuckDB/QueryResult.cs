@@ -1,49 +1,48 @@
 ﻿using DuckDB.NET.Data;
 
-namespace ParquetViewer.Engine.DuckDB
+namespace ParquetViewer.Engine.DuckDB;
+
+internal class QueryResult : IAsyncEnumerable<DuckDBDataReader>, IDisposable
 {
-    internal class QueryResult : IAsyncEnumerable<DuckDBDataReader>, IDisposable
+    private readonly DuckDBDataReader _reader;
+
+    public QueryResult(DuckDBDataReader reader)
     {
-        private readonly DuckDBDataReader _reader;
+        _reader = reader;
+    }
 
-        public QueryResult(DuckDBDataReader reader)
+    public void Dispose()
+    {
+        try
         {
-            _reader = reader;
+            _reader.DisposeAsync();
+        }
+        catch { }
+    }
+
+    public async Task<DuckDBDataReader> GetSingleAsync()
+    {
+        if (await _reader.ReadAsync())
+        {
+            return _reader;
+        }
+        throw new InvalidOperationException("No rows found.");
+    }
+
+    public async IAsyncEnumerator<DuckDBDataReader> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        if (!await _reader.ReadAsync())
+        {
+            yield break;
         }
 
-        public void Dispose()
-        {
-            try
-            {
-                _reader.DisposeAsync();
-            }
-            catch { }
-        }
+        yield return _reader;
 
-        public async Task<DuckDBDataReader> GetSingleAsync()
+        while (await _reader.ReadAsync())
         {
-            if (await _reader.ReadAsync())
-            {
-                return _reader;
-            }
-            throw new InvalidOperationException("No rows found.");
-        }
-
-        public async IAsyncEnumerator<DuckDBDataReader> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            if (!await _reader.ReadAsync())
-            {
-                yield break;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             yield return _reader;
-
-            while (await _reader.ReadAsync())
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                yield return _reader;
-            }
         }
     }
 }

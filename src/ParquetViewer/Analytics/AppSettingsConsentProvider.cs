@@ -1,7 +1,6 @@
-﻿namespace ParquetViewer.Analytics
+﻿namespace ParquetViewer.Analytics;
+
+public class AppSettingsConsentProvider : IConsentProvider
 {
-    public class AppSettingsConsentProvider : IConsentProvider
-    {
-        public bool AnalyticsDataGatheringConsent => AppSettings.AnalyticsDataGatheringConsent;
-    }
+    public bool AnalyticsDataGatheringConsent => AppSettings.AnalyticsDataGatheringConsent;
 }

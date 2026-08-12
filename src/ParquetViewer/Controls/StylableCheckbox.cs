@@ -1,9 +1,10 @@
-﻿using ParquetViewer;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
+
+namespace ParquetViewer.Controls;
 
 /// <summary>
 /// Represents a Windows <see cref="CheckBox"/>.
@@ -23,11 +24,7 @@ public class StylableCheckBox : CheckBox
     /// Gets or sets the foreground color of the checkbox label if a checkbox is disabled
     /// </summary>
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public Color DisabledForeColor
-    {
-        get;
-        set;
-    }
+    public Color DisabledForeColor { get; set; }
 
     public StylableCheckBox()
     {

@@ -2,53 +2,52 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace ParquetViewer.Controls
+namespace ParquetViewer.Controls;
+
+/// <summary>
+/// Only exists to allow us to show tooltips on disabled checkbox elements.
+/// https://stackoverflow.com/q/1732140/1458738
+/// </summary>
+public class CheckboxWithTooltip : StylableCheckBox
 {
-    /// <summary>
-    /// Only exists to allow us to show tooltips on disabled checkbox elements.
-    /// https://stackoverflow.com/q/1732140/1458738
-    /// </summary>
-    public class CheckboxWithTooltip : StylableCheckBox
+    private readonly ToolTip _tooltip = new();
+    private bool _tooltipShown = false;
+
+    public CheckboxWithTooltip(Control parent) : base()
     {
-        private readonly ToolTip _tooltip = new();
-        private bool _tooltipShown = false;
-
-        public CheckboxWithTooltip(Control parent) : base()
+        ArgumentNullException.ThrowIfNull(parent);
+        parent.MouseMove += (_, e) =>
         {
-            ArgumentNullException.ThrowIfNull(parent);
-            parent.MouseMove += (_, e) =>
+            var control = parent?.GetChildAtPoint(e.Location);
+            if (control == this)
             {
-                var control = parent?.GetChildAtPoint(e.Location);
-                if (control == this)
+                if (!this.Enabled && !this._tooltipShown)
                 {
-                    if (!this.Enabled && !this._tooltipShown)
-                    {
-                        //It's important the tooltip is outside the checkbox control's bounds; otherwise the MouseLeave event handler doesn't work very well.
-                        var point = new Point(e.Location.X, (int)(this.Height * 1.5));
+                    //It's important the tooltip is outside the checkbox control's bounds; otherwise the MouseLeave event handler doesn't work very well.
+                    var point = new Point(e.Location.X, (int)(this.Height * 1.5));
 
-                        this._tooltip.Show(this._tooltip.GetToolTip(this), this, point);
-                        this._tooltipShown = true;
-                    }
+                    this._tooltip.Show(this._tooltip.GetToolTip(this), this, point);
+                    this._tooltipShown = true;
                 }
-                else if (this._tooltipShown)
-                {
-                    this._tooltipShown = false;
-                    this._tooltip.Hide(this);
-                }
-            };
-            parent.MouseLeave += (_, _) =>
+            }
+            else if (this._tooltipShown)
             {
                 this._tooltipShown = false;
-                if (!this.IsDisposed)
-                    this._tooltip.Hide(this);
-            };
-        }
-
-        public void SetTooltip(string text)
+                this._tooltip.Hide(this);
+            }
+        };
+        parent.MouseLeave += (_, _) =>
         {
-            ArgumentException.ThrowIfNullOrEmpty(text);
+            this._tooltipShown = false;
+            if (!this.IsDisposed)
+                this._tooltip.Hide(this);
+        };
+    }
 
-            _tooltip.SetToolTip(this, text);
-        }
+    public void SetTooltip(string text)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(text);
+
+        _tooltip.SetToolTip(this, text);
     }
 }

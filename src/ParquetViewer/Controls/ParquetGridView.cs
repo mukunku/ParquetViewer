@@ -14,1527 +14,1526 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace ParquetViewer.Controls
-{
-    public class ParquetGridView : DataGridView
-    {
-        //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
-        //But let's use something smaller to increase rendering performance.
-        public const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
-        const string FORMATTING_ERROR_TEXT = "#ERR";
+namespace ParquetViewer.Controls;
 
-        private Theme _gridTheme = Theme.LightModeTheme;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public Theme GridTheme
+public class ParquetGridView : DataGridView
+{
+    //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
+    //But let's use something smaller to increase rendering performance.
+    public const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
+    const string FORMATTING_ERROR_TEXT = "#ERR";
+
+    private Theme _gridTheme = Theme.LightModeTheme;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public Theme GridTheme
+    {
+        get => _gridTheme;
+        set
         {
-            get => _gridTheme;
-            set
+            if (value != _gridTheme)
             {
-                if (value != _gridTheme)
-                {
-                    _gridTheme = value;
-                    SetTheme();
-                }
+                _gridTheme = value;
+                SetTheme();
             }
         }
+    }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public Image? CopyToClipboardIcon { get; set; } = null;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public Image? CopyAsWhereIcon { get; set; } = null;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public string ColumnNameEscapeFormat { get; set; } = "[{0}]";
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public string DateValueEscapeFormat { get; set; } = "#{0}#";
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public Image? CopyToClipboardIcon { get; set; } = null;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public Image? CopyAsWhereIcon { get; set; } = null;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public string ColumnNameEscapeFormat { get; set; } = "[{0}]";
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public string DateValueEscapeFormat { get; set; } = "#{0}#";
 
-        private readonly HashSet<int> _clickableColumnIndexes = new();
-        private readonly Dictionary<(int, int), QuickPeekForm> _openQuickPeekForms = new();
-        private bool _isCopyingToClipboard = false;
-        private DataGridViewCellStyle? _hyperlinkCellStyleCache;
-        private bool _isLeftClickButtonDown = false;
-        private ContextMenuStrip? _contextMenu = null;
-        private ContextMenuStrip? _headerContextMenu = null;
-        private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
+    private readonly HashSet<int> _clickableColumnIndexes = new();
+    private readonly Dictionary<(int, int), QuickPeekForm> _openQuickPeekForms = new();
+    private bool _isCopyingToClipboard = false;
+    private DataGridViewCellStyle? _hyperlinkCellStyleCache;
+    private bool _isLeftClickButtonDown = false;
+    private ContextMenuStrip? _contextMenu = null;
+    private ContextMenuStrip? _headerContextMenu = null;
+    private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
 
-        //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
-        private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
-        private readonly Dictionary<string, FloatDisplayFormat> _floatColumnsWithFormatOverrides = new();
+    //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
+    private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();
+    private readonly Dictionary<string, FloatDisplayFormat> _floatColumnsWithFormatOverrides = new();
 
-        public ParquetGridView() : base()
+    public ParquetGridView() : base()
+    {
+        DoubleBuffered = true; //Set DGV to be double buffered for smoother loading and scrolling
+        AllowUserToAddRows = false;
+        AllowUserToDeleteRows = false;
+        AllowUserToOrderColumns = true;
+        ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+        ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+        EnableHeadersVisualStyles = false;
+        ReadOnly = true;
+        RowHeadersWidth = 24;
+        SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
+        ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+        ShowCellToolTips = false; //tooltips for columns with very long strings cause performance issues. This was the easiest solution
+        AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None; //Leave as the default None as I'm concerned about performance to change the default. Needz moar testing to see if we can set to `DisplayedCells` by default
+    }
+
+    protected override void OnDataSourceChanged(EventArgs e)
+    {
+        this._clickableColumnIndexes.Clear();
+        base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
+
+        ConvertAudioCells();
+        SetColumnCellStyles();
+        AutoSizeColumns();
+    }
+
+    private void SetColumnCellStyles()
+    {
+        this._hyperlinkCellStyleCache = null;
+        foreach (DataGridViewColumn column in this.Columns)
         {
-            DoubleBuffered = true; //Set DGV to be double buffered for smoother loading and scrolling
-            AllowUserToAddRows = false;
-            AllowUserToDeleteRows = false;
-            AllowUserToOrderColumns = true;
-            ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            EnableHeadersVisualStyles = false;
-            ReadOnly = true;
-            RowHeadersWidth = 24;
-            SelectionMode = DataGridViewSelectionMode.RowHeaderSelect;
-            ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-            ShowCellToolTips = false; //tooltips for columns with very long strings cause performance issues. This was the easiest solution
-            AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None; //Leave as the default None as I'm concerned about performance to change the default. Needz moar testing to see if we can set to `DisplayedCells` by default
-        }
-
-        protected override void OnDataSourceChanged(EventArgs e)
-        {
-            this._clickableColumnIndexes.Clear();
-            base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
-
-            ConvertAudioCells();
-            SetColumnCellStyles();
-            AutoSizeColumns();
-        }
-
-        private void SetColumnCellStyles()
-        {
-            this._hyperlinkCellStyleCache = null;
-            foreach (DataGridViewColumn column in this.Columns)
+            //Handle NULLs for bool types
+            if (column is DataGridViewCheckBoxColumn checkboxColumn)
             {
-                //Handle NULLs for bool types
-                if (column is DataGridViewCheckBoxColumn checkboxColumn)
+                checkboxColumn.ThreeState = true;
+            }
+            else if (column.ValueType.ImplementsInterface<IListValue>()
+                || column.ValueType.ImplementsInterface<IMapValue>()
+                || column.ValueType.ImplementsInterface<IStructValue>())
+            {
+                column.DefaultCellStyle = GetHyperlinkCellStyle(column);
+            }
+            else if (column.ValueType.ImplementsInterface<IByteArrayValue>())
+            {
+                //Check if this column contains images
+                for (var i = 0; i < this.Rows.Count; i++)
                 {
-                    checkboxColumn.ThreeState = true;
-                }
-                else if (column.ValueType.ImplementsInterface<IListValue>()
-                    || column.ValueType.ImplementsInterface<IMapValue>()
-                    || column.ValueType.ImplementsInterface<IStructValue>())
-                {
-                    column.DefaultCellStyle = GetHyperlinkCellStyle(column);
-                }
-                else if (column.ValueType.ImplementsInterface<IByteArrayValue>())
-                {
-                    //Check if this column contains images
-                    for (var i = 0; i < this.Rows.Count; i++)
+                    var cellValue = this[column.Index, i].Value;
+                    if (cellValue != DBNull.Value)
                     {
-                        var cellValue = this[column.Index, i].Value;
-                        if (cellValue != DBNull.Value)
+                        var isImage = ((IByteArrayValue)cellValue!).ToImage(out var image);
+                        if (isImage)
                         {
-                            var isImage = ((IByteArrayValue)cellValue!).ToImage(out var image);
-                            if (isImage)
-                            {
-                                column.DefaultCellStyle = GetHyperlinkCellStyle(column);
-                                image?.Dispose();
-                            }
-                            break;
+                            column.DefaultCellStyle = GetHyperlinkCellStyle(column);
+                            image?.Dispose();
                         }
+                        break;
                     }
                 }
-                else
-                {
-                    //Reset any changed stylings
-                    column.DefaultCellStyle = new DataGridViewCellStyle();
-                }
             }
-
-            UpdateDateFormats();
+            else
+            {
+                //Reset any changed stylings
+                column.DefaultCellStyle = new DataGridViewCellStyle();
+            }
         }
 
-        public void UpdateDateFormats()
+        UpdateDateFormats();
+    }
+
+    public void UpdateDateFormats()
+    {
+        string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+        string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
+        string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
+
+        foreach (DataGridViewColumn column in this.Columns)
         {
-            string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-            string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
-            string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
-
-            foreach (DataGridViewColumn column in this.Columns)
-            {
-                if (column.ValueType == typeof(DateTime))
-                    column.DefaultCellStyle.Format = dateFormat;
-                else if (column.ValueType == typeof(DateOnly))
-                    column.DefaultCellStyle.Format = dateOnlyFormat;
-                else if (column.ValueType == typeof(TimeOnly))
-                    column.DefaultCellStyle.Format = timeOnlyFormat;
-            }
-
-            //Need to tell the parquet engine how to render date values
-            ParquetEngineSettings.DateDisplayFormat = dateFormat;
-            ParquetEngineSettings.DateOnlyDisplayFormat = dateOnlyFormat;
-            ParquetEngineSettings.TimeOnlyDisplayFormat = timeOnlyFormat;
+            if (column.ValueType == typeof(DateTime))
+                column.DefaultCellStyle.Format = dateFormat;
+            else if (column.ValueType == typeof(DateOnly))
+                column.DefaultCellStyle.Format = dateOnlyFormat;
+            else if (column.ValueType == typeof(TimeOnly))
+                column.DefaultCellStyle.Format = timeOnlyFormat;
         }
 
-        protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
+        //Need to tell the parquet engine how to render date values
+        ParquetEngineSettings.DateDisplayFormat = dateFormat;
+        ParquetEngineSettings.DateOnlyDisplayFormat = dateOnlyFormat;
+        ParquetEngineSettings.TimeOnlyDisplayFormat = timeOnlyFormat;
+    }
+
+    protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
+    {
+        if (e.RowIndex == -1 && e.ColumnIndex >= 0)
         {
-            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
+            var columnName = this.Columns[e.ColumnIndex].Name;
+            //Draw a star '*' next to column headers that are using a non-default display format
+            if ((this._byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var dateFormat) && dateFormat != default)
+                || (this._floatColumnsWithFormatOverrides.TryGetValue(columnName, out var floatFormat) && floatFormat != default))
             {
-                var columnName = this.Columns[e.ColumnIndex].Name;
-                //Draw a star '*' next to column headers that are using a non-default display format
-                if ((this._byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var dateFormat) && dateFormat != default)
-                    || (this._floatColumnsWithFormatOverrides.TryGetValue(columnName, out var floatFormat) && floatFormat != default))
-                {
-                    e.PaintBackground(e.CellBounds, true);
-                    e.PaintContent(e.CellBounds);
+                e.PaintBackground(e.CellBounds, true);
+                e.PaintContent(e.CellBounds);
 
-                    WidenColumnForIndicator(this.Columns[e.ColumnIndex], e.Graphics!, e.CellStyle!.Font!, false);
-                    var length = MeasureStringWidth(e.Graphics!, e.CellStyle.Font!, e.FormattedValue?.ToString() ?? string.Empty, false);
-                    var drawPoint = new Point(e.CellBounds.Left + length - 2, e.CellBounds.Y + 4);
-                    TextRenderer.DrawText(e.Graphics!, "*", e.CellStyle!.Font, drawPoint, e.CellStyle.ForeColor, TextFormatFlags.PreserveGraphicsClipping);
+                WidenColumnForIndicator(this.Columns[e.ColumnIndex], e.Graphics!, e.CellStyle!.Font!, false);
+                var length = MeasureStringWidth(e.Graphics!, e.CellStyle.Font!, e.FormattedValue?.ToString() ?? string.Empty, false);
+                var drawPoint = new Point(e.CellBounds.Left + length - 2, e.CellBounds.Y + 4);
+                TextRenderer.DrawText(e.Graphics!, "*", e.CellStyle!.Font, drawPoint, e.CellStyle.ForeColor, TextFormatFlags.PreserveGraphicsClipping);
 
-                    e.Handled = true;
-                }
+                e.Handled = true;
             }
-            else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+        }
+        else if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+        {
+            //Draw NULLs
+            if (e.Value == DBNull.Value || e.Value == null)
             {
-                //Draw NULLs
-                if (e.Value == DBNull.Value || e.Value == null)
-                {
-                    e.Paint(e.CellBounds, DataGridViewPaintParts.All
-                        & ~(DataGridViewPaintParts.ContentForeground));
+                e.Paint(e.CellBounds, DataGridViewPaintParts.All
+                    & ~(DataGridViewPaintParts.ContentForeground));
 
-                    var font = new Font(e.CellStyle!.Font!, FontStyle.Italic);
-                    var color = this.GridTheme.CellPlaceholderTextColor;
-                    if (e.State.HasFlag(DataGridViewElementStates.Selected))
-                        color = Color.White;
+                var font = new Font(e.CellStyle!.Font!, FontStyle.Italic);
+                var color = this.GridTheme.CellPlaceholderTextColor;
+                if (e.State.HasFlag(DataGridViewElementStates.Selected))
+                    color = Color.White;
 
-                    TextRenderer.DrawText(e.Graphics!, "NULL", font, e.CellBounds, color,
-                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
+                TextRenderer.DrawText(e.Graphics!, "NULL", font, e.CellBounds, color,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
 
-                    e.Handled = true;
-                }
+                e.Handled = true;
             }
-
-            base.OnCellPainting(e); //Handle any additional event handlers
         }
 
-        protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
+        base.OnCellPainting(e); //Handle any additional event handlers
+    }
+
+    protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
+    {
+        base.OnCellMouseMove(e);
+        if (e.RowIndex == -1 && e.ColumnIndex > -1 //cursor is hovering over column headers.
+            && this.Cursor == Cursors.Default /*don't show hand if user is resizing columns for example*/)
         {
-            base.OnCellMouseMove(e);
-            if (e.RowIndex == -1 && e.ColumnIndex > -1 //cursor is hovering over column headers.
-                && this.Cursor == Cursors.Default /*don't show hand if user is resizing columns for example*/)
+            //Since columns are sortable, show hand cursor on column headers
+            this.Cursor = Cursors.Hand;
+            return;
+        }
+        else if (e.ColumnIndex < 0 || e.RowIndex < 0)
+        {
+            return;
+        }
+
+        var isUserSelectingCells = this._isLeftClickButtonDown; //Don't show the hand cursor if the user is selecting cells
+        if (!isUserSelectingCells && this._clickableColumnIndexes.Contains(e.ColumnIndex))
+        {
+            //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
+            if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
             {
-                //Since columns are sortable, show hand cursor on column headers
                 this.Cursor = Cursors.Hand;
                 return;
             }
-            else if (e.ColumnIndex < 0 || e.RowIndex < 0)
-            {
-                return;
-            }
-
-            var isUserSelectingCells = this._isLeftClickButtonDown; //Don't show the hand cursor if the user is selecting cells
-            if (!isUserSelectingCells && this._clickableColumnIndexes.Contains(e.ColumnIndex))
-            {
-                //Lets be fancy and only change the cursor if the user is hovering over the actual text in the cell
-                if (IsCursorOverCellText(e.ColumnIndex, e.RowIndex))
-                {
-                    this.Cursor = Cursors.Hand;
-                    return;
-                }
-            }
-            this.Cursor = Cursors.Default;
         }
+        this.Cursor = Cursors.Default;
+    }
 
-        protected override void OnMouseClick(MouseEventArgs e)
+    protected override void OnMouseClick(MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Right)
         {
-            if (e.Button == MouseButtons.Right)
+            int rowIndex = this.HitTest(e.X, e.Y).RowIndex;
+            int columnIndex = this.HitTest(e.X, e.Y).ColumnIndex;
+
+            if (rowIndex >= 0 && columnIndex >= 0)
             {
-                int rowIndex = this.HitTest(e.X, e.Y).RowIndex;
-                int columnIndex = this.HitTest(e.X, e.Y).ColumnIndex;
-
-                if (rowIndex >= 0 && columnIndex >= 0)
+                if (_contextMenu is null)
                 {
-                    if (_contextMenu is null)
+                    var copy = new ToolStripMenuItem(Resources.Strings.CopyToClipboardText, this.CopyToClipboardIcon);
+                    copy.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
-                        var copy = new ToolStripMenuItem(Resources.Strings.CopyToClipboardText, this.CopyToClipboardIcon);
-                        copy.Click += (object? clickSender, EventArgs clickArgs) =>
-                        {
-                            this.CopySelectionToClipboard(false);
-                        };
+                        this.CopySelectionToClipboard(false);
+                    };
 
-                        var copyWithHeaders = new ToolStripMenuItem(Resources.Strings.CopyToClipboardWithHeadersText);
-                        copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
-                        {
-                            this.CopySelectionToClipboard(true);
-                        };
-
-                        var copyAsWhere = new ToolStripMenuItem(Resources.Strings.CopyAsWhereConditionText, this.CopyAsWhereIcon);
-                        copyAsWhere.Click += (object? clickSender, EventArgs clickArgs) =>
-                        {
-                            this.CopySelectionToClipboardAsWhereCondition();
-                        };
-
-                        _contextMenu = new ContextMenuStrip();
-                        _contextMenu.Items.Add(copy);
-                        _contextMenu.Items.Add(copyWithHeaders);
-
-                        if (this.ShowCopyAsWhereContextMenuItem)
-                        {
-                            _contextMenu.Items.Add(copyAsWhere);
-                        }
-                    }
-
-                    _contextMenu.Show(this, new Point(e.X, e.Y));
-                }
-            }
-            else if (e.Button == MouseButtons.Middle)
-            {
-                //TODO: Add some kind of in-app notification to inform users of this useful shortcut
-                //Add a shortcut to open images easily when data conforms to the huggingface format
-                //https://huggingface.co/docs/hub/en/datasets-image#parquet-format
-                int rowIndex = this.HitTest(e.X, e.Y).RowIndex;
-                int columnIndex = this.HitTest(e.X, e.Y).ColumnIndex;
-
-                if (rowIndex >= 0 && columnIndex >= 0
-                    && this[columnIndex, rowIndex].Value is IStructValue structValue
-                    && structValue.IsHuggingFaceFormat(out var data))
-                {
-                    Image? image;
-                    try
+                    var copyWithHeaders = new ToolStripMenuItem(Resources.Strings.CopyToClipboardWithHeadersText);
+                    copyWithHeaders.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
-                        using var ms = new System.IO.MemoryStream(data);
-                        image = Image.FromStream(ms); //quick peek form will dispose of this image when closed
-                    }
-                    catch (ArgumentException)
-                    {
-                        //Data is not an image
-                        image = null;
-                    }
-                    catch
-                    {
-                        throw;
-                    }
+                        this.CopySelectionToClipboard(true);
+                    };
 
-                    if (image is not null)
+                    var copyAsWhere = new ToolStripMenuItem(Resources.Strings.CopyAsWhereConditionText, this.CopyAsWhereIcon);
+                    copyAsWhere.Click += (object? clickSender, EventArgs clickArgs) =>
                     {
-                        var uniqueCellTag = Guid.NewGuid();
-                        var quickPeekForm = new QuickPeekForm(this.Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
-                        ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
+                        this.CopySelectionToClipboardAsWhereCondition();
+                    };
+
+                    _contextMenu = new ContextMenuStrip();
+                    _contextMenu.Items.Add(copy);
+                    _contextMenu.Items.Add(copyWithHeaders);
+
+                    if (this.ShowCopyAsWhereContextMenuItem)
+                    {
+                        _contextMenu.Items.Add(copyAsWhere);
                     }
                 }
+
+                _contextMenu.Show(this, new Point(e.X, e.Y));
             }
-
-            base.OnMouseClick(e);
         }
-
-        public void CloseContextMenu()
+        else if (e.Button == MouseButtons.Middle)
         {
-            //HACK: For some reason calling Close() isn't working so we're forcing it via .Dispose()
-            this._contextMenu?.Dispose();
-            this._contextMenu = null;
-        }
+            //TODO: Add some kind of in-app notification to inform users of this useful shortcut
+            //Add a shortcut to open images easily when data conforms to the huggingface format
+            //https://huggingface.co/docs/hub/en/datasets-image#parquet-format
+            int rowIndex = this.HitTest(e.X, e.Y).RowIndex;
+            int columnIndex = this.HitTest(e.X, e.Y).ColumnIndex;
 
-        protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
-        {
-            //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
-            //The value of this field is not important as we do not use the FILL mode for column sizing.
-            e.Column.FillWeight = 0.01f;
-
-            //Checkbox columns aren't sortable by default for some reason.
-            //https://stackoverflow.com/q/14979848/1458738
-            e.Column.SortMode = DataGridViewColumnSortMode.Automatic;
-
-            base.OnColumnAdded(e);
-        }
-
-        protected override void OnCellMouseLeave(DataGridViewCellEventArgs e)
-        {
-            this.Cursor = Cursors.Default;
-
-            base.OnCellMouseLeave(e);
-        }
-
-        protected override void OnCellContentClick(DataGridViewCellEventArgs e)
-        {
-            base.OnCellContentClick(e);
-
-            if (e.RowIndex < 0 || e.ColumnIndex < 0)
-                return;
-
-            var clickedCell = this[e.ColumnIndex, e.RowIndex];
-
-            //Check if there's already a quick peek open for this cell
-            if (clickedCell.Tag is Guid cellUniqueTag
-                && _openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var existingQuickPeekForm)
-                && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
+            if (rowIndex >= 0 && columnIndex >= 0
+                && this[columnIndex, rowIndex].Value is IStructValue structValue
+                && structValue.IsHuggingFaceFormat(out var data))
             {
-                //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
-                existingQuickPeekForm.Focus();
-                return;
-            }
-
-            var dataType = QuickPeekEvent.DataTypeId.Unknown;
-            QuickPeekForm? quickPeekForm = null;
-            var uniqueCellTag = Guid.NewGuid();
-            if (clickedCell.Value is IListValue listValue)
-            {
-                dataType = QuickPeekEvent.DataTypeId.List;
-
-                var dt = new DataTable();
-                dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type!));
-
-                foreach (var item in listValue)
+                Image? image;
+                try
                 {
-                    var row = dt.NewRow();
-                    row[0] = item;
-                    dt.Rows.Add(row);
+                    using var ms = new System.IO.MemoryStream(data);
+                    image = Image.FromStream(ms); //quick peek form will dispose of this image when closed
+                }
+                catch (ArgumentException)
+                {
+                    //Data is not an image
+                    image = null;
+                }
+                catch
+                {
+                    throw;
                 }
 
-                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
-            }
-            else if (clickedCell.Value is IMapValue mapValue)
-            {
-                dataType = QuickPeekEvent.DataTypeId.Map;
-
-                var dt = new DataTable();
-                dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
-                dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
-
-                foreach ((object key, object value) in mapValue)
+                if (image is not null)
                 {
-                    var row = dt.NewRow();
-                    row[0] = key;
-                    row[1] = value;
-                    dt.Rows.Add(row);
+                    var uniqueCellTag = Guid.NewGuid();
+                    var quickPeekForm = new QuickPeekForm(this.Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
+                    ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
                 }
-
-                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
             }
-            else if (clickedCell.Value is IStructValue structValue)
-            {
-                dataType = QuickPeekEvent.DataTypeId.Struct;
-
-                var dt = structValue.ToDataTable();
-                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
-            }
-            else if (clickedCell.Value is IByteArrayValue byteArray && byteArray.ToImage(out var image))
-            {
-                dataType = QuickPeekEvent.DataTypeId.Image;
-                quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, image!, uniqueCellTag, e.RowIndex, e.ColumnIndex);
-            }
-            else
-            {
-                //Nothing to preview
-                return;
-            }
-
-            ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
         }
 
-        private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell,
-            Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
+        base.OnMouseClick(e);
+    }
+
+    public void CloseContextMenu()
+    {
+        //HACK: For some reason calling Close() isn't working so we're forcing it via .Dispose()
+        this._contextMenu?.Dispose();
+        this._contextMenu = null;
+    }
+
+    protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
+    {
+        //This will help avoid overflowing the sum(fillweight) of the grid's columns when there are too many of them.
+        //The value of this field is not important as we do not use the FILL mode for column sizing.
+        e.Column.FillWeight = 0.01f;
+
+        //Checkbox columns aren't sortable by default for some reason.
+        //https://stackoverflow.com/q/14979848/1458738
+        e.Column.SortMode = DataGridViewColumnSortMode.Automatic;
+
+        base.OnColumnAdded(e);
+    }
+
+    protected override void OnCellMouseLeave(DataGridViewCellEventArgs e)
+    {
+        this.Cursor = Cursors.Default;
+
+        base.OnCellMouseLeave(e);
+    }
+
+    protected override void OnCellContentClick(DataGridViewCellEventArgs e)
+    {
+        base.OnCellContentClick(e);
+
+        if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            return;
+
+        var clickedCell = this[e.ColumnIndex, e.RowIndex];
+
+        //Check if there's already a quick peek open for this cell
+        if (clickedCell.Tag is Guid cellUniqueTag
+            && _openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var existingQuickPeekForm)
+            && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
         {
-            clickedCell.Tag = uniqueCellTag;
+            //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
+            existingQuickPeekForm.Focus();
+            return;
+        }
 
-            quickPeekForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
+        var dataType = QuickPeekEvent.DataTypeId.Unknown;
+        QuickPeekForm? quickPeekForm = null;
+        var uniqueCellTag = Guid.NewGuid();
+        if (clickedCell.Value is IListValue listValue)
+        {
+            dataType = QuickPeekEvent.DataTypeId.List;
+
+            var dt = new DataTable();
+            dt.Columns.Add(new DataColumn(this.Columns[e.ColumnIndex].Name, listValue.Type!));
+
+            foreach (var item in listValue)
             {
-                if (this.Rows.Count > tag.SourceRowIndex && this.Columns.Count > tag.SourceColumnIndex) //Can't be too safe
+                var row = dt.NewRow();
+                row[0] = item;
+                dt.Rows.Add(row);
+            }
+
+            quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+        }
+        else if (clickedCell.Value is IMapValue mapValue)
+        {
+            dataType = QuickPeekEvent.DataTypeId.Map;
+
+            var dt = new DataTable();
+            dt.Columns.Add(new DataColumn($"key", mapValue.KeyType));
+            dt.Columns.Add(new DataColumn($"value", mapValue.ValueType));
+
+            foreach ((object key, object value) in mapValue)
+            {
+                var row = dt.NewRow();
+                row[0] = key;
+                row[1] = value;
+                dt.Rows.Add(row);
+            }
+
+            quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+        }
+        else if (clickedCell.Value is IStructValue structValue)
+        {
+            dataType = QuickPeekEvent.DataTypeId.Struct;
+
+            var dt = structValue.ToDataTable();
+            quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, dt, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+        }
+        else if (clickedCell.Value is IByteArrayValue byteArray && byteArray.ToImage(out var image))
+        {
+            dataType = QuickPeekEvent.DataTypeId.Image;
+            quickPeekForm = new QuickPeekForm(this.Columns[e.ColumnIndex].Name, image!, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+        }
+        else
+        {
+            //Nothing to preview
+            return;
+        }
+
+        ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
+    }
+
+    private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell,
+        Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
+    {
+        clickedCell.Tag = uniqueCellTag;
+
+        quickPeekForm.TakeMeBackEvent += (object? form, TakeMeBackEventArgs tag) =>
+        {
+            if (this.Rows.Count > tag.SourceRowIndex && this.Columns.Count > tag.SourceColumnIndex) //Can't be too safe
+            {
+                DataGridViewCell cellToReturnTo = this[tag.SourceColumnIndex, tag.SourceRowIndex];
+
+                //Check if the cell is still the same (user hasn't navigated the file since opening the popup)
+                if (cellToReturnTo.Tag is Guid t && t == tag.UniqueTag)
                 {
-                    DataGridViewCell cellToReturnTo = this[tag.SourceColumnIndex, tag.SourceRowIndex];
+                    if (form is Form f)
+                        f.Close();
 
-                    //Check if the cell is still the same (user hasn't navigated the file since opening the popup)
-                    if (cellToReturnTo.Tag is Guid t && t == tag.UniqueTag)
-                    {
-                        if (form is Form f)
-                            f.Close();
-
-                        this.ClearSelection();
-                        this.FirstDisplayedScrollingRowIndex = cellToReturnTo.RowIndex;
-                        if (!this.Columns[tag.SourceColumnIndex].Frozen)
-                            this.FirstDisplayedScrollingColumnIndex = tag.SourceColumnIndex;
-                        this[cellToReturnTo.ColumnIndex, cellToReturnTo.RowIndex].Selected = true;
-                        this.CurrentCell = cellToReturnTo;
-                        this.Focus();
-                    }
-                    else
-                    {
-                        //Can't find return row
-                        if (form is QuickPeekForm f)
-                            f.DisableTakeMeBackLink();
-                    }
+                    this.ClearSelection();
+                    this.FirstDisplayedScrollingRowIndex = cellToReturnTo.RowIndex;
+                    if (!this.Columns[tag.SourceColumnIndex].Frozen)
+                        this.FirstDisplayedScrollingColumnIndex = tag.SourceColumnIndex;
+                    this[cellToReturnTo.ColumnIndex, cellToReturnTo.RowIndex].Selected = true;
+                    this.CurrentCell = cellToReturnTo;
+                    this.Focus();
                 }
                 else
                 {
-                    //User has navigated the file. We can't find the same cell again
+                    //Can't find return row
                     if (form is QuickPeekForm f)
                         f.DisableTakeMeBackLink();
                 }
-            };
-
-            quickPeekForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
-            {
-                if (_openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var quickPeekForm)
-                    && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
-                {
-                    _openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex));
-                }
-            };
-
-            _openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex)); //Remove any leftover value if the user navigated the file
-            _openQuickPeekForms.Add((clickedCell.RowIndex, clickedCell.ColumnIndex), quickPeekForm);
-            quickPeekForm.Show(this.Parent ?? this);
-            QuickPeekEvent.FireAndForget(dataType);
-        }
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C))
-            {
-                this.CopySelectionToClipboard(false);
-                e.Handled = true;
-            }
-            //Fix a rare bug where the horizontal scroll won't move all the way to the right sometimes with keyboard shortcuts (#156)
-            else if (
-                e.KeyValue == (int)Keys.End ||
-                (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.Right))
-            )
-            {
-                //We don't set e.Handled = true here so the DGV can perform its own handling as well.
-                this.FirstDisplayedScrollingColumnIndex = this.Columns.Count - 1;
-                if (e.KeyValue == (int)Keys.End && e.Modifiers.HasFlag(Keys.Control))
-                {
-                    //Need to also scroll to vertical bottom in this case
-                    this.FirstDisplayedScrollingRowIndex = this.RowCount - 1;
-                }
-            }
-
-            base.OnKeyDown(e);
-        }
-
-        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
-        {
-            base.OnCellFormatting(e);
-
-            var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
-            if (this._floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
-            {
-                if (!this._floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
-                    userSelectedDisplayFormat = default;
-
-                if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
-                {
-                    e.Value = f.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
-                    e.FormattingApplied = true;
-                }
-            }
-            else if (this._floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(double) && e.Value is double d)
-            {
-                if (!this._floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
-                    userSelectedDisplayFormat = default;
-
-                if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
-                {
-                    e.Value = d.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
-                    e.FormattingApplied = true;
-                }
-            }
-
-            if (this._isCopyingToClipboard)
-            {
-                //Temporarily replace checkboxes with true/false for better copy/paste experience.
-                //Otherwise you end up with: Indeterminate, Cleared, or Selected
-                if (cellValueType == typeof(bool))
-                {
-                    if (e.Value == DBNull.Value)
-                    {
-                        e.Value = string.Empty;
-                        e.FormattingApplied = true;
-                    }
-                    else if (e.Value is bool @bool)
-                    {
-                        e.Value = @bool.ToString();
-                        e.FormattingApplied = true;
-                    }
-                }
-            }
-
-            if (cellValueType.ImplementsInterface<IByteArrayValue>() && e.Value is IByteArrayValue byteArrayValue)
-            {
-                //Don't truncate the binary data if this is a copy to clipboard operation
-                int charLimit = this._isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
-
-                //Figure out which format to show the binary data in
-                if (!this._byteArrayColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
-                    userSelectedDisplayFormat = default;
-
-                e.Value = FormatByteArrayString(byteArrayValue, userSelectedDisplayFormat, charLimit);
-                e.FormattingApplied = true;
-            }
-
-            //In order to get full cell values into the clipboard during a copy to
-            //clipboard operation we need to skip the truncation formatting below 
-            var skipTruncation = this._isCopyingToClipboard
-                || e.FormattingApplied //Also exit early if we already formatted the value above
-                || e.Value == DBNull.Value; //Also exit if null as there's nothing to format
-            if (skipTruncation)
-            {
-                return;
-            }
-
-            if (cellValueType == typeof(string))
-            {
-                string value = e.Value!.ToString()!;
-                if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
-                {
-                    e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
-                    e.FormattingApplied = true;
-                }
-            }
-            else if (cellValueType.ImplementsInterface<IStructValue>() && e.Value is IStructValue structValue)
-            {
-                e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
-                e.FormattingApplied = true;
-            }
-            else if (cellValueType.ImplementsInterface<IListValue>() && e.Value is IListValue listValue)
-            {
-                e.Value = listValue.ToString()!.Left(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL - 3, "...");
-                e.FormattingApplied = true;
-            }
-        }
-
-        protected override void OnSorted(EventArgs e)
-        {
-            if (this.SortedColumn is not null)
-            {
-                using var graphics = this.CreateGraphics();
-                WidenColumnForIndicator(this.SortedColumn, graphics, this.Font, true);
-            }
-            base.OnSorted(e);
-        }
-
-        private static void WidenColumnForIndicator(DataGridViewColumn column, Graphics graphics, Font font, bool includeWhitespaceBuffer)
-        {
-            if (!(column.Tag is string tag && tag.Equals("WIDENED")))
-            {
-                var headerLength = MeasureStringWidth(graphics, font, column.Name, includeWhitespaceBuffer);
-                var columnWidth = column.Width;
-
-                //Widen the column a bit so the sorting arrow can be shown.
-                var whitespaceWidth = columnWidth - headerLength;
-                if (whitespaceWidth >= 0 && whitespaceWidth < 21)
-                {
-                    column.Width += 21 - whitespaceWidth;
-                }
-
-                //Don't widen the same column twice (this shouldn't be needed but I don't trust the logic above)
-                column.Tag = "WIDENED";
-            }
-        }
-
-        protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-                this.Cursor = Cursors.WaitCursor;
-
-            try
-            {
-                base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event if it's a left-click
-
-                if (e.Button == MouseButtons.Right)
-                {
-                    this._headerContextMenu?.Dispose();
-                    this._headerContextMenu = new ContextMenuStrip();
-
-                    AddFrozenOption(this._headerContextMenu.Items, e.ColumnIndex);
-                    AddDisplayFormatOptions(this._headerContextMenu.Items, e.ColumnIndex);
-                    AddWordWrapOption(this._headerContextMenu.Items, e.ColumnIndex);
-
-                    if (this._headerContextMenu.Items.Count > 0)
-                        this._headerContextMenu.Show(Cursor.Position);
-                }
-            }
-            finally
-            {
-                this.Cursor = Cursors.Default;
-            }
-        }
-
-        protected override void OnColumnDividerDoubleClick(DataGridViewColumnDividerDoubleClickEventArgs e)
-        {
-            //Override the auto-size behavior with our version
-            try
-            {
-                this.Cursor = Cursors.WaitCursor;
-                this.AutoSizeColumns(e.ColumnIndex);
-                e.Handled = true;
-            }
-            finally
-            {
-                this.Cursor = Cursors.Default;
-            }
-
-            base.OnColumnDividerDoubleClick(e);
-        }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-                this._isLeftClickButtonDown = true;
-
-            base.OnMouseDown(e);
-        }
-
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-                this._isLeftClickButtonDown = false;
-
-            base.OnMouseUp(e);
-        }
-
-        public void ClearQuickPeekForms()
-        {
-            foreach (var form in this._openQuickPeekForms)
-            {
-                try
-                {
-                    if (!form.Value.IsDisposed)
-                    {
-                        form.Value.Dispose();
-                    }
-                }
-                catch { /*Swallow*/ }
-            }
-        }
-
-        public void ClearColumnFormatOverrides()
-        {
-            this._byteArrayColumnsWithFormatOverrides.Clear();
-            this._floatColumnsWithFormatOverrides.Clear();
-        }
-
-        /// <summary>
-        /// Provides fast and basic column sizing for large data sets.
-        /// </summary>
-        /// <remarks>
-        /// We unfortunately can't iterate through the gridview cells themselves to get the already formatted values.
-        /// This is because iterating over cells/rows in the DGV is very slow due to row unsharing behavior.
-        /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control#preventing-rows-from-becoming-unshared
-        /// </remarks>
-        private void AutoSizeColumns(int? forceAutoSizeColumnIndex = null)
-        {
-            const int MAX_WIDTH = 360;
-            const int DECIMAL_PREFERRED_WIDTH = 180;
-
-            if (this.DataSource is not DataTable gridTable || this.Columns.Count == 0)
-                return;
-
-            var maxWidth = MAX_WIDTH;
-
-            // Create a graphics object from the target grid. Used for measuring text size.
-            using var gfx = this.CreateGraphics();
-
-            for (int i = 0; i < gridTable.Columns.Count; i++)
-            {
-                if (forceAutoSizeColumnIndex is not null && forceAutoSizeColumnIndex != i)
-                    continue;
-
-                //Don't autosize the same column twice
-                if (forceAutoSizeColumnIndex is null && this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
-                    continue;
-                else
-                    this.Columns[i].Tag = "AUTOSIZED";
-
-                //Fit header by default. If header is short, make sure NULLs will fit at least
-                string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
-                var newColumnSize = MeasureStringWidth(gfx, this.Font, columnNameOrNull, true);
-
-                // Collect all the rows into a string enumerable, making sure to exclude null values.
-                IEnumerable<string> colStringCollection;
-                var nonNullColumnValues = gridTable.AsEnumerable().Where(row => row[i] != DBNull.Value);
-                if (gridTable.Columns[i].DataType == typeof(DateTime))
-                {
-                    //All date time's will probably have the same string length so no need to go through all values.
-                    //We can just measure a few without going through all of them.
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<DateTime>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()))
-                        .Take(25);
-                }
-                else if (gridTable.Columns[i].DataType == typeof(DateOnly))
-                {
-                    //All date only's will probably have the same string length so no need to go through all values.
-                    //We can just measure a few without going through all of them.
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<DateOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat()))
-                        .Take(10);
-                }
-                else if (gridTable.Columns[i].DataType == typeof(TimeOnly))
-                {
-                    //All date only's will probably have the same string length so no need to go through all values.
-                    //We can just measure a few without going through all of them.
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<TimeOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat()))
-                        .Take(25);
-                }
-                else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
-                {
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
-                }
-                else if (gridTable.Columns[i].DataType == typeof(float)
-                    && this._floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
-                    && displayFormat == FloatDisplayFormat.Decimal)
-                {
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<float>(i).ToDecimalString())
-                        .Where(stringValue => stringValue is not null)!;
-
-                    //Allow longer than preferred width if header is longer
-                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
-                }
-                else if (gridTable.Columns[i].DataType == typeof(double)
-                    && this._floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out displayFormat)
-                    && displayFormat == FloatDisplayFormat.Decimal)
-                {
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<double>(i).ToDecimalString())
-                        .Where(stringValue => stringValue is not null)!;
-
-                    //Allow longer than preferred width if header is longer
-                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
-                }
-                else if (gridTable.Columns[i].DataType == typeof(decimal))
-                {
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<decimal>(i).ToString());
-
-                    //Allow longer than preferred width if header is longer
-                    maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
-                }
-                else if (this.Columns[i].CellTemplate!.GetType() == typeof(AudioPlayerDataGridViewCell))
-                {
-                    this.Columns[i].Width = Math.Min(Math.Max(240, newColumnSize), maxWidth);
-                    continue;
-                }
-                else if (gridTable.Columns[i].DataType.ImplementsInterface<IByteArrayValue>()
-                    && this._byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
-                {
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => FormatByteArrayString(row.Field<IByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
-                }
-                else
-                {
-                    colStringCollection = nonNullColumnValues
-                        .Select(row => row.Field<object>(i)!.ToString())
-                        .Where(value => value is not null)!;
-                }
-
-                // Get the longest string in the array. (Limit to 10k values to improve render time)
-                string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 10_000).MaxBy(stringValue => stringValue.Length);
-                if (longestColString is not null)
-                    newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
-
-                this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
-            }
-        }
-
-        private static int MeasureStringWidth(Graphics gfx, Font font, string input, bool appendWhitespaceBuffer)
-        {
-            const string WHITESPACE_BUFFER = "#";
-            try
-            {
-                var width = (int)gfx.MeasureString(input + (appendWhitespaceBuffer ? WHITESPACE_BUFFER : string.Empty), font).Width;
-
-                if (width <= 0) //happens with really long strings sometimes
-                    return int.MaxValue;
-                else
-                    return width;
-            }
-            catch (Exception)
-            {
-                return int.MaxValue; //Assume worst case
-            }
-        }
-
-        private bool IsCursorOverCellText(int columnIndex, int rowIndex)
-        {
-            if (this[columnIndex, rowIndex] is DataGridViewCell cell)
-            {
-                var cursorPosition = this.PointToClient(Cursor.Position);
-                var cellAreaWithTextInIt =
-                    new Rectangle(this.GetCellDisplayRectangle(columnIndex, rowIndex, true).Location, cell.GetContentBounds(rowIndex).Size);
-
-                return cellAreaWithTextInIt.Contains(cursorPosition);
-            }
-
-            return false;
-        }
-
-        private void CopySelectionToClipboard(bool withHeaders)
-        {
-            this._isCopyingToClipboard = true;
-            if (withHeaders)
-            {
-                this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
-                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-            }
-            try
-            {
-                var clipboardContent = this.GetClipboardContent();
-                if (clipboardContent is not null) //Not sure why it would ever be null but saw some exceptions in Amplitude so added this check here to be safe.
-                    Clipboard.SetDataObject(clipboardContent, true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
-            }
-            catch (ExternalException ex) //This can happen if the user spams CTRL+C
-            {
-                MessageBox.Show(this,
-                    ex.Message,
-                    Resources.Errors.CopyToClipboardErrorTitle,
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                if (withHeaders)
-                {
-                    this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
-                    this.RowHeadersVisible = true;
-                }
-                this._isCopyingToClipboard = false;
-            }
-        }
-
-        /// <remarks>
-        /// Microsoft recommends using a shared cell style for best performance:
-        /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control?view=netframeworkdesktop-4.8#using-cell-styles-efficiently
-        /// </remarks>
-        private DataGridViewCellStyle GetHyperlinkCellStyle(DataGridViewColumn column)
-        {
-            this._clickableColumnIndexes.Add(column.Index);
-            this._hyperlinkCellStyleCache ??= new DataGridViewCellStyle(column.DefaultCellStyle)
-            {
-                Font = new(column.DefaultCellStyle.Font ?? column.InheritedStyle!.Font!, FontStyle.Underline),
-                ForeColor = this.GridTheme.HyperlinkColor
-            };
-            return this._hyperlinkCellStyleCache;
-        }
-
-        private void SetTheme()
-        {
-            this.DefaultCellStyle.BackColor = this.GridTheme.CellBackgroundColor;
-            this.DefaultCellStyle.ForeColor = this.GridTheme.TextColor;
-            this.DefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
-
-            this.RowHeadersDefaultCellStyle.BackColor = this.GridTheme.RowHeaderColor;
-            this.RowHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
-            this.RowHeadersDefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
-            this.RowHeadersBorderStyle = this.GridTheme.RowHeaderBorderStyle;
-
-            this.BackgroundColor = this.GridTheme.GridBackgroundColor;
-            this.GridColor = this.GridTheme.GridColor;
-
-            this.ColumnHeadersDefaultCellStyle = new()
-            {
-                Alignment = DataGridViewContentAlignment.MiddleLeft,
-                BackColor = this.GridTheme.ColumnHeaderColor,
-                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = this.GridTheme.TextColor,
-                SelectionBackColor = SystemColors.Highlight,
-                SelectionForeColor = SystemColors.HighlightText,
-                WrapMode = DataGridViewTriState.True
-            };
-
-            StyleFrozenColumns();
-            SetColumnCellStyles();
-        }
-
-        protected override void OnDataError(bool displayErrorDialogIfNoHandler, DataGridViewDataErrorEventArgs e)
-        {
-            if (this.ReadOnly)
-            {
-                //Since we don't allow editing just ignore errors and hope for the best.
-                return;
-            }
-
-            base.OnDataError(displayErrorDialogIfNoHandler, e);
-        }
-
-        private void CopySelectionToClipboardAsWhereCondition()
-        {
-            var columnsAndValuesToFilterBy = new List<(string ColumnName, Type ValueType, object[] Values)>();
-            foreach (var selectedCellsByColumn in
-                this.SelectedCells.AsEnumerable()
-                .GroupBy(cell => cell.ColumnIndex)
-                .OrderBy(column => column.Key))
-            {
-                var cellValues = selectedCellsByColumn.Select(cell => this[cell.ColumnIndex, cell.RowIndex].Value!);
-                var columnIndex = selectedCellsByColumn.Key;
-                var column = this.Columns[columnIndex];
-                columnsAndValuesToFilterBy.Add((column.Name, column.ValueType!, cellValues.ToArray()));
-            }
-
-            var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy, this.ColumnNameEscapeFormat, this.DateValueEscapeFormat);
-            if (filterQuery.Length < new TextBox().MaxLength)
-            {
-                Clipboard.SetText(filterQuery, TextDataFormat.Text);
             }
             else
             {
-                //If the query is too long to fit in our query box, show an error
-                MessageBox.Show(this,
-                    Resources.Errors.CopyAsWhereTooLargeErrorMessage,
-                    Resources.Errors.CopyAsWhereTooLargeErrorTitle,
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //User has navigated the file. We can't find the same cell again
+                if (form is QuickPeekForm f)
+                    f.DisableTakeMeBackLink();
+            }
+        };
+
+        quickPeekForm.FormClosed += (object? sender, FormClosedEventArgs _) =>
+        {
+            if (_openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var quickPeekForm)
+                && quickPeekForm.UniqueTag.Equals(uniqueCellTag))
+            {
+                _openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex));
+            }
+        };
+
+        _openQuickPeekForms.Remove((clickedCell.RowIndex, clickedCell.ColumnIndex)); //Remove any leftover value if the user navigated the file
+        _openQuickPeekForms.Add((clickedCell.RowIndex, clickedCell.ColumnIndex), quickPeekForm);
+        quickPeekForm.Show(this.Parent ?? this);
+        QuickPeekEvent.FireAndForget(dataType);
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        if (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.C))
+        {
+            this.CopySelectionToClipboard(false);
+            e.Handled = true;
+        }
+        //Fix a rare bug where the horizontal scroll won't move all the way to the right sometimes with keyboard shortcuts (#156)
+        else if (
+            e.KeyValue == (int)Keys.End ||
+            (e.Modifiers.HasFlag(Keys.Control) && e.KeyCode.HasFlag(Keys.Right))
+        )
+        {
+            //We don't set e.Handled = true here so the DGV can perform its own handling as well.
+            this.FirstDisplayedScrollingColumnIndex = this.Columns.Count - 1;
+            if (e.KeyValue == (int)Keys.End && e.Modifiers.HasFlag(Keys.Control))
+            {
+                //Need to also scroll to vertical bottom in this case
+                this.FirstDisplayedScrollingRowIndex = this.RowCount - 1;
             }
         }
 
-        public static string GenerateFilterQuery(string columnName, Type valueType, object value)
-            => GenerateFilterQuery(new() { (columnName, valueType, [value]) });
+        base.OnKeyDown(e);
+    }
 
-        public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy,
-            string columnNameEscapeFormat = "[{0}]", string dateValueEscapeFormat = "#{0}#")
+    protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+    {
+        base.OnCellFormatting(e);
+
+        var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
+        if (this._floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
         {
-            if (columnNameEscapeFormat.Length < 5)
-                throw new ArgumentException("Column name escape format is too short.", nameof(columnNameEscapeFormat));
-            if (dateValueEscapeFormat.Length < 5)
-                throw new ArgumentException("Date value escape format is too short.", nameof(dateValueEscapeFormat));
+            if (!this._floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
+                userSelectedDisplayFormat = default;
 
-            var queryBuilder = new StringBuilder();
-            if (columnsAndValuesToFilterBy is null || columnsAndValuesToFilterBy.Count == 0)
+            if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
             {
-                return queryBuilder.ToString();
+                e.Value = f.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
+                e.FormattingApplied = true;
             }
+        }
+        else if (this._floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(double) && e.Value is double d)
+        {
+            if (!this._floatColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
+                userSelectedDisplayFormat = default;
 
-            for (var columnIndex = 0; columnIndex < columnsAndValuesToFilterBy.Count; columnIndex++)
+            if (userSelectedDisplayFormat == FloatDisplayFormat.Decimal)
             {
-                var (columnName, valueType, values) = columnsAndValuesToFilterBy[columnIndex];
+                e.Value = d.ToDecimalString() ?? FORMATTING_ERROR_TEXT;
+                e.FormattingApplied = true;
+            }
+        }
 
-                ArgumentException.ThrowIfNullOrWhiteSpace(columnName);
-                ArgumentNullException.ThrowIfNull(values);
-
-                //Wrap column name in brackets if it contains spaces or punctuation (if it isn't wrapped already)
-                var isAlreadyWrapped = columnName.StartsWith(columnNameEscapeFormat.First()) && columnName.EndsWith(columnNameEscapeFormat.Last());
-                if (!isAlreadyWrapped && !_validColumnNameRegex.IsMatch(columnName))
+        if (this._isCopyingToClipboard)
+        {
+            //Temporarily replace checkboxes with true/false for better copy/paste experience.
+            //Otherwise you end up with: Indeterminate, Cleared, or Selected
+            if (cellValueType == typeof(bool))
+            {
+                if (e.Value == DBNull.Value)
                 {
-                    columnName = string.Format(columnNameEscapeFormat, columnName);
+                    e.Value = string.Empty;
+                    e.FormattingApplied = true;
                 }
-
-                var hasNulls = values.Any(value => value == DBNull.Value || value is null);
-                values = values
-                    .Where(value => value != DBNull.Value && value is not null)
-                    .Distinct() //Distinct() doesn't work if there are any DBNull's in the collection
-                    .Order()
-                    .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
-                    .ToArray();
-
-                var needsOrClause = hasNulls && values.Length > 1;
-
-                for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
+                else if (e.Value is bool @bool)
                 {
-                    var value = values[valueIndex];
-                    if (valueIndex == 0)
-                    {
-                        if (columnIndex > 0)
-                        {
-                            queryBuilder.Append(" AND ");
-                        }
-
-                        if (needsOrClause)
-                        {
-                            queryBuilder.Append('(');
-                        }
-
-                        queryBuilder.Append(columnName);
-                        if (values.Length == 1)
-                        {
-                            if (value == DBNull.Value)
-                            {
-                                queryBuilder.Append(" IS NULL");
-                                break;
-                            }
-
-                            queryBuilder.Append(" = ");
-                        }
-                        else
-                        {
-                            queryBuilder.Append(" IN (");
-                        }
-                    }
-                    else if (value != DBNull.Value)
-                    {
-                        queryBuilder.Append(',');
-                    }
-
-                    if (value != DBNull.Value)
-                    {
-                        if (valueType == typeof(DateTime))
-                        {
-                            //Use a standard date format so the query is always syntactically correct.
-                            //Invariant culture is required: custom format strings still resolve the calendar from
-                            //the current culture, so locales like th-TH would emit a non-Gregorian year.
-                            queryBuilder.AppendFormat(CultureInfo.InvariantCulture, dateValueEscapeFormat,
-                                ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture));
-                        }
-                        else if (valueType.IsNumber())
-                        {
-                            //DataView.RowFilter syntax is culture invariant: it always expects '.' as the decimal
-                            //separator. Formatting with the current culture would emit ',' in locales like de-DE,
-                            //which silently corrupts the filter since ',' separates values inside an `IN (...)` clause.
-                            var stringValue = Convert.ToString(value, CultureInfo.InvariantCulture);
-                            if ((valueType == typeof(float) || valueType == typeof(double))
-                                && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
-                                stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
-
-                            queryBuilder.Append(stringValue);
-                        }
-                        else if (value is string stringValue)
-                        {
-                            queryBuilder.Append($"'{stringValue.Replace("'", "''")}'");
-                        }
-                        else
-                        {
-                            queryBuilder.Append($"'{value}'");
-                        }
-                    }
-
-                    //Close the `IN (` parenthesis if required
-                    if (valueIndex == values.Length - 1 && values.Length > 1)
-                    {
-                        queryBuilder.Append(')');
-                    }
-                }
-
-                if (needsOrClause)
-                {
-                    queryBuilder.Append($" OR {columnName} IS NULL");
-                    queryBuilder.Append(')'); //close the parenthesis opened above
+                    e.Value = @bool.ToString();
+                    e.FormattingApplied = true;
                 }
             }
+        }
 
+        if (cellValueType.ImplementsInterface<IByteArrayValue>() && e.Value is IByteArrayValue byteArrayValue)
+        {
+            //Don't truncate the binary data if this is a copy to clipboard operation
+            int charLimit = this._isCopyingToClipboard ? int.MaxValue : MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL;
+
+            //Figure out which format to show the binary data in
+            if (!this._byteArrayColumnsWithFormatOverrides.TryGetValue(this.Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
+                userSelectedDisplayFormat = default;
+
+            e.Value = FormatByteArrayString(byteArrayValue, userSelectedDisplayFormat, charLimit);
+            e.FormattingApplied = true;
+        }
+
+        //In order to get full cell values into the clipboard during a copy to
+        //clipboard operation we need to skip the truncation formatting below 
+        var skipTruncation = this._isCopyingToClipboard
+            || e.FormattingApplied //Also exit early if we already formatted the value above
+            || e.Value == DBNull.Value; //Also exit if null as there's nothing to format
+        if (skipTruncation)
+        {
+            return;
+        }
+
+        if (cellValueType == typeof(string))
+        {
+            string value = e.Value!.ToString()!;
+            if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
+            {
+                e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
+                e.FormattingApplied = true;
+            }
+        }
+        else if (cellValueType.ImplementsInterface<IStructValue>() && e.Value is IStructValue structValue)
+        {
+            e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+            e.FormattingApplied = true;
+        }
+        else if (cellValueType.ImplementsInterface<IListValue>() && e.Value is IListValue listValue)
+        {
+            e.Value = listValue.ToString()!.Left(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL - 3, "...");
+            e.FormattingApplied = true;
+        }
+    }
+
+    protected override void OnSorted(EventArgs e)
+    {
+        if (this.SortedColumn is not null)
+        {
+            using var graphics = this.CreateGraphics();
+            WidenColumnForIndicator(this.SortedColumn, graphics, this.Font, true);
+        }
+        base.OnSorted(e);
+    }
+
+    private static void WidenColumnForIndicator(DataGridViewColumn column, Graphics graphics, Font font, bool includeWhitespaceBuffer)
+    {
+        if (!(column.Tag is string tag && tag.Equals("WIDENED")))
+        {
+            var headerLength = MeasureStringWidth(graphics, font, column.Name, includeWhitespaceBuffer);
+            var columnWidth = column.Width;
+
+            //Widen the column a bit so the sorting arrow can be shown.
+            var whitespaceWidth = columnWidth - headerLength;
+            if (whitespaceWidth >= 0 && whitespaceWidth < 21)
+            {
+                column.Width += 21 - whitespaceWidth;
+            }
+
+            //Don't widen the same column twice (this shouldn't be needed but I don't trust the logic above)
+            column.Tag = "WIDENED";
+        }
+    }
+
+    protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+            this.Cursor = Cursors.WaitCursor;
+
+        try
+        {
+            base.OnColumnHeaderMouseClick(e); //This will trigger the sort operation and the OnSorted event if it's a left-click
+
+            if (e.Button == MouseButtons.Right)
+            {
+                this._headerContextMenu?.Dispose();
+                this._headerContextMenu = new ContextMenuStrip();
+
+                AddFrozenOption(this._headerContextMenu.Items, e.ColumnIndex);
+                AddDisplayFormatOptions(this._headerContextMenu.Items, e.ColumnIndex);
+                AddWordWrapOption(this._headerContextMenu.Items, e.ColumnIndex);
+
+                if (this._headerContextMenu.Items.Count > 0)
+                    this._headerContextMenu.Show(Cursor.Position);
+            }
+        }
+        finally
+        {
+            this.Cursor = Cursors.Default;
+        }
+    }
+
+    protected override void OnColumnDividerDoubleClick(DataGridViewColumnDividerDoubleClickEventArgs e)
+    {
+        //Override the auto-size behavior with our version
+        try
+        {
+            this.Cursor = Cursors.WaitCursor;
+            this.AutoSizeColumns(e.ColumnIndex);
+            e.Handled = true;
+        }
+        finally
+        {
+            this.Cursor = Cursors.Default;
+        }
+
+        base.OnColumnDividerDoubleClick(e);
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+            this._isLeftClickButtonDown = true;
+
+        base.OnMouseDown(e);
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+            this._isLeftClickButtonDown = false;
+
+        base.OnMouseUp(e);
+    }
+
+    public void ClearQuickPeekForms()
+    {
+        foreach (var form in this._openQuickPeekForms)
+        {
+            try
+            {
+                if (!form.Value.IsDisposed)
+                {
+                    form.Value.Dispose();
+                }
+            }
+            catch { /*Swallow*/ }
+        }
+    }
+
+    public void ClearColumnFormatOverrides()
+    {
+        this._byteArrayColumnsWithFormatOverrides.Clear();
+        this._floatColumnsWithFormatOverrides.Clear();
+    }
+
+    /// <summary>
+    /// Provides fast and basic column sizing for large data sets.
+    /// </summary>
+    /// <remarks>
+    /// We unfortunately can't iterate through the gridview cells themselves to get the already formatted values.
+    /// This is because iterating over cells/rows in the DGV is very slow due to row unsharing behavior.
+    /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control#preventing-rows-from-becoming-unshared
+    /// </remarks>
+    private void AutoSizeColumns(int? forceAutoSizeColumnIndex = null)
+    {
+        const int MAX_WIDTH = 360;
+        const int DECIMAL_PREFERRED_WIDTH = 180;
+
+        if (this.DataSource is not DataTable gridTable || this.Columns.Count == 0)
+            return;
+
+        var maxWidth = MAX_WIDTH;
+
+        // Create a graphics object from the target grid. Used for measuring text size.
+        using var gfx = this.CreateGraphics();
+
+        for (int i = 0; i < gridTable.Columns.Count; i++)
+        {
+            if (forceAutoSizeColumnIndex is not null && forceAutoSizeColumnIndex != i)
+                continue;
+
+            //Don't autosize the same column twice
+            if (forceAutoSizeColumnIndex is null && this.Columns[i].Tag is string tag && tag.Equals("AUTOSIZED"))
+                continue;
+            else
+                this.Columns[i].Tag = "AUTOSIZED";
+
+            //Fit header by default. If header is short, make sure NULLs will fit at least
+            string columnNameOrNull = gridTable.Columns[i].ColumnName.Length < 5 ? "NULL" : gridTable.Columns[i].ColumnName;
+            var newColumnSize = MeasureStringWidth(gfx, this.Font, columnNameOrNull, true);
+
+            // Collect all the rows into a string enumerable, making sure to exclude null values.
+            IEnumerable<string> colStringCollection;
+            var nonNullColumnValues = gridTable.AsEnumerable().Where(row => row[i] != DBNull.Value);
+            if (gridTable.Columns[i].DataType == typeof(DateTime))
+            {
+                //All date time's will probably have the same string length so no need to go through all values.
+                //We can just measure a few without going through all of them.
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<DateTime>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()))
+                    .Take(25);
+            }
+            else if (gridTable.Columns[i].DataType == typeof(DateOnly))
+            {
+                //All date only's will probably have the same string length so no need to go through all values.
+                //We can just measure a few without going through all of them.
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<DateOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat()))
+                    .Take(10);
+            }
+            else if (gridTable.Columns[i].DataType == typeof(TimeOnly))
+            {
+                //All date only's will probably have the same string length so no need to go through all values.
+                //We can just measure a few without going through all of them.
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<TimeOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat()))
+                    .Take(25);
+            }
+            else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
+            }
+            else if (gridTable.Columns[i].DataType == typeof(float)
+                && this._floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
+                && displayFormat == FloatDisplayFormat.Decimal)
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<float>(i).ToDecimalString())
+                    .Where(stringValue => stringValue is not null)!;
+
+                //Allow longer than preferred width if header is longer
+                maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+            }
+            else if (gridTable.Columns[i].DataType == typeof(double)
+                && this._floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out displayFormat)
+                && displayFormat == FloatDisplayFormat.Decimal)
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<double>(i).ToDecimalString())
+                    .Where(stringValue => stringValue is not null)!;
+
+                //Allow longer than preferred width if header is longer
+                maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+            }
+            else if (gridTable.Columns[i].DataType == typeof(decimal))
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<decimal>(i).ToString());
+
+                //Allow longer than preferred width if header is longer
+                maxWidth = Math.Max(newColumnSize, DECIMAL_PREFERRED_WIDTH);
+            }
+            else if (this.Columns[i].CellTemplate!.GetType() == typeof(AudioPlayerDataGridViewCell))
+            {
+                this.Columns[i].Width = Math.Min(Math.Max(240, newColumnSize), maxWidth);
+                continue;
+            }
+            else if (gridTable.Columns[i].DataType.ImplementsInterface<IByteArrayValue>()
+                && this._byteArrayColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var byteArrayDisplayFormat))
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => FormatByteArrayString(row.Field<IByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
+            }
+            else
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<object>(i)!.ToString())
+                    .Where(value => value is not null)!;
+            }
+
+            // Get the longest string in the array. (Limit to 10k values to improve render time)
+            string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 10_000).MaxBy(stringValue => stringValue.Length);
+            if (longestColString is not null)
+                newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, this.Font, longestColString, true));
+
+            this.Columns[i].Width = Math.Min(newColumnSize, maxWidth);
+        }
+    }
+
+    private static int MeasureStringWidth(Graphics gfx, Font font, string input, bool appendWhitespaceBuffer)
+    {
+        const string WHITESPACE_BUFFER = "#";
+        try
+        {
+            var width = (int)gfx.MeasureString(input + (appendWhitespaceBuffer ? WHITESPACE_BUFFER : string.Empty), font).Width;
+
+            if (width <= 0) //happens with really long strings sometimes
+                return int.MaxValue;
+            else
+                return width;
+        }
+        catch (Exception)
+        {
+            return int.MaxValue; //Assume worst case
+        }
+    }
+
+    private bool IsCursorOverCellText(int columnIndex, int rowIndex)
+    {
+        if (this[columnIndex, rowIndex] is DataGridViewCell cell)
+        {
+            var cursorPosition = this.PointToClient(Cursor.Position);
+            var cellAreaWithTextInIt =
+                new Rectangle(this.GetCellDisplayRectangle(columnIndex, rowIndex, true).Location, cell.GetContentBounds(rowIndex).Size);
+
+            return cellAreaWithTextInIt.Contains(cursorPosition);
+        }
+
+        return false;
+    }
+
+    private void CopySelectionToClipboard(bool withHeaders)
+    {
+        this._isCopyingToClipboard = true;
+        if (withHeaders)
+        {
+            this.RowHeadersVisible = false; //disable row headers temporarily so they don't end up in the clipboard content
+            this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+        }
+        try
+        {
+            var clipboardContent = this.GetClipboardContent();
+            if (clipboardContent is not null) //Not sure why it would ever be null but saw some exceptions in Amplitude so added this check here to be safe.
+                Clipboard.SetDataObject(clipboardContent, true, 2, 250); //Without setting `copy` to true, this call can cause a UI thread deadlock somehow...
+        }
+        catch (ExternalException ex) //This can happen if the user spams CTRL+C
+        {
+            MessageBox.Show(this,
+                ex.Message,
+                Resources.Errors.CopyToClipboardErrorTitle,
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+        finally
+        {
+            if (withHeaders)
+            {
+                this.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+                this.RowHeadersVisible = true;
+            }
+            this._isCopyingToClipboard = false;
+        }
+    }
+
+    /// <remarks>
+    /// Microsoft recommends using a shared cell style for best performance:
+    /// https://learn.microsoft.com/en-us/dotnet/desktop/winforms/controls/best-practices-for-scaling-the-windows-forms-datagridview-control?view=netframeworkdesktop-4.8#using-cell-styles-efficiently
+    /// </remarks>
+    private DataGridViewCellStyle GetHyperlinkCellStyle(DataGridViewColumn column)
+    {
+        this._clickableColumnIndexes.Add(column.Index);
+        this._hyperlinkCellStyleCache ??= new DataGridViewCellStyle(column.DefaultCellStyle)
+        {
+            Font = new(column.DefaultCellStyle.Font ?? column.InheritedStyle!.Font!, FontStyle.Underline),
+            ForeColor = this.GridTheme.HyperlinkColor
+        };
+        return this._hyperlinkCellStyleCache;
+    }
+
+    private void SetTheme()
+    {
+        this.DefaultCellStyle.BackColor = this.GridTheme.CellBackgroundColor;
+        this.DefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+        this.DefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
+
+        this.RowHeadersDefaultCellStyle.BackColor = this.GridTheme.RowHeaderColor;
+        this.RowHeadersDefaultCellStyle.ForeColor = this.GridTheme.TextColor;
+        this.RowHeadersDefaultCellStyle.SelectionBackColor = this.GridTheme.SelectionBackColor;
+        this.RowHeadersBorderStyle = this.GridTheme.RowHeaderBorderStyle;
+
+        this.BackgroundColor = this.GridTheme.GridBackgroundColor;
+        this.GridColor = this.GridTheme.GridColor;
+
+        this.ColumnHeadersDefaultCellStyle = new()
+        {
+            Alignment = DataGridViewContentAlignment.MiddleLeft,
+            BackColor = this.GridTheme.ColumnHeaderColor,
+            Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point),
+            ForeColor = this.GridTheme.TextColor,
+            SelectionBackColor = SystemColors.Highlight,
+            SelectionForeColor = SystemColors.HighlightText,
+            WrapMode = DataGridViewTriState.True
+        };
+
+        StyleFrozenColumns();
+        SetColumnCellStyles();
+    }
+
+    protected override void OnDataError(bool displayErrorDialogIfNoHandler, DataGridViewDataErrorEventArgs e)
+    {
+        if (this.ReadOnly)
+        {
+            //Since we don't allow editing just ignore errors and hope for the best.
+            return;
+        }
+
+        base.OnDataError(displayErrorDialogIfNoHandler, e);
+    }
+
+    private void CopySelectionToClipboardAsWhereCondition()
+    {
+        var columnsAndValuesToFilterBy = new List<(string ColumnName, Type ValueType, object[] Values)>();
+        foreach (var selectedCellsByColumn in
+            this.SelectedCells.AsEnumerable()
+            .GroupBy(cell => cell.ColumnIndex)
+            .OrderBy(column => column.Key))
+        {
+            var cellValues = selectedCellsByColumn.Select(cell => this[cell.ColumnIndex, cell.RowIndex].Value!);
+            var columnIndex = selectedCellsByColumn.Key;
+            var column = this.Columns[columnIndex];
+            columnsAndValuesToFilterBy.Add((column.Name, column.ValueType!, cellValues.ToArray()));
+        }
+
+        var filterQuery = GenerateFilterQuery(columnsAndValuesToFilterBy, this.ColumnNameEscapeFormat, this.DateValueEscapeFormat);
+        if (filterQuery.Length < new TextBox().MaxLength)
+        {
+            Clipboard.SetText(filterQuery, TextDataFormat.Text);
+        }
+        else
+        {
+            //If the query is too long to fit in our query box, show an error
+            MessageBox.Show(this,
+                Resources.Errors.CopyAsWhereTooLargeErrorMessage,
+                Resources.Errors.CopyAsWhereTooLargeErrorTitle,
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    public static string GenerateFilterQuery(string columnName, Type valueType, object value)
+        => GenerateFilterQuery(new() { (columnName, valueType, [value]) });
+
+    public static string GenerateFilterQuery(List<(string ColumnName, Type ValueType, object[] Values)> columnsAndValuesToFilterBy,
+        string columnNameEscapeFormat = "[{0}]", string dateValueEscapeFormat = "#{0}#")
+    {
+        if (columnNameEscapeFormat.Length < 5)
+            throw new ArgumentException("Column name escape format is too short.", nameof(columnNameEscapeFormat));
+        if (dateValueEscapeFormat.Length < 5)
+            throw new ArgumentException("Date value escape format is too short.", nameof(dateValueEscapeFormat));
+
+        var queryBuilder = new StringBuilder();
+        if (columnsAndValuesToFilterBy is null || columnsAndValuesToFilterBy.Count == 0)
+        {
             return queryBuilder.ToString();
         }
 
-        private void AddDisplayFormatOptions(ToolStripItemCollection contextMenu, int columnIndex)
+        for (var columnIndex = 0; columnIndex < columnsAndValuesToFilterBy.Count; columnIndex++)
         {
-            //If this is a byte array column, show available formatting options
-            if (this.Columns[columnIndex].ValueType.ImplementsInterface<IByteArrayValue>()
-                && this.Columns[columnIndex].CellTemplate?.GetType() != typeof(AudioPlayerDataGridViewCell))
+            var (columnName, valueType, values) = columnsAndValuesToFilterBy[columnIndex];
+
+            ArgumentException.ThrowIfNullOrWhiteSpace(columnName);
+            ArgumentNullException.ThrowIfNull(values);
+
+            //Wrap column name in brackets if it contains spaces or punctuation (if it isn't wrapped already)
+            var isAlreadyWrapped = columnName.StartsWith(columnNameEscapeFormat.First()) && columnName.EndsWith(columnNameEscapeFormat.Last());
+            if (!isAlreadyWrapped && !_validColumnNameRegex.IsMatch(columnName))
             {
-                AddSeperatorIfNeeded();
-                const int RECORDS_TO_INTERSECT_COUNT = 8;
+                columnName = string.Format(columnNameEscapeFormat, columnName);
+            }
 
-                //Find a few different non-null values and find the common display formats that all of them support.
-                //This will reduce the chance the user sees #ERR in the cells from bad formatting conversions.
-                int intersectCounter = RECORDS_TO_INTERSECT_COUNT;
-                IEnumerable<IByteArrayValue.DisplayFormat> possibleDisplayFormats = Enum.GetValues<IByteArrayValue.DisplayFormat>();
-                for (var i = 0; i < this.RowCount; i++)
+            var hasNulls = values.Any(value => value == DBNull.Value || value is null);
+            values = values
+                .Where(value => value != DBNull.Value && value is not null)
+                .Distinct() //Distinct() doesn't work if there are any DBNull's in the collection
+                .Order()
+                .AppendIf(hasNulls, DBNull.Value) //Add one DBNull back if required
+                .ToArray();
+
+            var needsOrClause = hasNulls && values.Length > 1;
+
+            for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
+            {
+                var value = values[valueIndex];
+                if (valueIndex == 0)
                 {
-                    if (this[columnIndex, i].Value is not IByteArrayValue byteArrayValue)
-                        continue;
-
-                    possibleDisplayFormats = possibleDisplayFormats.Intersect(byteArrayValue.PossibleDisplayFormats);
-                    intersectCounter--;
-
-                    if (intersectCounter <= 0)
-                        break;
-                }
-
-                if (intersectCounter == RECORDS_TO_INTERSECT_COUNT)
-                {
-                    //Most likely that all values are null. Just show the default option
-                    possibleDisplayFormats = [default];
-                }
-
-                foreach (var supportedFormat in possibleDisplayFormats)
-                {
-                    var columnName = this.Columns[columnIndex].Name;
-                    var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
-                    toolstripMenuItem.Click += (object? _, EventArgs _) =>
+                    if (columnIndex > 0)
                     {
-                        ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
-                        if (_byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
-                            _byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
-                        else
-                            _byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
+                        queryBuilder.Append(" AND ");
+                    }
 
-                        this.Refresh(); //Force a re-draw to render updated format
-                        this.AutoSizeColumns(columnIndex); //Re-size the column
-                    };
-                    contextMenu.Add(toolstripMenuItem);
-
-                    if (!_byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
-                        displayFormat = default;
-
-                    toolstripMenuItem.Checked = displayFormat == supportedFormat;
-                }
-            }
-            else if (this.Columns[columnIndex].ValueType == typeof(float) || this.Columns[columnIndex].ValueType == typeof(double))
-            {
-                AddSeperatorIfNeeded();
-                var columnName = this.Columns[columnIndex].Name;
-                if (!_floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
-                    displayFormat = default;
-
-                var scientificNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalScientificFormatting)
-                { Checked = displayFormat == FloatDisplayFormat.Scientific };
-                scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
-                {
-                    ColumnFormattedEvent.FireAndForget("Scientific");
-
-                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
-                        _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
-                    else
-                        _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
-
-                    this.Refresh(); //Force a re-draw to render updated format
-                    this.AutoSizeColumns(columnIndex); //Re-size the column
-                };
-                contextMenu.Add(scientificNotationMenuItem);
-
-                var decimalNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalFormatting)
-                { Checked = displayFormat == FloatDisplayFormat.Decimal };
-                decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
-                {
-                    ColumnFormattedEvent.FireAndForget("Decimal");
-
-                    if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
-                        _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
-                    else
-                        _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
-
-                    this.Refresh(); //Force a re-draw to render updated format
-                    this.AutoSizeColumns(columnIndex); //Re-size the column
-                };
-                contextMenu.Add(decimalNotationMenuItem);
-            }
-
-            void AddSeperatorIfNeeded()
-            {
-                if (contextMenu.Count > 0)
-                    contextMenu.Add(new ToolStripSeparator());
-            }
-        }
-
-        private void AddFrozenOption(ToolStripItemCollection items, int columnIndex)
-        {
-            var column = this.Columns[columnIndex];
-
-            //Only show the option to freeze if the horizontal scroll bar is visible or if the column is already frozen
-            if (!column.Frozen && !this.HorizontalScrollBar.Visible)
-                return;
-
-            var menuItem = new ToolStripMenuItem(Resources.Strings.FrozenColumnText)
-            { Checked = column.Frozen };
-
-            menuItem.Click += (object? _, EventArgs _) =>
-            {
-                column.Frozen = !column.Frozen;
-                this.StyleFrozenColumns();
-            };
-
-            items.Add(menuItem);
-        }
-
-        private void AddWordWrapOption(ToolStripItemCollection items, int columnIndex)
-        {
-            var column = this.Columns[columnIndex];
-            var isWordWrapEnabled = column.DefaultCellStyle.WrapMode == DataGridViewTriState.True;
-
-            //If word wrap is already enabled, we want to show this option
-            if (!isWordWrapEnabled)
-            {
-                //If not, only show this option if the text in the currently displayed cells are cut off
-                var hasCutOffText = false;
-                foreach (var rowIndex in GetVisibleRowIndexes())
-                {
-                    if (IsCellTextCutOff(rowIndex, columnIndex))
+                    if (needsOrClause)
                     {
-                        hasCutOffText = true;
-                        break;
+                        queryBuilder.Append('(');
+                    }
+
+                    queryBuilder.Append(columnName);
+                    if (values.Length == 1)
+                    {
+                        if (value == DBNull.Value)
+                        {
+                            queryBuilder.Append(" IS NULL");
+                            break;
+                        }
+
+                        queryBuilder.Append(" = ");
+                    }
+                    else
+                    {
+                        queryBuilder.Append(" IN (");
                     }
                 }
-                if (!hasCutOffText)
-                    return;
+                else if (value != DBNull.Value)
+                {
+                    queryBuilder.Append(',');
+                }
+
+                if (value != DBNull.Value)
+                {
+                    if (valueType == typeof(DateTime))
+                    {
+                        //Use a standard date format so the query is always syntactically correct.
+                        //Invariant culture is required: custom format strings still resolve the calendar from
+                        //the current culture, so locales like th-TH would emit a non-Gregorian year.
+                        queryBuilder.AppendFormat(CultureInfo.InvariantCulture, dateValueEscapeFormat,
+                            ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture));
+                    }
+                    else if (valueType.IsNumber())
+                    {
+                        //DataView.RowFilter syntax is culture invariant: it always expects '.' as the decimal
+                        //separator. Formatting with the current culture would emit ',' in locales like de-DE,
+                        //which silently corrupts the filter since ',' separates values inside an `IN (...)` clause.
+                        var stringValue = Convert.ToString(value, CultureInfo.InvariantCulture);
+                        if ((valueType == typeof(float) || valueType == typeof(double))
+                            && stringValue?.Contains('E', StringComparison.OrdinalIgnoreCase) == true)
+                            stringValue = $"'{stringValue}'"; //scientific notation values need to be wrapped in single quotes
+
+                        queryBuilder.Append(stringValue);
+                    }
+                    else if (value is string stringValue)
+                    {
+                        queryBuilder.Append($"'{stringValue.Replace("'", "''")}'");
+                    }
+                    else
+                    {
+                        queryBuilder.Append($"'{value}'");
+                    }
+                }
+
+                //Close the `IN (` parenthesis if required
+                if (valueIndex == values.Length - 1 && values.Length > 1)
+                {
+                    queryBuilder.Append(')');
+                }
             }
 
-            var menuItem = new ToolStripMenuItem(Resources.Strings.WordWrapContextMenuItemText)
-            { Checked = isWordWrapEnabled };
-
-            menuItem.Click += (object? _, EventArgs _) =>
+            if (needsOrClause)
             {
-                var isWordWrapCurrentlyEnabled = column.DefaultCellStyle.WrapMode == DataGridViewTriState.True;
+                queryBuilder.Append($" OR {columnName} IS NULL");
+                queryBuilder.Append(')'); //close the parenthesis opened above
+            }
+        }
 
-                if (!isWordWrapCurrentlyEnabled)
-                    ColumnFormattedEvent.FireAndForget("WordWrap");
+        return queryBuilder.ToString();
+    }
 
-                column.DefaultCellStyle.WrapMode = isWordWrapCurrentlyEnabled ? DataGridViewTriState.False : DataGridViewTriState.True;
+    private void AddDisplayFormatOptions(ToolStripItemCollection contextMenu, int columnIndex)
+    {
+        //If this is a byte array column, show available formatting options
+        if (this.Columns[columnIndex].ValueType.ImplementsInterface<IByteArrayValue>()
+            && this.Columns[columnIndex].CellTemplate?.GetType() != typeof(AudioPlayerDataGridViewCell))
+        {
+            AddSeperatorIfNeeded();
+            const int RECORDS_TO_INTERSECT_COUNT = 8;
 
-                var didWeJustEnableWordWrap = !isWordWrapCurrentlyEnabled;
-                if (didWeJustEnableWordWrap)
+            //Find a few different non-null values and find the common display formats that all of them support.
+            //This will reduce the chance the user sees #ERR in the cells from bad formatting conversions.
+            int intersectCounter = RECORDS_TO_INTERSECT_COUNT;
+            IEnumerable<IByteArrayValue.DisplayFormat> possibleDisplayFormats = Enum.GetValues<IByteArrayValue.DisplayFormat>();
+            for (var i = 0; i < this.RowCount; i++)
+            {
+                if (this[columnIndex, i].Value is not IByteArrayValue byteArrayValue)
+                    continue;
+
+                possibleDisplayFormats = possibleDisplayFormats.Intersect(byteArrayValue.PossibleDisplayFormats);
+                intersectCounter--;
+
+                if (intersectCounter <= 0)
+                    break;
+            }
+
+            if (intersectCounter == RECORDS_TO_INTERSECT_COUNT)
+            {
+                //Most likely that all values are null. Just show the default option
+                possibleDisplayFormats = [default];
+            }
+
+            foreach (var supportedFormat in possibleDisplayFormats)
+            {
+                var columnName = this.Columns[columnIndex].Name;
+                var toolstripMenuItem = new ToolStripMenuItem(supportedFormat.ToString());
+                toolstripMenuItem.Click += (object? _, EventArgs _) =>
+                {
+                    ColumnFormattedEvent.FireAndForget(toolstripMenuItem.Text);
+                    if (_byteArrayColumnsWithFormatOverrides.ContainsKey(columnName))
+                        _byteArrayColumnsWithFormatOverrides[columnName] = supportedFormat;
+                    else
+                        _byteArrayColumnsWithFormatOverrides.Add(columnName, supportedFormat);
+
+                    this.Refresh(); //Force a re-draw to render updated format
+                    this.AutoSizeColumns(columnIndex); //Re-size the column
+                };
+                contextMenu.Add(toolstripMenuItem);
+
+                if (!_byteArrayColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
+                    displayFormat = default;
+
+                toolstripMenuItem.Checked = displayFormat == supportedFormat;
+            }
+        }
+        else if (this.Columns[columnIndex].ValueType == typeof(float) || this.Columns[columnIndex].ValueType == typeof(double))
+        {
+            AddSeperatorIfNeeded();
+            var columnName = this.Columns[columnIndex].Name;
+            if (!_floatColumnsWithFormatOverrides.TryGetValue(columnName, out var displayFormat))
+                displayFormat = default;
+
+            var scientificNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalScientificFormatting)
+            { Checked = displayFormat == FloatDisplayFormat.Scientific };
+            scientificNotationMenuItem.Click += (object? _, EventArgs _) =>
+            {
+                ColumnFormattedEvent.FireAndForget("Scientific");
+
+                if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                    _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Scientific;
+                else
+                    _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Scientific);
+
+                this.Refresh(); //Force a re-draw to render updated format
+                this.AutoSizeColumns(columnIndex); //Re-size the column
+            };
+            contextMenu.Add(scientificNotationMenuItem);
+
+            var decimalNotationMenuItem = new ToolStripMenuItem(Resources.Strings.DecimalFormatting)
+            { Checked = displayFormat == FloatDisplayFormat.Decimal };
+            decimalNotationMenuItem.Click += (object? _, EventArgs _) =>
+            {
+                ColumnFormattedEvent.FireAndForget("Decimal");
+
+                if (_floatColumnsWithFormatOverrides.ContainsKey(columnName))
+                    _floatColumnsWithFormatOverrides[columnName] = FloatDisplayFormat.Decimal;
+                else
+                    _floatColumnsWithFormatOverrides.Add(columnName, FloatDisplayFormat.Decimal);
+
+                this.Refresh(); //Force a re-draw to render updated format
+                this.AutoSizeColumns(columnIndex); //Re-size the column
+            };
+            contextMenu.Add(decimalNotationMenuItem);
+        }
+
+        void AddSeperatorIfNeeded()
+        {
+            if (contextMenu.Count > 0)
+                contextMenu.Add(new ToolStripSeparator());
+        }
+    }
+
+    private void AddFrozenOption(ToolStripItemCollection items, int columnIndex)
+    {
+        var column = this.Columns[columnIndex];
+
+        //Only show the option to freeze if the horizontal scroll bar is visible or if the column is already frozen
+        if (!column.Frozen && !this.HorizontalScrollBar.Visible)
+            return;
+
+        var menuItem = new ToolStripMenuItem(Resources.Strings.FrozenColumnText)
+        { Checked = column.Frozen };
+
+        menuItem.Click += (object? _, EventArgs _) =>
+        {
+            column.Frozen = !column.Frozen;
+            this.StyleFrozenColumns();
+        };
+
+        items.Add(menuItem);
+    }
+
+    private void AddWordWrapOption(ToolStripItemCollection items, int columnIndex)
+    {
+        var column = this.Columns[columnIndex];
+        var isWordWrapEnabled = column.DefaultCellStyle.WrapMode == DataGridViewTriState.True;
+
+        //If word wrap is already enabled, we want to show this option
+        if (!isWordWrapEnabled)
+        {
+            //If not, only show this option if the text in the currently displayed cells are cut off
+            var hasCutOffText = false;
+            foreach (var rowIndex in GetVisibleRowIndexes())
+            {
+                if (IsCellTextCutOff(rowIndex, columnIndex))
+                {
+                    hasCutOffText = true;
+                    break;
+                }
+            }
+            if (!hasCutOffText)
+                return;
+        }
+
+        var menuItem = new ToolStripMenuItem(Resources.Strings.WordWrapContextMenuItemText)
+        { Checked = isWordWrapEnabled };
+
+        menuItem.Click += (object? _, EventArgs _) =>
+        {
+            var isWordWrapCurrentlyEnabled = column.DefaultCellStyle.WrapMode == DataGridViewTriState.True;
+
+            if (!isWordWrapCurrentlyEnabled)
+                ColumnFormattedEvent.FireAndForget("WordWrap");
+
+            column.DefaultCellStyle.WrapMode = isWordWrapCurrentlyEnabled ? DataGridViewTriState.False : DataGridViewTriState.True;
+
+            var didWeJustEnableWordWrap = !isWordWrapCurrentlyEnabled;
+            if (didWeJustEnableWordWrap)
+            {
+                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
+            }
+            else
+            {
+                var doesAnyColumnHaveWordWrapEnabled = this.Columns.Cast<DataGridViewColumn>()
+                    .Any(col => col.DefaultCellStyle.WrapMode == DataGridViewTriState.True);
+                if (doesAnyColumnHaveWordWrapEnabled)
                 {
                     AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
                 }
                 else
                 {
-                    var doesAnyColumnHaveWordWrapEnabled = this.Columns.Cast<DataGridViewColumn>()
-                        .Any(col => col.DefaultCellStyle.WrapMode == DataGridViewTriState.True);
-                    if (doesAnyColumnHaveWordWrapEnabled)
+                    AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+                }
+            }
+        };
+
+        items.Add(menuItem);
+    }
+
+    private void StyleFrozenColumns()
+    {
+        //First reset styles for all column headers
+        for (var i = 0; i < this.Columns.Count; i++)
+        {
+            this.Columns[i].HeaderCell.Style = new DataGridViewCellStyle();
+        }
+
+        //Reset cells
+        SetColumnCellStyles();
+
+        //Now style frozen ones (We need to go by DisplayIndex in case the user re-arranged the columns)
+        var columnsInOrderByDisplayIndex = this.Columns.AsEnumerable().OrderBy(col => col.DisplayIndex);
+        foreach (var column in columnsInOrderByDisplayIndex)
+        {
+            if (!column.Frozen)
+                break;
+
+            column.DefaultCellStyle.BackColor = this.GridTheme.FrozenCellBackgroundColor;
+            column.HeaderCell.Style.BackColor = this.GridTheme.FrozenColumnHeaderColor;
+        }
+    }
+
+    /// <summary>
+    /// Gets the string representation of the binary data in the desired format
+    /// </summary>
+    /// <param name="desiredFormat">How to interpret the binary data</param>
+    /// <param name="desiredLength">An optional maximum string length target to try and achieve (NOT GUARANTEED)</param>
+    /// <returns>String representation of the binary data in the desired format if possible.
+    /// If conversion fails, <see cref="FORMATTING_ERROR_TEXT"/> is returned instead</returns>
+    /// <remarks>Utilize <see cref="ByteArrayValue.PossibleDisplayFormats"/> to avoid calling incompatible conversions</remarks>
+    private static string FormatByteArrayString(IByteArrayValue byteArrayValue, IByteArrayValue.DisplayFormat desiredFormat, int desiredLength = int.MaxValue)
+    {
+        ArgumentNullException.ThrowIfNull(byteArrayValue);
+        ArgumentOutOfRangeException.ThrowIfLessThan(desiredLength, 1);
+
+        if (desiredFormat == IByteArrayValue.DisplayFormat.IPv4)
+        {
+            if (byteArrayValue.ToIPv4(out var ipAddress))
+            {
+                return ipAddress.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.IPv6)
+        {
+            if (byteArrayValue.ToIPv6(out var ipAddress))
+            {
+                return ipAddress.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Guid)
+        {
+            if (byteArrayValue.ToGuid(out var @guid))
+            {
+                return @guid.Value.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Short)
+        {
+            if (byteArrayValue.ToShort(out var @short))
+            {
+                return @short.Value.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Integer)
+        {
+            if (byteArrayValue.ToInteger(out var @int))
+            {
+                return @int.Value.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Long)
+        {
+            if (byteArrayValue.ToLong(out var @long))
+            {
+                return @long.Value.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Float)
+        {
+            if (byteArrayValue.ToFloat(out var @float))
+            {
+                return @float.Value.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Double)
+        {
+            if (byteArrayValue.ToDouble(out var @double))
+            {
+                return @double.Value.ToString();
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.ASCII)
+        {
+            if (byteArrayValue.ToASCII(out var ascii))
+            {
+                if (ascii.Length <= desiredLength)
+                    return ascii;
+
+                return ascii[..desiredLength] + "[...]";
+            }
+
+            return FORMATTING_ERROR_TEXT;
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Base64)
+        {
+            byteArrayValue.ToBase64(out var base64);
+            if (base64.Length <= desiredLength)
+                return base64;
+
+            return base64[..desiredLength] + "[...]";
+        }
+        else if (desiredFormat == IByteArrayValue.DisplayFormat.Size)
+        {
+            return byteArrayValue.Data.Length.ToString() + (byteArrayValue.Data.Length == 1 ? " byte" : " bytes");
+        }
+        else
+        {
+            return byteArrayValue.ToStringTruncated(desiredLength);
+        }
+    }
+
+    private void ConvertAudioCells()
+    {
+        if (this.DataSource is not DataTable dataTable)
+            return;
+
+        //Check for audio data
+        foreach (DataGridViewColumn column in this.Columns)
+        {
+            if (column.ValueType.ImplementsInterface<IByteArrayValue>())
+            {
+                var isAudioColumn = false;
+                var tryCount = 0;
+                for (var i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    if (tryCount > 1)
+                        break; //give up after checking a few non-null values
+
+                    var value = dataTable.Rows[i][column.Name];
+                    if (value == DBNull.Value)
+                        continue;
+
+                    var byteArray = (IByteArrayValue)value;
+                    if (AudioPlayer.IsAudio(byteArray.Data, out var _)
+                        && !byteArray.ToImage(out _)) //help prevent false positives by checking for image data
                     {
-                        AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
+                        isAudioColumn = true;
+                        break;
                     }
-                    else
+                    tryCount++;
+                }
+
+                if (isAudioColumn)
+                {
+                    //This is technically a hack as the column was created with AutoGenerateColumns = true
+                    //which means it's a DataGridViewTextBoxColumn. Changing the cell template to this causes
+                    //'System.ArgumentException' in System.Drawing.Common.dll at runtime. However these
+                    //exceptions "seem" to be innocuous so going to keep doing it this way for now.
+                    //Only other alternative is to stop using AutoGenerateColumns :/
+                    column.CellTemplate = new AudioPlayerDataGridViewCell();
+
+                    //If the form isn't visible yet, the cells will be recreated when the form is showing,
+                    //allowing the new cell template to be used. If the form is already visible, we need
+                    //to manually replace the cells with the new cell type.
+                    if (this.FindForm()?.Visible == true)
                     {
-                        AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
-                    }
-                }
-            };
-
-            items.Add(menuItem);
-        }
-
-        private void StyleFrozenColumns()
-        {
-            //First reset styles for all column headers
-            for (var i = 0; i < this.Columns.Count; i++)
-            {
-                this.Columns[i].HeaderCell.Style = new DataGridViewCellStyle();
-            }
-
-            //Reset cells
-            SetColumnCellStyles();
-
-            //Now style frozen ones (We need to go by DisplayIndex in case the user re-arranged the columns)
-            var columnsInOrderByDisplayIndex = this.Columns.AsEnumerable().OrderBy(col => col.DisplayIndex);
-            foreach (var column in columnsInOrderByDisplayIndex)
-            {
-                if (!column.Frozen)
-                    break;
-
-                column.DefaultCellStyle.BackColor = this.GridTheme.FrozenCellBackgroundColor;
-                column.HeaderCell.Style.BackColor = this.GridTheme.FrozenColumnHeaderColor;
-            }
-        }
-
-        /// <summary>
-        /// Gets the string representation of the binary data in the desired format
-        /// </summary>
-        /// <param name="desiredFormat">How to interpret the binary data</param>
-        /// <param name="desiredLength">An optional maximum string length target to try and achieve (NOT GUARANTEED)</param>
-        /// <returns>String representation of the binary data in the desired format if possible.
-        /// If conversion fails, <see cref="FORMATTING_ERROR_TEXT"/> is returned instead</returns>
-        /// <remarks>Utilize <see cref="ByteArrayValue.PossibleDisplayFormats"/> to avoid calling incompatible conversions</remarks>
-        private static string FormatByteArrayString(IByteArrayValue byteArrayValue, IByteArrayValue.DisplayFormat desiredFormat, int desiredLength = int.MaxValue)
-        {
-            ArgumentNullException.ThrowIfNull(byteArrayValue);
-            ArgumentOutOfRangeException.ThrowIfLessThan(desiredLength, 1);
-
-            if (desiredFormat == IByteArrayValue.DisplayFormat.IPv4)
-            {
-                if (byteArrayValue.ToIPv4(out var ipAddress))
-                {
-                    return ipAddress.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.IPv6)
-            {
-                if (byteArrayValue.ToIPv6(out var ipAddress))
-                {
-                    return ipAddress.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Guid)
-            {
-                if (byteArrayValue.ToGuid(out var @guid))
-                {
-                    return @guid.Value.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Short)
-            {
-                if (byteArrayValue.ToShort(out var @short))
-                {
-                    return @short.Value.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Integer)
-            {
-                if (byteArrayValue.ToInteger(out var @int))
-                {
-                    return @int.Value.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Long)
-            {
-                if (byteArrayValue.ToLong(out var @long))
-                {
-                    return @long.Value.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Float)
-            {
-                if (byteArrayValue.ToFloat(out var @float))
-                {
-                    return @float.Value.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Double)
-            {
-                if (byteArrayValue.ToDouble(out var @double))
-                {
-                    return @double.Value.ToString();
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.ASCII)
-            {
-                if (byteArrayValue.ToASCII(out var ascii))
-                {
-                    if (ascii.Length <= desiredLength)
-                        return ascii;
-
-                    return ascii[..desiredLength] + "[...]";
-                }
-
-                return FORMATTING_ERROR_TEXT;
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Base64)
-            {
-                byteArrayValue.ToBase64(out var base64);
-                if (base64.Length <= desiredLength)
-                    return base64;
-
-                return base64[..desiredLength] + "[...]";
-            }
-            else if (desiredFormat == IByteArrayValue.DisplayFormat.Size)
-            {
-                return byteArrayValue.Data.Length.ToString() + (byteArrayValue.Data.Length == 1 ? " byte" : " bytes");
-            }
-            else
-            {
-                return byteArrayValue.ToStringTruncated(desiredLength);
-            }
-        }
-
-        private void ConvertAudioCells()
-        {
-            if (this.DataSource is not DataTable dataTable)
-                return;
-
-            //Check for audio data
-            foreach (DataGridViewColumn column in this.Columns)
-            {
-                if (column.ValueType.ImplementsInterface<IByteArrayValue>())
-                {
-                    var isAudioColumn = false;
-                    var tryCount = 0;
-                    for (var i = 0; i < dataTable.Rows.Count; i++)
-                    {
-                        if (tryCount > 1)
-                            break; //give up after checking a few non-null values
-
-                        var value = dataTable.Rows[i][column.Name];
-                        if (value == DBNull.Value)
-                            continue;
-
-                        var byteArray = (IByteArrayValue)value;
-                        if (AudioPlayer.IsAudio(byteArray.Data, out var _)
-                            && !byteArray.ToImage(out _)) //help prevent false positives by checking for image data
+                        foreach (DataGridViewRow row in this.Rows)
                         {
-                            isAudioColumn = true;
-                            break;
-                        }
-                        tryCount++;
-                    }
-
-                    if (isAudioColumn)
-                    {
-                        //This is technically a hack as the column was created with AutoGenerateColumns = true
-                        //which means it's a DataGridViewTextBoxColumn. Changing the cell template to this causes
-                        //'System.ArgumentException' in System.Drawing.Common.dll at runtime. However these
-                        //exceptions "seem" to be innocuous so going to keep doing it this way for now.
-                        //Only other alternative is to stop using AutoGenerateColumns :/
-                        column.CellTemplate = new AudioPlayerDataGridViewCell();
-
-                        //If the form isn't visible yet, the cells will be recreated when the form is showing,
-                        //allowing the new cell template to be used. If the form is already visible, we need
-                        //to manually replace the cells with the new cell type.
-                        if (this.FindForm()?.Visible == true)
-                        {
-                            foreach (DataGridViewRow row in this.Rows)
-                            {
-                                row.Cells[column.Index] = new AudioPlayerDataGridViewCell();
-                            }
+                            row.Cells[column.Index] = new AudioPlayerDataGridViewCell();
                         }
                     }
                 }
             }
         }
+    }
 
-        public void DisposeAudioCells()
+    public void DisposeAudioCells()
+    {
+        foreach (var audioColumn in this.Columns.Cast<DataGridViewColumn>()
+            .Where(column => column.CellTemplate?.GetType() == typeof(AudioPlayerDataGridViewCell)))
         {
-            foreach (var audioColumn in this.Columns.Cast<DataGridViewColumn>()
-                .Where(column => column.CellTemplate?.GetType() == typeof(AudioPlayerDataGridViewCell)))
+            foreach (DataGridViewRow row in this.Rows)
             {
-                foreach (DataGridViewRow row in this.Rows)
-                {
-                    row.Cells[audioColumn.Index].Dispose();
-                }
+                row.Cells[audioColumn.Index].Dispose();
             }
         }
+    }
 
-        protected override void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
+    {
+        //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
+        //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
+        this.DisposeAudioCells();
+
+        this._contextMenu?.Dispose();
+        this._headerContextMenu?.Dispose();
+
+        base.Dispose(disposing);
+    }
+
+    private enum FloatDisplayFormat
+    {
+        Scientific = 0,
+        Decimal
+    }
+
+    /// <summary>
+    /// Simple tool to guess if text is long enough to be cut off in a cell.
+    /// Returns false for all non-string columns.
+    /// </summary>
+    private bool IsCellTextCutOff(int rowIndex, int columnIndex)
+    {
+        var cell = this.Rows[rowIndex].Cells[columnIndex];
+        if (cell.OwningColumn?.ValueType != typeof(string))
+            return false; //Only show word wrap for string columns
+
+        var text = cell.FormattedValue?.ToString() ?? string.Empty;
+        if (string.IsNullOrEmpty(text))
+            return false;
+
+        Size textSize = TextRenderer.MeasureText(text, cell.InheritedStyle.Font ?? this.Font);
+        return textSize.Width > this.Columns[columnIndex].Width;
+    }
+
+    /// <summary>
+    /// Returns the row indexes for rows that are currently visible
+    /// </summary>
+    private IEnumerable<int> GetVisibleRowIndexes()
+    {
+        int firstIndex = this.FirstDisplayedScrollingRowIndex;
+        if (firstIndex < 0)
+            yield break; // no rows displayed (e.g., grid is empty)
+
+        int displayedCount = this.DisplayedRowCount(true); // true = include partially visible rows
+
+        for (int i = 0; i < displayedCount; i++)
         {
-            //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
-            //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
-            this.DisposeAudioCells();
+            int rowIndex = firstIndex + i;
+            if (rowIndex >= this.Rows.Count)
+                yield break;
 
-            this._contextMenu?.Dispose();
-            this._headerContextMenu?.Dispose();
-
-            base.Dispose(disposing);
-        }
-
-        private enum FloatDisplayFormat
-        {
-            Scientific = 0,
-            Decimal
-        }
-
-        /// <summary>
-        /// Simple tool to guess if text is long enough to be cut off in a cell.
-        /// Returns false for all non-string columns.
-        /// </summary>
-        private bool IsCellTextCutOff(int rowIndex, int columnIndex)
-        {
-            var cell = this.Rows[rowIndex].Cells[columnIndex];
-            if (cell.OwningColumn?.ValueType != typeof(string))
-                return false; //Only show word wrap for string columns
-
-            var text = cell.FormattedValue?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(text))
-                return false;
-
-            Size textSize = TextRenderer.MeasureText(text, cell.InheritedStyle.Font ?? this.Font);
-            return textSize.Width > this.Columns[columnIndex].Width;
-        }
-
-        /// <summary>
-        /// Returns the row indexes for rows that are currently visible
-        /// </summary>
-        private IEnumerable<int> GetVisibleRowIndexes()
-        {
-            int firstIndex = this.FirstDisplayedScrollingRowIndex;
-            if (firstIndex < 0)
-                yield break; // no rows displayed (e.g., grid is empty)
-
-            int displayedCount = this.DisplayedRowCount(true); // true = include partially visible rows
-
-            for (int i = 0; i < displayedCount; i++)
-            {
-                int rowIndex = firstIndex + i;
-                if (rowIndex >= this.Rows.Count)
-                    yield break;
-
-                yield return rowIndex;
-            }
+            yield return rowIndex;
         }
     }
 }

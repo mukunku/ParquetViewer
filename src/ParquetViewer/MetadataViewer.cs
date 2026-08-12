@@ -6,131 +6,130 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace ParquetViewer
+namespace ParquetViewer;
+
+public partial class MetadataViewer : FormBase
 {
-    public partial class MetadataViewer : FormBase
+    private const string THRIFT_METADATA = "Thrift Metadata";
+    private const string APACHE_ARROW_SCHEMA = "ARROW:schema";
+    private const string PANDAS_SCHEMA = "pandas";
+    private readonly IParquetEngine? _parquetEngine;
+
+    public MetadataViewer(IParquetEngine parquetEngine) : this()
     {
-        private const string THRIFT_METADATA = "Thrift Metadata";
-        private const string APACHE_ARROW_SCHEMA = "ARROW:schema";
-        private const string PANDAS_SCHEMA = "pandas";
-        private readonly IParquetEngine? _parquetEngine;
+        this._parquetEngine = parquetEngine;
+    }
 
-        public MetadataViewer(IParquetEngine parquetEngine) : this()
+    public MetadataViewer()
+    {
+        InitializeComponent();
+        this.DoubleBuffered = true;
+    }
+
+    private void MetadataViewer_Load(object sender, EventArgs e)
+    {
+        this.mainBackgroundWorker.RunWorkerAsync();
+    }
+
+    private void AddTab(string tabName, string text)
+    {
+        TabPage tab = new TabPage(tabName);
+        tab.Controls.Add(new TextBox()
         {
-            this._parquetEngine = parquetEngine;
+            Multiline = true,
+            Dock = DockStyle.Fill,
+            BackColor = Color.LightGray,
+            Text = text,
+            ScrollBars = ScrollBars.Both,
+            ReadOnly = true,
+            WordWrap = false //gives significant performance boost
+        });
+
+        this.tabControl.TabPages.Add(tab);
+    }
+
+    private void CloseButton_Click(object sender, EventArgs e)
+    {
+        this.Close();
+    }
+
+    private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+    {
+        var metadataResult = new List<(string TabName, string Text)>();
+        if (_parquetEngine!.Metadata != null)
+        {
+            string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(_parquetEngine, _parquetEngine.RecordCount, _parquetEngine.Fields.Count);
+            metadataResult.Add((THRIFT_METADATA, json));
         }
+        else
+            metadataResult.Add((THRIFT_METADATA, Resources.Errors.NoThriftMetadataAvailableErrorMessage));
 
-        public MetadataViewer()
+        if (_parquetEngine.CustomMetadata != null)
         {
-            InitializeComponent();
-            this.DoubleBuffered = true;
-        }
-
-        private void MetadataViewer_Load(object sender, EventArgs e)
-        {
-            this.mainBackgroundWorker.RunWorkerAsync();
-        }
-
-        private void AddTab(string tabName, string text)
-        {
-            TabPage tab = new TabPage(tabName);
-            tab.Controls.Add(new TextBox()
+            foreach (var _customMetadata in _parquetEngine.CustomMetadata)
             {
-                Multiline = true,
-                Dock = DockStyle.Fill,
-                BackColor = Color.LightGray,
-                Text = text,
-                ScrollBars = ScrollBars.Both,
-                ReadOnly = true,
-                WordWrap = false //gives significant performance boost
-            });
+                string value = _customMetadata.Value;
+                if (PANDAS_SCHEMA.Equals(_customMetadata.Key))
+                {
+                    //Pandas is already json; so just make it pretty.
+                    value = ParquetMetadataAnalyzers.TryFormatJSON(value);
+                }
+                else if (APACHE_ARROW_SCHEMA.Equals(_customMetadata.Key))
+                {
+                    value = ParquetMetadataAnalyzers.ApacheArrowToJSON(value);
+                }
+                else
+                {
+                    value = ParquetMetadataAnalyzers.TryFormatJSON(value);
+                }
 
-            this.tabControl.TabPages.Add(tab);
+                metadataResult.Add((_customMetadata.Key, value));
+            }
         }
 
-        private void CloseButton_Click(object sender, EventArgs e)
+        e.Result = metadataResult;
+    }
+
+    private void MainBackgroundWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+    {
+        if (e.Error != null)
+        {
+            MessageBox.Show(this,
+                Resources.Errors.MetadataReadErrorMessage + Environment.NewLine + e.Error,
+                Resources.Errors.MetadataReadErrorTitle,
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        else
+        {
+            this.tabControl.SuspendLayout();
+            this.tabControl.TabPages.Clear();
+            if (e.Result is List<(string TabName, string Text)> tabs)
+            {
+                foreach (var tab in tabs)
+                {
+                    this.AddTab(tab.TabName, tab.Text);
+                }
+            }
+            this.tabControl.ResumeLayout();
+        }
+    }
+
+    private void MetadataViewer_KeyUp(object sender, KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.Escape)
         {
             this.Close();
         }
+    }
 
-        private void MainBackgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+    public override void SetTheme(Theme theme)
+    {
+        if (DesignMode)
         {
-            var metadataResult = new List<(string TabName, string Text)>();
-            if (_parquetEngine!.Metadata != null)
-            {
-                string json = ParquetMetadataAnalyzers.ThriftMetadataToJSON(_parquetEngine, _parquetEngine.RecordCount, _parquetEngine.Fields.Count);
-                metadataResult.Add((THRIFT_METADATA, json));
-            }
-            else
-                metadataResult.Add((THRIFT_METADATA, Resources.Errors.NoThriftMetadataAvailableErrorMessage));
-
-            if (_parquetEngine.CustomMetadata != null)
-            {
-                foreach (var _customMetadata in _parquetEngine.CustomMetadata)
-                {
-                    string value = _customMetadata.Value;
-                    if (PANDAS_SCHEMA.Equals(_customMetadata.Key))
-                    {
-                        //Pandas is already json; so just make it pretty.
-                        value = ParquetMetadataAnalyzers.TryFormatJSON(value);
-                    }
-                    else if (APACHE_ARROW_SCHEMA.Equals(_customMetadata.Key))
-                    {
-                        value = ParquetMetadataAnalyzers.ApacheArrowToJSON(value);
-                    }
-                    else
-                    {
-                        value = ParquetMetadataAnalyzers.TryFormatJSON(value);
-                    }
-
-                    metadataResult.Add((_customMetadata.Key, value));
-                }
-            }
-
-            e.Result = metadataResult;
+            return;
         }
 
-        private void MainBackgroundWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error != null)
-            {
-                MessageBox.Show(this,
-                    Resources.Errors.MetadataReadErrorMessage + Environment.NewLine + e.Error,
-                    Resources.Errors.MetadataReadErrorTitle,
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-                this.tabControl.SuspendLayout();
-                this.tabControl.TabPages.Clear();
-                if (e.Result is List<(string TabName, string Text)> tabs)
-                {
-                    foreach (var tab in tabs)
-                    {
-                        this.AddTab(tab.TabName, tab.Text);
-                    }
-                }
-                this.tabControl.ResumeLayout();
-            }
-        }
-
-        private void MetadataViewer_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Escape)
-            {
-                this.Close();
-            }
-        }
-
-        public override void SetTheme(Theme theme)
-        {
-            if (DesignMode)
-            {
-                return;
-            }
-
-            base.SetTheme(theme);
-            this.closeButton.ForeColor = Color.Black;
-        }
+        base.SetTheme(theme);
+        this.closeButton.ForeColor = Color.Black;
     }
 }
