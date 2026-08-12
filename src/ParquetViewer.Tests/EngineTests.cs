@@ -728,4 +728,19 @@ public abstract class EngineTests
         Assert.AreEqual(new DateOnly(2024, 1, 1), dataTable.Rows[0][0]);
         Assert.AreEqual(new TimeOnly(215720000000), dataTable.Rows[0][1]);
     }
+
+    //Note this test exists because we now use a custom build of Parquet.Net. So keep this test around until we
+    //switch back to the official releases of the library.
+    [SkippableTestMethod]
+    public async Task NULL_DATA_PAGE_HEADER_PYARROW_V25()
+    {
+        using var parquetEngine = await OpenFileOrFolderAsync("Data/NULL_DATA_PAGE_HEADER_PYARROW_V25.parquet");
+
+        Assert.AreEqual(46, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 1, default))(false);
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[0][0]);
+        Assert.AreEqual((double)0, dataTable.Rows[0][1]);
+    }
 }

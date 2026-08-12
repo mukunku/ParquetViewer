@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace ParquetViewer.Engine;
+﻿namespace ParquetViewer.Engine;
 
 public interface IParquetSchemaElement<T> : IParquetSchemaElement where T : IParquetSchemaElement
 {
@@ -36,7 +34,6 @@ public interface IParquetSchemaElement
 
     ICollection<IParquetSchemaElement> Children { get; }
 
-    [JsonIgnore]
     Type ClrType { get; }
 
     FieldTypeId FieldType { get; }
