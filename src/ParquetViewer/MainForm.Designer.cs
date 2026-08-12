@@ -333,14 +333,14 @@ namespace ParquetViewer
             // 
             resources.ApplyResources(getSQLCreateTableScriptToolStripMenuItem, "getSQLCreateTableScriptToolStripMenuItem");
             getSQLCreateTableScriptToolStripMenuItem.Name = "getSQLCreateTableScriptToolStripMenuItem";
-            getSQLCreateTableScriptToolStripMenuItem.Click += GetSQLCreateTableScriptToolStripMenuItem_Click;
+            getSQLCreateTableScriptToolStripMenuItem.Click += getSQLCreateTableScriptToolStripMenuItem_Click;
             getSQLCreateTableScriptToolStripMenuItem.MouseEnter += GetSQLCreateTableScriptToolStripMenuItem_MouseEnter;
             // 
             // metadataViewerToolStripMenuItem
             // 
             resources.ApplyResources(metadataViewerToolStripMenuItem, "metadataViewerToolStripMenuItem");
             metadataViewerToolStripMenuItem.Name = "metadataViewerToolStripMenuItem";
-            metadataViewerToolStripMenuItem.Click += MetadataViewerToolStripMenuItem_Click;
+            metadataViewerToolStripMenuItem.Click += metadataViewerToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 

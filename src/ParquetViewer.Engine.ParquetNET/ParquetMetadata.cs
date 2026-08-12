@@ -50,7 +50,7 @@ public class ParquetMetadata : IParquetMetadata
                 }
                 catch
                 {
-                    /*swallow*/
+                    /*Swallow*/
                 }
 
                 var columnMetadata = new RowGroupColumnMetadata(

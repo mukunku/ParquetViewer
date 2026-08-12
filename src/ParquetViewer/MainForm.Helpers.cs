@@ -194,7 +194,7 @@ public partial class MainForm
         }
         else
         {
-            throw new Exception(string.Format(Resources.Errors.UnsupportedExportTypeFormat, selectedFileType.ToString()));
+            throw new Exception(Resources.Errors.UnsupportedExportTypeFormat.Format(selectedFileType.ToString()));
         }
     }
 

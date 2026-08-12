@@ -39,11 +39,11 @@ public class ParquetGridView : DataGridView
     }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public Image? CopyToClipboardIcon { get; set; } = null;
+    public Image? CopyToClipboardIcon { get; set; }
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public Image? CopyAsWhereIcon { get; set; } = null;
+    public Image? CopyAsWhereIcon { get; set; }
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    public bool ShowCopyAsWhereContextMenuItem { get; set; } = false;
+    public bool ShowCopyAsWhereContextMenuItem { get; set; }
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public string ColumnNameEscapeFormat { get; set; } = "[{0}]";
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -51,12 +51,12 @@ public class ParquetGridView : DataGridView
 
     private readonly HashSet<int> _clickableColumnIndexes = new();
     private readonly Dictionary<(int, int), QuickPeekForm> _openQuickPeekForms = new();
-    private bool _isCopyingToClipboard = false;
+    private bool _isCopyingToClipboard;
     private DataGridViewCellStyle? _hyperlinkCellStyleCache;
-    private bool _isLeftClickButtonDown = false;
-    private ContextMenuStrip? _contextMenu = null;
-    private ContextMenuStrip? _headerContextMenu = null;
-    private static readonly Regex _validColumnNameRegex = new Regex("^[a-zA-Z0-9_]+$");
+    private bool _isLeftClickButtonDown;
+    private ContextMenuStrip? _contextMenu;
+    private ContextMenuStrip? _headerContextMenu;
+    private static readonly Regex _validColumnNameRegex = new("^[a-zA-Z0-9_]+$");
 
     //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
     private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = new();

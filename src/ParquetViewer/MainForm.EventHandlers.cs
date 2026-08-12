@@ -21,7 +21,7 @@ public partial class MainForm
     [GeneratedRegex("^WHERE ")]
     private static partial Regex QueryUselessPartRegex();
 
-    private int _failedFileIntegrityCheckCount = 0;
+    private int _failedFileIntegrityCheckCount;
 
     private void offsetTextBox_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -363,7 +363,7 @@ public partial class MainForm
         }
         catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
         {
-            //swallow expected exceptions to not overload the user with error message dialogs
+            //Swallow expected exceptions to not overload the user with error message dialogs
         }
         catch (Exception ex)
         {

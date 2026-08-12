@@ -15,7 +15,6 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     private readonly Timer _updateTimer = new() { Interval = 100 };
     private readonly Timer _initializationTimer = new() { Interval = 100 };
 
-
     private volatile bool _isInitialized = false; //volatile because written by the background initialization task and read by the UI thread while painting.
     private readonly string _loadingMessage = "loading...";
     private readonly string _errorMessage = "#ERR";

@@ -16,12 +16,12 @@ namespace ParquetViewer;
 
 public partial class MainForm : FormBase
 {
-    private const int DefaultOffset = 0;
-    private const int DefaultRowCountValue = 1000;
+    private const int DEFAULT_OFFSET = 0;
+    private const int DEFAULT_ROW_COUNT = 1000;
     private readonly string _defaultFormTitle;
 
     #region Members
-    private readonly string? _fileToLoadOnLaunch = null;
+    private readonly string? _fileToLoadOnLaunch;
     private string? _openFileOrFolderPath;
     private string? OpenFileOrFolderPath
     {
@@ -44,8 +44,8 @@ public partial class MainForm : FormBase
             MainDataSource = null;
             loadAllRowsButton.Enabled = false;
             searchFilterTextBox.PlaceholderText = "WHERE ";
-            offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-            _currentOffset = DefaultOffset;
+            offsetTextBox.SetTextQuiet(DEFAULT_OFFSET.ToString());
+            _currentOffset = DEFAULT_OFFSET;
             mainGridView.ClearQuickPeekForms();
             mainGridView.ClearColumnFormatOverrides();
             ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
@@ -57,9 +57,9 @@ public partial class MainForm : FormBase
             else
             {
                 if (File.Exists(_openFileOrFolderPath))
-                    Text = string.Format(Resources.Strings.MainWindowOpenFileTitleFormat, _openFileOrFolderPath);
+                    Text = Resources.Strings.MainWindowOpenFileTitleFormat.Format(_openFileOrFolderPath);
                 else
-                    Text = string.Format(Resources.Strings.MainWindowOpenFolderTitleFormat, _openFileOrFolderPath);
+                    Text = Resources.Strings.MainWindowOpenFolderTitleFormat.Format(_openFileOrFolderPath);
 
                 changeFieldsMenuStripButton.Enabled = true;
                 saveAsToolStripMenuItem.Enabled = true;
@@ -95,7 +95,7 @@ public partial class MainForm : FormBase
         }
     }
 
-    private int _currentOffset = DefaultOffset;
+    private int _currentOffset = DEFAULT_OFFSET;
     private int CurrentOffset
     {
         get => _currentOffset;
@@ -106,9 +106,7 @@ public partial class MainForm : FormBase
         }
     }
 
-    private static int DefaultRowCount => DefaultRowCountValue;
-
-    private int _currentMaxRowCount = DefaultRowCount;
+    private int _currentMaxRowCount = DEFAULT_ROW_COUNT;
     private int CurrentMaxRowCount
     {
         get => _currentMaxRowCount;
@@ -149,8 +147,8 @@ public partial class MainForm : FormBase
     {
         InitializeComponent();
         _defaultFormTitle = Text;
-        offsetTextBox.SetTextQuiet(DefaultOffset.ToString());
-        recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
+        offsetTextBox.SetTextQuiet(DEFAULT_OFFSET.ToString());
+        recordCountTextBox.SetTextQuiet(DEFAULT_ROW_COUNT.ToString());
         MainDataSource = new DataTable();
         OpenFileOrFolderPath = null;
 
@@ -247,7 +245,7 @@ public partial class MainForm : FormBase
             fields = _openParquetEngine.Fields;
         }
         catch (ArgumentException ex) when (ex.Message.StartsWith("at least one field is required"))
-        { /*swallow: This exception is thrown from Parquet.Net when the schema has no fields*/ }
+        { /*Swallow: This exception is thrown from Parquet.Net when the schema has no fields*/ }
         catch (Exception ex)
         {
             throw new Parquet.ParquetException(Resources.Errors.ParquetSchemaReadErrorMessage, ex);
@@ -323,7 +321,9 @@ public partial class MainForm : FormBase
 
     private async Task LoadFileToGridviewImpl(IParquetEngine engine)
     {
-        var stopwatch = Stopwatch.StartNew(); var loadTime = TimeSpan.Zero; var indexTime = TimeSpan.Zero;
+        var stopwatch = Stopwatch.StartNew();
+        var loadTime = TimeSpan.Zero;
+        var indexTime = TimeSpan.Zero;
         LoadingIcon? loadingIcon = null;
         var wasSuccessful = false;
         try
@@ -361,7 +361,7 @@ public partial class MainForm : FormBase
             var finalResult = await Task.Run(() => intermediateResult.Invoke(showIndexingProgress), loadingIcon.CancellationToken);
             indexTime = stopwatch.Elapsed - loadTime;
 
-            recordCountStatusBarLabel.Text = string.Format(Resources.Strings.LoadedRecordCountRangeFormat, CurrentOffset, CurrentOffset + finalResult.Rows.Count);
+            recordCountStatusBarLabel.Text = Resources.Strings.LoadedRecordCountRangeFormat.Format(CurrentOffset, CurrentOffset + finalResult.Rows.Count);
             totalRowCountStatusBarLabel.Text = engine.RecordCount.ToString();
             actualShownRecordCountLabel.Text = finalResult.Rows.Count.ToString();
 
@@ -401,8 +401,8 @@ public partial class MainForm : FormBase
         {
             stopwatch.Stop();
 
-            TimeSpan totalTime = stopwatch.Elapsed;
-            TimeSpan renderTime = totalTime - loadTime - indexTime;
+            var totalTime = stopwatch.Elapsed;
+            var renderTime = totalTime - loadTime - indexTime;
 
             //Little secret performance counter
             showingStatusBarLabel.ToolTipText = $"Total time: {totalTime:mm\\:ss\\.ff}" + Environment.NewLine +
@@ -449,15 +449,15 @@ public partial class MainForm : FormBase
         {
             var recordCount = _openParquetEngine!.RecordCount;
             if (recordCount == 0 || recordCount > int.MaxValue)
-                recordCount = DefaultRowCount;
+                recordCount = DEFAULT_ROW_COUNT;
 
             _currentMaxRowCount = (int)recordCount;
             recordCountTextBox.SetTextQuiet(recordCount.ToString());
         }
         else
         {
-            _currentMaxRowCount = DefaultRowCount;
-            recordCountTextBox.SetTextQuiet(DefaultRowCount.ToString());
+            _currentMaxRowCount = DEFAULT_ROW_COUNT;
+            recordCountTextBox.SetTextQuiet(DEFAULT_ROW_COUNT.ToString());
         }
 
         if (fieldList is not null)
@@ -511,7 +511,8 @@ public partial class MainForm : FormBase
             return;
 
         //find a value we can use as a sample
-        object sampleSimpleValue = DBNull.Value; int counter = 1000;
+        object sampleSimpleValue = DBNull.Value;
+        int counter = 1000;
         foreach (DataRow row in MainDataSource.Rows)
         {
             sampleSimpleValue = row[simpleColumn];

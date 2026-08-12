@@ -230,7 +230,7 @@ public static class ExtensionMethods
         {
             disposable?.Dispose();
         }
-        catch { /*swallow*/ }
+        catch { /*Swallow*/ }
     }
 
     public static bool ImplementsInterface<T>(this Type? type)

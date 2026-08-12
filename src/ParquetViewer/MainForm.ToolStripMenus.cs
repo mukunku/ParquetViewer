@@ -73,7 +73,7 @@ public partial class MainForm
             SelectedFields = fieldList; //triggers a file load
     }
 
-    private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
+    private void getSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
     {
         var openFileOrFolderPath = OpenFileOrFolderPath;
         if (openFileOrFolderPath?.EndsWith('/') == true)
@@ -103,7 +103,7 @@ public partial class MainForm
             MessageBox.Show(this, Resources.Strings.CreateTableScriptFailedWithNoFieldsMessage, "ParquetViewer", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
-    private void MetadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
+    private void metadataViewerToolStripMenuItem_Click(object sender, EventArgs e)
     {
         if (IsAnyFileOpen)
         {
