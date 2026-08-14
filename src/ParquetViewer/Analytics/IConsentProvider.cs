@@ -1,7 +1,6 @@
-﻿namespace ParquetViewer.Analytics
+﻿namespace ParquetViewer.Analytics;
+
+public interface IConsentProvider
 {
-    public interface IConsentProvider
-    {
-        public bool AnalyticsDataGatheringConsent { get; }
-    }
+    public bool AnalyticsDataGatheringConsent { get; }
 }

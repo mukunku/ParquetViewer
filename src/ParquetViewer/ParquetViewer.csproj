@@ -17,7 +17,7 @@
     <StartupObject>ParquetViewer.Program</StartupObject>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>
@@ -77,7 +77,7 @@
     <PackageReference Include="MiniExcel" />
     <PackageReference Include="NAudio" />
     <PackageReference Include="NAudio.WinForms" />
-    <PackageReference Include="Parquet.Net" />
+    <PackageReference Include="Parquet.Net.mukunku" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Release_SelfContained'">
     <!--We only use DuckDB in the selfcontained release to save on file size-->

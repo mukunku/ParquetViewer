@@ -1,7 +1,6 @@
-﻿namespace ParquetViewer.Engine.Exceptions
+﻿namespace ParquetViewer.Engine.Exceptions;
+
+public class MalformedFieldException : Exception
 {
-    public class MalformedFieldException : Exception
-    {
-        public MalformedFieldException(string message, Exception? ex = null) : base(message, ex) { }
-    }
+    public MalformedFieldException(string message, Exception? ex = null) : base(message, ex) { }
 }

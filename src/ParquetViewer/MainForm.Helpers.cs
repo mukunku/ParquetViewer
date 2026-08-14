@@ -16,208 +16,237 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ParquetViewer
-{
-    public partial class MainForm
-    {
-        public LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
-        {
-            var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
-            loadingIcon.OnShow += (object? sender, EventArgs e) =>
-            {
-                this.mainTableLayoutPanel.Enabled = false;
-                this.mainMenuStrip.Enabled = false;
-            };
-            loadingIcon.OnHide += (object? sender, EventArgs e) =>
-            {
-                this.mainTableLayoutPanel.Enabled = true;
-                this.mainMenuStrip.Enabled = true;
-            };
+namespace ParquetViewer;
 
-            loadingIcon.Show();
-            return loadingIcon;
+public partial class MainForm
+{
+    public LoadingIcon ShowLoadingIcon(string message, long loadingBarMax = 0)
+    {
+        var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
+        loadingIcon.OnShow += (sender, e) =>
+        {
+            mainTableLayoutPanel.Enabled = false;
+            mainMenuStrip.Enabled = false;
+        };
+        loadingIcon.OnHide += (sender, e) =>
+        {
+            mainTableLayoutPanel.Enabled = true;
+            mainMenuStrip.Enabled = true;
+        };
+
+        loadingIcon.Show();
+        return loadingIcon;
+    }
+
+    //TODO: Should we export floats and binary data with custom formatting if activated?
+    //E.g. float -> Decimal format, Binary -> Size format, etc.
+    //We can't use the gridview formattedValue directly as we're changing the type sometimes plus enumerating the dgv is really slow due to row unsharing.
+    private async void ExportResults(FileType defaultFileType, string? filePathWithExtension = null)
+    {
+        string? filePath = null;
+        LoadingIcon? loadingIcon = null;
+        FileType? rerunType = null;
+        filePathWithExtension = string.IsNullOrWhiteSpace(filePathWithExtension) ? null : filePathWithExtension;
+        try
+        {
+            if (MainDataSource?.DefaultView.Count > 0)
+            {
+                exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(MainDataSource.DefaultView.Count);
+                exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
+                exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+
+                if (_openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
+                    && _openParquetEngine is Engine.ParquetNET.ParquetEngine)
+                {
+                    exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+                }
+
+                if (filePathWithExtension is not null || exportFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    filePath = filePathWithExtension ?? exportFileDialog.FileName;
+                    CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
+
+                    var fileExtension = Path.GetExtension(filePath);
+                    FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
+                    var stopWatch = Stopwatch.StartNew();
+                    loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
+                    await ExportResultsImpl(MainDataSource!, selectedFileType.Value, _openParquetEngine,
+                        filePath, loadingIcon, OpenFileOrFolderPath, loadingIcon.CancellationToken);
+
+                    if (loadingIcon.CancellationToken.IsCancellationRequested)
+                    {
+                        CleanupFile(filePath);
+                        MessageBox.Show(Resources.Strings.ExportCancelledMessage, Resources.Strings.ExportCancelledTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        long fileSizeInBytes = new FileInfo(filePath).Length;
+
+                        FileExportEvent.FireAndForget(
+                            selectedFileType.Value,
+                            fileSizeInBytes,
+                            mainGridView.RowCount,
+                            mainGridView.ColumnCount,
+                            stopWatch.ElapsedMilliseconds);
+
+                        MessageBox.Show(this,
+                            Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
+                            Resources.Strings.ExportSuccessfulTitle,
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+        }
+        catch (IOException ex)
+        {
+            CleanupFile(filePath);
+            ShowError(ex.Message, Resources.Errors.ExportFailedErrorTitle);
+        }
+        catch (XlsCellLengthException ex)
+        {
+            CleanupFile(filePath);
+
+            if (MessageBox.Show(this,
+                Resources.Strings.SwitchFromXlsToXlsxMessageFormat.Format(ex.MaxLength, ex.FileType.GetExtension(), FileType.XLSX.GetExtension()),
+                Resources.Strings.SwitchFromXlsToXlsxMessageTitle,
+                MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
+            {
+                rerunType = FileType.XLSX;
+            }
+        }
+        catch (Exception)
+        {
+            CleanupFile(filePath);
+            throw;
+        }
+        finally
+        {
+            loadingIcon?.Dispose();
         }
 
-        //TODO: Should we export floats and binary data with custom formatting if activated?
-        //E.g. float -> Decimal format, Binary -> Size format, etc.
-        //We can't use the gridview formattedValue directly as we're changing the type sometimes plus enumerating the dgv is really slow due to row unsharing.
-        private async void ExportResults(FileType defaultFileType, string? filePathWithExtension = null)
+        if (rerunType is not null)
         {
-            string? filePath = null;
-            LoadingIcon? loadingIcon = null;
-            FileType? rerunType = null;
-            filePathWithExtension = string.IsNullOrWhiteSpace(filePathWithExtension) ? null : filePathWithExtension;
+            ExportResults(default, filePath is not null ? Path.ChangeExtension(filePath, rerunType.Value.GetExtension()) : filePath);
+        }
+
+        static void CleanupFile(string? filePath)
+        {
             try
             {
-                if (this.MainDataSource?.DefaultView.Count > 0)
-                {
-                    this.exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(this.MainDataSource.DefaultView.Count);
-                    this.exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
-                    this.exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+                if (!string.IsNullOrWhiteSpace(filePath))
+                    File.Delete(filePath);
+            }
+            catch (Exception) { /*Swallow*/ }
+        }
+    }
 
-                    if (this._openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
-                        && this._openParquetEngine is Engine.ParquetNET.ParquetEngine)
+
+    private static Task ExportResultsImpl(DataTable dataTable, FileType selectedFileType, IParquetEngine? engine,
+        string filePath, IProgress<int> progress, string? sourceFileOrFolderPath, CancellationToken cancellationToken)
+    {
+        if (selectedFileType == FileType.CSV)
+        {
+            return WriteDataToCSVFile(dataTable, filePath, cancellationToken, progress);
+        }
+        else if (selectedFileType == FileType.XLS)
+        {
+            const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
+            if (dataTable.Columns.Count > MAX_XLS_COLUMN_COUNT)
+            {
+                MessageBox.Show(
+                    Resources.Errors.TooManyColumnsXlsErrorMessageFormat.Format(MAX_XLS_COLUMN_COUNT, dataTable.Columns.Count),
+                    Resources.Errors.TooManyColumnsErrorTitle,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                return Task.CompletedTask;
+            }
+
+            return WriteDataToExcel93File(dataTable, filePath, cancellationToken, progress);
+        }
+        else if (selectedFileType == FileType.XLSX)
+        {
+            const int MAX_XLSX_COLUMN_COUNT = 16384; //.xlsx format has a hard limit on 16384 columns
+            if (dataTable.Columns.Count > MAX_XLSX_COLUMN_COUNT)
+            {
+                MessageBox.Show(
+                    Resources.Errors.TooManyColumnsXlsxErrorMessageFormat.Format(MAX_XLSX_COLUMN_COUNT, dataTable.Columns.Count),
+                    Resources.Errors.TooManyColumnsErrorTitle,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                return Task.CompletedTask;
+            }
+
+            var sheetName = Path.GetFileNameWithoutExtension(sourceFileOrFolderPath) ?? "Sheet1";
+            return WriteDataToExcel2007File(dataTable, filePath, sheetName, cancellationToken, progress);
+        }
+        else if (selectedFileType == FileType.JSON)
+        {
+            return WriteDataToJSONFile(dataTable, filePath, cancellationToken, progress);
+        }
+        else if (selectedFileType == FileType.PARQUET)
+        {
+            ArgumentNullException.ThrowIfNull(engine);
+            var engineTypeName = engine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" : "DuckDB";
+            return WriteDataToParquetFile(engine, dataTable, filePath, progress, engineTypeName, cancellationToken);
+        }
+        else
+        {
+            throw new Exception(Resources.Errors.UnsupportedExportTypeFormat.Format(selectedFileType.ToString()));
+        }
+    }
+
+    private static async Task WriteDataToExcel2007File(DataTable mainDataSource, string path, string sheetName, CancellationToken cancellationToken, IProgress<int> progress)
+    {
+        const int MAX_XLSX_SHEET_NAME_LENGTH = 31;
+
+        //sanitize sheet name
+        sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
+
+        using var fs = new FileStream(path, FileMode.OpenOrCreate);
+        await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
+    }
+
+    private static Task WriteDataToCSVFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+        => Task.Run(() =>
+            {
+                using var writer = new StreamWriter(path, false, Encoding.UTF8);
+
+                var rowBuilder = new StringBuilder();
+                bool isFirst = true;
+                foreach (DataColumn column in dataTable.Columns)
+                {
+                    if (!isFirst)
                     {
-                        this.exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+                        rowBuilder.Append(',');
+                    }
+                    else
+                    {
+                        isFirst = false;
                     }
 
-                    if (filePathWithExtension is not null || this.exportFileDialog.ShowDialog() == DialogResult.OK)
+                    rowBuilder.Append(
+                        column.ColumnName
+                            .Replace("\r", string.Empty)
+                            .Replace("\n", string.Empty)
+                            .Replace(",", string.Empty));
+                }
+                writer.WriteLine(rowBuilder.ToString());
+
+                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
+                string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
+                foreach (DataRowView row in dataTable.DefaultView)
+                {
+                    rowBuilder.Clear();
+
+                    isFirst = true;
+                    foreach (object? value in row.Row.ItemArray)
                     {
-                        filePath = filePathWithExtension ?? this.exportFileDialog.FileName;
-                        CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
-
-                        var fileExtension = Path.GetExtension(filePath);
-                        FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension);
-                        if (selectedFileType is null)
-                            throw new ArgumentOutOfRangeException(fileExtension);
-
-                        var stopWatch = Stopwatch.StartNew();
-                        loadingIcon = this.ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, this.MainDataSource.DefaultView.Count * this.MainDataSource.Columns.Count);
-                        await ExportResultsImpl(this.MainDataSource!, selectedFileType.Value, this._openParquetEngine,
-                            filePath, loadingIcon.CancellationToken, loadingIcon, this.OpenFileOrFolderPath);
-
-                        if (loadingIcon.CancellationToken.IsCancellationRequested)
+                        if (cancellationToken.IsCancellationRequested)
                         {
-                            CleanupFile(filePath);
-                            MessageBox.Show(Resources.Strings.ExportCancelledMessage, Resources.Strings.ExportCancelledTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            break;
                         }
-                        else
-                        {
-                            long fileSizeInBytes = new FileInfo(filePath).Length;
 
-                            FileExportEvent.FireAndForget(
-                                selectedFileType.Value,
-                                fileSizeInBytes,
-                                this.mainGridView.RowCount,
-                                this.mainGridView.ColumnCount,
-                                stopWatch.ElapsedMilliseconds);
-
-                            MessageBox.Show(this,
-                                Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
-                                Resources.Strings.ExportSuccessfulTitle,
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                }
-            }
-            catch (IOException ex)
-            {
-                CleanupFile(filePath);
-                ShowError(ex.Message, Resources.Errors.ExportFailedErrorTitle);
-            }
-            catch (XlsCellLengthException ex)
-            {
-                CleanupFile(filePath);
-
-                if (MessageBox.Show(this,
-                    Resources.Strings.SwitchFromXlsToXlsxMessageFormat.Format(ex.MaxLength, ex.FileType.GetExtension(), FileType.XLSX.GetExtension()),
-                    Resources.Strings.SwitchFromXlsToXlsxMessageTitle,
-                    MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
-                {
-                    rerunType = FileType.XLSX;
-                }
-            }
-            catch (Exception)
-            {
-                CleanupFile(filePath);
-                throw;
-            }
-            finally
-            {
-                loadingIcon?.Dispose();
-            }
-
-            if (rerunType is not null)
-            {
-                ExportResults(default, filePath is not null ? Path.ChangeExtension(filePath, rerunType.Value.GetExtension()) : filePath);
-            }
-
-            static void CleanupFile(string? filePath)
-            {
-                try
-                {
-                    if (!string.IsNullOrWhiteSpace(filePath))
-                        File.Delete(filePath);
-                }
-                catch (Exception) { /*Swallow*/ }
-            }
-        }
-
-
-        private static Task ExportResultsImpl(DataTable dataTable, FileType selectedFileType, IParquetEngine? engine,
-            string filePath, CancellationToken cancellationToken, IProgress<int> progress, string? sourceFileOrFolderPath)
-        {
-            if (selectedFileType == FileType.CSV)
-            {
-                return WriteDataToCSVFile(dataTable, filePath, cancellationToken, progress);
-            }
-            else if (selectedFileType == FileType.XLS)
-            {
-                const int MAX_XLS_COLUMN_COUNT = 256; //.xls format has a hard limit on 256 columns
-                if (dataTable.Columns.Count > MAX_XLS_COLUMN_COUNT)
-                {
-                    MessageBox.Show(
-                        Resources.Errors.TooManyColumnsXlsErrorMessageFormat.Format(MAX_XLS_COLUMN_COUNT, dataTable.Columns.Count),
-                        Resources.Errors.TooManyColumnsErrorTitle,
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    return Task.CompletedTask;
-                }
-
-                return WriteDataToExcel93File(dataTable, filePath, cancellationToken, progress);
-            }
-            else if (selectedFileType == FileType.XLSX)
-            {
-                const int MAX_XLSX_COLUMN_COUNT = 16384; //.xlsx format has a hard limit on 16384 columns
-                if (dataTable.Columns.Count > MAX_XLSX_COLUMN_COUNT)
-                {
-                    MessageBox.Show(
-                        Resources.Errors.TooManyColumnsXlsxErrorMessageFormat.Format(MAX_XLSX_COLUMN_COUNT, dataTable.Columns.Count),
-                        Resources.Errors.TooManyColumnsErrorTitle,
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    return Task.CompletedTask;
-                }
-
-                var sheetName = Path.GetFileNameWithoutExtension(sourceFileOrFolderPath) ?? "Sheet1";
-                return WriteDataToExcel2007File(dataTable, filePath, sheetName, cancellationToken, progress);
-            }
-            else if (selectedFileType == FileType.JSON)
-            {
-                return WriteDataToJSONFile(dataTable, filePath, cancellationToken, progress);
-            }
-            else if (selectedFileType == FileType.PARQUET)
-            {
-                ArgumentNullException.ThrowIfNull(engine);
-                var engineTypeName = engine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" : "DuckDB";
-                return WriteDataToParquetFile(engine, dataTable, filePath, cancellationToken, progress, engineTypeName);
-            }
-            else
-            {
-                throw new Exception(string.Format(Resources.Errors.UnsupportedExportTypeFormat, selectedFileType.ToString()));
-            }
-        }
-
-        private static async Task WriteDataToExcel2007File(DataTable mainDataSource, string path, string sheetName, CancellationToken cancellationToken, IProgress<int> progress)
-        {
-            const int MAX_XLSX_SHEET_NAME_LENGTH = 31;
-
-            //sanitize sheet name
-            sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
-
-            using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
-        }
-
-        private static Task WriteDataToCSVFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
-            => Task.Run(() =>
-                {
-                    using var writer = new StreamWriter(path, false, Encoding.UTF8);
-
-                    var rowBuilder = new StringBuilder();
-                    bool isFirst = true;
-                    foreach (DataColumn column in dataTable.Columns)
-                    {
                         if (!isFirst)
                         {
                             rowBuilder.Append(',');
@@ -227,180 +256,149 @@ namespace ParquetViewer
                             isFirst = false;
                         }
 
-                        rowBuilder.Append(
-                            column.ColumnName
-                                .Replace("\r", string.Empty)
-                                .Replace("\n", string.Empty)
-                                .Replace(",", string.Empty));
-                    }
-                    writer.WriteLine(rowBuilder.ToString());
-
-                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                    string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
-                    string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
-                    foreach (DataRowView row in dataTable.DefaultView)
-                    {
-                        rowBuilder.Clear();
-
-                        isFirst = true;
-                        foreach (object? value in row.Row.ItemArray)
+                        if (value is DateTime dt)
                         {
-                            if (cancellationToken.IsCancellationRequested)
-                            {
-                                break;
-                            }
-
-                            if (!isFirst)
-                            {
-                                rowBuilder.Append(',');
-                            }
-                            else
-                            {
-                                isFirst = false;
-                            }
-
-                            if (value is DateTime dt)
-                            {
-                                rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
-                            }
-                            else if (value is DateOnly dateOnly)
-                            {
-                                rowBuilder.Append(UtilityMethods.CleanCSVValue(dateOnly.ToString(dateOnlyFormat)));
-                            }
-                            else if (value is TimeOnly timeOnly)
-                            {
-                                rowBuilder.Append(UtilityMethods.CleanCSVValue(timeOnly.ToString(timeOnlyFormat)));
-                            }
-                            else
-                            {
-                                var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
-                                rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
-                            }
-
-                            progress.Report(1);
+                            rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
+                        }
+                        else if (value is DateOnly dateOnly)
+                        {
+                            rowBuilder.Append(UtilityMethods.CleanCSVValue(dateOnly.ToString(dateOnlyFormat)));
+                        }
+                        else if (value is TimeOnly timeOnly)
+                        {
+                            rowBuilder.Append(UtilityMethods.CleanCSVValue(timeOnly.ToString(timeOnlyFormat)));
+                        }
+                        else
+                        {
+                            var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
+                            rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
                         }
 
-                        writer.WriteLine(rowBuilder.ToString());
+                        progress.Report(1);
                     }
-                }, cancellationToken);
 
-        private static Task WriteDataToExcel93File(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
-            => Task.Run(() =>
+                    writer.WriteLine(rowBuilder.ToString());
+                }
+            }, cancellationToken);
+
+    private static Task WriteDataToExcel93File(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+        => Task.Run(() =>
+            {
+                string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+                string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
+                string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
+                using var fs = new FileStream(path, FileMode.OpenOrCreate);
+                var excelWriter = new ExcelWriter(fs);
+                excelWriter.BeginWrite();
+
+                //Write headers
+                for (int i = 0; i < dataTable.Columns.Count; i++)
                 {
-                    string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
-                    string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
-                    string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
-                    using var fs = new FileStream(path, FileMode.OpenOrCreate);
-                    var excelWriter = new ExcelWriter(fs);
-                    excelWriter.BeginWrite();
+                    excelWriter.WriteCell(0, i, dataTable.Columns[i].ColumnName);
+                }
 
-                    //Write headers
-                    for (int i = 0; i < dataTable.Columns.Count; i++)
+                //Write data
+                for (int i = 0; i < dataTable.DefaultView.Count; i++)
+                {
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        excelWriter.WriteCell(0, i, dataTable.Columns[i].ColumnName);
+                        break;
                     }
 
-                    //Write data
-                    for (int i = 0; i < dataTable.DefaultView.Count; i++)
+                    for (int j = 0; j < dataTable.Columns.Count; j++)
+                    {
+                        var value = dataTable.DefaultView[i][j];
+                        if (value == DBNull.Value)
+                        {
+                            excelWriter.WriteCell(i + 1, j); //empty cell
+                        }
+                        else if (IsIntCastSafe(value))
+                        {
+                            excelWriter.WriteCell(i + 1, j, Convert.ToInt32(value));
+                        }
+                        else if (IsDoubleCastSafe(value))
+                        {
+                            excelWriter.WriteCell(i + 1, j, Convert.ToDouble(value));
+                        }
+                        else if (value is DateTime dt)
+                        {
+                            excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
+                        }
+                        else if (value is DateOnly dateOnly)
+                        {
+                            excelWriter.WriteCell(i + 1, j, dateOnly.ToString(dateOnlyFormat));
+                        }
+                        else if (value is TimeOnly timeOnly)
+                        {
+                            excelWriter.WriteCell(i + 1, j, timeOnly.ToString(timeOnlyFormat));
+                        }
+                        else
+                        {
+                            var stringValue = value.ToString();
+
+                            //BUG: for some reason strings longer than 255 characters appear empty.
+                            const int maxSupportedCellLength = 255;
+                            if (stringValue!.Length > maxSupportedCellLength)
+                            {
+                                throw new XlsCellLengthException(maxSupportedCellLength);
+                            }
+
+                            excelWriter.WriteCell(i + 1, j, stringValue);
+                        }
+                        progress.Report(1);
+                    }
+                }
+
+                bool IsIntCastSafe(object value) => value.GetType() == typeof(int)
+                    || (value.GetType() == typeof(uint) && (uint)value < int.MaxValue)
+                    || value.GetType() == typeof(sbyte)
+                    || value.GetType() == typeof(byte);
+
+                bool IsDoubleCastSafe(object value) => value.GetType() == typeof(double)
+                    || value.GetType() == typeof(decimal)
+                    || value.GetType() == typeof(float)
+                    || value.GetType() == typeof(long)
+                    || value.GetType() == typeof(uint);
+
+                excelWriter.EndWrite();
+            }, cancellationToken);
+
+    private static Task WriteDataToJSONFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+        => Task.Run(() =>
+            {
+                using var fs = new FileStream(path, FileMode.OpenOrCreate);
+                using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
+
+                jsonWriter.WriteStartArray();
+                foreach (DataRowView row in dataTable.DefaultView)
+                {
+                    jsonWriter.WriteStartObject();
+                    for (var i = 0; i < row.Row.ItemArray.Length; i++)
                     {
                         if (cancellationToken.IsCancellationRequested)
                         {
                             break;
                         }
 
-                        for (int j = 0; j < dataTable.Columns.Count; j++)
-                        {
-                            var value = dataTable.DefaultView[i][j];
-                            if (value == DBNull.Value)
-                            {
-                                excelWriter.WriteCell(i + 1, j); //empty cell
-                            }
-                            else if (IsIntCastSafe(value))
-                            {
-                                excelWriter.WriteCell(i + 1, j, Convert.ToInt32(value));
-                            }
-                            else if (IsDoubleCastSafe(value))
-                            {
-                                excelWriter.WriteCell(i + 1, j, Convert.ToDouble(value));
-                            }
-                            else if (value is DateTime dt)
-                            {
-                                excelWriter.WriteCell(i + 1, j, dt.ToString(dateFormat));
-                            }
-                            else if (value is DateOnly dateOnly)
-                            {
-                                excelWriter.WriteCell(i + 1, j, dateOnly.ToString(dateOnlyFormat));
-                            }
-                            else if (value is TimeOnly timeOnly)
-                            {
-                                excelWriter.WriteCell(i + 1, j, timeOnly.ToString(timeOnlyFormat));
-                            }
-                            else
-                            {
-                                var stringValue = value.ToString();
+                        var columnName = dataTable.Columns[i].ColumnName;
+                        jsonWriter.WritePropertyName(columnName);
 
-                                //BUG: for some reason strings longer than 255 characters appear empty.
-                                const int maxSupportedCellLength = 255;
-                                if (stringValue!.Length > maxSupportedCellLength)
-                                {
-                                    throw new XlsCellLengthException(maxSupportedCellLength);
-                                }
-
-                                excelWriter.WriteCell(i + 1, j, stringValue);
-                            }
-                            progress.Report(1);
-                        }
+                        object? value = row.Row.ItemArray[i];
+                        Engine.Helpers.WriteValue(jsonWriter, value!, false);
+                        progress.Report(1);
                     }
+                    jsonWriter.WriteEndObject();
+                }
+                jsonWriter.WriteEndArray();
+            }, cancellationToken);
 
-                    bool IsIntCastSafe(object value) => value.GetType() == typeof(int)
-                        || value.GetType() == typeof(uint)
-                        || value.GetType() == typeof(sbyte)
-                        || value.GetType() == typeof(byte);
-
-                    bool IsDoubleCastSafe(object value) => value.GetType() == typeof(double)
-                        || value.GetType() == typeof(decimal)
-                        || value.GetType() == typeof(float)
-                        || value.GetType() == typeof(long);
-
-                    excelWriter.EndWrite();
-                }, cancellationToken);
-
-        private static Task WriteDataToJSONFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
-            => Task.Run(() =>
-                {
-                    using var fs = new FileStream(path, FileMode.OpenOrCreate);
-                    using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
-
-                    jsonWriter.WriteStartArray();
-                    foreach (DataRowView row in dataTable.DefaultView)
-                    {
-                        jsonWriter.WriteStartObject();
-                        for (var i = 0; i < row.Row.ItemArray.Length; i++)
+    private static Task WriteDataToParquetFile(IParquetEngine engine, DataTable dataTable, string path,
+        IProgress<int> progress, string engineName, CancellationToken cancellationToken)
+        => Task.Run(async () =>
+            {
+                var customMetadata = new Dictionary<string, string>
                         {
-                            if (cancellationToken.IsCancellationRequested)
                             {
-                                break;
-                            }
-
-                            var columnName = dataTable.Columns[i].ColumnName;
-                            jsonWriter.WritePropertyName(columnName);
-
-                            object? value = row.Row.ItemArray[i];
-                            Engine.Helpers.WriteValue(jsonWriter, value!, false);
-                            progress.Report(1);
-                        }
-                        jsonWriter.WriteEndObject();
-                    }
-                    jsonWriter.WriteEndArray();
-                }, cancellationToken);
-
-        private static Task WriteDataToParquetFile(IParquetEngine engine, DataTable dataTable, string path,
-            CancellationToken cancellationToken, IProgress<int> progress, string engineName)
-            => Task.Run(async () =>
-                {
-                    var customMetadata = new Dictionary<string, string>
-                            {
-                                {
 "ParquetViewer", @"
 {
     ""CreatedWith"": ""ParquetViewer"",
@@ -409,96 +407,89 @@ namespace ParquetViewer
     ""CreationDate"": """ + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + @""",
     ""Engine"": """ + engineName + @"""
 }"
-                                }
-                            };
-                    await engine.WriteDataToParquetFileAsync(dataTable, path, cancellationToken, progress, customMetadata);
-                }, cancellationToken);
+                            }
+                        };
+                await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
+            }, cancellationToken);
 
-        private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
+    private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(Resources.Errors.NoValidParquetFilesFoundErrorMessage);
+        foreach (var skippedFile in ex.SkippedFiles)
         {
-            var sb = new StringBuilder();
-            sb.AppendLine(Resources.Errors.NoValidParquetFilesFoundErrorMessage);
-            foreach (var skippedFile in ex.SkippedFiles)
-            {
-                sb.AppendLine($"-{skippedFile.FileName}");
-            }
-            ShowError(sb.ToString());
+            sb.AppendLine($"-{skippedFile.FileName}");
         }
-
-        private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(Resources.Errors.SomeInvalidParquetFilesFoundErrorMessage);
-            foreach (var skippedFile in ex.SkippedFiles)
-            {
-                sb.AppendLine($"-{skippedFile.FileName}");
-            }
-            ShowError(sb.ToString());
-        }
-
-        private static void HandleFileReadException(FileReadException ex)
-        {
-            ShowError(Resources.Errors.UnexpectedFileReadErrorMessageFormat.Format(ex));
-        }
-
-        private static void HandleFileNotFoundException(FileNotFoundException ex)
-        {
-            ShowError(ex.Message);
-        }
-
-        private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
-        {
-            var sb = new StringBuilder();
-            sb.Append(Resources.Errors.MultipleSchemasDetectedErrorMessage);
-            sb.AppendLine(" ");
-
-            var schemaIndex = 1;
-            const int topCount = 5;
-            const int maxSchemasLimit = 10; //prevent a giant textbox from appearing
-            foreach (var schema in ex.Schemas)
-            {
-                sb.AppendLine(Resources.Errors.MultipleSchemasDetectedEntriesErrorMessageFormat.Format(schemaIndex++));
-                for (var i = 0; i < topCount; i++)
-                {
-                    if (i == schema.Count)
-                        break;
-
-                    sb.AppendLine($"  {schema.ElementAt(i)}");
-                }
-
-                if (schemaIndex > maxSchemasLimit)
-                {
-                    sb.AppendLine("...");
-                    break;
-                }
-
-                if (schemaIndex > maxSchemasLimit)
-                {
-                    sb.AppendLine("...");
-                    break;
-                }
-            }
-            ShowError(sb.ToString());
-        }
-
-        private static void HandleMalformedFieldException(MalformedFieldException ex)
-        {
-            ShowError(Resources.Errors.MalformedFieldErrorMessageFormat.Format(ex.Message));
-        }
-
-        private static void HandleDecimalOverflowException(DecimalOverflowException ex)
-            => ShowError(
-                   (ex.HasDetailedInfo ? Resources.Errors.DecimalValueTooLargeErrorMessageFormat
-                        : Resources.Errors.DecimalValueUnknownSizeTooLargeErrorMessageFormat)
-                   .Format(
-                       ex.FieldName,
-                       ex.Precision,
-                       ex.Scale,
-                       DecimalOverflowException.MAX_DECIMAL_PRECISION,
-                       DecimalOverflowException.MAX_DECIMAL_SCALE),
-                   Resources.Errors.DecimalValueTooLargeErrorTitle);
-
-        private static void ShowError(string message, string? title = null)
-            => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        ShowError(sb.ToString());
     }
+
+    private static void HandleSomeFilesSkippedException(SomeFilesSkippedException ex)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(Resources.Errors.SomeInvalidParquetFilesFoundErrorMessage);
+        foreach (var skippedFile in ex.SkippedFiles)
+        {
+            sb.AppendLine($"-{skippedFile.FileName}");
+        }
+        ShowError(sb.ToString());
+    }
+
+    private static void HandleFileReadException(FileReadException ex)
+    {
+        ShowError(Resources.Errors.UnexpectedFileReadErrorMessageFormat.Format(ex));
+    }
+
+    private static void HandleFileNotFoundException(FileNotFoundException ex)
+    {
+        ShowError(ex.Message);
+    }
+
+    private static void HandleMultipleSchemasFoundException(MultipleSchemasFoundException ex)
+    {
+        var sb = new StringBuilder();
+        sb.Append(Resources.Errors.MultipleSchemasDetectedErrorMessage);
+        sb.AppendLine(" ");
+
+        var schemaIndex = 1;
+        const int topCount = 5;
+        const int maxSchemasLimit = 10; //prevent a giant textbox from appearing
+        foreach (var schema in ex.Schemas)
+        {
+            sb.AppendLine(Resources.Errors.MultipleSchemasDetectedEntriesErrorMessageFormat.Format(schemaIndex++));
+            for (var i = 0; i < topCount; i++)
+            {
+                if (i == schema.Count)
+                    break;
+
+                sb.AppendLine($"  {schema.ElementAt(i)}");
+            }
+
+            if (schemaIndex > maxSchemasLimit)
+            {
+                sb.AppendLine("...");
+                break;
+            }
+        }
+        ShowError(sb.ToString());
+    }
+
+    private static void HandleMalformedFieldException(MalformedFieldException ex)
+    {
+        ShowError(Resources.Errors.MalformedFieldErrorMessageFormat.Format(ex.Message));
+    }
+
+    private static void HandleDecimalOverflowException(DecimalOverflowException ex)
+        => ShowError(
+               (ex.HasDetailedInfo ? Resources.Errors.DecimalValueTooLargeErrorMessageFormat
+                    : Resources.Errors.DecimalValueUnknownSizeTooLargeErrorMessageFormat)
+               .Format(
+                   ex.FieldName,
+                   ex.Precision,
+                   ex.Scale,
+                   DecimalOverflowException.MAX_DECIMAL_PRECISION,
+                   DecimalOverflowException.MAX_DECIMAL_SCALE),
+               Resources.Errors.DecimalValueTooLargeErrorTitle);
+
+    private static void ShowError(string message, string? title = null)
+        => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
 }

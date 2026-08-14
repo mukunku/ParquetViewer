@@ -30,7 +30,7 @@ namespace ParquetViewer
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AboutBox));
+            var resources = new System.ComponentModel.ComponentResourceManager(typeof(AboutBox));
             tableLayoutPanel = new TableLayoutPanel();
             logoPictureBox = new PictureBox();
             labelProductName = new Label();
@@ -104,7 +104,7 @@ namespace ParquetViewer
             // 
             resources.ApplyResources(associateFileExtensionCheckBox, "associateFileExtensionCheckBox");
             associateFileExtensionCheckBox.Name = "associateFileExtensionCheckBox";
-            associateFileExtensionCheckBox.CheckedChanged += associateFileExtensionCheckBox_CheckedChanged;
+            associateFileExtensionCheckBox.CheckedChanged += AssociateFileExtensionCheckBox_CheckedChanged;
             // 
             // flowLayoutPanel2
             // 
@@ -125,7 +125,7 @@ namespace ParquetViewer
             newVersionLabel.Image = Resources.Icons.external_link_icon;
             newVersionLabel.Name = "newVersionLabel";
             newVersionLabel.TabStop = true;
-            newVersionLabel.LinkClicked += newVersionLabel_LinkClicked;
+            newVersionLabel.LinkClicked += NewVersionLabel_LinkClicked;
             // 
             // AboutBox
             // 

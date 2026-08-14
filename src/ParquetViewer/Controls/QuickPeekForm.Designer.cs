@@ -109,7 +109,7 @@ namespace ParquetViewer.Controls
             saveImageToFileButton.Image = Resources.Icons.save_icon;
             saveImageToFileButton.Name = "saveImageToFileButton";
             saveImageToFileButton.UseVisualStyleBackColor = true;
-            saveImageToFileButton.Click += saveImageToFileButton_Click;
+            saveImageToFileButton.Click += SaveImageToFileButton_Click;
             // 
             // mainPictureBox
             // 
@@ -128,7 +128,7 @@ namespace ParquetViewer.Controls
             // 
             resources.ApplyResources(copyToClipboardToolStripMenuItem, "copyToClipboardToolStripMenuItem");
             copyToClipboardToolStripMenuItem.Name = "copyToClipboardToolStripMenuItem";
-            copyToClipboardToolStripMenuItem.Click += copyToClipboardToolStripMenuItem_Click;
+            copyToClipboardToolStripMenuItem.Click += CopyToClipboardToolStripMenuItem_Click;
             // 
             // QuickPeekForm
             // 
