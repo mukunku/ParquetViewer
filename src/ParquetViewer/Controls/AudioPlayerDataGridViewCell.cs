@@ -81,7 +81,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         if (DataGridView?.InvokeRequired == true) //NAudio captures the synchronization context so this check isn't needed actually...
         {
-            DataGridView.Invoke(OnPlaybackStopped);
+            DataGridView.Invoke(() => OnPlaybackStopped(source, args));
         }
         else
         {
@@ -99,7 +99,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
             paintParts & ~DataGridViewPaintParts.ContentForeground & ~DataGridViewPaintParts.SelectionBackground);
 
-        if (value is null || value == DBNull.Value || _audioPlayer is null)
+        if (value is null || value == DBNull.Value)
         {
             return;
         }
@@ -109,7 +109,8 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
             TextRenderer.DrawText(graphics, _loadingMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
             return;
         }
-        if (_audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
+
+        if (_audioPlayer is null || _audioPlayer.AudioFormat == AudioPlayer.AudioFormatType.Invalid)
         {
             TextRenderer.DrawText(graphics, _errorMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
             return;
