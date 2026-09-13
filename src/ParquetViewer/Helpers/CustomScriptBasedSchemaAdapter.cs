@@ -4,178 +4,176 @@ using System.Collections;
 using System.Data;
 using System.Text;
 
-namespace ParquetViewer.Helpers
+namespace ParquetViewer.Helpers;
+
+public class CustomScriptBasedSchemaAdapter
 {
-    public class CustomScriptBasedSchemaAdapter
+    private static readonly Hashtable _typeMap = new()
+        {
+            { typeof(ulong), "BIGINT {1}NULL" },
+            { typeof(long), "BIGINT {1}NULL" },
+            { typeof(bool), "BIT {1}NULL" },
+            { typeof(char), "CHAR {1}NULL" },
+            { typeof(DateTime), "DATETIME {1}NULL" },
+            { typeof(DateOnly), "DATE {1}NULL" },
+            { typeof(double), "FLOAT {1}NULL" },
+            { typeof(uint), "INT {1}NULL" },
+            { typeof(int), "INT {1}NULL" },
+            { typeof(Guid), "UNIQUEIDENTIFIER {1}NULL" },
+            { typeof(ushort), "SMALLINT {1}NULL" },
+            { typeof(short), "SMALLINT {1}NULL" },
+            { typeof(decimal), "DECIMAL {1}NULL" },
+            { typeof(float), "FLOAT {1}NULL" },
+            { typeof(byte), "TINYINT {1}NULL" },
+            { typeof(sbyte), "TINYINT {1}NULL" },
+            { typeof(string), "NVARCHAR({0}) {1}NULL" },
+            { typeof(TimeSpan), "INT {1}NULL" },
+            { typeof(TimeOnly), "INT {1}NULL" },
+            { typeof(byte[]), "VARBINARY({0}) {1}NULL" },
+            { typeof(IListValue), "sql_variant {1}NULL /*LIST*/" },
+            { typeof(IMapValue), "sql_variant {1}NULL /*MAP*/" },
+            { typeof(IStructValue), "sql_variant {1}NULL /*STRUCT*/" },
+            { typeof(IByteArrayValue), "VARBINARY({0}) {1}NULL" },
+        };
+
+    public string? TablePrefix { get; set; }
+    public bool CascadeDeletes { get; set; }
+
+    public string GetSchemaScript(DataSet dataSet, bool markTablesAsLocalTemp)
     {
-        internal readonly static Hashtable TypeMap = new()
-            {
-                { typeof(ulong), "BIGINT {1}NULL" },
-                { typeof(long), "BIGINT {1}NULL" },
-                { typeof(bool), "BIT {1}NULL" },
-                { typeof(char), "CHAR {1}NULL" },
-                { typeof(DateTime), "DATETIME {1}NULL" },
-                { typeof(DateOnly), "DATE {1}NULL" },
-                { typeof(double), "FLOAT {1}NULL" },
-                { typeof(uint), "INT {1}NULL" },
-                { typeof(int), "INT {1}NULL" },
-                { typeof(Guid), "UNIQUEIDENTIFIER {1}NULL" },
-                { typeof(ushort), "SMALLINT {1}NULL" },
-                { typeof(short), "SMALLINT {1}NULL" },
-                { typeof(decimal), "DECIMAL {1}NULL" },
-                { typeof(float), "FLOAT {1}NULL" },
-                { typeof(byte), "TINYINT {1}NULL" },
-                { typeof(sbyte), "TINYINT {1}NULL" },
-                { typeof(string), "NVARCHAR({0}) {1}NULL" },
-                { typeof(TimeSpan), "INT {1}NULL" },
-                { typeof(TimeOnly), "INT {1}NULL" },
-                { typeof(byte[]), "VARBINARY {1}NULL" },
-                { typeof(IListValue), "sql_variant {1}NULL /*LIST*/" },
-                { typeof(IMapValue), "sql_variant {1}NULL /*MAP*/" },
-                { typeof(IStructValue), "sql_variant {1}NULL /*STRUCT*/" },
-                { typeof(IByteArrayValue), "VARBINARY({0}) {1}NULL" },
-            };
-
-        public string? TablePrefix { get; set; }
-        public bool CascadeDeletes { get; set; }
-
-        public string GetSchemaScript(DataSet dataSet, bool markTablesAsLocalTemp)
+        if (dataSet is null)
         {
-            if (dataSet == null)
+            throw new ArgumentException("null is not a valid parameter value", nameof(dataSet));
+        }
+        var stringBuilder = new StringBuilder();
+        foreach (DataTable table in dataSet.Tables)
+        {
+            try
             {
-                throw new ArgumentException("null is not a valid parameter value", nameof(dataSet));
+                stringBuilder.Append(MakeTable(table, markTablesAsLocalTemp));
             }
-            StringBuilder stringBuilder = new StringBuilder();
-            foreach (DataTable table in dataSet.Tables)
+            catch (ArgumentException argumentException)
             {
-                try
-                {
-                    stringBuilder.Append(MakeTable(table, markTablesAsLocalTemp));
-                }
-                catch (ArgumentException argumentException)
-                {
-                    throw new ArgumentException("Table does not contain any columns", table.TableName, argumentException);
-                }
+                throw new ArgumentException("Table does not contain any columns", table.TableName, argumentException);
             }
-            foreach (DataTable dataTable in dataSet.Tables)
+        }
+        foreach (DataTable dataTable in dataSet.Tables)
+        {
+            if (dataTable.PrimaryKey.Length <= 0)
             {
-                if (dataTable.PrimaryKey.Length <= 0)
-                {
-                    continue;
-                }
-                string str = MakeSafe(string.Concat(TablePrefix, dataTable.TableName));
-                string str1 = MakeSafe(string.Concat("PK_", TablePrefix, dataTable.TableName));
-                string str2 = MakeList(dataTable.PrimaryKey);
-                stringBuilder.AppendFormat("IF OBJECT_ID('{1}', 'PK') IS NULL BEGIN ALTER TABLE {0} WITH NOCHECK ADD CONSTRAINT {1} PRIMARY KEY CLUSTERED ({2}); END\n", str, str1, str2);
+                continue;
             }
-            foreach (DataRelation relation in dataSet.Relations)
+            string str = MakeSafe(string.Concat(TablePrefix, dataTable.TableName));
+            string str1 = MakeSafe(string.Concat("PK_", TablePrefix, dataTable.TableName));
+            string str2 = MakeList(dataTable.PrimaryKey);
+            stringBuilder.AppendFormat("IF OBJECT_ID('{1}', 'PK') IS NULL BEGIN ALTER TABLE {0} WITH NOCHECK ADD CONSTRAINT {1} PRIMARY KEY CLUSTERED ({2}); END\n", str, str1, str2);
+        }
+        foreach (DataRelation relation in dataSet.Relations)
+        {
+            try
             {
-                try
-                {
-                    stringBuilder.Append(MakeRelation(relation));
-                }
-                catch (ArgumentException argumentException1)
-                {
-                    throw new ArgumentException("Relationship has an empty column list", relation.RelationName, argumentException1);
-                }
+                stringBuilder.Append(MakeRelation(relation));
             }
-            return stringBuilder.ToString();
+            catch (ArgumentException argumentException1)
+            {
+                throw new ArgumentException("Relationship has an empty column list", relation.RelationName, argumentException1);
+            }
+        }
+        return stringBuilder.ToString();
+    }
+
+    public static string GetTypeFor(DataColumn column)
+    {
+        Type columnType = column.DataType;
+        if (columnType.ImplementsInterface<IListValue>())
+            columnType = typeof(IListValue);
+        else if (columnType.ImplementsInterface<IMapValue>())
+            columnType = typeof(IMapValue);
+        else if (columnType.ImplementsInterface<IStructValue>())
+            columnType = typeof(IStructValue);
+        else if (columnType.ImplementsInterface<IByteArrayValue>())
+            columnType = typeof(IByteArrayValue);
+
+        var item = _typeMap[columnType] as string
+            ?? throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
+        bool useMaxKeyword = column.DataType == typeof(string) || column.DataType == typeof(byte[]) || column.DataType.ImplementsInterface<IByteArrayValue>();
+        return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
+    }
+
+    private static string MakeList(DataColumn[] columns)
+    {
+        if (columns is null || columns.Length < 1)
+        {
+            throw new ArgumentException("Invalid column list!", nameof(columns));
+        }
+        StringBuilder stringBuilder = new();
+        bool flag = true;
+        for (int i = 0; i < columns.Length; i++)
+        {
+            var dataColumn = columns[i];
+            if (!flag)
+            {
+                stringBuilder.Append(", ");
+            }
+            stringBuilder.Append(MakeSafe(dataColumn.ColumnName));
+            flag = false;
+        }
+        return stringBuilder.ToString();
+    }
+
+    private static string MakeList(DataColumnCollection columns)
+    {
+        if (columns is null || columns.Count < 1)
+        {
+            throw new ArgumentException("Invalid column list!", nameof(columns));
+        }
+        var stringBuilder = new StringBuilder();
+        bool flag = true;
+        foreach (DataColumn column in columns)
+        {
+            if (!flag)
+            {
+                stringBuilder.Append(", ");
+            }
+            string str = MakeSafe(column.ColumnName);
+            string typeFor = GetTypeFor(column);
+            stringBuilder.Append($"{Environment.NewLine} {str} {typeFor}");
+            flag = false;
+        }
+        return stringBuilder.ToString();
+    }
+
+    private string MakeRelation(DataRelation relation)
+    {
+        if (relation is null)
+        {
+            throw new ArgumentException("Invalid argument value (null)", nameof(relation));
         }
 
-        public static string GetTypeFor(DataColumn column)
-        {
-            Type columnType = column.DataType;
-            if (columnType.ImplementsInterface<IListValue>())
-                columnType = typeof(IListValue);
-            else if (columnType.ImplementsInterface<IMapValue>())
-                columnType = typeof(IMapValue);
-            else if (columnType.ImplementsInterface<IStructValue>())
-                columnType = typeof(IStructValue);
-            else if (columnType.ImplementsInterface<IByteArrayValue>())
-                columnType = typeof(IByteArrayValue);
+        string childTable = MakeSafe(string.Concat(TablePrefix, relation.ChildTable.TableName));
+        string parentTable = MakeSafe(string.Concat(TablePrefix, relation.ParentTable.TableName));
+        string fkRelationName = MakeSafe(string.Concat(TablePrefix, relation.RelationName)); //Add prefix so same tables can be created using different prefixes. Otherwise collisions occur
+        string childTableFKColumns = MakeList(relation.ChildColumns);
+        string parentTableFKColumns = MakeList(relation.ParentColumns);
 
-            var item = TypeMap[columnType] as string
-                ?? throw new NotSupportedException(string.Format("No type mapping is provided for {0}", column.DataType.Name));
-            bool useMaxKeyword = column.DataType == typeof(string) || column.DataType.ImplementsInterface<IByteArrayValue>();
-            return string.Format(item, useMaxKeyword ? "MAX" : column.MaxLength.ToString(), column.AllowDBNull ? string.Empty : "NOT ");
-        }
+        return $"IF OBJECT_ID('{fkRelationName}', 'F') IS NULL BEGIN ALTER TABLE {childTable} " +
+            $"ADD CONSTRAINT {fkRelationName} FOREIGN KEY ({childTableFKColumns}) REFERENCES {parentTable} ({parentTableFKColumns})" +
+            $"{(CascadeDeletes ? " ON DELETE CASCADE" : string.Empty)}; END\n";
+    }
 
-        private string MakeList(DataColumn[] columns)
-        {
-            if (columns == null || columns.Length < 1)
-            {
-                throw new ArgumentException("Invalid column list!", nameof(columns));
-            }
-            StringBuilder stringBuilder = new();
-            bool flag = true;
-            DataColumn[] dataColumnArray = columns;
-            for (int i = 0; i < dataColumnArray.Length; i++)
-            {
-                DataColumn dataColumn = dataColumnArray[i];
-                if (!flag)
-                {
-                    stringBuilder.Append(", ");
-                }
-                stringBuilder.Append(MakeSafe(dataColumn.ColumnName));
-                flag = false;
-            }
-            return stringBuilder.ToString();
-        }
+    private static string MakeSafe(string inputValue)
+    {
+        string str = inputValue.Trim();
+        string str1 = string.Format("[{0}]", str[..Math.Min(128, str.Length)]);
+        return str1;
+    }
 
-        private string MakeList(DataColumnCollection columns)
-        {
-            if (columns == null || columns.Count < 1)
-            {
-                throw new ArgumentException("Invalid column list!", nameof(columns));
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            bool flag = true;
-            foreach (DataColumn column in columns)
-            {
-                if (!flag)
-                {
-                    stringBuilder.Append(", ");
-                }
-                string str = MakeSafe(column.ColumnName);
-                string typeFor = GetTypeFor(column);
-                stringBuilder.Append($"{Environment.NewLine} {str} {typeFor}");
-                flag = false;
-            }
-            return stringBuilder.ToString();
-        }
-
-        private string MakeRelation(DataRelation relation)
-        {
-            if (relation == null)
-            {
-                throw new ArgumentException("Invalid argument value (null)", nameof(relation));
-            }
-
-            string childTable = MakeSafe(string.Concat(TablePrefix, relation.ChildTable.TableName));
-            string parentTable = MakeSafe(string.Concat(TablePrefix, relation.ParentTable.TableName));
-            string fkRelationName = MakeSafe(string.Concat(TablePrefix, relation.RelationName)); //Add prefix so same tables can be created using different prefixes. Otherwise collisions occur
-            string childTableFKColumns = MakeList(relation.ChildColumns);
-            string parentTableFKColumns = MakeList(relation.ParentColumns);
-
-            return $"IF OBJECT_ID('{fkRelationName}', 'F') IS NULL BEGIN ALTER TABLE {childTable} " +
-                $"ADD CONSTRAINT {fkRelationName} FOREIGN KEY ({childTableFKColumns}) REFERENCES {parentTable} ({parentTableFKColumns})" +
-                $"{(CascadeDeletes ? " ON DELETE CASCADE" : string.Empty)}; END\n";
-        }
-
-        protected string MakeSafe(string inputValue)
-        {
-            string str = inputValue.Trim();
-            string str1 = string.Format("[{0}]", str[..Math.Min(128, str.Length)]);
-            return str1;
-        }
-
-        private string MakeTable(DataTable table, bool markTablesAsLocalTemp)
-        {
-            var stringBuilder = new StringBuilder();
-            string str = MakeSafe(string.Concat(markTablesAsLocalTemp ? "#" : string.Empty, TablePrefix, table.TableName));
-            string str1 = MakeList(table.Columns);
-            stringBuilder.AppendFormat("CREATE TABLE {0} ({1}\n);", str, str1);
-            return stringBuilder.ToString();
-        }
+    private string MakeTable(DataTable table, bool markTablesAsLocalTemp)
+    {
+        var stringBuilder = new StringBuilder();
+        string str = MakeSafe(string.Concat(markTablesAsLocalTemp ? "#" : string.Empty, TablePrefix, table.TableName));
+        string str1 = MakeList(table.Columns);
+        stringBuilder.AppendFormat("CREATE TABLE {0} ({1}\n);", str, str1);
+        return stringBuilder.ToString();
     }
 }

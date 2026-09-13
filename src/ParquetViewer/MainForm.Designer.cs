@@ -119,8 +119,8 @@ namespace ParquetViewer
             resources.ApplyResources(recordCountTextBox, "recordCountTextBox");
             recordCountTextBox.DelayedTextChangedTimeout = 1000;
             recordCountTextBox.Name = "recordCountTextBox";
-            recordCountTextBox.DelayedTextChanged += recordsToTextBox_TextChanged;
-            recordCountTextBox.KeyPress += recordsToTextBox_KeyPress;
+            recordCountTextBox.DelayedTextChanged += RecordsToTextBox_TextChanged;
+            recordCountTextBox.KeyPress += RecordsToTextBox_KeyPress;
             // 
             // showRecordsFromLabel
             // 
@@ -132,8 +132,8 @@ namespace ParquetViewer
             resources.ApplyResources(offsetTextBox, "offsetTextBox");
             offsetTextBox.DelayedTextChangedTimeout = 1000;
             offsetTextBox.Name = "offsetTextBox";
-            offsetTextBox.DelayedTextChanged += offsetTextBox_TextChanged;
-            offsetTextBox.KeyPress += offsetTextBox_KeyPress;
+            offsetTextBox.DelayedTextChanged += OffsetTextBox_TextChanged;
+            offsetTextBox.KeyPress += OffsetTextBox_KeyPress;
             // 
             // runQueryButton
             // 
@@ -142,7 +142,7 @@ namespace ParquetViewer
             runQueryButton.Image = Resources.Icons.exclamation_icon;
             runQueryButton.Name = "runQueryButton";
             runQueryButton.UseVisualStyleBackColor = true;
-            runQueryButton.Click += runQueryButton_Click;
+            runQueryButton.Click += RunQueryButton_Click;
             // 
             // searchFilterLabel
             // 
@@ -151,16 +151,16 @@ namespace ParquetViewer
             searchFilterLabel.LinkColor = System.Drawing.Color.Navy;
             searchFilterLabel.Name = "searchFilterLabel";
             searchFilterLabel.TabStop = true;
-            searchFilterLabel.LinkClicked += searchFilterLabel_Click;
+            searchFilterLabel.LinkClicked += SearchFilterLabel_Click;
             // 
             // searchFilterTextBox
             // 
             resources.ApplyResources(searchFilterTextBox, "searchFilterTextBox");
             mainTableLayoutPanel.SetColumnSpan(searchFilterTextBox, 2);
             searchFilterTextBox.Name = "searchFilterTextBox";
-            searchFilterTextBox.Enter += searchFilterTextBox_Enter;
-            searchFilterTextBox.KeyPress += searchFilterTextBox_KeyPress;
-            searchFilterTextBox.Leave += searchFilterTextBox_Leave;
+            searchFilterTextBox.Enter += SearchFilterTextBox_Enter;
+            searchFilterTextBox.KeyPress += SearchFilterTextBox_KeyPress;
+            searchFilterTextBox.Leave += SearchFilterTextBox_Leave;
             // 
             // clearFilterButton
             // 
@@ -168,7 +168,7 @@ namespace ParquetViewer
             clearFilterButton.ForeColor = System.Drawing.Color.Black;
             clearFilterButton.Name = "clearFilterButton";
             clearFilterButton.UseVisualStyleBackColor = true;
-            clearFilterButton.Click += clearFilterButton_Click;
+            clearFilterButton.Click += ClearFilterButton_Click;
             // 
             // mainGridView
             // 
@@ -198,7 +198,7 @@ namespace ParquetViewer
             mainTableLayoutPanel.SetRowSpan(mainGridView, 2);
             mainGridView.ShowCellToolTips = false;
             mainGridView.ShowCopyAsWhereContextMenuItem = true;
-            mainGridView.DataBindingComplete += mainGridView_DataBindingComplete;
+            mainGridView.DataBindingComplete += MainGridView_DataBindingComplete;
             // 
             // loadAllRowsButton
             // 
@@ -210,8 +210,8 @@ namespace ParquetViewer
             loadAllRowsButton.Name = "loadAllRowsButton";
             loadAllRowsButtonTooltip.SetToolTip(loadAllRowsButton, resources.GetString("loadAllRowsButton.ToolTip"));
             loadAllRowsButton.UseVisualStyleBackColor = true;
-            loadAllRowsButton.EnabledChanged += loadAllRowsButton_EnabledChanged;
-            loadAllRowsButton.Click += loadAllRowsButton_Click;
+            loadAllRowsButton.EnabledChanged += LoadAllRowsButton_EnabledChanged;
+            loadAllRowsButton.Click += LoadAllRowsButton_Click;
             // 
             // openParquetFileDialog
             // 
@@ -234,19 +234,19 @@ namespace ParquetViewer
             // 
             resources.ApplyResources(newToolStripMenuItem, "newToolStripMenuItem");
             newToolStripMenuItem.Name = "newToolStripMenuItem";
-            newToolStripMenuItem.Click += newToolStripMenuItem_Click;
+            newToolStripMenuItem.Click += NewToolStripMenuItem_Click;
             // 
             // openToolStripMenuItem
             // 
             resources.ApplyResources(openToolStripMenuItem, "openToolStripMenuItem");
             openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.Click += openToolStripMenuItem_Click;
+            openToolStripMenuItem.Click += OpenToolStripMenuItem_Click;
             // 
             // openFolderToolStripMenuItem
             // 
             openFolderToolStripMenuItem.Name = "openFolderToolStripMenuItem";
             resources.ApplyResources(openFolderToolStripMenuItem, "openFolderToolStripMenuItem");
-            openFolderToolStripMenuItem.Click += openFolderToolStripMenuItem_Click;
+            openFolderToolStripMenuItem.Click += OpenFolderToolStripMenuItem_Click;
             // 
             // toolStripSeparator
             // 
@@ -257,7 +257,7 @@ namespace ParquetViewer
             // 
             resources.ApplyResources(saveAsToolStripMenuItem, "saveAsToolStripMenuItem");
             saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
+            saveAsToolStripMenuItem.Click += SaveAsToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
@@ -268,7 +268,7 @@ namespace ParquetViewer
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             resources.ApplyResources(exitToolStripMenuItem, "exitToolStripMenuItem");
-            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
+            exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
             // 
             // editToolStripMenuItem
             // 
@@ -280,7 +280,7 @@ namespace ParquetViewer
             // 
             resources.ApplyResources(changeFieldsMenuStripButton, "changeFieldsMenuStripButton");
             changeFieldsMenuStripButton.Name = "changeFieldsMenuStripButton";
-            changeFieldsMenuStripButton.Click += changeFieldsMenuStripButton_Click;
+            changeFieldsMenuStripButton.Click += ChangeFieldsMenuStripButton_Click;
             // 
             // changeDateFormatToolStripMenuItem
             // 
@@ -315,13 +315,13 @@ namespace ParquetViewer
             alwaysLoadAllRecordsToolStripMenuItem.CheckState = CheckState.Checked;
             alwaysLoadAllRecordsToolStripMenuItem.Name = "alwaysLoadAllRecordsToolStripMenuItem";
             resources.ApplyResources(alwaysLoadAllRecordsToolStripMenuItem, "alwaysLoadAllRecordsToolStripMenuItem");
-            alwaysLoadAllRecordsToolStripMenuItem.Click += alwaysLoadAllRecordsToolStripMenuItem_Click;
+            alwaysLoadAllRecordsToolStripMenuItem.Click += AlwaysLoadAllRecordsToolStripMenuItem_Click;
             // 
             // darkModeToolStripMenuItem
             // 
             darkModeToolStripMenuItem.Name = "darkModeToolStripMenuItem";
             resources.ApplyResources(darkModeToolStripMenuItem, "darkModeToolStripMenuItem");
-            darkModeToolStripMenuItem.Click += darkModeToolStripMenuItem_Click;
+            darkModeToolStripMenuItem.Click += DarkModeToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem
             // 
@@ -353,14 +353,14 @@ namespace ParquetViewer
             userGuideToolStripMenuItem.Image = Resources.Icons.external_link_icon;
             userGuideToolStripMenuItem.Name = "userGuideToolStripMenuItem";
             resources.ApplyResources(userGuideToolStripMenuItem, "userGuideToolStripMenuItem");
-            userGuideToolStripMenuItem.Click += userGuideToolStripMenuItem_Click;
+            userGuideToolStripMenuItem.Click += UserGuideToolStripMenuItem_Click;
             // 
             // shareAnonymousUsageDataToolStripMenuItem
             // 
             shareAnonymousUsageDataToolStripMenuItem.Name = "shareAnonymousUsageDataToolStripMenuItem";
             resources.ApplyResources(shareAnonymousUsageDataToolStripMenuItem, "shareAnonymousUsageDataToolStripMenuItem");
-            shareAnonymousUsageDataToolStripMenuItem.CheckedChanged += shareAnonymousUsageDataToolStripMenuItem_CheckedChanged;
-            shareAnonymousUsageDataToolStripMenuItem.Click += shareAnonymousUsageDataToolStripMenuItem_Click;
+            shareAnonymousUsageDataToolStripMenuItem.CheckedChanged += ShareAnonymousUsageDataToolStripMenuItem_CheckedChanged;
+            shareAnonymousUsageDataToolStripMenuItem.Click += ShareAnonymousUsageDataToolStripMenuItem_Click;
             // 
             // languageToolStripMenuItem
             // 
@@ -374,20 +374,20 @@ namespace ParquetViewer
             englishToolStripMenuItem.Name = "englishToolStripMenuItem";
             resources.ApplyResources(englishToolStripMenuItem, "englishToolStripMenuItem");
             englishToolStripMenuItem.Tag = "en-US";
-            englishToolStripMenuItem.Click += languageToolStripMenuItem_Click;
+            englishToolStripMenuItem.Click += LanguageToolStripMenuItem_Click;
             // 
             // turkishToolStripMenuItem
             // 
             turkishToolStripMenuItem.Name = "turkishToolStripMenuItem";
             resources.ApplyResources(turkishToolStripMenuItem, "turkishToolStripMenuItem");
             turkishToolStripMenuItem.Tag = "tr-TR";
-            turkishToolStripMenuItem.Click += languageToolStripMenuItem_Click;
+            turkishToolStripMenuItem.Click += LanguageToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             resources.ApplyResources(aboutToolStripMenuItem, "aboutToolStripMenuItem");
-            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
+            aboutToolStripMenuItem.Click += AboutToolStripMenuItem_Click;
             // 
             // showingRecordCountStatusBarLabel
             // 
@@ -414,7 +414,7 @@ namespace ParquetViewer
             // 
             showingStatusBarLabel.Name = "showingStatusBarLabel";
             resources.ApplyResources(showingStatusBarLabel, "showingStatusBarLabel");
-            showingStatusBarLabel.Click += showingStatusBarLabel_Click;
+            showingStatusBarLabel.Click += ShowingStatusBarLabel_Click;
             // 
             // recordCountStatusBarLabel
             // 
@@ -453,7 +453,7 @@ namespace ParquetViewer
             // 
             fileIntegrityCheckingTimer.Enabled = true;
             fileIntegrityCheckingTimer.Interval = 2500;
-            fileIntegrityCheckingTimer.Tick += fileIntegrityCheckingTimer_Tick;
+            fileIntegrityCheckingTimer.Tick += FileIntegrityCheckingTimer_Tick;
             // 
             // MainForm
             // 

@@ -10,256 +10,255 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace ParquetViewer.Helpers
+namespace ParquetViewer.Helpers;
+
+public static class ExtensionMethods
 {
-    public static class ExtensionMethods
+    private const string DEFAULT_DATE_TIME_FORMAT = "g";
+    private const string DEFAULT_DATE_ONLY_FORMAT = "d";
+    private const string DEFAULT_TIME_ONLY_FORMAT = "T";
+    public const string ISO_8601_DATE_TIME_FORMAT = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
+    public const string ISO_8601_DATE_ONLY_FORMAT = "yyyy-MM-dd";
+    public const string ISO_8601_TIME_ONLY_FORMAT = "HH:mm:ss.FFFFFFF";
+
+    /// <summary>
+    /// Returns a list of all column names within a given datatable
+    /// </summary>
+    /// <param name="datatable">The datatable to retrieve the column names from</param>
+    /// <returns></returns>
+    public static IList<string> GetColumnNames(this DataTable datatable)
     {
-        private const string DefaultDateTimeFormat = "g";
-        private const string DefaultDateOnlyFormat = "d";
-        private const string DefaultTimeOnlyFormat = "T";
-        public const string ISO8601DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFF";
-        public const string ISO8601DateOnlyFormat = "yyyy-MM-dd";
-        public const string ISO8601TimeOnlyFormat = "HH:mm:ss.FFFFFFF";
-
-        /// <summary>
-        /// Returns a list of all column names within a given datatable
-        /// </summary>
-        /// <param name="datatable">The datatable to retrieve the column names from</param>
-        /// <returns></returns>
-        public static IList<string> GetColumnNames(this DataTable datatable)
+        var columns = new List<string>(datatable.Columns.Count);
+        foreach (DataColumn column in datatable.Columns)
         {
-            List<string> columns = new List<string>(datatable.Columns.Count);
-            foreach (System.Data.DataColumn column in datatable.Columns)
-            {
-                columns.Add(column.ColumnName);
-            }
-            return columns;
+            columns.Add(column.ColumnName);
         }
+        return columns;
+    }
 
-        /// <summary>
-        /// Gets the corresponding date format string for the provided <paramref name="dateFormat"/>
-        /// </summary>
-        /// <param name="dateFormat">Date format to get formatting string for</param>
-        /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
-        public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
+    /// <summary>
+    /// Gets the corresponding date format string for the provided <paramref name="dateFormat"/>
+    /// </summary>
+    /// <param name="dateFormat">Date format to get formatting string for</param>
+    /// <returns>A formatting string such as: YYYY-MM-dd that is passible to DateTime.ToString()</returns>
+    public static string GetDateFormat(this DateFormat dateFormat) => dateFormat switch
+    {
+        DateFormat.ISO8601 => ISO_8601_DATE_TIME_FORMAT,
+        DateFormat.Default => DEFAULT_DATE_TIME_FORMAT,
+        DateFormat.Custom => AppSettings.CustomDateFormat ?? DEFAULT_DATE_TIME_FORMAT,
+        _ => string.Empty
+    };
+
+    public static string GetDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
+    {
+        DateFormat.ISO8601 => ISO_8601_DATE_ONLY_FORMAT,
+        DateFormat.Default => DEFAULT_DATE_ONLY_FORMAT,
+        DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
+            UtilityMethods.StripTimeComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DEFAULT_DATE_ONLY_FORMAT,
+        _ => string.Empty
+    };
+
+    public static string GetTimeOnlyFormat(this DateFormat dateFormat) => dateFormat switch
+    {
+        DateFormat.ISO8601 => ISO_8601_TIME_ONLY_FORMAT,
+        DateFormat.Default => DEFAULT_TIME_ONLY_FORMAT,
+        DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
+            UtilityMethods.StripDateComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DEFAULT_TIME_ONLY_FORMAT,
+        _ => string.Empty
+    };
+
+    public static string GetExtension(this FileType fileType)
+        => Enum.IsDefined(fileType)
+        ? $".{fileType.ToString().ToLowerInvariant()}"
+        : throw new ArgumentOutOfRangeException(nameof(fileType));
+
+    public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
+
+    public static Size RenderedSize(this PictureBox pictureBox)
+    {
+        var wfactor = (double)pictureBox.Image!.Width / pictureBox.ClientSize.Width;
+        var hfactor = (double)pictureBox.Image.Height / pictureBox.ClientSize.Height;
+
+        var resizeFactor = Math.Max(wfactor, hfactor);
+        return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
+    }
+
+    public static IEnumerable<DataColumn> AsEnumerable(this DataColumnCollection columns)
+    {
+        foreach (DataColumn column in columns)
         {
-            DateFormat.ISO8601 => ISO8601DateTimeFormat,
-            DateFormat.Default => DefaultDateTimeFormat,
-            DateFormat.Custom => AppSettings.CustomDateFormat ?? DefaultDateTimeFormat,
-            _ => string.Empty
-        };
-
-        public static string GetDateOnlyFormat(this DateFormat dateFormat) => dateFormat switch
-        {
-            DateFormat.ISO8601 => ISO8601DateOnlyFormat,
-            DateFormat.Default => DefaultDateOnlyFormat,
-            DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
-                UtilityMethods.StripTimeComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DefaultDateOnlyFormat,
-            _ => string.Empty
-        };
-
-        public static string GetTimeOnlyFormat(this DateFormat dateFormat) => dateFormat switch
-        {
-            DateFormat.ISO8601 => ISO8601TimeOnlyFormat,
-            DateFormat.Default => DefaultTimeOnlyFormat,
-            DateFormat.Custom => AppSettings.CustomDateFormat is not null ?
-                UtilityMethods.StripDateComponentsFromDateTimeFormat(AppSettings.CustomDateFormat) : DefaultTimeOnlyFormat,
-            _ => string.Empty
-        };
-
-        public static string GetExtension(this FileType fileType)
-            => Enum.IsDefined(fileType)
-            ? $".{fileType.ToString().ToLowerInvariant()}"
-            : throw new ArgumentOutOfRangeException(nameof(fileType));
-
-        public static long ToMillisecondsSinceEpoch(this DateTime dateTime) => new DateTimeOffset(dateTime).ToUnixTimeMilliseconds();
-
-        public static Size RenderedSize(this PictureBox pictureBox)
-        {
-            var wfactor = (double)pictureBox.Image!.Width / pictureBox.ClientSize.Width;
-            var hfactor = (double)pictureBox.Image.Height / pictureBox.ClientSize.Height;
-
-            var resizeFactor = Math.Max(wfactor, hfactor);
-            return new Size((int)(pictureBox.Image.Width / resizeFactor), (int)(pictureBox.Image.Height / resizeFactor));
+            yield return column;
         }
+    }
 
-        public static IEnumerable<DataColumn> AsEnumerable(this DataColumnCollection columns)
+    public static IEnumerable<DataGridViewCell> AsEnumerable(this DataGridViewSelectedCellCollection cells)
+    {
+        foreach (DataGridViewCell cell in cells)
         {
-            foreach (DataColumn column in columns)
-            {
-                yield return column;
-            }
+            yield return cell;
         }
+    }
 
-        public static IEnumerable<DataGridViewCell> AsEnumerable(this DataGridViewSelectedCellCollection cells)
+    public static IEnumerable<DataGridViewColumn> AsEnumerable(this DataGridViewColumnCollection columns)
+    {
+        foreach (DataGridViewColumn column in columns)
         {
-            foreach (DataGridViewCell cell in cells)
-            {
-                yield return cell;
-            }
+            yield return column;
         }
+    }
 
-        public static IEnumerable<DataGridViewColumn> AsEnumerable(this DataGridViewColumnCollection columns)
+    /// <summary>
+    /// Returns true if the type is a "simple" type. Basically anything that isn't a class, struct or array.
+    /// </summary>
+    /// <remarks>Source: https://stackoverflow.com/a/65079923/1458738</remarks>
+    public static bool IsSimple(this Type type)
+        => TypeDescriptor.GetConverter(type).CanConvertFrom(typeof(string));
+
+    public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
+    {
+        if (Enum.IsDefined(typeof(T), value))
         {
-            foreach (DataGridViewColumn column in columns)
-            {
-                yield return column;
-            }
+            return (T)Enum.ToObject(typeof(T), value);
         }
+        return @default;
+    }
 
-        /// <summary>
-        /// Returns true if the type is a "simple" type. Basically anything that isn't a class, struct or array.
-        /// </summary>
-        /// <remarks>Source: https://stackoverflow.com/a/65079923/1458738</remarks>
-        public static bool IsSimple(this Type type)
-            => TypeDescriptor.GetConverter(type).CanConvertFrom(typeof(string));
-
-        public static T ToEnum<T>(this int value, T @default) where T : struct, Enum
+    public static void DeleteSubKeyTreeIfExists(this RegistryKey key, string name)
+    {
+        if (key.OpenSubKey(name) is not null)
         {
-            if (Enum.IsDefined(typeof(T), value))
-            {
-                return (T)Enum.ToObject(typeof(T), value);
-            }
-            return @default;
+            key.DeleteSubKeyTree(name);
         }
+    }
 
-        public static void DeleteSubKeyTreeIfExists(this RegistryKey key, string name)
+    /// <summary>
+    /// Converts a float to a string without using the scientific notation, if possible
+    /// </summary>
+    /// <returns><paramref name="floatValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
+    public static string? ToDecimalString(this float floatValue)
+        => floatValue >= (float)decimal.MinValue && floatValue <= (float)decimal.MaxValue ? ToDecimalStringImpl(floatValue) : null;
+
+    /// <summary>
+    /// Converts a double to a string without using the scientific notation, if possible
+    /// </summary>
+    /// <returns><paramref name="doubleValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
+    public static string? ToDecimalString(this double doubleValue)
+        => doubleValue >= (double)decimal.MinValue && doubleValue <= (double)decimal.MaxValue ? ToDecimalStringImpl(doubleValue) : null;
+
+    private static string? ToDecimalStringImpl(object value)
+    {
+        try
         {
-            if (key.OpenSubKey(name) is not null)
-            {
-                key.DeleteSubKeyTree(name);
-            }
+            return Convert.ToDecimal(value).ToString();
         }
-
-        /// <summary>
-        /// Converts a float to a string without using the scientific notation, if possible
-        /// </summary>
-        /// <returns><paramref name="floatValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
-        public static string? ToDecimalString(this float floatValue)
-            => floatValue >= (float)decimal.MinValue && floatValue <= (float)decimal.MaxValue ? ToDecimalStringImpl(floatValue) : null;
-
-        /// <summary>
-        /// Converts a double to a string without using the scientific notation, if possible
-        /// </summary>
-        /// <returns><paramref name="doubleValue"/> in its decimal representation. `null` if the decimal conversion fails.</returns>
-        public static string? ToDecimalString(this double doubleValue)
-            => doubleValue >= (double)decimal.MinValue && doubleValue <= (double)decimal.MaxValue ? ToDecimalStringImpl(doubleValue) : null;
-
-        private static string? ToDecimalStringImpl(object value)
+        catch
         {
-            try
-            {
-                return Convert.ToDecimal(value).ToString();
-            }
-            catch
-            {
-                return null;
-            }
+            return null;
         }
+    }
 
-        //Source: https://stackoverflow.com/a/7574615/1458738
-        public static string Left(this string value, int maxLength, string? truncateSuffix = null)
+    //Source: https://stackoverflow.com/a/7574615/1458738
+    public static string Left(this string value, int maxLength, string? truncateSuffix = null)
+    {
+        if (string.IsNullOrEmpty(value))
+            return value;
+
+        maxLength = Math.Abs(maxLength);
+        return value.Length <= maxLength ? value : string.Concat(value.AsSpan(0, maxLength), truncateSuffix);
+    }
+
+    public static IEnumerable<ToolStripItem> Children(this MenuStrip menuStrip)
+    {
+        foreach (ToolStripItem toolStrip in menuStrip.Items)
         {
-            if (string.IsNullOrEmpty(value))
-                return value;
+            yield return toolStrip;
 
-            maxLength = Math.Abs(maxLength);
-            return value.Length <= maxLength ? value : (value.Substring(0, maxLength) + truncateSuffix);
-        }
-
-        public static IEnumerable<ToolStripItem> Children(this MenuStrip menuStrip)
-        {
-            foreach (ToolStripItem toolStrip in menuStrip.Items)
+            if (toolStrip is ToolStripMenuItem childStrip)
             {
-                yield return toolStrip;
-
-                if (toolStrip is ToolStripMenuItem childStrip)
+                foreach (var child in childStrip.Children())
                 {
-                    foreach (var child in childStrip.Children())
-                    {
-                        yield return child;
-                    }
+                    yield return child;
                 }
             }
         }
+    }
 
-        private static IEnumerable<ToolStripItem> Children(this ToolStripItem toolStrip)
+    private static IEnumerable<ToolStripItem> Children(this ToolStripItem toolStrip)
+    {
+        if (toolStrip is ToolStripMenuItem menuItem)
         {
-            if (toolStrip is ToolStripMenuItem menuItem)
+            foreach (ToolStripItem childStrip in menuItem.DropDownItems)
             {
-                foreach (ToolStripItem childStrip in menuItem.DropDownItems)
+                yield return childStrip;
+                foreach (ToolStripItem cc in childStrip.Children())
                 {
-                    yield return childStrip;
-                    foreach (ToolStripItem cc in childStrip.Children())
-                    {
-                        yield return cc;
-                    }
+                    yield return cc;
                 }
             }
         }
+    }
 
-        public static IEnumerable<T> AppendIf<T>(this IEnumerable<T> enumerable, bool append, T value)
+    public static IEnumerable<T> AppendIf<T>(this IEnumerable<T> enumerable, bool append, T value)
+    {
+        if (append)
+            return enumerable.Append(value);
+        else
+            return enumerable;
+    }
+
+    /// <remarks>Can't put this into IByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
+    public static bool ToImage(this IByteArrayValue byteArrayValue, [NotNullWhen(true)] out Image? image)
+    {
+        ArgumentNullException.ThrowIfNull(byteArrayValue);
+
+        try
         {
-            if (append)
-                return enumerable.Append(value);
-            else
-                return enumerable;
+            using var ms = new MemoryStream(byteArrayValue.Data);
+            image = Image.FromStream(ms);
+            return true;
         }
-
-        /// <remarks>Can't put this into IByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
-        public static bool ToImage(this IByteArrayValue byteArrayValue, [NotNullWhen(true)] out Image? image)
+        catch
         {
-            ArgumentNullException.ThrowIfNull(byteArrayValue);
-
-            try
-            {
-                using var ms = new MemoryStream(byteArrayValue.Data);
-                image = Image.FromStream(ms);
-                return true;
-            }
-            catch
-            {
-                image = null;
-                return false;
-            }
-        }
-
-        public static void DisposeSafely(this IDisposable? disposable)
-        {
-            try
-            {
-                disposable?.Dispose();
-            }
-            catch { /*swallow*/ }
-        }
-
-        public static bool ImplementsInterface<T>(this Type? type)
-        {
-            if (type is null)
-                return false;
-            else
-                return typeof(T).IsAssignableFrom(type);
-        }
-
-        public static string Format(this string formatString, params object?[] args)
-            => string.Format(formatString, args);
-
-        /// <summary>
-        /// https://huggingface.co/docs/hub/en/datasets-image#parquet-format
-        /// </summary>
-        /// <returns>True if this is a struct with "bytes" and "path" fields</returns>
-        public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
-        {
-            if (structValue.Data.ColumnNames.Count == 2
-                && structValue.Data.ColumnNames.Contains("bytes")
-                && structValue.Data.ColumnNames.Contains("path")
-                && structValue.Data.GetValue("bytes") is ByteArrayValue byteArrayValue)
-            {
-                data = byteArrayValue.Data;
-                return true;
-            }
-            data = null;
+            image = null;
             return false;
         }
+    }
+
+    public static void DisposeSafely(this IDisposable? disposable)
+    {
+        try
+        {
+            disposable?.Dispose();
+        }
+        catch { /*Swallow*/ }
+    }
+
+    public static bool ImplementsInterface<T>(this Type? type)
+    {
+        if (type is null)
+            return false;
+        else
+            return typeof(T).IsAssignableFrom(type);
+    }
+
+    public static string Format(this string formatString, params object?[] args)
+        => string.Format(formatString, args);
+
+    /// <summary>
+    /// https://huggingface.co/docs/hub/en/datasets-image#parquet-format
+    /// </summary>
+    /// <returns>True if this is a struct with "bytes" and "path" fields</returns>
+    public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
+    {
+        if (structValue.Data.ColumnNames.Count == 2
+            && structValue.Data.ColumnNames.Contains("bytes")
+            && structValue.Data.ColumnNames.Contains("path")
+            && structValue.Data.GetValue("bytes") is IByteArrayValue byteArrayValue)
+        {
+            data = byteArrayValue.Data;
+            return true;
+        }
+        data = null;
+        return false;
     }
 }

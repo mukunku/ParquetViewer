@@ -257,7 +257,7 @@ IN KONTROLÜ:
 BIRDEN FAZLA KOŞUL: 
     WHERE (field_1 = 0 AND field_2 <> 'value') OR field_3 IS NULL
 
-Daha fazla bilgi için: 'Hakkında → Kullanıcı Kılavuzu'",""
+Daha fazla bilgi için: 'Yardım → Kullanıcı Kılavuzu'",""
 "Strings.resx","QuerySyntaxHelpTitle","Shown when the user clicks on the Filter Query (?): link button","Filter Query Syntax Examples","Sorgu Filtresi Söz Dizim Örnekleri",""
 "Strings.resx","QueryZoomStatusTextFormat","Text format used in the Query Editor tool to display the current zoom level","Query Zoom: {0}%","Sorgu Zumu: {0}%",""
 "Strings.resx","RecordsToBeExportedTitleFormat","Title shown on the save file dialog when the user is exporting data","{0} records will be exported","{0} kayıt kaydedilecektir",""

@@ -1,160 +1,152 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
-namespace ParquetViewer
+namespace ParquetViewer;
+
+public static class AppSettings
 {
-    public static class AppSettings
+    private const string REGISTRY_SUB = "ParquetViewer";
+    private const string ALWAYS_SELECT_ALL_FIELDS = "AlwaysSelectAllFields";
+    private const string DATE_TIME_DISPLAY_FORMAT = "DateTimeDisplayFormat";
+    private const string CONSENT_LAST_ASKED_ON_VERSION = "ConsentLastAskedOnVersion";
+    private const string ANALYTICS_DEVICE_ID = "AnalyticsDeviceId";
+    private const string ANALYTICS_DATA_GATHERING_CONSENT = "AnalyticsDataGatheringConsent";
+    private const string ALWAYS_LOAD_ALL_RECORDS = "AlwaysLoadAllRecords";
+    private const string OPENED_FILE_COUNT = "OpenedFileCount";
+    private const string CUSTOM_DATE_FORMAT = "CustomDateFormat";
+    private const string DARK_MODE = "DarkMode";
+    private const string USER_SELECTED_CULTURE = "UserSelectedCulture";
+
+    public static DateFormat DateTimeDisplayFormat
     {
-        private const string RegistrySubKey = "ParquetViewer";
-        private const string AlwaysSelectAllFieldsKey = "AlwaysSelectAllFields";
-        private const string DateTimeDisplayFormatKey = "DateTimeDisplayFormat";
-        private const string ConsentLastAskedOnVersionKey = "ConsentLastAskedOnVersion";
-        private const string AnalyticsDeviceIdKey = "AnalyticsDeviceId";
-        private const string AnalyticsDataGatheringConsentKey = "AnalyticsDataGatheringConsent";
-        private const string AlwaysLoadAllRecordsKey = "AlwaysLoadAllRecords";
-        private const string OpenedFileCountKey = "OpenedFileCount";
-        private const string CustomDateFormatKey = "CustomDateFormat";
-        private const string DarkModeKey = "DarkMode";
-        private const string UserSelectedCultureKey = "UserSelectedCulture";
-        private const string QueryEditorZoomLevelKey = "QueryEditorZoomLevel";
+        get => ReadRegistryValue(DATE_TIME_DISPLAY_FORMAT, out int value) ? value.ToEnum(DateFormat.Default) : DateFormat.Default;
+        set => SetRegistryValue(DATE_TIME_DISPLAY_FORMAT, (int)value);
+    }
 
-        public static DateFormat DateTimeDisplayFormat
+    public static bool AlwaysSelectAllFields
+    {
+        get => ReadRegistryValue(ALWAYS_SELECT_ALL_FIELDS, out string? temp) && bool.TryParse(temp, out var value) && value;
+        set => SetRegistryValue(ALWAYS_SELECT_ALL_FIELDS, value.ToString());
+    }
+
+    public static bool AlwaysLoadAllRecords
+    {
+        get => ReadRegistryValue(ALWAYS_LOAD_ALL_RECORDS, out string? temp) && bool.TryParse(temp, out var value) && value;
+        set => SetRegistryValue(ALWAYS_LOAD_ALL_RECORDS, value.ToString());
+    }
+
+    public static SemanticVersion? ConsentLastAskedOnVersion
+    {
+        get => ReadRegistryValue(CONSENT_LAST_ASKED_ON_VERSION, out string? value) ? SemanticVersion.TryParse(value, out var semanticVersion) ? semanticVersion : null : null;
+        set => SetRegistryValue(CONSENT_LAST_ASKED_ON_VERSION, value?.ToString() ?? string.Empty);
+    }
+
+    public static Guid AnalyticsDeviceId
+        => ReadRegistryValue(ANALYTICS_DEVICE_ID, out string? temp) && Guid.TryParse(temp, out var value) ? value : SetAnalyticsDeviceId();
+
+    private static Guid SetAnalyticsDeviceId()
+    {
+        try
         {
-            get => ReadRegistryValue(DateTimeDisplayFormatKey, out int value) ? value.ToEnum(DateFormat.Default) : DateFormat.Default;
-            set => SetRegistryValue(DateTimeDisplayFormatKey, (int)value);
+            var newDeviceId = Guid.NewGuid();
+            SetRegistryValue(ANALYTICS_DEVICE_ID, newDeviceId);
+            return newDeviceId;
         }
-
-        public static bool AlwaysSelectAllFields
+        catch
         {
-            get => ReadRegistryValue(AlwaysSelectAllFieldsKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
-            set => SetRegistryValue(AlwaysSelectAllFieldsKey, value.ToString());
+            return Guid.Empty;
         }
+    }
 
-        public static bool AlwaysLoadAllRecords
+    public static bool AnalyticsDataGatheringConsent
+    {
+        get => ReadRegistryValue(ANALYTICS_DATA_GATHERING_CONSENT, out string? temp) && bool.TryParse(temp, out var value) && value;
+        set => SetRegistryValue(ANALYTICS_DATA_GATHERING_CONSENT, value.ToString());
+    }
+
+    private static int? _openedFileCount;
+    public static int OpenedFileCount
+    {
+        get => _openedFileCount ??= ReadRegistryValue(OPENED_FILE_COUNT, out int value) ? value : 0;
+        set
         {
-            get => ReadRegistryValue(AlwaysLoadAllRecordsKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
-            set => SetRegistryValue(AlwaysLoadAllRecordsKey, value.ToString());
+            _openedFileCount = value;
+            SetRegistryValue(OPENED_FILE_COUNT, value);
         }
+    }
 
-        public static SemanticVersion? ConsentLastAskedOnVersion
+    private static string? _customDateFormat;
+    public static string? CustomDateFormat
+    {
+        get => _customDateFormat ??= ReadRegistryValue(CUSTOM_DATE_FORMAT, out string? value) && UtilityMethods.IsValidDateFormat(value) ? value : null;
+        set
         {
-            get => ReadRegistryValue(ConsentLastAskedOnVersionKey, out string? value) ? SemanticVersion.TryParse(value, out var semanticVersion) ? semanticVersion : null : null;
-            set => SetRegistryValue(ConsentLastAskedOnVersionKey, value?.ToString() ?? string.Empty);
+            _customDateFormat = value;
+            SetRegistryValue(CUSTOM_DATE_FORMAT, value ?? string.Empty);
         }
+    }
 
-        public static Guid AnalyticsDeviceId
-            => ReadRegistryValue(AnalyticsDeviceIdKey, out string? temp) && Guid.TryParse(temp, out var value) ? value : SetAnalyticsDeviceId();
-
-        private static Guid SetAnalyticsDeviceId()
+    public static bool DarkMode
+    {
+        get => ReadRegistryValue(DARK_MODE, out string? temp) && bool.TryParse(temp, out var value) && value;
+        set
         {
-            try
+            SetRegistryValue(DARK_MODE, value.ToString());
+            var theme = GetTheme();
+            foreach (var form in FormBase.OpenForms)
             {
-                Guid newDeviceId = Guid.NewGuid();
-                SetRegistryValue(AnalyticsDeviceIdKey, newDeviceId);
-                return newDeviceId;
-            }
-            catch
-            {
-                return Guid.Empty;
-            }
-        }
-
-        public static bool AnalyticsDataGatheringConsent
-        {
-            get => ReadRegistryValue(AnalyticsDataGatheringConsentKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
-            set => SetRegistryValue(AnalyticsDataGatheringConsentKey, value.ToString());
-        }
-
-        private static int? _openedFileCount;
-        public static int OpenedFileCount
-        {
-            get => _openedFileCount ??= ReadRegistryValue(OpenedFileCountKey, out int value) ? value : 0;
-            set
-            {
-                _openedFileCount = value;
-                SetRegistryValue(OpenedFileCountKey, value);
-            }
-        }
-
-        private static string? _customDateFormat;
-        public static string? CustomDateFormat
-        {
-            get => _customDateFormat ??= ReadRegistryValue(CustomDateFormatKey, out string? value) && UtilityMethods.IsValidDateFormat(value) ? value : null;
-            set
-            {
-                _customDateFormat = value;
-                SetRegistryValue(CustomDateFormatKey, value ?? string.Empty);
+                form.SetTheme(theme);
             }
         }
+    }
 
-        public static bool DarkMode
+    public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;
+
+    public static CultureInfo? UserSelectedCulture
+    {
+        get => ReadRegistryValue(USER_SELECTED_CULTURE, out string? value) ?
+            (UtilityMethods.TryParseCultureInfo(value, out var cultureInfo) ? cultureInfo : null)
+            : null;
+        set => SetRegistryValue(USER_SELECTED_CULTURE, value?.ToString() ?? string.Empty);
+    }
+
+    private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)
+    {
+        try
         {
-            get => ReadRegistryValue(DarkModeKey, out string? temp) && bool.TryParse(temp, out var value) ? value : false;
-            set
+            using var registryKey = Registry.CurrentUser.CreateSubKey(REGISTRY_SUB);
+            if (registryKey.GetValue(key) is T castValue)
             {
-                SetRegistryValue(DarkModeKey, value.ToString());
-                var theme = GetTheme();
-                foreach (var form in FormBase.OpenForms)
-                {
-                    form.SetTheme(theme);
-                }
+                value = castValue;
+                return true;
             }
-        }
-
-        public static Theme GetTheme() => DarkMode ? Theme.DarkModeTheme : Theme.LightModeTheme;
-
-        public static CultureInfo? UserSelectedCulture
-        {
-            get => ReadRegistryValue(UserSelectedCultureKey, out string? value) ?
-                (UtilityMethods.TryParseCultureInfo(value, out CultureInfo? cultureInfo) ? cultureInfo : null)
-                : null;
-            set => SetRegistryValue(UserSelectedCultureKey, value?.ToString() ?? string.Empty);
-        }
-
-        public static int? QueryEditorZoomLevel
-        {
-            get => ReadRegistryValue(QueryEditorZoomLevelKey, out int value) ? value : null;
-            set => SetRegistryValue(QueryEditorZoomLevelKey, value);
-        }
-
-        private static bool ReadRegistryValue<T>(string key, [NotNullWhen(true)] out T? value)
-        {
-            try
-            {
-                using var registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey);
-                if (registryKey.GetValue(key) is T castValue)
-                {
-                    value = castValue;
-                    return true;
-                }
-                else
-                {
-                    value = default;
-                    return false;
-                }
-            }
-            catch
+            else
             {
                 value = default;
                 return false;
             }
         }
-
-        private static void SetRegistryValue<T>(string key, T value)
+        catch
         {
-            if (value is null) //registry can't store null values
-                throw new ArgumentNullException(nameof(value));
-
-            try
-            {
-                using var registryKey = Registry.CurrentUser.CreateSubKey(RegistrySubKey);
-                registryKey.SetValue(key, value);
-            }
-            catch { }
+            value = default;
+            return false;
         }
+    }
+
+    private static void SetRegistryValue<T>(string key, T value)
+    {
+        if (value is null) //registry can't store null values
+            throw new ArgumentNullException(nameof(value));
+
+        try
+        {
+            using var registryKey = Registry.CurrentUser.CreateSubKey(REGISTRY_SUB);
+            registryKey.SetValue(key, value);
+        }
+        catch { }
     }
 }

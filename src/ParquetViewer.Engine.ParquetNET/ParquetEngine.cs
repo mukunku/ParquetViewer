@@ -5,287 +5,283 @@ using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Data;
 
-namespace ParquetViewer.Engine.ParquetNET
+namespace ParquetViewer.Engine.ParquetNET;
+
+public sealed partial class ParquetEngine : IParquetEngine, IDisposable
 {
-    public partial class ParquetEngine : IParquetEngine, IDisposable
+    private static readonly ParquetOptions _defaultParquetOptions = new() { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
+    private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
+    private long? _recordCount;
+
+    private ParquetReader DefaultReader => _parquetFiles.Length > 0 ? _parquetFiles[0].Reader : throw new ParquetEngineException("No parquet readers available");
+
+    private FileMetaData ThriftMetadata => DefaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
+
+    private ParquetSchema Schema => DefaultReader.Schema;
+
+    public Dictionary<string, string> CustomMetadata => DefaultReader.CustomMetadata;
+
+    public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Reader.Metadata?.NumRows ?? 0);
+
+    public int NumberOfPartitions => _parquetFiles.Length;
+
+    public List<string> Fields => DefaultReader.Schema.Fields.Select(f => f.Name).ToList();
+
+    public string Path { get; }
+
+    ParquetMetadata? _metadata = null;
+    public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(ThriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
+
+    private ParquetEngine(string fileOrFolderPath, params (string FilePath, ParquetReader Reader)[] parquetFiles)
     {
-        private static readonly ParquetOptions _defaultParquetOptions = new () { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
-        private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
-        private long? _recordCount;
+        _parquetFiles = parquetFiles ?? throw new ArgumentNullException(nameof(parquetFiles), "No parquet readers provided");
+        Path = fileOrFolderPath;
+    }
 
-        private ParquetReader _defaultReader => _parquetFiles.Length > 0 ? _parquetFiles[0].Reader : throw new ParquetEngineException("No parquet readers available");
+    private ParquetSchemaElement BuildParquetSchemaTree()
+    {
+        var thriftSchema = ThriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
+        var schemaElements = thriftSchema.GetEnumerator();
+        var thriftSchemaTree = ReadSchemaTree(ref schemaElements);
 
-        private FileMetaData _thriftMetadata => _defaultReader.Metadata ?? throw new ParquetEngineException("No thrift metadata was found");
-
-        private ParquetSchema _schema => _defaultReader.Schema;
-
-        public Dictionary<string, string> CustomMetadata => _defaultReader.CustomMetadata;
-
-        public long RecordCount => _recordCount ??= _parquetFiles.Sum(pf => pf.Reader.Metadata?.NumRows ?? 0);
-
-        public int NumberOfPartitions => _parquetFiles.Length;
-
-        public List<string> Fields => _defaultReader.Schema.Fields.Select(f => f.Name).ToList();
-
-        public string Path { get; }
-
-        ParquetMetadata? _metadata = null;
-        public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(_thriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
-
-        private ParquetEngine(string fileOrFolderPath, params (string FilePath, ParquetReader Reader)[] parquetFiles)
+        foreach (var dataField in Schema.GetDataFields())
         {
-            _parquetFiles = parquetFiles ?? throw new ArgumentNullException(nameof(parquetFiles), "No parquet readers provided");
-            Path = fileOrFolderPath;
+            var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new MalformedFieldException($"Field has no schema path: `{dataField.Name}`"));
+            for (var i = 1; i < dataField.Path.Length; i++)
+            {
+                field = field.GetChild(dataField.Path[i]);
+            }
+            field.DataField = dataField; //if it doesn't have a child it's a datafield (I hope)
         }
 
-        private ParquetSchemaElement BuildParquetSchemaTree()
+        return thriftSchemaTree;
+    }
+
+    private static ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements)
+    {
+        if (!schemaElements.MoveNext())
+            throw new ParquetException("Invalid parquet schema");
+
+        var current = schemaElements.Current;
+        var parquetSchemaElement = new ParquetSchemaElement(current);
+        for (int i = 0; i < current.NumChildren; i++)
         {
-            var thriftSchema = _thriftMetadata.Schema ?? throw new ParquetException("No thrift metadata was found");
-            var schemaElements = thriftSchema.GetEnumerator();
-            var thriftSchemaTree = ReadSchemaTree(ref schemaElements);
+            parquetSchemaElement.AddChild(ReadSchemaTree(ref schemaElements));
+        }
+        return parquetSchemaElement;
+    }
 
-            foreach (var dataField in _schema.GetDataFields())
-            {
-                var field = thriftSchemaTree.GetChild(dataField.Path.FirstPart ?? throw new MalformedFieldException($"Field has no schema path: `{dataField.Name}`"));
-                for (var i = 1; i < dataField.Path.Length; i++)
-                {
-                    field = field.GetChild(dataField.Path[i]);
-                }
-                field.DataField = dataField; //if it doesn't have a child it's a datafield (I hope)
-            }
+    public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath)
+    {
+        if (File.Exists(fileOrFolderPath)) //Handles null
+        {
+            return OpenFileAsync(fileOrFolderPath);
+        }
+        else if (Directory.Exists(fileOrFolderPath)) //Handles null
+        {
+            return OpenFolderAsync(fileOrFolderPath);
+        }
+        else
+        {
+            throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
+        }
+    }
 
-            return thriftSchemaTree;
+    public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath)
+    {
+        if (!File.Exists(parquetFilePath)) //Handles null
+        {
+            throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
         }
 
-        private static ParquetSchemaElement ReadSchemaTree(ref List<SchemaElement>.Enumerator schemaElements)
+        Stream? readOnlyNonLockingStream = null;
+        try
         {
-            if (!schemaElements.MoveNext())
-                throw new ParquetException("Invalid parquet schema");
+            readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false);
+            return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
+        }
+        catch (Exception ex)
+        {
+            readOnlyNonLockingStream?.Dispose();
+            throw new FileReadException(ex);
+        }
+    }
 
-            var current = schemaElements.Current;
-            var parquetSchemaElement = new ParquetSchemaElement(current);
-            for (int i = 0; i < current.NumChildren; i++)
-            {
-                parquetSchemaElement.AddChild(ReadSchemaTree(ref schemaElements));
-            }
-            return parquetSchemaElement;
+    public static async Task<ParquetEngine> OpenFolderAsync(string folderPath)
+    {
+        if (!Directory.Exists(folderPath)) //Handles null
+        {
+            throw new DirectoryNotFoundException($"Directory doesn't exist: {folderPath}");
         }
 
-        public static Task<ParquetEngine> OpenFileOrFolderAsync(string fileOrFolderPath, CancellationToken cancellationToken)
+        var skippedFiles = new Dictionary<string, Exception>();
+        var fileGroups = new Dictionary<ParquetSchema, List<(string FilePath, ParquetReader Reader)>>();
+        foreach (var file in Engine.Helpers.ListParquetFiles(folderPath))
         {
-            if (File.Exists(fileOrFolderPath)) //Handles null
-            {
-                return OpenFileAsync(fileOrFolderPath, cancellationToken);
-            }
-            else if (Directory.Exists(fileOrFolderPath)) //Handles null
-            {
-                return OpenFolderAsync(fileOrFolderPath, cancellationToken);
-            }
-            else
-            {
-                throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
-            }
-        }
-
-        public static async Task<ParquetEngine> OpenFileAsync(string parquetFilePath, CancellationToken cancellationToken)
-        {
-            if (!File.Exists(parquetFilePath)) //Handles null
-            {
-                throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
-            }
-
             Stream? readOnlyNonLockingStream = null;
             try
             {
-                readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
-                return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
+                readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false);
+                if (!fileGroups.TryGetValue(parquetReader.Schema, out var value))
+                {
+                    value = [];
+                    fileGroups.Add(parquetReader.Schema, value);
+                }
+
+                value.Add((file, parquetReader));
             }
             catch (Exception ex)
             {
                 readOnlyNonLockingStream?.Dispose();
-                throw new FileReadException(ex);
+                skippedFiles.Add(System.IO.Path.GetRelativePath(folderPath, file), ex);
             }
         }
 
-        public static async Task<ParquetEngine> OpenFolderAsync(string folderPath, CancellationToken cancellationToken)
+        if (fileGroups.Keys.Count == 0)
         {
-            if (!Directory.Exists(folderPath)) //Handles null
+            if (skippedFiles.Count == 0)
             {
-                throw new DirectoryNotFoundException($"Directory doesn't exist: {folderPath}");
+                throw new FileNotFoundException("Directory is empty");
             }
-
-            var skippedFiles = new Dictionary<string, Exception>();
-            var fileGroups = new Dictionary<ParquetSchema, List<(string FilePath, ParquetReader Reader)>>();
-            foreach (var file in Engine.Helpers.ListParquetFiles(folderPath))
+            else
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                Stream? readOnlyNonLockingStream = null;
-                try
-                {
-                    readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                    var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false, cancellationToken);
-                    if (!fileGroups.ContainsKey(parquetReader.Schema))
-                    {
-                        fileGroups.Add(parquetReader.Schema, new List<(string, ParquetReader)>());
-                    }
-
-                    fileGroups[parquetReader.Schema].Add((file, parquetReader));
-                }
-                catch (Exception ex)
-                {
-                    readOnlyNonLockingStream?.Dispose();
-                    skippedFiles.Add(System.IO.Path.GetRelativePath(folderPath, file), ex);
-                }
-            }
-
-            if (fileGroups.Keys.Count == 0)
-            {
-                if (skippedFiles.Count == 0)
-                {
-                    throw new FileNotFoundException("Directory is empty");
-                }
-                else
-                {
-                    throw new AllFilesSkippedException(skippedFiles);
-                }
-            }
-            else if (fileGroups.Keys.Count > 1)
-            {
-                //We found more than one type of schema.
-                foreach (var fileGroupList in fileGroups.Values)
-                {
-                    Engine.Helpers.EZDispose(fileGroupList.Select(f => f.Reader));
-                }
-
-                throw new MultipleSchemasFoundException(fileGroups.Keys.ToList()
-                    .Select(schema => schema.Fields.Select(f => f.Name).ToList()).ToList());
-            }
-            else if (skippedFiles.Count > 0)
-            {
-                //We found one schema but some files couldn't be read
-                Engine.Helpers.EZDispose(fileGroups.Values.First().Select(f => f.Reader));
-                throw new SomeFilesSkippedException(skippedFiles);
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            return new ParquetEngine(folderPath, fileGroups.Values.First().ToArray());
-        }
-
-        private IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)
-        {
-            foreach (var parquetFile in _parquetFiles)
-            {
-                if (offset >= parquetFile.Reader.Metadata?.NumRows)
-                {
-                    offset -= parquetFile.Reader.Metadata.NumRows;
-                    continue;
-                }
-
-                yield return (offset, parquetFile.Reader);
-                offset = 0;
+                throw new AllFilesSkippedException(skippedFiles);
             }
         }
-
-        public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path,
-            CancellationToken cancellationToken, IProgress<int> progress, Dictionary<string, string>? customMetadata)
+        else if (fileGroups.Keys.Count > 1)
         {
-            var fields = new List<Field>(dataTable.Columns.Count);
-            foreach (DataColumn column in dataTable.Columns)
+            //We found more than one type of schema.
+            foreach (var fileGroupList in fileGroups.Values)
             {
-                fields.Add(this._schema.Fields
-                    .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
-                    .First());
+                Engine.Helpers.EZDispose(fileGroupList.Select(f => f.Reader));
             }
-            var parquetSchema = new ParquetSchema(fields);
 
-            using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            using var parquetWriter = await ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
-            parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
-            if (customMetadata is not null)
-                parquetWriter.CustomMetadata = customMetadata;
+            throw new MultipleSchemasFoundException(fileGroups.Keys.ToList()
+                .Select(schema => schema.Fields.Select(f => f.Name).ToList()).ToList());
+        }
+        else if (skippedFiles.Count > 0)
+        {
+            //We found one schema but some files couldn't be read
+            Engine.Helpers.EZDispose(fileGroups.Values.First().Select(f => f.Reader));
+            throw new SomeFilesSkippedException(skippedFiles);
+        }
 
-            const int MAX_ROWS_PER_ROWGROUP = 100_000; //Without batching we sometimes get "OverflowException: Array dimensions exceeded supported range" from Parquet.NET
-            var batchIndex = 0;
-            var isLastBatch = false;
-            while (!isLastBatch)
+        return new ParquetEngine(folderPath, fileGroups.Values.First().ToArray());
+    }
+
+    private IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)
+    {
+        foreach (var (ParquetFilePath, Reader) in _parquetFiles)
+        {
+            if (offset >= Reader.Metadata?.NumRows)
+            {
+                offset -= Reader.Metadata.NumRows;
+                continue;
+            }
+
+            yield return (offset, Reader);
+            offset = 0;
+        }
+    }
+
+    public async Task WriteDataToParquetFileAsync(DataTable dataTable, string path,
+        IProgress<int> progress, Dictionary<string, string>? customMetadata, CancellationToken cancellationToken)
+    {
+        var fields = new List<Field>(dataTable.Columns.Count);
+        foreach (DataColumn column in dataTable.Columns)
+        {
+            fields.Add(Schema.Fields
+                .Where(field => field.Name.Equals(column.ColumnName, StringComparison.InvariantCulture))
+                .First());
+        }
+        var parquetSchema = new ParquetSchema(fields);
+
+        using var fs = new FileStream(path, FileMode.OpenOrCreate);
+        using var parquetWriter = await ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
+        parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
+        if (customMetadata is not null)
+            parquetWriter.CustomMetadata = customMetadata;
+
+        const int MAX_ROWS_PER_ROWGROUP = 100_000; //Without batching we sometimes get "OverflowException: Array dimensions exceeded supported range" from Parquet.NET
+        var batchIndex = 0;
+        var isLastBatch = false;
+        while (!isLastBatch)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            using var rowGroup = parquetWriter.CreateRowGroup();
+            foreach (var dataField in parquetSchema.DataFields)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
 
-                using var rowGroup = parquetWriter.CreateRowGroup();
-                foreach (var dataField in parquetSchema.DataFields)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
-                    var type = dataField.IsNullable ? GetNullableVersion(dataField.ClrType) : dataField.ClrType;
-                    var values = GetColumnValues(dataTable, type, dataField.Name, batchIndex * MAX_ROWS_PER_ROWGROUP, MAX_ROWS_PER_ROWGROUP);
-                    var dataColumn = new Parquet.Data.DataColumn(dataField, values);
-                    await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
-                    progress.Report(values.Length); //No way to report progress for each row, so do it by column
-                    isLastBatch = values.Length < MAX_ROWS_PER_ROWGROUP;
-                }
-                batchIndex++;
+                var type = dataField.IsNullable ? GetNullableVersion(dataField.ClrType) : dataField.ClrType;
+                var values = GetColumnValues(dataTable, type, dataField.Name, batchIndex * MAX_ROWS_PER_ROWGROUP, MAX_ROWS_PER_ROWGROUP);
+                var dataColumn = new Parquet.Data.DataColumn(dataField, values);
+                await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
+                progress.Report(values.Length); //No way to report progress for each row, so do it by column
+                isLastBatch = values.Length < MAX_ROWS_PER_ROWGROUP;
             }
+            batchIndex++;
         }
-
-        public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles.Select(f => f.Reader));
-
-        private static System.Type GetNullableVersion(System.Type sourceType) => sourceType == null
-                ? throw new ArgumentNullException(nameof(sourceType))
-                : !sourceType.IsValueType
-                    || (sourceType.IsGenericType
-                        && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                ? sourceType
-                : typeof(Nullable<>).MakeGenericType(sourceType);
-
-        private static Array GetColumnValues(DataTable dataTable, System.Type type, string columnName, int skipCount, int fetchCount)
-        {
-            ArgumentNullException.ThrowIfNull(dataTable);
-            ArgumentNullException.ThrowIfNull(type);
-            ArgumentOutOfRangeException.ThrowIfLessThan(skipCount, 0);
-            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
-
-            if (!dataTable.Columns.Contains(columnName))
-                throw new ArgumentException($"Column `{columnName}` does not exist in the datatable");
-
-            var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
-            var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
-            var values = Array.CreateInstance(type, recordCountToRead);
-            var index = 0;
-            foreach (DataRow row in dataTable.Rows)
-            {
-                if (skipCount-- > 0)
-                {
-                    continue;
-                }
-
-                var value = row[columnName];
-                if (value == DBNull.Value)
-                    value = null;
-                else if (value is IByteArrayValue byteArray)
-                    value = byteArray.Data;
-                else if (value is IListValue || value is IMapValue || value is IStructValue)
-                    throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
-
-                values.SetValue(value, index++);
-
-                if (--fetchCount <= 0)
-                {
-                    break;
-                }
-            }
-
-            return values;
-        }
-
-        public IEnumerable<string> GetOpenParquetFilePaths() => this._parquetFiles.Select(db => db.ParquetFilePath);
     }
+
+    public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles.Select(f => f.Reader));
+
+    private static System.Type GetNullableVersion(System.Type sourceType) => sourceType is null
+            ? throw new ArgumentNullException(nameof(sourceType))
+            : !sourceType.IsValueType
+                || (sourceType.IsGenericType
+                    && sourceType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            ? sourceType
+            : typeof(Nullable<>).MakeGenericType(sourceType);
+
+    private static Array GetColumnValues(DataTable dataTable, System.Type type, string columnName, int skipCount, int fetchCount)
+    {
+        ArgumentNullException.ThrowIfNull(dataTable);
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentOutOfRangeException.ThrowIfLessThan(skipCount, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
+
+        if (!dataTable.Columns.Contains(columnName))
+            throw new ArgumentException($"Column `{columnName}` does not exist in the datatable");
+
+        var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
+        var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
+        var values = Array.CreateInstance(type, recordCountToRead);
+        var index = 0;
+        foreach (DataRow row in dataTable.Rows)
+        {
+            if (skipCount-- > 0)
+            {
+                continue;
+            }
+
+            var value = row[columnName];
+            if (value == DBNull.Value)
+                value = null;
+            else if (value is IByteArrayValue byteArray)
+                value = byteArray.Data;
+            else if (value is IListValue || value is IMapValue || value is IStructValue)
+                throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
+
+            values.SetValue(value, index++);
+
+            if (--fetchCount <= 0)
+            {
+                break;
+            }
+        }
+
+        return values;
+    }
+
+    public IEnumerable<string> GetOpenParquetFilePaths() => _parquetFiles.Select(db => db.ParquetFilePath);
 }

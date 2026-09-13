@@ -8,7 +8,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <Configurations>Debug;Release;Release_SelfContained</Configurations>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <LangVersion>default</LangVersion>

@@ -1,17 +1,16 @@
 ﻿using System.Data;
 
-namespace ParquetViewer.Engine.Types
+namespace ParquetViewer.Engine.Types;
+
+public interface IStructValue : IComparable<IStructValue>, IComparable
 {
-    public interface IStructValue : IComparable<IStructValue>, IComparable
-    {
-        public IDataRowLite Data { get; }
+    public IDataRowLite Data { get; }
 
-        IReadOnlyCollection<string> FieldNames { get; }
+    IReadOnlyCollection<string> FieldNames { get; }
 
-        string ToStringTruncated(int desiredLength);
+    string ToStringTruncated(int desiredLength);
 
-        DataTable ToDataTable();
+    DataTable ToDataTable();
 
-        string ToJSON(out bool success, int? desiredLength = null);
-    }
+    string ToJSON(out bool success, int? desiredLength = null);
 }

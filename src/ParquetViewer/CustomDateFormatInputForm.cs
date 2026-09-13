@@ -3,105 +3,102 @@ using ParquetViewer.Helpers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
-using System.Net.Http;
 using System.Windows.Forms;
 
-namespace ParquetViewer
+namespace ParquetViewer;
+
+public partial class CustomDateFormatInputForm : FormBase
 {
-    public partial class CustomDateFormatInputForm : FormBase
+    public string UserEnteredDateFormat => desiredDateFormatTextBox.Text;
+
+    public CustomDateFormatInputForm()
     {
-        public string UserEnteredDateFormat => this.desiredDateFormatTextBox.Text;
+        InitializeComponent();
+    }
 
-        public CustomDateFormatInputForm()
-        {
-            InitializeComponent();
-        }
+    public CustomDateFormatInputForm(string? customDateFormat) : this()
+    {
+        desiredDateFormatTextBox.Text = customDateFormat ?? string.Empty;
+    }
 
-        public CustomDateFormatInputForm(string? customDateFormat) : this()
-        {
-            this.desiredDateFormatTextBox.Text = customDateFormat ?? string.Empty;
-        }
+    public void DateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo(Resources.Strings.DotNetDateFormatHelpUrl) { UseShellExecute = true });
+    }
 
-        public void dateFormatDocsLinkLabel_Clicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            Process.Start(new ProcessStartInfo(Resources.Strings.DotNetDateFormatHelpUrl) { UseShellExecute = true });
-        }
+    private void CancelButton_Clicked(object sender, EventArgs e)
+    {
+        DialogResult = DialogResult.Cancel;
+        Close();
+    }
 
-        private void cancelButton_Clicked(object sender, EventArgs e)
+    private void DesiredDateFormatTextBox_TextChanged(object sender, EventArgs e)
+    {
+        try
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
-        }
-
-        private void desiredDateFormatTextBox_TextChanged(object sender, EventArgs e)
-        {
-            try
+            if (string.IsNullOrWhiteSpace(desiredDateFormatTextBox.Text))
             {
-                if (string.IsNullOrWhiteSpace(this.desiredDateFormatTextBox.Text))
-                {
-                    this.livePreviewTextBox.Text = string.Empty;
-                    this.saveDateFormatButton.Enabled = false;
-                }
-                else
-                {
-                    this.livePreviewTextBox.Text = DateTime.Now.ToString(this.desiredDateFormatTextBox.Text);
-                    this.saveDateFormatButton.Enabled = true;
-                }
-            }
-            catch (Exception)
-            {
-                this.livePreviewTextBox.Text = Resources.Strings.InvalidDateFormatErrorText;
-                this.saveDateFormatButton.Enabled = false;
-            }
-        }
-
-        private void CustomDateFormatInputForm_Load(object sender, EventArgs e)
-        {
-            this.timer.Enabled = true;
-            this.saveDateFormatButton.Enabled = false; //always start disabled
-        }
-
-        //This timer exists to deal with visual bugs
-        private void timer_Tick(object sender, EventArgs e)
-        {
-            //We only wanted to run this once
-            this.timer.Enabled = false;
-
-            //HACK: need to widen the form a tiny bit to get rid of the horizontal scrollbar :shrug:
-            this.Width += 20;
-
-            //HACK: For some reason resetting the auto scroll position doesn't work in the Load event.
-            this.instructionsTableLayoutPanel.AutoScrollPosition = new System.Drawing.Point(0, 0);
-        }
-
-        private void saveDateFormatButton_Click(object sender, EventArgs e)
-        {
-            if (UtilityMethods.IsValidDateFormat(this.desiredDateFormatTextBox.Text))
-            {
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                livePreviewTextBox.Text = string.Empty;
+                saveDateFormatButton.Enabled = false;
             }
             else
             {
-                MessageBox.Show(this,
-                    Resources.Errors.InvalidDateFormatErrorMessage,
-                    Resources.Errors.InvalidDateFormatErrorTitle,
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                livePreviewTextBox.Text = DateTime.Now.ToString(desiredDateFormatTextBox.Text);
+                saveDateFormatButton.Enabled = true;
             }
         }
-
-        public override void SetTheme(Theme theme)
+        catch (Exception)
         {
-            if (DesignMode)
-            {
-                return;
-            }
-
-            base.SetTheme(theme);
-            this.saveDateFormatButton.ForeColor = Color.Black;
-            this.dateFormatDocsLinkLabel.LinkColor = theme.HyperlinkColor;
-            this.dateFormatDocsLinkLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
+            livePreviewTextBox.Text = Resources.Strings.InvalidDateFormatErrorText;
+            saveDateFormatButton.Enabled = false;
         }
+    }
+
+    private void CustomDateFormatInputForm_Load(object sender, EventArgs e)
+    {
+        timer.Enabled = true;
+        saveDateFormatButton.Enabled = false; //always start disabled
+    }
+
+    //This timer exists to deal with visual bugs
+    private void Timer_Tick(object sender, EventArgs e)
+    {
+        //We only wanted to run this once
+        timer.Enabled = false;
+
+        //HACK: need to widen the form a tiny bit to get rid of the horizontal scrollbar :shrug:
+        Width += 20;
+
+        //HACK: For some reason resetting the auto scroll position doesn't work in the Load event.
+        instructionsTableLayoutPanel.AutoScrollPosition = new System.Drawing.Point(0, 0);
+    }
+
+    private void SaveDateFormatButton_Click(object sender, EventArgs e)
+    {
+        if (UtilityMethods.IsValidDateFormat(desiredDateFormatTextBox.Text))
+        {
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+        else
+        {
+            MessageBox.Show(this,
+                Resources.Errors.InvalidDateFormatErrorMessage,
+                Resources.Errors.InvalidDateFormatErrorTitle,
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    public override void SetTheme(Theme theme)
+    {
+        if (DesignMode)
+        {
+            return;
+        }
+
+        base.SetTheme(theme);
+        saveDateFormatButton.ForeColor = Color.Black;
+        dateFormatDocsLinkLabel.LinkColor = theme.HyperlinkColor;
+        dateFormatDocsLinkLabel.ActiveLinkColor = theme.ActiveHyperlinkColor;
     }
 }

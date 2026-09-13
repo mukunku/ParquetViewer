@@ -31,7 +31,7 @@ namespace ParquetViewer
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CustomDateFormatInputForm));
+            var resources = new System.ComponentModel.ComponentResourceManager(typeof(CustomDateFormatInputForm));
             mainTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             livePreviewTextBox = new System.Windows.Forms.TextBox();
             label56 = new System.Windows.Forms.Label();
@@ -418,7 +418,7 @@ namespace ParquetViewer
             dateFormatDocsLinkLabel.Image = Resources.Icons.external_link_icon;
             dateFormatDocsLinkLabel.Name = "dateFormatDocsLinkLabel";
             dateFormatDocsLinkLabel.TabStop = true;
-            dateFormatDocsLinkLabel.LinkClicked += dateFormatDocsLinkLabel_Clicked;
+            dateFormatDocsLinkLabel.LinkClicked += DateFormatDocsLinkLabel_Clicked;
             // 
             // label1
             // 
@@ -429,7 +429,7 @@ namespace ParquetViewer
             // 
             resources.ApplyResources(desiredDateFormatTextBox, "desiredDateFormatTextBox");
             desiredDateFormatTextBox.Name = "desiredDateFormatTextBox";
-            desiredDateFormatTextBox.TextChanged += desiredDateFormatTextBox_TextChanged;
+            desiredDateFormatTextBox.TextChanged += DesiredDateFormatTextBox_TextChanged;
             // 
             // saveDateFormatButton
             // 
@@ -438,18 +438,18 @@ namespace ParquetViewer
             saveDateFormatButton.Image = Resources.Icons.save_icon;
             saveDateFormatButton.Name = "saveDateFormatButton";
             saveDateFormatButton.UseVisualStyleBackColor = true;
-            saveDateFormatButton.Click += saveDateFormatButton_Click;
+            saveDateFormatButton.Click += SaveDateFormatButton_Click;
             // 
             // timer
             // 
             timer.Interval = 10;
-            timer.Tick += timer_Tick;
+            timer.Tick += Timer_Tick;
             // 
             // cancelButton
             // 
             resources.ApplyResources(cancelButton, "cancelButton");
             cancelButton.Name = "cancelButton";
-            cancelButton.Click += cancelButton_Clicked;
+            cancelButton.Click += CancelButton_Clicked;
             // 
             // CustomDateFormatInputForm
             // 

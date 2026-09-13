@@ -1,22 +1,21 @@
 ﻿using System.Data;
 
-namespace ParquetViewer.Engine
+namespace ParquetViewer.Engine;
+
+public interface IParquetEngine : IDisposable
 {
-    public interface IParquetEngine : IDisposable
-    {
-        List<string> Fields { get; }
-        long RecordCount { get; }
-        int NumberOfPartitions { get; }
-        Dictionary<string, string> CustomMetadata { get; }
-        string Path { get; }
-        IParquetMetadata Metadata { get; }
+    List<string> Fields { get; }
+    long RecordCount { get; }
+    int NumberOfPartitions { get; }
+    Dictionary<string, string> CustomMetadata { get; }
+    string Path { get; }
+    IParquetMetadata Metadata { get; }
 
-        Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount,
-            CancellationToken cancellationToken, IProgress<int>? progress = null);
+    Task<Func<bool, DataTable>> ReadRowsAsync(List<string> selectedFields, int offset, int recordCount,
+        IProgress<int>? progress = null, CancellationToken cancellationToken = default);
 
-        Task WriteDataToParquetFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken,
-            IProgress<int> progress, Dictionary<string, string>? customMetadata);
+    Task WriteDataToParquetFileAsync(DataTable dataTable, string path, IProgress<int> progress,
+        Dictionary<string, string>? customMetadata, CancellationToken cancellationToken);
 
-        IEnumerable<string> GetOpenParquetFilePaths();
-    }
+    IEnumerable<string> GetOpenParquetFilePaths();
 }

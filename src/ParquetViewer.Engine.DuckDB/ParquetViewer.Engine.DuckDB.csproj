@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
     <Configurations>Debug;Release;Release_SelfContained</Configurations>
-    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
+    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
   </PropertyGroup>

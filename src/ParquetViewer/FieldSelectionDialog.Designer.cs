@@ -60,14 +60,14 @@ namespace ParquetViewer
             mainTableLayoutPanel.SetColumnSpan(doneButton, 2);
             doneButton.Name = "doneButton";
             doneButton.UseVisualStyleBackColor = true;
-            doneButton.Click += doneButton_Click;
+            doneButton.Click += DoneButton_Click;
             // 
             // clearfilterColumnsButton
             // 
             resources.ApplyResources(clearfilterColumnsButton, "clearfilterColumnsButton");
             clearfilterColumnsButton.Name = "clearfilterColumnsButton";
             clearfilterColumnsButton.UseVisualStyleBackColor = true;
-            clearfilterColumnsButton.Click += clearfilterColumnsButton_Click;
+            clearfilterColumnsButton.Click += ClearfilterColumnsButton_Click;
             // 
             // showSelectedFieldsRadioButton
             // 
@@ -75,7 +75,7 @@ namespace ParquetViewer
             mainTableLayoutPanel.SetColumnSpan(showSelectedFieldsRadioButton, 3);
             showSelectedFieldsRadioButton.Name = "showSelectedFieldsRadioButton";
             showSelectedFieldsRadioButton.UseVisualStyleBackColor = true;
-            showSelectedFieldsRadioButton.CheckedChanged += showSelectedFieldsRadioButton_CheckedChanged;
+            showSelectedFieldsRadioButton.CheckedChanged += ShowSelectedFieldsRadioButton_CheckedChanged;
             // 
             // allFieldsRadioButton
             // 
@@ -85,7 +85,7 @@ namespace ParquetViewer
             allFieldsRadioButton.Name = "allFieldsRadioButton";
             allFieldsRadioButton.TabStop = true;
             allFieldsRadioButton.UseVisualStyleBackColor = true;
-            allFieldsRadioButton.CheckedChanged += allFieldsRadioButton_CheckedChanged;
+            allFieldsRadioButton.CheckedChanged += AllFieldsRadioButton_CheckedChanged;
             // 
             // rememberMyChoiceCheckBox
             // 
@@ -100,7 +100,7 @@ namespace ParquetViewer
             mainTableLayoutPanel.SetColumnSpan(filterColumnsTextbox, 3);
             filterColumnsTextbox.DelayedTextChangedTimeout = 275;
             filterColumnsTextbox.Name = "filterColumnsTextbox";
-            filterColumnsTextbox.DelayedTextChanged += filterColumnsTextbox_DelayedTextChanged;
+            filterColumnsTextbox.DelayedTextChanged += FilterColumnsTextbox_DelayedTextChanged;
             // 
             // fieldsPanel
             // 
