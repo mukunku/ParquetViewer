@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ParquetViewer.Helpers;
+using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -94,6 +95,7 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
 
         _progressSoFar = 0;
         _progressRatio = 0;
+        _cancelButton.BackgroundImage?.DisposeSafely();
         _cancelButton.BackgroundImage = null;
         _cancelButton.Invoke(_cancelButton.Refresh);
     }
@@ -118,7 +120,6 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
         _panel.Dispose();
     }
 
-    private readonly Lock _lock = new();
     public void Report(int progress)
     {
         if (_loadingBarMax <= 0)
@@ -130,7 +131,7 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
         {
             _progressRatio = progressRatio;
 
-            lock (_lock) //This part isn't thread-safe
+            _cancelButton.Invoke(() =>
             {
                 //Convert the cancel button into a progress bar
                 var bitmap = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
@@ -142,9 +143,12 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
                     var rect = new RectangleF(0, 0, wid, hgt);
                     graphics.FillRectangle(solidBrush, rect);
                 }
+
+                var oldBackgroundImage = _cancelButton.BackgroundImage;
                 _cancelButton.BackgroundImage = bitmap;
-                _cancelButton.Invoke(_cancelButton.Refresh);
-            }
+                _cancelButton.Refresh();
+                oldBackgroundImage?.DisposeSafely();
+            });
         }
     }
 }

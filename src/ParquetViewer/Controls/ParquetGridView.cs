@@ -270,7 +270,6 @@ public class ParquetGridView : DataGridView
         }
         else if (e.Button == MouseButtons.Middle)
         {
-            //TODO: Add some kind of in-app notification to inform users of this useful shortcut
             //Add a shortcut to open images easily when data conforms to the huggingface format
             //https://huggingface.co/docs/hub/en/datasets-image#parquet-format
             int rowIndex = HitTest(e.X, e.Y).RowIndex;
@@ -280,11 +279,10 @@ public class ParquetGridView : DataGridView
                 && this[columnIndex, rowIndex].Value is IStructValue structValue
                 && structValue.IsHuggingFaceFormat(out var data))
             {
-                Image? image;
+                ManagedImage? image;
                 try
                 {
-                    using var ms = new System.IO.MemoryStream(data);
-                    image = Image.FromStream(ms); //quick peek form will dispose of this image when closed
+                    image = new ManagedImage(data);
                 }
                 catch (ArgumentException)
                 {
@@ -303,6 +301,7 @@ public class ParquetGridView : DataGridView
                     ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
                 }
             }
+            //TODO: Add some kind of in-app notification to inform users of this useful shortcut
         }
 
         base.OnMouseClick(e);
@@ -401,7 +400,7 @@ public class ParquetGridView : DataGridView
         else if (clickedCell.Value is IByteArrayValue byteArray && byteArray.ToImage(out var image))
         {
             dataType = QuickPeekEvent.DataTypeId.Image;
-            quickPeekForm = new QuickPeekForm(Columns[e.ColumnIndex].Name, image!, uniqueCellTag, e.RowIndex, e.ColumnIndex);
+            quickPeekForm = new QuickPeekForm(Columns[e.ColumnIndex].Name, image, uniqueCellTag, e.RowIndex, e.ColumnIndex);
         }
         else
         {
@@ -1429,13 +1428,15 @@ public class ParquetGridView : DataGridView
                     if (value == DBNull.Value)
                         continue;
 
+                    ManagedImage? image = null;
                     var byteArray = (IByteArrayValue)value;
                     if (AudioPlayer.IsAudio(byteArray.Data, out var _)
-                        && !byteArray.ToImage(out _)) //help prevent false positives by checking for image data
+                        && !byteArray.ToImage(out image)) //help prevent false positives by checking for image data
                     {
                         isAudioColumn = true;
                         break;
                     }
+                    image?.Dispose();
                     tryCount++;
                 }
 

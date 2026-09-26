@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using ParquetViewer.Controls;
 using ParquetViewer.Engine.Types;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -207,14 +207,13 @@ public static class ExtensionMethods
     }
 
     /// <remarks>Can't put this into IByteArrayValue itself as that assembly doesn't reference System.Drawing</remarks>
-    public static bool ToImage(this IByteArrayValue byteArrayValue, [NotNullWhen(true)] out Image? image)
+    public static bool ToImage(this IByteArrayValue byteArrayValue, [NotNullWhen(true)] out ManagedImage? image)
     {
         ArgumentNullException.ThrowIfNull(byteArrayValue);
 
         try
         {
-            using var ms = new MemoryStream(byteArrayValue.Data);
-            image = Image.FromStream(ms);
+            image = new ManagedImage(byteArrayValue.Data);
             return true;
         }
         catch
