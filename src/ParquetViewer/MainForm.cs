@@ -97,7 +97,7 @@ public partial class MainForm : FormBase
 
     private IParquetEngine? _openParquetEngine;
 
-    private (DateTime LastWriteTimeUtc, long Length)? _originalModifiedInfo;
+    private FileModifiedInfo? _originalModifiedInfo;
     #endregion
 
     public MainForm()

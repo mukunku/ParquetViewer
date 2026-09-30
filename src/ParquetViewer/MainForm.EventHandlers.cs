@@ -303,7 +303,7 @@ public partial class MainForm
     /// Not sure how common that is but this implementation without it is simpler and I'm hoping not too IO intensive</remarks>
     private async void FileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
     {
-        if (_openFileOrFolderPath is null || _openParquetEngine is null)
+        if (!IsAnyFileOpen)
             return; //no file open
 
         fileIntegrityCheckingTimer.Stop();
@@ -311,9 +311,16 @@ public partial class MainForm
         {
             var fileDeletedSuffix = $" ({Resources.Strings.OpenFileNoLongerExistsTitleSuffix})";
             var fileModifiedSuffix = $" ({Resources.Strings.OpenFileWasModifiedTitleSuffix})";
+            var openPathSnapshot = _openFileOrFolderPath;
 
             if (_originalModifiedInfo is null)
             {
+                ResetTitle();
+            }
+            //Check if the open file/folder changed
+            else if (!_originalModifiedInfo.Path.Equals(openPathSnapshot))
+            {
+                _originalModifiedInfo = null;
                 ResetTitle();
             }
 
@@ -321,8 +328,8 @@ public partial class MainForm
 
             //Perform file system checks in a background thread avoid blocking the UI thread.
             //Only really relevant when opening a folder with many files on a network drive.
-            var engineSnapshot = _openParquetEngine;
-            var lastModifiedInfo = await Task.Run(() => TryGetLastModifiedInfo(engineSnapshot, _openFileOrFolderPath));
+            var engineSnapshot = _openParquetEngine!;
+            var lastModifiedInfo = await Task.Run(() => TryGetLastModifiedInfo(engineSnapshot, openPathSnapshot!));
             if (!ReferenceEquals(engineSnapshot, _openParquetEngine))
                 return; //the user has opened a different file/folder while we were checking the file system, so ignore this result
 
@@ -382,7 +389,7 @@ public partial class MainForm
 
         //Returns the last modified date and size of the open file, or the most recent last modified
         //date and total combined size of all open files in the folder.
-        static (DateTime LastModifiedUtc, long Length)? TryGetLastModifiedInfo(IParquetEngine engine, string openFileOrFolderPath)
+        static FileModifiedInfo? TryGetLastModifiedInfo(IParquetEngine engine, string openFileOrFolderPath)
         {
             if (engine is null)
             {
@@ -422,7 +429,9 @@ public partial class MainForm
                 counter++;
             }
 
-            return (latest, totalLength);
+            return new(openFileOrFolderPath, latest, totalLength);
         }
     }
+
+    private record FileModifiedInfo(string Path, DateTime LastModifiedUtc, long Length);
 }
