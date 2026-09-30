@@ -290,7 +290,7 @@ public partial class MainForm : FormBase
         //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
         try
         {
-            await LoadFileToGridviewImpl(_openParquetEngine);
+            await LoadFileToGridviewImpl(_openParquetEngine!);
         }
         catch (Exception unhandledEx)
         {
@@ -304,7 +304,7 @@ public partial class MainForm : FormBase
                 await LoadFileToGridviewImpl(duckDbEngine);
 
                 //Swap engines
-                await _openParquetEngine.DisposeAsync();
+                await _openParquetEngine!.DisposeAsync();
                 _openParquetEngine = duckDbEngine;
             }
             catch (Exception duckDbEx)
