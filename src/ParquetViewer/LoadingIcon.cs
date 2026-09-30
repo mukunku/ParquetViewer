@@ -83,7 +83,7 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
     {
         if (newMessage is not null)
         {
-            foreach (Control control in _panel.Controls.Find("loadingmessagelabel", false))
+            foreach (var control in _panel.Controls.Find("loadingmessagelabel", false))
             {
                 control.Text = newMessage;
             }
