@@ -16,10 +16,11 @@ public partial class MainForm
 
     private string? _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText;
 
-    private void NewToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void NewToolStripMenuItem_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileNew);
-        OpenFileOrFolderPath = null;
+        _openFileOrFolderPath = null;
+        await ResetForm();
     }
 
     private async void OpenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -34,7 +35,8 @@ public partial class MainForm
         }
         catch
         {
-            OpenFileOrFolderPath = null;
+            _openFileOrFolderPath = null;
+            await ResetForm();
             throw;
         }
     }
@@ -51,7 +53,8 @@ public partial class MainForm
         }
         catch
         {
-            OpenFileOrFolderPath = null;
+            _openFileOrFolderPath = null;
+            await ResetForm();
             throw;
         }
     }
@@ -75,7 +78,7 @@ public partial class MainForm
 
     private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        var openFileOrFolderPath = OpenFileOrFolderPath;
+        var openFileOrFolderPath = _openFileOrFolderPath;
         if (openFileOrFolderPath?.EndsWith('/') == true)
         {
             //trim trailing slash '/'
@@ -197,7 +200,7 @@ public partial class MainForm
     {
         _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText ??= getSQLCreateTableScriptToolStripMenuItem.ToolTipText;
         var firstColumn = MainDataSource?.Columns.AsEnumerable().FirstOrDefault();
-        if (firstColumn is null || OpenFileOrFolderPath is null)
+        if (firstColumn is null || _openFileOrFolderPath is null)
         {
             ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
             return;
@@ -206,7 +209,7 @@ public partial class MainForm
         //Adjust the tooltip dynamically to be fancy
         try
         {
-            string tableName = Path.GetFileNameWithoutExtension(OpenFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
+            string tableName = Path.GetFileNameWithoutExtension(_openFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
             string sqlTypeDefinition = CustomScriptBasedSchemaAdapter.GetTypeFor(firstColumn);
 
             var truncateSuffix = MainDataSource?.Columns.Count > 1 ? ",..." : ")";

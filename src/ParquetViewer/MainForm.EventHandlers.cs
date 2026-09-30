@@ -82,7 +82,8 @@ public partial class MainForm
         }
         catch
         {
-            OpenFileOrFolderPath = null;
+            _openFileOrFolderPath = null;
+            await ResetForm();
             throw;
         }
     }
@@ -302,7 +303,7 @@ public partial class MainForm
     /// Not sure how common that is but this implementation without it is simpler and I'm hoping not too IO intensive</remarks>
     private async void FileIntegrityCheckingTimer_Tick(object sender, EventArgs e)
     {
-        if (OpenFileOrFolderPath is null || _openParquetEngine is null)
+        if (_openFileOrFolderPath is null || _openParquetEngine is null)
             return; //no file open
 
         fileIntegrityCheckingTimer.Stop();
@@ -321,7 +322,7 @@ public partial class MainForm
             //Perform file system checks in a background thread avoid blocking the UI thread.
             //Only really relevant when opening a folder with many files on a network drive.
             var engineSnapshot = _openParquetEngine;
-            var lastModifiedInfo = await Task.Run(() => TryGetLastModifiedInfo(engineSnapshot, OpenFileOrFolderPath));
+            var lastModifiedInfo = await Task.Run(() => TryGetLastModifiedInfo(engineSnapshot, _openFileOrFolderPath));
             if (!ReferenceEquals(engineSnapshot, _openParquetEngine))
                 return; //the user has opened a different file/folder while we were checking the file system, so ignore this result
 

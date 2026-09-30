@@ -19,7 +19,7 @@ public class HelperTests
         testEvent.RegularProperty = "yyy";
 
         var isSelfContainedExecutable = false;
-#if RELEASE_SELFCONTAINED
+#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
         isSelfContainedExecutable = true;
 #endif
 

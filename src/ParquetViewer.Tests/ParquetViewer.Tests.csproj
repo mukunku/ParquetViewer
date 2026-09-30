@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <PlatformTarget>x64</PlatformTarget>
-    <Configurations>Debug;Release;Release_SelfContained</Configurations>
+    <Configurations>Debug;Release;Release_SelfContained;Debug_SelfContained</Configurations>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
   </PropertyGroup>
@@ -19,6 +19,9 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_SelfContained|AnyCPU'">
     <LangVersion>default</LangVersion>
   </PropertyGroup>
   <ItemGroup>

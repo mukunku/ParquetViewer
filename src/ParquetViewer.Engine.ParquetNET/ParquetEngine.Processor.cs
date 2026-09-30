@@ -176,7 +176,6 @@ public partial class ParquetEngine
             if (progressUntilReport > 0)
             {
                 progress?.Report(progressUntilReport);
-                progressUntilReport = 0;
             }
         }
     }

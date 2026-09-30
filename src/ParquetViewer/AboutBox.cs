@@ -14,8 +14,8 @@ public partial class AboutBox : FormBase
 {
     public const string PERFORM_FILE_ASSOCIATION = "PERFORM_FILE_ASSOCIATION";
 
-#if RELEASE_SELFCONTAINED
-    private bool _isSelfContainedExe = true;
+#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
+    private readonly bool _isSelfContainedExe = true;
 #else
     private readonly bool _isSelfContainedExe = false;
 #endif

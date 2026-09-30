@@ -39,7 +39,7 @@ public abstract class AmplitudeEvent
         IsDefaultParquetViewer = AboutBox.IsDefaultViewerForParquetFiles,
         AppSettings.DarkMode,
         CultureInfo = (AppSettings.UserSelectedCulture ?? CultureInfo.CurrentUICulture).ToString(),
-#if RELEASE_SELFCONTAINED
+#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
         SelfContainedExecutable = true,
 #else
         SelfContainedExecutable = false,

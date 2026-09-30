@@ -71,7 +71,7 @@ public partial class MainForm
                     var stopWatch = Stopwatch.StartNew();
                     loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
                     await ExportResultsImpl(MainDataSource!, selectedFileType.Value, _openParquetEngine,
-                        filePath, loadingIcon, OpenFileOrFolderPath, loadingIcon.CancellationToken);
+                        filePath, loadingIcon, _openFileOrFolderPath, loadingIcon.CancellationToken);
 
                     if (loadingIcon.CancellationToken.IsCancellationRequested)
                     {
