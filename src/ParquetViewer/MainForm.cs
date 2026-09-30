@@ -29,7 +29,9 @@ public partial class MainForm : FormBase
         set
         {
             _openFileOrFolderPath = value;
-            _openParquetEngine?.Dispose();
+#pragma warning disable CA2012 // Use ValueTasks correctly
+            _ = _openParquetEngine?.DisposeAsync(); //TODO: Fix this fire-and-forget
+#pragma warning restore CA2012 // Use ValueTasks correctly
             _openParquetEngine = null;
             SelectedFields = null;
             changeFieldsMenuStripButton.Enabled = false;

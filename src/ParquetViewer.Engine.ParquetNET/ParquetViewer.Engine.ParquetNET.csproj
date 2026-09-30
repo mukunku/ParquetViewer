@@ -17,9 +17,12 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Parquet.Net.mukunku" />
+    <PackageReference Include="Parquet.Net" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParquetViewer.Tests" />
   </ItemGroup>
 </Project>

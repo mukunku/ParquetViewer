@@ -7,9 +7,9 @@ using System.Data;
 
 namespace ParquetViewer.Engine.ParquetNET;
 
-public sealed partial class ParquetEngine : IParquetEngine, IDisposable
+public sealed partial class ParquetEngine : IParquetEngine
 {
-    private static readonly ParquetOptions _defaultParquetOptions = new() { UseDateOnlyTypeForDates = true, UseTimeOnlyTypeForTimeMicros = true, UseTimeOnlyTypeForTimeMillis = true };
+    private static readonly ParquetOptions _defaultParquetOptions = new() { UseDateOnlyTypeForDates = true };
     private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
     private long? _recordCount;
 
@@ -155,7 +155,7 @@ public sealed partial class ParquetEngine : IParquetEngine, IDisposable
             //We found more than one type of schema.
             foreach (var fileGroupList in fileGroups.Values)
             {
-                Engine.Helpers.EZDispose(fileGroupList.Select(f => f.Reader));
+                await Engine.Helpers.EZDisposeAsync(fileGroupList.Select(f => f.Reader));
             }
 
             throw new MultipleSchemasFoundException(fileGroups.Keys.ToList()
@@ -164,7 +164,7 @@ public sealed partial class ParquetEngine : IParquetEngine, IDisposable
         else if (skippedFiles.Count > 0)
         {
             //We found one schema but some files couldn't be read
-            Engine.Helpers.EZDispose(fileGroups.Values.First().Select(f => f.Reader));
+            await Engine.Helpers.EZDisposeAsync(fileGroups.Values.First().Select(f => f.Reader));
             throw new SomeFilesSkippedException(skippedFiles);
         }
 
@@ -199,8 +199,8 @@ public sealed partial class ParquetEngine : IParquetEngine, IDisposable
         var parquetSchema = new ParquetSchema(fields);
 
         using var fs = new FileStream(path, FileMode.OpenOrCreate);
-        using var parquetWriter = await ParquetWriter.CreateAsync(parquetSchema, fs, cancellationToken: cancellationToken);
-        parquetWriter.CompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
+        var writeOptions = new ParquetOptions { CompressionLevel = System.IO.Compression.CompressionLevel.Optimal };
+        await using var parquetWriter = await ParquetWriter.CreateAsync(parquetSchema, fs, writeOptions, cancellationToken: cancellationToken);
         if (customMetadata is not null)
             parquetWriter.CustomMetadata = customMetadata;
 
@@ -222,10 +222,8 @@ public sealed partial class ParquetEngine : IParquetEngine, IDisposable
                     break;
                 }
 
-                var type = dataField.IsNullable ? GetNullableVersion(dataField.ClrType) : dataField.ClrType;
-                var values = GetColumnValues(dataTable, type, dataField.Name, batchIndex * MAX_ROWS_PER_ROWGROUP, MAX_ROWS_PER_ROWGROUP);
-                var dataColumn = new Parquet.Data.DataColumn(dataField, values);
-                await rowGroup.WriteColumnAsync(dataColumn, cancellationToken);
+                var values = GetColumnValues(dataTable, dataField, batchIndex * MAX_ROWS_PER_ROWGROUP, MAX_ROWS_PER_ROWGROUP);
+                await ColumnWriter.WriteAsync(rowGroup, dataField, values, cancellationToken);
                 progress.Report(values.Length); //No way to report progress for each row, so do it by column
                 isLastBatch = values.Length < MAX_ROWS_PER_ROWGROUP;
             }
@@ -233,7 +231,10 @@ public sealed partial class ParquetEngine : IParquetEngine, IDisposable
         }
     }
 
-    public void Dispose() => Engine.Helpers.EZDispose(_parquetFiles.Select(f => f.Reader));
+    public async ValueTask DisposeAsync()
+    {
+        await Engine.Helpers.EZDisposeAsync(_parquetFiles.Select(f => f.Reader));
+    }
 
     private static System.Type GetNullableVersion(System.Type sourceType) => sourceType is null
             ? throw new ArgumentNullException(nameof(sourceType))
@@ -243,19 +244,18 @@ public sealed partial class ParquetEngine : IParquetEngine, IDisposable
             ? sourceType
             : typeof(Nullable<>).MakeGenericType(sourceType);
 
-    private static Array GetColumnValues(DataTable dataTable, System.Type type, string columnName, int skipCount, int fetchCount)
+    private static Array GetColumnValues(DataTable dataTable, DataField columnSourceDataField, int skipCount, int fetchCount)
     {
-        ArgumentNullException.ThrowIfNull(dataTable);
-        ArgumentNullException.ThrowIfNull(type);
         ArgumentOutOfRangeException.ThrowIfLessThan(skipCount, 0);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fetchCount, 0);
 
-        if (!dataTable.Columns.Contains(columnName))
-            throw new ArgumentException($"Column `{columnName}` does not exist in the datatable");
+        var column = dataTable.Columns[columnSourceDataField.Name] ?? throw new ArgumentException($"Column `{columnSourceDataField.Name}` was not found.", nameof(dataTable));
+        var columnType = column.DataType == typeof(ByteArrayValue) ? typeof(byte[]) : column.DataType;
+        columnType = columnSourceDataField.IsNullable ? GetNullableVersion(columnType) : columnType;
 
         var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
         var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
-        var values = Array.CreateInstance(type, recordCountToRead);
+        var values = Array.CreateInstance(columnType, recordCountToRead);
         var index = 0;
         foreach (DataRow row in dataTable.Rows)
         {
@@ -264,7 +264,7 @@ public sealed partial class ParquetEngine : IParquetEngine, IDisposable
                 continue;
             }
 
-            var value = row[columnName];
+            var value = row[column];
             if (value == DBNull.Value)
                 value = null;
             else if (value is IByteArrayValue byteArray)

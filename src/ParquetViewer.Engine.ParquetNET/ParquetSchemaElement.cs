@@ -183,12 +183,28 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.ToList<IParquetSchemaElement>();
 
-    public System.Type ClrType => DataField?.ClrType ?? FieldType switch
+    public System.Type ClrType => DataField switch
     {
-        FieldTypeId.List => typeof(ListValue),
-        FieldTypeId.Map => typeof(MapValue),
-        FieldTypeId.Struct => typeof(StructValueExt),
-        _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
+        //Parquet.Net v6 dropped `UseTimeOnlyTypeForTime*`, TIME columns now come back as raw
+        //int/long counts of millis/micros/nanos. ParquetColumnData converts them back to TimeOnly so
+        //the rest of the app (grid, JSON export, filters) keeps seeing TimeOnly.
+        TimeDataField => typeof(TimeOnly),
+        //Null DataField means this is a complex type
+        null => FieldType switch
+        {
+            FieldTypeId.List => typeof(ListValue),
+            FieldTypeId.Map => typeof(MapValue),
+            FieldTypeId.Struct => typeof(StructValueExt),
+            FieldTypeId.Primitive => throw new InvalidOperationException($"Cannot determine CLR type for primitive field `{Path}` without ClrType information."),
+            _ => throw new InvalidOperationException($"Unknown complex type {FieldType} detected for field `{Path}`")
+        },
+        //Parquet.Net v6 handles byte[] and string values as ReadOnlyMemory types
+        _ => DataField.ClrType switch
+        {
+            _ when DataField.ClrType == typeof(ReadOnlyMemory<char>) => typeof(string),
+            _ when DataField.ClrType == typeof(ReadOnlyMemory<byte>) => typeof(byte[]),
+            _ => DataField.ClrType
+        }
     };
 
     public object? LogicalType => LogicalTypeToJSONObject(SchemaElement.LogicalType);

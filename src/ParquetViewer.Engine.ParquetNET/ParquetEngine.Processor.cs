@@ -116,7 +116,7 @@ public partial class ParquetEngine
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
     {
         var rowIndex = rowBeginIndex;
-        int skippedRecords = 0;
+        var skippedRecords = 0;
         var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
 
         if (field.BelongsToListField || field.BelongsToListOfStructsField || field.DataField?.IsArray == true)
@@ -126,10 +126,12 @@ public partial class ParquetEngine
         else
         {
             var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
-            var dataEnumerable = dataColumn.GetDataWithPaddedNulls(field);
+            var dataEnumerable = dataColumn.Data;
 
             var fieldType = dataTable.Columns[field.Path].Type;
-            foreach (var value in dataEnumerable)
+            var progressUntilReport = 0;
+            const int progressReportThreshold = 10;
+            foreach (object value in dataEnumerable)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -161,7 +163,20 @@ public partial class ParquetEngine
                 }
 
                 rowIndex++;
-                progress?.Report(1);
+                progressUntilReport++;
+
+                //Report progress in bursts. This is a micro-optimization when loading more than 50 million cells
+                if (progressUntilReport >= progressReportThreshold)
+                {
+                    progress?.Report(progressUntilReport);
+                    progressUntilReport = 0;
+                }
+            }
+
+            if (progressUntilReport > 0)
+            {
+                progress?.Report(progressUntilReport);
+                progressUntilReport = 0;
             }
         }
     }
@@ -188,16 +203,16 @@ public partial class ParquetEngine
                 var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
                 lastMilestone = "Read";
 
-                var dataEnumerable = dataColumn.GetDataWithPaddedNulls(itemField);
+                var dataEnumerable = dataColumn.Data;
 
                 var numberOfListParents = itemField.NumberOfListParents;
                 #region Fixes TWO_TIER_LIST_TYPE_TEST
                 numberOfListParents = numberOfListParents == 0 ? 1 : numberOfListParents;
                 #endregion
 
-                var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, dataColumn.Field.ClrType);
+                var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, itemField.ClrType);
                 var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, numberOfListParents,
-                    itemField.CurrentDefinitionLevel, dataColumn.Field.MaxDefinitionLevel, cancellationToken);
+                    itemField.CurrentDefinitionLevel, cancellationToken);
                 lastMilestone = "ReadRows";
 
                 foreach (var listValue in listValues)
@@ -357,8 +372,8 @@ public partial class ParquetEngine
         var keyDataColumn = await ReadColumnAsync(groupReader, keyField, cancellationToken);
         var valueDataColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
 
-        var keyDataEnumerable = keyDataColumn.GetDataWithPaddedNulls(keyField);
-        var valueDataEnumerable = valueDataColumn.GetDataWithPaddedNulls(valueField);
+        var keyDataEnumerable = keyDataColumn.Data;
+        var valueDataEnumerable = valueDataColumn.Data;
 
         var dataEnumerable = Engine.Helpers.PairEnumerables(keyDataEnumerable, valueDataEnumerable, DBNull.Value);
 
@@ -397,11 +412,11 @@ public partial class ParquetEngine
                 mapValues.Add(value);
 
                 if (keyDataColumn.IsEmpty(index, keyField) || valueDataColumn.IsEmpty(index, valueField))
-                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue([], keyField.DataField!.ClrType, [], valueField.DataField!.ClrType);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue([], keyField.ClrType, [], valueField.ClrType);
                 else if (keyDataColumn.IsNull(index, keyField) || valueDataColumn.IsNull(index, valueField))
                     dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
                 else
-                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.DataField!.ClrType, mapValues, valueField.DataField!.ClrType);
+                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.ClrType, mapValues, valueField.ClrType);
 
                 mapKeys = null;
                 mapValues = null;
@@ -539,11 +554,11 @@ public partial class ParquetEngine
         return dataTable;
     }
 
-    private static async Task<Parquet.Data.DataColumn> ReadColumnAsync(ParquetRowGroupReader groupReader, ParquetSchemaElement field, CancellationToken cancellationToken)
+    private static async Task<ParquetColumnData> ReadColumnAsync(ParquetRowGroupReader groupReader, ParquetSchemaElement field, CancellationToken cancellationToken)
     {
         try
         {
-            return await groupReader.ReadColumnAsync(field.DataField ?? throw new MalformedFieldException($"Field `{field.PathWithParent}` has no data field"), cancellationToken);
+            return await ReflectiveColumnReader.ReadAsync(groupReader, field, cancellationToken);
         }
         catch (OverflowException ex)
         {

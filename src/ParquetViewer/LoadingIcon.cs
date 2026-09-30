@@ -1,4 +1,4 @@
-﻿using ParquetViewer.Helpers;
+﻿using ParquetViewer.Controls;
 using System;
 using System.Drawing;
 using System.Threading;
@@ -13,11 +13,10 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
 
     private readonly Form _form;
     private readonly Panel _panel;
-    private readonly Button _cancelButton;
-    private readonly long _loadingBarMax = 0;
+    private readonly ProgressButton _cancelButton;
+    private readonly double _loadingBarMaxRatio = 0;
     private readonly CancellationTokenSource _cancellationToken = new();
     private long _progressSoFar = 0;
-    private int _progressRatio = 0;
 
     public CancellationToken CancellationToken => _cancellationToken.Token;
 
@@ -35,7 +34,7 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
             Size = new Size(LOADING_PANEL_WIDTH, LOADING_PANEL_HEIGHT),
             Location = GetFormCenter()
         };
-        _loadingBarMax = loadingBarMax;
+        _loadingBarMaxRatio = 100d / loadingBarMax;
 
         _panel.Controls.Add(new Label()
         {
@@ -54,7 +53,7 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
         };
         _panel.Controls.Add(pictureBox);
 
-        _cancelButton = new Button()
+        _cancelButton = new ProgressButton()
         {
             Name = "cancelloadingbutton",
             Text = Resources.Strings.CancelButtonText,
@@ -67,11 +66,8 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
         {
             _cancellationToken.Cancel();
 
-            if (buttonSender is Button button)
-            {
-                button.Enabled = false;
-                button.Text = Resources.Strings.CancelInitiatedLabelText;
-            }
+            _cancelButton.Enabled = false;
+            _cancelButton.Text = Resources.Strings.CancelInitiatedLabelText;
         };
         _panel.Controls.Add(_cancelButton);
         _cancelButton.BringToFront();
@@ -94,9 +90,7 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
         }
 
         _progressSoFar = 0;
-        _progressRatio = 0;
-        _cancelButton.BackgroundImage?.DisposeSafely();
-        _cancelButton.BackgroundImage = null;
+        _cancelButton.Percent = 0;
         _cancelButton.Invoke(_cancelButton.Refresh);
     }
 
@@ -106,8 +100,6 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
         _panel.BringToFront();
         _panel.Show();
         _cancelButton.Focus();
-
-        _cancelButton.BackgroundImage = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
         OnShow?.Invoke(this, EventArgs.Empty);
     }
 
@@ -122,33 +114,12 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
 
     public void Report(int progress)
     {
-        if (_loadingBarMax <= 0)
+        if (_loadingBarMaxRatio <= 0)
             return;
 
-        var progressSoFar = Interlocked.Add(ref _progressSoFar, progress);
-        var progressRatio = (int)Math.Ceiling((progressSoFar * 100) / (double)_loadingBarMax);
-        if (progressRatio != _progressRatio)
-        {
-            _progressRatio = progressRatio;
+        //We always have one background thread loading data so this is thread-safe
+        _progressSoFar += progress;
 
-            _cancelButton.Invoke(() =>
-            {
-                //Convert the cancel button into a progress bar
-                var bitmap = new Bitmap(_cancelButton.ClientSize.Width, _cancelButton.ClientSize.Height);
-                using (var solidBrush = new SolidBrush(Color.FromArgb(160, 40, 160, 60)))
-                {
-                    using var graphics = Graphics.FromImage(bitmap);
-                    float wid = bitmap.Width * _progressRatio / 100;
-                    float hgt = bitmap.Height;
-                    var rect = new RectangleF(0, 0, wid, hgt);
-                    graphics.FillRectangle(solidBrush, rect);
-                }
-
-                var oldBackgroundImage = _cancelButton.BackgroundImage;
-                _cancelButton.BackgroundImage = bitmap;
-                _cancelButton.Refresh();
-                oldBackgroundImage?.DisposeSafely();
-            });
-        }
+        _cancelButton.Percent = (int)Math.Ceiling(_progressSoFar * _loadingBarMaxRatio);
     }
 }

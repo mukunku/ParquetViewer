@@ -83,7 +83,7 @@ namespace ParquetViewer.Controls
             mainGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             mainGridView.ColumnNameEscapeFormat = "[{0}]";
             mainGridView.CopyAsWhereIcon = null;
-            mainGridView.CopyToClipboardIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyToClipboardIcon");
+            mainGridView.CopyToClipboardIcon = (System.Drawing.Image)resources.GetObject("mainGridView.CopyToClipboardIcon")!;
             mainGridView.DateValueEscapeFormat = "#{0}#";
             mainGridView.EnableHeadersVisualStyles = false;
             mainGridView.Name = "mainGridView";

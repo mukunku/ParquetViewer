@@ -196,9 +196,10 @@ public sealed class ParquetEngine : IParquetEngine
         return new ParquetEngine(folderPath, dbs, metadatas, fields, totalRecordCount, customMetadata);
     }
 
-    public void Dispose()
+    public ValueTask DisposeAsync()
     {
         Helpers.EZDispose(_dbs);
+        return default;
     }
 
     private async IAsyncEnumerable<DuckDBDataReader> QueryDataAsync(List<string> selectedFields, int offset, int recordCount)
