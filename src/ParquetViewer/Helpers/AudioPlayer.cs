@@ -10,7 +10,7 @@ internal class AudioPlayer : IDisposable
     private const string INVALID_AUDIO_ERROR_MESSAGE = "Provided data was not a valid .mp3 or .wav file.";
 
     private readonly MemoryStream _inputStream;
-    private readonly WaveStream? _audioStream;
+    private WaveStream? _audioStream;
     private TimeSpan? _postStopSeekLocation;
 
     public AudioFormatType AudioFormat { get; private set; }
@@ -133,8 +133,15 @@ internal class AudioPlayer : IDisposable
 
     public void Dispose()
     {
-        _audioPlayer.DisposeSafely();
-        _audioStream.DisposeSafely();
+        //We need to null out the _audioStream because OnPlaybackStopped_Internal
+        //can get called if audio was still playing when the user closed the form.
+        //And we shouldn't touch the stream after disposal as it throws
+        //Null Reference Exceptions inside NAudio otherwise.
+        var audioStream = _audioStream;
+        _audioStream = null;
+
+        _audioPlayer?.DisposeSafely();
+        audioStream.DisposeSafely();
         _inputStream.DisposeSafely();
     }
 

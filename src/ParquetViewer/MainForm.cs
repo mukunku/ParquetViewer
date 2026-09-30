@@ -148,6 +148,7 @@ public partial class MainForm : FormBase
 
     private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)
     {
+        //Can't use `!IsAnyFileOpen` since we expect _openParquetEngine to be null sometimes
         if (string.IsNullOrWhiteSpace(_openFileOrFolderPath))
         {
             return null;
@@ -282,7 +283,7 @@ public partial class MainForm : FormBase
 
     private async void LoadFileToGridview()
     {
-        if (_openParquetEngine is null)
+        if (!IsAnyFileOpen)
             return;
 
 #if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
@@ -293,7 +294,7 @@ public partial class MainForm : FormBase
         }
         catch (Exception unhandledEx)
         {
-            //Try DuckDB if Parquet.NET fails
+            //Try DuckDB if Parquet.NET fails (unless this was already DuckDB)
             if (_openParquetEngine is Engine.DuckDB.ParquetEngine)
                 throw;
 
@@ -328,9 +329,6 @@ public partial class MainForm : FormBase
         var wasSuccessful = false;
         try
         {
-            if (!IsAnyFileOpen)
-                return;
-
             if (SelectedFields is null || SelectedFields.Count == 0)
                 return;
 
