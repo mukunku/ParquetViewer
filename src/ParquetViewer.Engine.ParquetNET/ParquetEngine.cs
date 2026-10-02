@@ -94,16 +94,13 @@ public sealed partial class ParquetEngine : IParquetEngine
             throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
         }
 
-        Stream? readOnlyNonLockingStream = null;
         try
         {
-            readOnlyNonLockingStream = new FileStream(parquetFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false);
+            var parquetReader = await OpenReader(parquetFilePath, _defaultParquetOptions);
             return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
         }
         catch (Exception ex)
         {
-            readOnlyNonLockingStream?.Dispose();
             throw new FileReadException(ex);
         }
     }
@@ -119,11 +116,9 @@ public sealed partial class ParquetEngine : IParquetEngine
         var fileGroups = new Dictionary<ParquetSchema, List<(string FilePath, ParquetReader Reader)>>();
         foreach (var file in Engine.Helpers.ListParquetFiles(folderPath))
         {
-            Stream? readOnlyNonLockingStream = null;
             try
             {
-                readOnlyNonLockingStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                var parquetReader = await ParquetReader.CreateAsync(readOnlyNonLockingStream, _defaultParquetOptions, false);
+                var parquetReader = await OpenReader(file, _defaultParquetOptions);
                 if (!fileGroups.TryGetValue(parquetReader.Schema, out var value))
                 {
                     value = [];
@@ -134,7 +129,6 @@ public sealed partial class ParquetEngine : IParquetEngine
             }
             catch (Exception ex)
             {
-                readOnlyNonLockingStream?.Dispose();
                 skippedFiles.Add(System.IO.Path.GetRelativePath(folderPath, file), ex);
             }
         }
@@ -169,6 +163,12 @@ public sealed partial class ParquetEngine : IParquetEngine
         }
 
         return new ParquetEngine(folderPath, fileGroups.Values.First().ToArray());
+    }
+
+    private static async Task<ParquetReader> OpenReader(string filePath, ParquetOptions parquetOptions)
+    {
+        var readOnlyNonLockingStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        return await ParquetReader.CreateAsync(readOnlyNonLockingStream, parquetOptions, false);
     }
 
     private IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)
