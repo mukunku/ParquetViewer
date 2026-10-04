@@ -70,7 +70,7 @@ public partial class MainForm
                     FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
                     var stopWatch = Stopwatch.StartNew();
                     loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
-                    await ExportResultsImpl(MainDataSource!, selectedFileType.Value, _openParquetEngine,
+                    await ExportResultsImplAsync(MainDataSource!, selectedFileType.Value, _openParquetEngine,
                         filePath, loadingIcon, _openFileOrFolderPath, loadingIcon.CancellationToken);
 
                     if (loadingIcon.CancellationToken.IsCancellationRequested)
@@ -141,12 +141,12 @@ public partial class MainForm
     }
 
 
-    private static Task ExportResultsImpl(DataTable dataTable, FileType selectedFileType, IParquetEngine? engine,
+    private static Task ExportResultsImplAsync(DataTable dataTable, FileType selectedFileType, IParquetEngine? engine,
         string filePath, IProgress<int> progress, string? sourceFileOrFolderPath, CancellationToken cancellationToken)
     {
         if (selectedFileType == FileType.CSV)
         {
-            return WriteDataToCSVFile(dataTable, filePath, cancellationToken, progress);
+            return WriteDataToCSVFileAsync(dataTable, filePath, cancellationToken, progress);
         }
         else if (selectedFileType == FileType.XLS)
         {
@@ -161,7 +161,7 @@ public partial class MainForm
                 return Task.CompletedTask;
             }
 
-            return WriteDataToExcel93File(dataTable, filePath, cancellationToken, progress);
+            return WriteDataToExcel93FileAsync(dataTable, filePath, cancellationToken, progress);
         }
         else if (selectedFileType == FileType.XLSX)
         {
@@ -177,17 +177,17 @@ public partial class MainForm
             }
 
             var sheetName = Path.GetFileNameWithoutExtension(sourceFileOrFolderPath) ?? "Sheet1";
-            return WriteDataToExcel2007File(dataTable, filePath, sheetName, cancellationToken, progress);
+            return WriteDataToExcel2007FileAsync(dataTable, filePath, sheetName, cancellationToken, progress);
         }
         else if (selectedFileType == FileType.JSON)
         {
-            return WriteDataToJSONFile(dataTable, filePath, cancellationToken, progress);
+            return WriteDataToJSONFileAsync(dataTable, filePath, cancellationToken, progress);
         }
         else if (selectedFileType == FileType.PARQUET)
         {
             ArgumentNullException.ThrowIfNull(engine);
             var engineTypeName = engine is Engine.ParquetNET.ParquetEngine ? "ParquetNET" : "DuckDB";
-            return WriteDataToParquetFile(engine, dataTable, filePath, progress, engineTypeName, cancellationToken);
+            return WriteDataToParquetFileAsync(engine, dataTable, filePath, progress, engineTypeName, cancellationToken);
         }
         else
         {
@@ -195,7 +195,7 @@ public partial class MainForm
         }
     }
 
-    private static async Task WriteDataToExcel2007File(DataTable mainDataSource, string path, string sheetName, CancellationToken cancellationToken, IProgress<int> progress)
+    private static async Task WriteDataToExcel2007FileAsync(DataTable mainDataSource, string path, string sheetName, CancellationToken cancellationToken, IProgress<int> progress)
     {
         const int MAX_XLSX_SHEET_NAME_LENGTH = 31;
 
@@ -206,7 +206,7 @@ public partial class MainForm
         await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
     }
 
-    private static Task WriteDataToCSVFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+    private static Task WriteDataToCSVFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
         => Task.Run(() =>
             {
                 using var writer = new StreamWriter(path, false, Encoding.UTF8);
@@ -281,7 +281,7 @@ public partial class MainForm
                 }
             }, cancellationToken);
 
-    private static Task WriteDataToExcel93File(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+    private static Task WriteDataToExcel93FileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
         => Task.Run(() =>
             {
                 string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
@@ -363,7 +363,7 @@ public partial class MainForm
                 excelWriter.EndWrite();
             }, cancellationToken);
 
-    private static Task WriteDataToJSONFile(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+    private static Task WriteDataToJSONFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
         => Task.Run(() =>
             {
                 using var fs = new FileStream(path, FileMode.OpenOrCreate);
@@ -392,7 +392,7 @@ public partial class MainForm
                 jsonWriter.WriteEndArray();
             }, cancellationToken);
 
-    private static Task WriteDataToParquetFile(IParquetEngine engine, DataTable dataTable, string path,
+    private static Task WriteDataToParquetFileAsync(IParquetEngine engine, DataTable dataTable, string path,
         IProgress<int> progress, string engineName, CancellationToken cancellationToken)
         => Task.Run(async () =>
             {

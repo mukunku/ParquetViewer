@@ -53,7 +53,7 @@ public class FileOpenEvent : AmplitudeEvent
             IndexTimeMS = indexTimeMS,
             RenderTimeMS = renderTimeMS,
             EngineType = engineType,
-        }.Record();
+        }.RecordAsync();
     }
 
     public enum ParquetEngineTypeId
@@ -89,7 +89,7 @@ public class FileExportEvent : AmplitudeEvent
             RowCount = rowCount,
             ColumnCount = columnCount,
             ExportTimeMS = exportTimeInMilliseconds
-        }.Record();
+        }.RecordAsync();
     }
 }
 
@@ -109,7 +109,7 @@ public class MenuBarClickEvent : AmplitudeEvent
 
     public static void FireAndForget(ActionId action)
     {
-        var _ = new MenuBarClickEvent { Action = action }.Record();
+        var _ = new MenuBarClickEvent { Action = action }.RecordAsync();
     }
 
     public enum ActionId
@@ -184,12 +184,12 @@ public class ExceptionEvent : AmplitudeEvent
         if (ex is RowsReadException rre)
         {
             //Record two separate exceptions for both parquet.net and duckdb
-            var _ = new ExceptionEvent(rre.ParquetNetException).Record()
-                .ContinueWith((_) => _ = new ExceptionEvent(rre.DuckDbException).Record());
+            var _ = new ExceptionEvent(rre.ParquetNetException).RecordAsync()
+                .ContinueWith((_) => _ = new ExceptionEvent(rre.DuckDbException).RecordAsync());
         }
         else
         {
-            var _ = new ExceptionEvent(ex).Record();
+            var _ = new ExceptionEvent(ex).RecordAsync();
         }
     }
 }
@@ -220,7 +220,7 @@ public class QuickPeekEvent : AmplitudeEvent
 
     public static void FireAndForget(DataTypeId dataType)
     {
-        var _ = new QuickPeekEvent { DataType = dataType }.Record();
+        var _ = new QuickPeekEvent { DataType = dataType }.RecordAsync();
     }
 }
 
@@ -254,6 +254,6 @@ public class ColumnFormattedEvent : AmplitudeEvent
 
     public static void FireAndForget(string? formatName)
     {
-        var _ = new ColumnFormattedEvent(formatName).Record();
+        var _ = new ColumnFormattedEvent(formatName).RecordAsync();
     }
 }

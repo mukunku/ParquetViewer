@@ -84,6 +84,7 @@
     <PackageReference Include="NAudio" />
     <PackageReference Include="NAudio.WinForms" />
     <PackageReference Include="Parquet.Net" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Release_SelfContained' Or '$(Configuration)' == 'Debug_SelfContained'">
     <!--We only use DuckDB in the selfcontained release to save on file size-->

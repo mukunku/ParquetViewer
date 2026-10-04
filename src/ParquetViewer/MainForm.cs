@@ -123,12 +123,12 @@ public partial class MainForm : FormBase
 
     private async void MainForm_Load(object sender, EventArgs e)
     {
-        await ResetForm();
+        await ResetFormAsync();
 
         //Open existing file on first load. Usually this means user double-clicked a parquet file with this utility as the default program.
         if (!string.IsNullOrWhiteSpace(_fileToLoadOnLaunch))
         {
-            await OpenNewFileOrFolder(_fileToLoadOnLaunch);
+            await OpenNewFileOrFolderAsync(_fileToLoadOnLaunch);
         }
 
         //Check necessary toolstrip menu items
@@ -146,7 +146,7 @@ public partial class MainForm : FormBase
         Program.AskUserIfTheyWantToSwitchToDarkMode();
     }
 
-    private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)
+    private async Task<List<string>?> OpenFieldSelectionDialogAsync(bool forceOpenDialog)
     {
         //Can't use `!IsAnyFileOpen` since we expect _openParquetEngine to be null sometimes
         if (string.IsNullOrWhiteSpace(_openFileOrFolderPath))
@@ -166,7 +166,7 @@ public partial class MainForm : FormBase
                 {
                     //cancel the file open
                     _openFileOrFolderPath = null;
-                    await ResetForm();
+                    await ResetFormAsync();
                 }
 
                 if (ex is AllFilesSkippedException afse)
@@ -236,7 +236,7 @@ public partial class MainForm : FormBase
         }
     }
 
-    private async ValueTask ResetForm()
+    private async ValueTask ResetFormAsync()
     {
         if (_openParquetEngine is not null)
         {
@@ -290,7 +290,7 @@ public partial class MainForm : FormBase
         //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
         try
         {
-            await LoadFileToGridviewImpl(_openParquetEngine!);
+            await LoadFileToGridviewImplAsync(_openParquetEngine!);
         }
         catch (Exception unhandledEx)
         {
@@ -301,7 +301,7 @@ public partial class MainForm : FormBase
             try
             {
                 var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
-                await LoadFileToGridviewImpl(duckDbEngine);
+                await LoadFileToGridviewImplAsync(duckDbEngine);
 
                 //Swap engines
                 await _openParquetEngine!.DisposeAsync();
@@ -314,13 +314,13 @@ public partial class MainForm : FormBase
             }
         }
 #else
-        await LoadFileToGridviewImpl(_openParquetEngine);
+        await LoadFileToGridviewImplAsync(_openParquetEngine);
 #endif
 
         _originalModifiedInfo = null;
     }
 
-    private async Task LoadFileToGridviewImpl(IParquetEngine engine)
+    private async Task LoadFileToGridviewImplAsync(IParquetEngine engine)
     {
         var stopwatch = Stopwatch.StartNew();
         var loadTime = TimeSpan.Zero;
@@ -436,12 +436,12 @@ public partial class MainForm : FormBase
         }
     }
 
-    private async Task OpenNewFileOrFolder(string fileOrFolderPath)
+    private async Task OpenNewFileOrFolderAsync(string fileOrFolderPath)
     {
         _openFileOrFolderPath = fileOrFolderPath;
-        await ResetForm();
+        await ResetFormAsync();
 
-        var fieldList = await OpenFieldSelectionDialog(false);
+        var fieldList = await OpenFieldSelectionDialogAsync(false);
         var wasOpenSuccess = _openParquetEngine is not null;
 
         if (wasOpenSuccess && AppSettings.AlwaysLoadAllRecords)

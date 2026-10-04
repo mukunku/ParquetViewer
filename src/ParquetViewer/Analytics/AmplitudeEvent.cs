@@ -54,7 +54,7 @@ public abstract class AmplitudeEvent
         _amplitudeConfiguration = amplitudeConfiguration ?? _defaultConfiguration;
     }
 
-    public async Task<bool> Record()
+    public async Task<bool> RecordAsync()
     {
         try
         {

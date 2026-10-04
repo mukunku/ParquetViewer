@@ -77,13 +77,13 @@ public partial class MainForm
             if (files?.Length > 0)
             {
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.DragDrop);
-                await OpenNewFileOrFolder(files[0]);
+                await OpenNewFileOrFolderAsync(files[0]);
             }
         }
         catch
         {
             _openFileOrFolderPath = null;
-            await ResetForm();
+            await ResetFormAsync();
             throw;
         }
     }
@@ -221,7 +221,7 @@ public partial class MainForm
             {
                 Cursor = Cursors.Default;
                 queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
-                var _ = queryEvent.Record(); //Fire and forget
+                var _ = queryEvent.RecordAsync(); //Fire and forget
                 actualShownRecordCountLabel.Text = MainDataSource.DefaultView.Count.ToString();
             }
         }

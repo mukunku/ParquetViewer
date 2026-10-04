@@ -197,7 +197,7 @@ public partial class AboutBox : FormBase
         try
         {
             newVersionLabel.Visible = false;
-            var latestRelease = await Env.FetchLatestRelease();
+            var latestRelease = await Env.FetchLatestReleaseAsync();
             newVersionLabel.Text = newVersionLabel.Text.Format(latestRelease.Version);
             newVersionLabel.Visible = true;
 

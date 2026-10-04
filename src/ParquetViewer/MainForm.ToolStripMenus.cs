@@ -20,7 +20,7 @@ public partial class MainForm
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileNew);
         _openFileOrFolderPath = null;
-        await ResetForm();
+        await ResetFormAsync();
     }
 
     private async void OpenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -30,13 +30,13 @@ public partial class MainForm
             if (openParquetFileDialog.ShowDialog(this) == DialogResult.OK)
             {
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileOpen);
-                await OpenNewFileOrFolder(openParquetFileDialog.FileName);
+                await OpenNewFileOrFolderAsync(openParquetFileDialog.FileName);
             }
         }
         catch
         {
             _openFileOrFolderPath = null;
-            await ResetForm();
+            await ResetFormAsync();
             throw;
         }
     }
@@ -48,13 +48,13 @@ public partial class MainForm
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FolderOpen);
-                await OpenNewFileOrFolder(openFolderDialog.SelectedPath);
+                await OpenNewFileOrFolderAsync(openFolderDialog.SelectedPath);
             }
         }
         catch
         {
             _openFileOrFolderPath = null;
-            await ResetForm();
+            await ResetFormAsync();
             throw;
         }
     }
@@ -63,7 +63,7 @@ public partial class MainForm
 
     private async void ExitToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        var exitEventTask = new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
+        var exitEventTask = new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.RecordAsync();
         await Task.WhenAny(exitEventTask, Task.Delay(3000)); //don't prevent the app from closing for too long
         Close();
     }
@@ -71,7 +71,7 @@ public partial class MainForm
     private async void ChangeFieldsMenuStripButton_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.ChangeFields);
-        var fieldList = await OpenFieldSelectionDialog(true);
+        var fieldList = await OpenFieldSelectionDialogAsync(true);
         if (fieldList is not null)
             SelectedFields = fieldList; //triggers a file load
     }

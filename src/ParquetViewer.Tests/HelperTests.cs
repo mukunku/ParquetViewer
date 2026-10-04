@@ -62,7 +62,7 @@ public class HelperTests
                 return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         });
 
-        bool wasSuccess = await testEvent.Record();
+        bool wasSuccess = await testEvent.RecordAsync();
         Assert.IsTrue(wasSuccess, "The event json we would have sent to Amplitude didn't match the expected value");
     }
 
@@ -83,7 +83,7 @@ public class HelperTests
                 return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         });
 
-        bool wasSuccess = await testEvent.Record();
+        bool wasSuccess = await testEvent.RecordAsync();
         Assert.IsTrue(wasSuccess, "Sensitive data wasn't stripped out correctly");
     }
 
@@ -111,7 +111,7 @@ public class HelperTests
                 return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         });
 
-        bool wasSuccess = await testEvent.Record();
+        bool wasSuccess = await testEvent.RecordAsync();
         Assert.IsTrue(wasSuccess, "Additional exception data wasn't added to the amplitude event as expected");
     }
 
