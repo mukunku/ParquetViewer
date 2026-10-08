@@ -19,8 +19,7 @@ public partial class MainForm
     private async void NewToolStripMenuItem_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileNew);
-        _openFileOrFolderPath = null;
-        await ResetFormAsync();
+        await CloseOpenFileOrFolderAsync();
     }
 
     private async void OpenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -35,8 +34,7 @@ public partial class MainForm
         }
         catch
         {
-            _openFileOrFolderPath = null;
-            await ResetFormAsync();
+            await CloseOpenFileOrFolderAsync();
             throw;
         }
     }
@@ -53,8 +51,7 @@ public partial class MainForm
         }
         catch
         {
-            _openFileOrFolderPath = null;
-            await ResetFormAsync();
+            await CloseOpenFileOrFolderAsync();
             throw;
         }
     }

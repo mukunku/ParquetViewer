@@ -216,7 +216,6 @@ public static class Helpers
             {
                 if (disposable is not null)
                 {
-                    //Convert to Task, we don't need the benefit of ValueTask necessarily
                     var task = disposable.DisposeAsync();
                     tasks.Add(task);
                 }

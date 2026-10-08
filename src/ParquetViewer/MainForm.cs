@@ -166,8 +166,7 @@ public partial class MainForm : FormBase
                 if (_openParquetEngine is null)
                 {
                     //cancel the file open
-                    _openFileOrFolderPath = null;
-                    await ResetFormAsync();
+                    await CloseOpenFileOrFolderAsync();
                 }
 
                 if (ex is AllFilesSkippedException afse)
@@ -578,5 +577,11 @@ public partial class MainForm : FormBase
             //We default to English
             englishToolStripMenuItem.Checked = true;
         }
+    }
+
+    private async ValueTask CloseOpenFileOrFolderAsync()
+    {
+        _openFileOrFolderPath = null;
+        await ResetFormAsync();
     }
 }

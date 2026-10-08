@@ -82,8 +82,7 @@ public partial class MainForm
         }
         catch
         {
-            _openFileOrFolderPath = null;
-            await ResetFormAsync();
+            await CloseOpenFileOrFolderAsync();
             throw;
         }
     }
