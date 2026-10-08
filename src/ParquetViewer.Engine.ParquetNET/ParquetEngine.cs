@@ -168,7 +168,15 @@ public sealed partial class ParquetEngine : IParquetEngine
     private static async Task<ParquetReader> OpenReaderAsync(string filePath, ParquetOptions parquetOptions)
     {
         var readOnlyNonLockingStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        return await ParquetReader.CreateAsync(readOnlyNonLockingStream, parquetOptions, false);
+        try
+        {
+            return await ParquetReader.CreateAsync(readOnlyNonLockingStream, parquetOptions, false);
+        }
+        catch
+        {
+            await readOnlyNonLockingStream.DisposeAsync();
+            throw;
+        }
     }
 
     private IEnumerable<(long RemainingOffset, ParquetReader ParquetReader)> GetReaders(long offset)
