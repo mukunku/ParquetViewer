@@ -359,8 +359,8 @@ public class WriteDataToParquetFileTests
         if (File.Exists(path))
         {
             await using var rewritten = await OpenAsync(path);
-            Assert.IsLessThanOrEqualTo(engine.RecordCount, rewritten.RecordCount,
-                $"cancelled write produced {rewritten.RecordCount} rows, more than the source");
+            Assert.IsLessThan(engine.RecordCount, rewritten.RecordCount,
+                $"cancelled write still produced all {rewritten.RecordCount} source rows");
         }
     }
 }
