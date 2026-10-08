@@ -78,7 +78,7 @@ internal class ProgressButton : Button
             args.Graphics,
             Text,
             Font,
-            new Point(ClientRectangle.Width, (ClientRectangle.Height / 2) + 1), //Needs +1 to match native alignment
+            new Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height),
             Enabled ? ForeColor : SystemColors.GrayText,
             TextFormatFlags.HorizontalCenter |
             TextFormatFlags.VerticalCenter |
