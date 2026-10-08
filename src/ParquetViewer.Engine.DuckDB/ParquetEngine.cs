@@ -250,7 +250,7 @@ public sealed class ParquetEngine : IParquetEngine
             {
                 row.GetValues(values);
             }
-            catch (OverflowException ex) when (ex.Message == "Value was either too large or too small for a Decimal.")
+            catch (OverflowException ex) when (ex.InnerException?.Message == "Value was either too large or too small for a Decimal.")
             {
                 throw new DecimalOverflowException(ex);
             }
