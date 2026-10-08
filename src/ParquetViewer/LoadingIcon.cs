@@ -34,7 +34,7 @@ public sealed class LoadingIcon : IDisposable, IProgress<int>
             Size = new Size(LOADING_PANEL_WIDTH, LOADING_PANEL_HEIGHT),
             Location = GetFormCenter()
         };
-        _loadingBarMaxRatio = 100d / loadingBarMax;
+        _loadingBarMaxRatio = loadingBarMax > 0 ? (100d / loadingBarMax) : 0;
 
         _panel.Controls.Add(new Label()
         {
