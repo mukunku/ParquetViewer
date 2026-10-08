@@ -82,6 +82,8 @@ public class ParquetGridView : DataGridView
     protected override void OnDataSourceChanged(EventArgs e)
     {
         _clickableColumnIndexes.Clear();
+        AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None; //Word-wrapped columns don't survive a datasource change, so we reset row styling here. (Must be called before calling the base method)
+
         base.OnDataSourceChanged(e); //This runs OnColumnAdded() for all columns before continuing.
 
         ConvertAudioCells();
