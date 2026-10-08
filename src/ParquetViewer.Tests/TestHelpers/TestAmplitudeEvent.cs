@@ -2,7 +2,7 @@
 using RichardSzalay.MockHttp;
 using System.Text.Json.Serialization;
 
-namespace ParquetViewer.Tests;
+namespace ParquetViewer.Tests.TestHelpers;
 
 public class TestAmplitudeEvent : AmplitudeEvent
 {

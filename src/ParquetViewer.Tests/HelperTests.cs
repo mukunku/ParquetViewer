@@ -1,6 +1,7 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
+using ParquetViewer.Tests.TestHelpers;
 using RichardSzalay.MockHttp;
 using System.Globalization;
 using System.Text.Json.Nodes;

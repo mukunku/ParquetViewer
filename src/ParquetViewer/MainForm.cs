@@ -318,7 +318,7 @@ public partial class MainForm : FormBase
             }
         }
 #else
-        await LoadFileToGridviewImplAsync(_openParquetEngine);
+        await LoadFileToGridviewImplAsync(_openParquetEngine!);
 #endif
 
         _originalModifiedInfo = null;
