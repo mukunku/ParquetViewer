@@ -1,5 +1,4 @@
-﻿using NAudio.FileFormats.Wav;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using System;
 using System.IO;
 
@@ -101,15 +100,15 @@ internal class AudioPlayer : IDisposable
         }
     }
 
-    private WaveOutEvent? _audioPlayer;
-    private WaveOutEvent? GetOrCreateAudioPlayer()
+    private WaveOut? _audioPlayer;
+    private WaveOut? GetOrCreateAudioPlayer()
     {
         if (_audioStream is null)
             return null;
 
         if (_audioPlayer is null)
         {
-            _audioPlayer = new WaveOutEvent();
+            _audioPlayer = new WaveOut();
             _audioPlayer.Init(_audioStream);
             _audioPlayer.PlaybackStopped += OnPlaybackStopped_Internal;
         }
@@ -157,8 +156,7 @@ internal class AudioPlayer : IDisposable
         using var ms = new MemoryStream(data);
         try
         {
-            var wavReader = new WaveFileChunkReader();
-            wavReader.ReadWaveHeader(ms);
+            using var reader = new WaveFileReader(ms);
             audioFormat = AudioFormatType.Wav;
             return true;
         }
