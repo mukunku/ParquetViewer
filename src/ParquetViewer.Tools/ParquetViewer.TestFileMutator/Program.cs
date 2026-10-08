@@ -124,11 +124,11 @@ internal static class Program
             try { File.Delete(temp); } catch (IOException) { /* Best effort */ }
         }
 
-        Console.WriteLine($"[ok] Wrote {rows:N0} rows to `{path}` ({ScenarioDescription(scenario, rows)})");
+        Console.WriteLine($"[ok] Wrote {rows:N0} rows to `{path}` ({ScenarioDescription(scenario)})");
         return 0;
     }
 
-    private static string ScenarioDescription(Scenario scenario, int rows) => scenario switch
+    private static string ScenarioDescription(Scenario scenario) => scenario switch
     {
         Scenario.Baseline =>
             "baseline: Id(int), Name(string), Score(double), IsActive(bool), Rank(int?)"
@@ -206,14 +206,14 @@ internal enum Scenario
 
 internal static class FileGenerator
 {
-    private static readonly ParquetSchema BaselineSchema = new(
+    private static readonly ParquetSchema _baselineSchema = new(
         new DataField<int>("Id"),
         new DataField<string>("Name"),
         new DataField<double>("Score"),
         new DataField<bool>("IsActive"),
         new DataField<int?>("Rank"));
 
-    private static readonly ParquetSchema DifferentSchema = new(
+    private static readonly ParquetSchema _differentSchema = new(
         new DataField<long>("Code"),
         new DataField<string>("Label"),
         new DataField<int>("Rank"),
@@ -221,7 +221,7 @@ internal static class FileGenerator
 
     public static async Task WriteAsync(string path, Scenario scenario, int rows)
     {
-        var schema = scenario == Scenario.DifferentColumns ? DifferentSchema : BaselineSchema;
+        var schema = scenario == Scenario.DifferentColumns ? _differentSchema : _baselineSchema;
         await using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
         await using var writer = await ParquetWriter.CreateAsync(schema, stream, null, false);
 
