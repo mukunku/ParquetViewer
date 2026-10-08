@@ -260,4 +260,9 @@ public static class ExtensionMethods
         data = null;
         return false;
     }
+
+    public static bool IsSubsetOf<T>(this IEnumerable<T> first, IEnumerable<T> second)
+    {
+        return !first.Except(second).Any();
+    }
 }

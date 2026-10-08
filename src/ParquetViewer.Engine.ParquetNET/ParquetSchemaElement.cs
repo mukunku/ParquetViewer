@@ -99,7 +99,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
         GetChildImpl(_children.Keys.FirstOrDefault((key) => key?.Equals(name, StringComparison.InvariantCultureIgnoreCase) == true) ?? name);
 
     private ParquetSchemaElement GetChildImpl(string? name) => name is not null && _children.TryGetValue(name, out var result)
-            ? result : throw new MalformedFieldException($"Field schema path not found: `{Path}/{name}`");
+            ? result : throw new MalformedFieldException($"Field not found: `{Path}/{name}`");
 
     public ParquetSchemaElement GetSingleOrByName(string name)
     {

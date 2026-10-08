@@ -82,8 +82,8 @@ public partial class ParquetEngine
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var field = column.ParentSchema.Children.FirstOrDefault(c => c.Path == column.Name) as ParquetSchemaElement;
-            switch (field?.FieldType)
+            var field = (ParquetSchemaElement)column.ParentSchema.GetChild(column.Name);
+            switch (field.FieldType)
             {
                 case FieldTypeId.Primitive:
                     await ReadPrimitiveFieldAsync(dataTable, groupReader, rowBeginIndex, field, skipRecords,
@@ -105,7 +105,7 @@ public partial class ParquetEngine
                         readRecords, isFirstColumn, cancellationToken, progress);
                     break;
                 default:
-                    throw new InvalidDataException($"`{column.Name}`");
+                    throw new InvalidDataException($"Field `{column.Name}` has an unknown type {field.FieldType}.");
             }
 
             isFirstColumn = false;

@@ -277,7 +277,7 @@ public partial class MainForm
             targetCulture = "en-US"; //our default culture
         }
 
-        if (!UtilityMethods.TryParseCultureInfo(targetCulture, out CultureInfo? newCultureInfo))
+        if (!UtilityMethods.TryParseCultureInfo(targetCulture, out var newCultureInfo))
         {
             return; //invalid culture
         }
@@ -356,6 +356,7 @@ public partial class MainForm
                 {
                     ResetTitle();
                     Text += fileModifiedSuffix;
+                    _reloadEngine = true;
                 }
             }
 
@@ -396,7 +397,7 @@ public partial class MainForm
                 return null; //no open file;
             }
 
-            DateTime latest = Directory.Exists(openFileOrFolderPath) ? Directory.GetCreationTimeUtc(openFileOrFolderPath) : DateTime.MinValue;
+            var latest = Directory.Exists(openFileOrFolderPath) ? Directory.GetCreationTimeUtc(openFileOrFolderPath) : DateTime.MinValue;
             long totalLength = 0;
             bool foundAny = false;
             var counter = 0;

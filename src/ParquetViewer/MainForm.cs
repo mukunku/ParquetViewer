@@ -95,6 +95,7 @@ public partial class MainForm : FormBase
         }
     }
 
+    private bool _reloadEngine;
     private IParquetEngine? _openParquetEngine;
 
     private FileModifiedInfo? _originalModifiedInfo;
@@ -279,12 +280,15 @@ public partial class MainForm : FormBase
             getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
             metadataViewerToolStripMenuItem.Enabled = true;
         }
+        _reloadEngine = false;
     }
 
     private async void LoadFileToGridview()
     {
         if (!IsAnyFileOpen)
             return;
+
+        await ReloadEngineIfRequiredAsync();
 
 #if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
         //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
@@ -318,6 +322,36 @@ public partial class MainForm : FormBase
 #endif
 
         _originalModifiedInfo = null;
+    }
+
+    private async Task ReloadEngineIfRequiredAsync()
+    {
+        if (!_reloadEngine)
+            return;
+
+        //Reload is a try-once, best-effort operation
+        _reloadEngine = false;
+
+        //ParquetNET caches file metadata so we need to reload the engine if the parquet files were modified.
+        //DuckDB reads the file from scratch each time so that engine doesn't need this.
+        if (_openParquetEngine is Engine.ParquetNET.ParquetEngine engine)
+        {
+            try
+            {
+                var oldEngine = _openParquetEngine;
+                _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(engine.Path);
+                if (SelectedFields is not null && !SelectedFields.IsSubsetOf(_openParquetEngine.Fields))
+                {
+                    //The file doesn't have the fields we want anymore. Reset to the fields that are there.
+                    _selectedFields = _openParquetEngine.Fields; //Since we're setting the backing field directly, there's a chance this new set of fields has dupes but I think we're okay risking it.
+                }
+                await oldEngine.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                //Swallow the exception.
+            }
+        }
     }
 
     private async Task LoadFileToGridviewImplAsync(IParquetEngine engine)
