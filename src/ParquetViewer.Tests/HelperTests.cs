@@ -1,6 +1,7 @@
 ﻿using ParquetViewer.Analytics;
 using ParquetViewer.Controls;
 using ParquetViewer.Helpers;
+using ParquetViewer.Tests.TestHelpers;
 using RichardSzalay.MockHttp;
 using System.Globalization;
 using System.Text.Json.Nodes;
@@ -19,7 +20,7 @@ public class HelperTests
         testEvent.RegularProperty = "yyy";
 
         var isSelfContainedExecutable = false;
-#if RELEASE_SELFCONTAINED
+#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
         isSelfContainedExecutable = true;
 #endif
 
@@ -62,7 +63,7 @@ public class HelperTests
                 return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         });
 
-        bool wasSuccess = await testEvent.Record();
+        bool wasSuccess = await testEvent.RecordAsync();
         Assert.IsTrue(wasSuccess, "The event json we would have sent to Amplitude didn't match the expected value");
     }
 
@@ -83,7 +84,7 @@ public class HelperTests
                 return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         });
 
-        bool wasSuccess = await testEvent.Record();
+        bool wasSuccess = await testEvent.RecordAsync();
         Assert.IsTrue(wasSuccess, "Sensitive data wasn't stripped out correctly");
     }
 
@@ -111,7 +112,7 @@ public class HelperTests
                 return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         });
 
-        bool wasSuccess = await testEvent.Record();
+        bool wasSuccess = await testEvent.RecordAsync();
         Assert.IsTrue(wasSuccess, "Additional exception data wasn't added to the amplitude event as expected");
     }
 

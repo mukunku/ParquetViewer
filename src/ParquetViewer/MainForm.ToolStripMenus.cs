@@ -16,10 +16,10 @@ public partial class MainForm
 
     private string? _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText;
 
-    private void NewToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void NewToolStripMenuItem_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileNew);
-        OpenFileOrFolderPath = null;
+        await CloseOpenFileOrFolderAsync();
     }
 
     private async void OpenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -29,12 +29,12 @@ public partial class MainForm
             if (openParquetFileDialog.ShowDialog(this) == DialogResult.OK)
             {
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FileOpen);
-                await OpenNewFileOrFolder(openParquetFileDialog.FileName);
+                await OpenNewFileOrFolderAsync(openParquetFileDialog.FileName);
             }
         }
         catch
         {
-            OpenFileOrFolderPath = null;
+            await CloseOpenFileOrFolderAsync();
             throw;
         }
     }
@@ -46,12 +46,12 @@ public partial class MainForm
             if (openFolderDialog.ShowDialog(this) == DialogResult.OK)
             {
                 MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.FolderOpen);
-                await OpenNewFileOrFolder(openFolderDialog.SelectedPath);
+                await OpenNewFileOrFolderAsync(openFolderDialog.SelectedPath);
             }
         }
         catch
         {
-            OpenFileOrFolderPath = null;
+            await CloseOpenFileOrFolderAsync();
             throw;
         }
     }
@@ -60,7 +60,7 @@ public partial class MainForm
 
     private async void ExitToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        var exitEventTask = new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.Record();
+        var exitEventTask = new MenuBarClickEvent { Action = MenuBarClickEvent.ActionId.Exit }.RecordAsync();
         await Task.WhenAny(exitEventTask, Task.Delay(3000)); //don't prevent the app from closing for too long
         Close();
     }
@@ -68,14 +68,14 @@ public partial class MainForm
     private async void ChangeFieldsMenuStripButton_Click(object sender, EventArgs e)
     {
         MenuBarClickEvent.FireAndForget(MenuBarClickEvent.ActionId.ChangeFields);
-        var fieldList = await OpenFieldSelectionDialog(true);
+        var fieldList = await OpenFieldSelectionDialogAsync(true);
         if (fieldList is not null)
             SelectedFields = fieldList; //triggers a file load
     }
 
     private void GetSQLCreateTableScriptToolStripMenuItem_Click(object sender, EventArgs e)
     {
-        var openFileOrFolderPath = OpenFileOrFolderPath;
+        var openFileOrFolderPath = _openFileOrFolderPath;
         if (openFileOrFolderPath?.EndsWith('/') == true)
         {
             //trim trailing slash '/'
@@ -197,7 +197,7 @@ public partial class MainForm
     {
         _getSqlCreateTableScriptToolStripMenuItem_ToolTipOriginalText ??= getSQLCreateTableScriptToolStripMenuItem.ToolTipText;
         var firstColumn = MainDataSource?.Columns.AsEnumerable().FirstOrDefault();
-        if (firstColumn is null || OpenFileOrFolderPath is null)
+        if (firstColumn is null || _openFileOrFolderPath is null)
         {
             ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
             return;
@@ -206,7 +206,7 @@ public partial class MainForm
         //Adjust the tooltip dynamically to be fancy
         try
         {
-            string tableName = Path.GetFileNameWithoutExtension(OpenFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
+            string tableName = Path.GetFileNameWithoutExtension(_openFileOrFolderPath) ?? DEFAULT_TABLE_NAME;
             string sqlTypeDefinition = CustomScriptBasedSchemaAdapter.GetTypeFor(firstColumn);
 
             var truncateSuffix = MainDataSource?.Columns.Count > 1 ? ",..." : ")";

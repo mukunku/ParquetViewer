@@ -1,0 +1,80 @@
+name: Code Format
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+
+permissions:
+  contents: write
+
+concurrency:
+  group: code-format-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Format code
+    runs-on: windows-latest
+    if: github.repository == 'mukunku/ParquetViewer'
+
+    steps:
+      - name: Checkout pull request branch
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        working-directory: src
+        run: dotnet restore ParquetViewer.sln
+
+      - name: If this is a Fork PR, notify the author of formatting issues
+        if: github.event.pull_request.head.repo.full_name != github.repository
+        working-directory: src
+        run: dotnet format ParquetViewer.sln --no-restore --verify-no-changes
+
+      - name: If this is a native PR, format it
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        working-directory: src
+        run: dotnet format ParquetViewer.sln --no-restore
+
+      - name: Detect changes
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        id: check
+        shell: pwsh
+        run: |
+          git diff --quiet -- src
+          $diffExitCode = $LASTEXITCODE
+          if ($diffExitCode -eq 0) {
+              'changed=false' | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              Write-Host 'No formatting changes required.'
+          }
+          elseif ($diffExitCode -eq 1) {
+              'changed=true' | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              Write-Host 'Formatting changes detected.'
+              git diff --stat -- src
+          }
+          else {
+              throw "git diff failed with exit code $diffExitCode"
+          }
+
+      - name: Commit and push formatting changes for native PR
+        if: github.event.pull_request.head.repo.full_name == github.repository && steps.check.outputs.changed == 'true'
+        shell: pwsh
+        run: |
+          git config user.name 'Code Format Bot'
+          git config user.email 'code-format-bot@users.noreply.github.com'
+          git add -- src
+          git commit -m 'Apply dotnet format'
+          git push

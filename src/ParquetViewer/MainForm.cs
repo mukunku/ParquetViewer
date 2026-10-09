@@ -18,56 +18,12 @@ public partial class MainForm : FormBase
 {
     private const int DEFAULT_OFFSET = 0;
     private const int DEFAULT_ROW_COUNT = 1000;
-    private readonly string _defaultFormTitle;
 
     #region Members
     private readonly string? _fileToLoadOnLaunch;
-    private string? _openFileOrFolderPath;
-    private string? OpenFileOrFolderPath
-    {
-        get => _openFileOrFolderPath;
-        set
-        {
-            _openFileOrFolderPath = value;
-            _openParquetEngine?.Dispose();
-            _openParquetEngine = null;
-            SelectedFields = null;
-            changeFieldsMenuStripButton.Enabled = false;
-            getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
-            saveAsToolStripMenuItem.Enabled = false;
-            metadataViewerToolStripMenuItem.Enabled = false;
-            recordCountStatusBarLabel.Text = "0";
-            totalRowCountStatusBarLabel.Text = "0";
-            actualShownRecordCountLabel.Text = "0";
-            mainGridView.DisposeAudioCells();
-            MainDataSource?.Dispose();
-            MainDataSource = null;
-            loadAllRowsButton.Enabled = false;
-            searchFilterTextBox.PlaceholderText = "WHERE ";
-            offsetTextBox.SetTextQuiet(DEFAULT_OFFSET.ToString());
-            _currentOffset = DEFAULT_OFFSET;
-            mainGridView.ClearQuickPeekForms();
-            mainGridView.ClearColumnFormatOverrides();
-            ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
+    private readonly string _defaultFormTitle;
 
-            if (string.IsNullOrWhiteSpace(_openFileOrFolderPath))
-            {
-                Text = _defaultFormTitle;
-            }
-            else
-            {
-                if (File.Exists(_openFileOrFolderPath))
-                    Text = Resources.Strings.MainWindowOpenFileTitleFormat.Format(_openFileOrFolderPath);
-                else
-                    Text = Resources.Strings.MainWindowOpenFolderTitleFormat.Format(_openFileOrFolderPath);
-
-                changeFieldsMenuStripButton.Enabled = true;
-                saveAsToolStripMenuItem.Enabled = true;
-                getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
-                metadataViewerToolStripMenuItem.Enabled = true;
-            }
-        }
-    }
+    private string? _openFileOrFolderPath = null;
 
     private List<string>? _selectedFields = null;
     private List<string>? SelectedFields
@@ -81,6 +37,7 @@ public partial class MainForm : FormBase
             var duplicateFields = _selectedFields?.GroupBy(f => f.ToUpperInvariant()).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
             if (duplicateFields?.Count > 0)
             {
+                //Remove dupe fields (we _could_ keep one of them actually :shrug:)
                 _selectedFields = _selectedFields!.Where(f => !duplicateFields.Any(df => df.Equals(f, StringComparison.InvariantCultureIgnoreCase))).ToList();
 
                 MessageBox.Show($"The following duplicate fields could not be loaded: {string.Join(',', duplicateFields)}. " +
@@ -118,10 +75,10 @@ public partial class MainForm : FormBase
     }
 
     private bool IsAnyFileOpen
-        => !string.IsNullOrWhiteSpace(OpenFileOrFolderPath)
+        => !string.IsNullOrWhiteSpace(_openFileOrFolderPath)
             && _openParquetEngine is not null;
 
-    private DataTable? _mainDataSource;
+    private DataTable? _mainDataSource = null;
     private DataTable? MainDataSource
     {
         get => _mainDataSource;
@@ -138,11 +95,10 @@ public partial class MainForm : FormBase
         }
     }
 
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+    private bool _reloadEngine;
     private IParquetEngine? _openParquetEngine;
-#pragma warning restore CA1859 // Self-Contained executable will assign DuckDB engines to this
 
-    private (DateTime LastWriteTimeUtc, long Length)? _originalModifiedInfo;
+    private FileModifiedInfo? _originalModifiedInfo;
     #endregion
 
     public MainForm()
@@ -151,8 +107,6 @@ public partial class MainForm : FormBase
         _defaultFormTitle = Text;
         offsetTextBox.SetTextQuiet(DEFAULT_OFFSET.ToString());
         recordCountTextBox.SetTextQuiet(DEFAULT_ROW_COUNT.ToString());
-        MainDataSource = new DataTable();
-        OpenFileOrFolderPath = null;
 
         //Have to set these here because it gets deleted from the .Designer.cs file for some reason
         metadataViewerToolStripMenuItem.Image = Resources.Icons.text_file_icon_16x16.ToBitmap();
@@ -170,10 +124,12 @@ public partial class MainForm : FormBase
 
     private async void MainForm_Load(object sender, EventArgs e)
     {
+        await ResetFormAsync();
+
         //Open existing file on first load. Usually this means user double-clicked a parquet file with this utility as the default program.
         if (!string.IsNullOrWhiteSpace(_fileToLoadOnLaunch))
         {
-            await OpenNewFileOrFolder(_fileToLoadOnLaunch);
+            await OpenNewFileOrFolderAsync(_fileToLoadOnLaunch);
         }
 
         //Check necessary toolstrip menu items
@@ -191,9 +147,10 @@ public partial class MainForm : FormBase
         Program.AskUserIfTheyWantToSwitchToDarkMode();
     }
 
-    private async Task<List<string>?> OpenFieldSelectionDialog(bool forceOpenDialog)
+    private async Task<List<string>?> OpenFieldSelectionDialogAsync(bool forceOpenDialog)
     {
-        if (string.IsNullOrWhiteSpace(OpenFileOrFolderPath))
+        //Can't use `!IsAnyFileOpen` since we expect _openParquetEngine to be null sometimes
+        if (string.IsNullOrWhiteSpace(_openFileOrFolderPath))
         {
             return null;
         }
@@ -202,14 +159,14 @@ public partial class MainForm : FormBase
         {
             try
             {
-                _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(OpenFileOrFolderPath);
+                _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath);
             }
             catch (Exception ex)
             {
                 if (_openParquetEngine is null)
                 {
                     //cancel the file open
-                    OpenFileOrFolderPath = null;
+                    await CloseOpenFileOrFolderAsync();
                 }
 
                 if (ex is AllFilesSkippedException afse)
@@ -279,28 +236,79 @@ public partial class MainForm : FormBase
         }
     }
 
+    private async ValueTask ResetFormAsync()
+    {
+        if (_openParquetEngine is not null)
+        {
+            await _openParquetEngine.DisposeAsync();
+            _openParquetEngine = null;
+        }
+
+        SelectedFields = null;
+        changeFieldsMenuStripButton.Enabled = false;
+        getSQLCreateTableScriptToolStripMenuItem.Enabled = false;
+        saveAsToolStripMenuItem.Enabled = false;
+        metadataViewerToolStripMenuItem.Enabled = false;
+        recordCountStatusBarLabel.Text = "0";
+        totalRowCountStatusBarLabel.Text = "0";
+        actualShownRecordCountLabel.Text = "0";
+        mainGridView.DisposeAudioCells();
+        MainDataSource?.Dispose();
+        MainDataSource = null; //This also sets: mainGridView.DataSource = null
+        loadAllRowsButton.Enabled = false;
+        searchFilterTextBox.PlaceholderText = "WHERE ";
+        offsetTextBox.SetTextQuiet(DEFAULT_OFFSET.ToString());
+        _currentOffset = DEFAULT_OFFSET;
+        mainGridView.ClearQuickPeekForms();
+        mainGridView.ClearColumnFormatOverrides();
+        ResetGetSQLCreateTableScriptToolStripMenuItemToolTipText();
+
+        if (string.IsNullOrWhiteSpace(_openFileOrFolderPath))
+        {
+            Text = _defaultFormTitle;
+        }
+        else
+        {
+            if (File.Exists(_openFileOrFolderPath))
+                Text = Resources.Strings.MainWindowOpenFileTitleFormat.Format(_openFileOrFolderPath);
+            else
+                Text = Resources.Strings.MainWindowOpenFolderTitleFormat.Format(_openFileOrFolderPath);
+
+            changeFieldsMenuStripButton.Enabled = true;
+            saveAsToolStripMenuItem.Enabled = true;
+            getSQLCreateTableScriptToolStripMenuItem.Enabled = true;
+            metadataViewerToolStripMenuItem.Enabled = true;
+        }
+        _reloadEngine = false;
+    }
+
     private async void LoadFileToGridview()
     {
-        if (_openParquetEngine is null)
+        if (!IsAnyFileOpen)
             return;
 
-#if RELEASE_SELFCONTAINED
+        await ReloadEngineIfRequiredAsync();
+
+#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
         //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
         try
         {
-            await this.LoadFileToGridviewImpl(this._openParquetEngine);
+            await LoadFileToGridviewImplAsync(_openParquetEngine!);
         }
         catch (Exception unhandledEx)
         {
-            //Try DuckDB if Parquet.NET fails
-            if (this._openParquetEngine is Engine.DuckDB.ParquetEngine)
+            //Try DuckDB if Parquet.NET fails (unless this was already DuckDB)
+            if (_openParquetEngine is Engine.DuckDB.ParquetEngine)
                 throw;
 
             try
             {
-                var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(this.OpenFileOrFolderPath!);
-                await LoadFileToGridviewImpl(duckDbEngine);
-                SwapEngines(duckDbEngine);
+                var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
+                await LoadFileToGridviewImplAsync(duckDbEngine);
+
+                //Swap engines
+                await _openParquetEngine!.DisposeAsync();
+                _openParquetEngine = duckDbEngine;
             }
             catch (Exception duckDbEx)
             {
@@ -308,20 +316,44 @@ public partial class MainForm : FormBase
                 throw new Exceptions.RowsReadException(unhandledEx, duckDbEx);
             }
         }
-
-        void SwapEngines(IParquetEngine newEngine)
-        {
-            this._openParquetEngine.DisposeSafely();
-            this._openParquetEngine = newEngine;
-        }
 #else
-        await LoadFileToGridviewImpl(_openParquetEngine);
+        await LoadFileToGridviewImplAsync(_openParquetEngine!);
 #endif
 
         _originalModifiedInfo = null;
     }
 
-    private async Task LoadFileToGridviewImpl(IParquetEngine engine)
+    private async Task ReloadEngineIfRequiredAsync()
+    {
+        if (!_reloadEngine)
+            return;
+
+        //Reload is a try-once, best-effort operation
+        _reloadEngine = false;
+
+        //ParquetNET caches file metadata so we need to reload the engine if the parquet files were modified.
+        //DuckDB reads the file from scratch each time so that engine doesn't need this.
+        if (_openParquetEngine is Engine.ParquetNET.ParquetEngine engine)
+        {
+            try
+            {
+                var oldEngine = _openParquetEngine;
+                _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(engine.Path);
+                if (SelectedFields is not null && !SelectedFields.IsSubsetOf(_openParquetEngine.Fields))
+                {
+                    //The file doesn't have the fields we want anymore. Reset to the fields that are there.
+                    _selectedFields = _openParquetEngine.Fields; //Since we're setting the backing field directly, there's a chance this new set of fields has dupes but I think we're okay risking it.
+                }
+                await oldEngine.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                //Swallow the exception.
+            }
+        }
+    }
+
+    private async Task LoadFileToGridviewImplAsync(IParquetEngine engine)
     {
         var stopwatch = Stopwatch.StartNew();
         var loadTime = TimeSpan.Zero;
@@ -330,15 +362,12 @@ public partial class MainForm : FormBase
         var wasSuccessful = false;
         try
         {
-            if (!IsAnyFileOpen)
-                return;
-
             if (SelectedFields is null || SelectedFields.Count == 0)
                 return;
 
-            if (!File.Exists(OpenFileOrFolderPath) && !Directory.Exists(OpenFileOrFolderPath))
+            if (!File.Exists(_openFileOrFolderPath) && !Directory.Exists(_openFileOrFolderPath))
             {
-                ShowError(Resources.Errors.OpenFileNoLongerExistsErrorMessageFormat.Format(OpenFileOrFolderPath + Environment.NewLine));
+                ShowError(Resources.Errors.OpenFileNoLongerExistsErrorMessageFormat.Format(_openFileOrFolderPath + Environment.NewLine));
                 return;
             }
 
@@ -422,7 +451,7 @@ public partial class MainForm : FormBase
                     : FileOpenEvent.ParquetEngineTypeId.DuckDB;
 
                 FileOpenEvent.FireAndForget(
-                    Directory.Exists(OpenFileOrFolderPath),
+                    Directory.Exists(_openFileOrFolderPath),
                     engine.NumberOfPartitions,
                     engine.RecordCount,
                     engine.Metadata.RowGroups.Count,
@@ -440,11 +469,12 @@ public partial class MainForm : FormBase
         }
     }
 
-    private async Task OpenNewFileOrFolder(string fileOrFolderPath)
+    private async Task OpenNewFileOrFolderAsync(string fileOrFolderPath)
     {
-        OpenFileOrFolderPath = fileOrFolderPath;
+        _openFileOrFolderPath = fileOrFolderPath;
+        await ResetFormAsync();
 
-        var fieldList = await OpenFieldSelectionDialog(false);
+        var fieldList = await OpenFieldSelectionDialogAsync(false);
         var wasOpenSuccess = _openParquetEngine is not null;
 
         if (wasOpenSuccess && AppSettings.AlwaysLoadAllRecords)
@@ -547,5 +577,11 @@ public partial class MainForm : FormBase
             //We default to English
             englishToolStripMenuItem.Checked = true;
         }
+    }
+
+    private async ValueTask CloseOpenFileOrFolderAsync()
+    {
+        _openFileOrFolderPath = null;
+        await ResetFormAsync();
     }
 }

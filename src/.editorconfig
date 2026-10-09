@@ -34,6 +34,14 @@ dotnet_diagnostic.CA1068.severity = warning # CancellationToken parameters must 
 dotnet_diagnostic.MSTEST0049.severity = none # Flow TestContext cancellation token
 dotnet_diagnostic.IDE0076.severity = warning # Remove invalid global 'SuppressMessageAttribute'
 
+# Rules that apply to Microsoft.VisualStudio.Threading.Analyzers
+dotnet_diagnostic.VSTHRD200.severity = warning # Use Async suffix for async methods
+dotnet_diagnostic.VSTHRD100.severity = none # Avoid "async void" methods (event handlers are intentionally async void)
+dotnet_diagnostic.VSTHRD101.severity = none # Avoid async lambda for a void returning delegate type
+dotnet_diagnostic.VSTHRD103.severity = none # Call async methods when in an async method (sync-over-async is intentional here)
+dotnet_diagnostic.VSTHRD105.severity = none # Avoid method overloads that assume TaskScheduler.Current
+dotnet_diagnostic.VSTHRD110.severity = none # Observe the awaitable result of this method call
+
 # this. and Me. preferences (IDE0003 )
 dotnet_style_qualification_for_event = false
 dotnet_style_qualification_for_field = false

@@ -2,7 +2,7 @@
 
 namespace ParquetViewer.Engine;
 
-public interface IParquetEngine : IDisposable
+public interface IParquetEngine : IAsyncDisposable
 {
     List<string> Fields { get; }
     long RecordCount { get; }

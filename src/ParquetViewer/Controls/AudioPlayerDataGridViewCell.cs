@@ -95,14 +95,16 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         InitializePlayerAsync(); //Trigger initialization if it wasn't performed yet
 
+        if (value is null || value == DBNull.Value)
+        {
+            base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
+                paintParts & ~DataGridViewPaintParts.ContentForeground);
+            return;
+        }
+
         //Call base render so we have a nice base to draw on
         base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
             paintParts & ~DataGridViewPaintParts.ContentForeground & ~DataGridViewPaintParts.SelectionBackground);
-
-        if (value is null || value == DBNull.Value)
-        {
-            return;
-        }
 
         if (!_isInitialized)
         {

@@ -191,9 +191,7 @@ public static class Helpers
     public static void EZDispose(IEnumerable<IDisposable> disposables)
     {
         if (disposables is null)
-        {
             return;
-        }
 
         foreach (var disposable in disposables)
         {
@@ -203,6 +201,36 @@ public static class Helpers
             }
             catch { /* Swallow */ }
         }
+    }
+
+    public static async ValueTask EZDisposeAsync(IEnumerable<IAsyncDisposable> disposables)
+    {
+        if (disposables is null)
+            return;
+
+        try
+        {
+            var tasks = new List<ValueTask>();
+
+            foreach (var disposable in disposables)
+            {
+                if (disposable is not null)
+                {
+                    var task = disposable.DisposeAsync();
+                    tasks.Add(task);
+                }
+            }
+
+            foreach (var task in tasks)
+            {
+                try
+                {
+                    await task;
+                }
+                catch { /* Swallow */ }
+            }
+        }
+        catch { /* Swallow */ }
     }
 
     public static int ByteArraysEqual(ReadOnlySpan<byte> a1, ReadOnlySpan<byte> a2) => a1.SequenceCompareTo(a2);

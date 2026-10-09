@@ -103,7 +103,7 @@ public sealed class ParquetEngine : IParquetEngine
         try
         {
             var parquetMetadata = await ParquetMetadata.FromDuckDBAsync(db);
-            var fields = await DuckDBHelper.GetFields(db);
+            var fields = await DuckDBHelper.GetFieldsAsync(db);
             var customMetadata = await DuckDBHelper.GetCustomMetadataAsync(db);
             return new ParquetEngine(parquetFilePath, db, parquetMetadata, fields.ToList(), parquetMetadata.RowCount, customMetadata);
         }
@@ -128,7 +128,7 @@ public sealed class ParquetEngine : IParquetEngine
             try
             {
                 var db = await DuckDBHandle.OpenAsync(file);
-                var fileFields = await DuckDBHelper.GetFields(db);
+                var fileFields = await DuckDBHelper.GetFieldsAsync(db);
                 var fieldsHashCode = GetFieldsHashCode(fileFields);
                 if (!fileGroups.TryGetValue(fieldsHashCode, out var value))
                 {
@@ -166,7 +166,7 @@ public sealed class ParquetEngine : IParquetEngine
             var fieldsByFile = new List<List<string>>();
             foreach (var db in fileGroups.Values)
             {
-                var groupFields = await DuckDBHelper.GetFields(db.First());
+                var groupFields = await DuckDBHelper.GetFieldsAsync(db.First());
                 fieldsByFile.Add(groupFields.Select(f => f.Name).ToList());
             }
 
@@ -190,15 +190,16 @@ public sealed class ParquetEngine : IParquetEngine
         }
 
         var totalRecordCount = metadatas.Sum(m => m.RowCount);
-        var fields = await DuckDBHelper.GetFields(dbs.First());
+        var fields = await DuckDBHelper.GetFieldsAsync(dbs.First());
         var customMetadata = await DuckDBHelper.GetCustomMetadataAsync(dbs.First());
 
         return new ParquetEngine(folderPath, dbs, metadatas, fields, totalRecordCount, customMetadata);
     }
 
-    public void Dispose()
+    public ValueTask DisposeAsync()
     {
         Helpers.EZDispose(_dbs);
+        return default;
     }
 
     private async IAsyncEnumerable<DuckDBDataReader> QueryDataAsync(List<string> selectedFields, int offset, int recordCount)
@@ -249,7 +250,7 @@ public sealed class ParquetEngine : IParquetEngine
             {
                 row.GetValues(values);
             }
-            catch (OverflowException ex) when (ex.Message == "Value was either too large or too small for a Decimal.")
+            catch (OverflowException ex) when (ex.InnerException?.Message == "Value was either too large or too small for a Decimal.")
             {
                 throw new DecimalOverflowException(ex);
             }

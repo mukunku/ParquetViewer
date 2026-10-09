@@ -1,5 +1,4 @@
-﻿using NAudio.FileFormats.Wav;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using System;
 using System.IO;
 
@@ -10,7 +9,7 @@ internal class AudioPlayer : IDisposable
     private const string INVALID_AUDIO_ERROR_MESSAGE = "Provided data was not a valid .mp3 or .wav file.";
 
     private readonly MemoryStream _inputStream;
-    private readonly WaveStream? _audioStream;
+    private WaveStream? _audioStream;
     private TimeSpan? _postStopSeekLocation;
 
     public AudioFormatType AudioFormat { get; private set; }
@@ -101,15 +100,15 @@ internal class AudioPlayer : IDisposable
         }
     }
 
-    private WaveOutEvent? _audioPlayer;
-    private WaveOutEvent? GetOrCreateAudioPlayer()
+    private WaveOut? _audioPlayer;
+    private WaveOut? GetOrCreateAudioPlayer()
     {
         if (_audioStream is null)
             return null;
 
         if (_audioPlayer is null)
         {
-            _audioPlayer = new WaveOutEvent();
+            _audioPlayer = new WaveOut();
             _audioPlayer.Init(_audioStream);
             _audioPlayer.PlaybackStopped += OnPlaybackStopped_Internal;
         }
@@ -133,8 +132,15 @@ internal class AudioPlayer : IDisposable
 
     public void Dispose()
     {
-        _audioPlayer.DisposeSafely();
-        _audioStream.DisposeSafely();
+        //We need to null out the _audioStream because OnPlaybackStopped_Internal
+        //can get called if audio was still playing when the user closed the form.
+        //And we shouldn't touch the stream after disposal as it throws
+        //Null Reference Exceptions inside NAudio otherwise.
+        var audioStream = _audioStream;
+        _audioStream = null;
+
+        _audioPlayer?.DisposeSafely();
+        audioStream.DisposeSafely();
         _inputStream.DisposeSafely();
     }
 
@@ -150,8 +156,7 @@ internal class AudioPlayer : IDisposable
         using var ms = new MemoryStream(data);
         try
         {
-            var wavReader = new WaveFileChunkReader();
-            wavReader.ReadWaveHeader(ms);
+            using var reader = new WaveFileReader(ms);
             audioFormat = AudioFormatType.Wav;
             return true;
         }
