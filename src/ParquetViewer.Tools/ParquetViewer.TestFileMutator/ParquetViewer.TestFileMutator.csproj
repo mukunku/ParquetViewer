@@ -12,9 +12,4 @@
   <ItemGroup>
     <PackageReference Include="Parquet.Net" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Include="README.md" />
-  </ItemGroup>
-
 </Project>
