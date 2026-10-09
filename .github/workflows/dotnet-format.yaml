@@ -54,14 +54,19 @@ jobs:
         id: check
         shell: pwsh
         run: |
-          if (git diff --quiet -- src) {
-            'changed=false' | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            Write-Host 'No formatting changes required.'
+          git diff --quiet -- src
+          $diffExitCode = $LASTEXITCODE
+          if ($diffExitCode -eq 0) {
+              'changed=false' | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              Write-Host 'No formatting changes required.'
+          }
+          elseif ($diffExitCode -eq 1) {
+              'changed=true' | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              Write-Host 'Formatting changes detected.'
+              git diff --stat -- src
           }
           else {
-            'changed=true' | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            Write-Host 'Formatting changes detected.'
-            git diff --stat -- src
+              throw "git diff failed with exit code $diffExitCode"
           }
 
       - name: Commit and push formatting changes for native PR
