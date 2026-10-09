@@ -7,6 +7,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+      - converted_to_draft
 
 permissions:
   contents: write
@@ -19,7 +20,7 @@ jobs:
   format:
     name: Format code
     runs-on: windows-latest
-    if: github.repository == 'mukunku/ParquetViewer' && github.event.pull_request.draft == false
+    if: github.repository == 'mukunku/ParquetViewer'
 
     steps:
       - name: Checkout pull request branch
