@@ -21,7 +21,8 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
         _ => throw new InvalidOperationException("Cannot determine CLR type for primitive field without ClrType information."),
     };
 
-    public FieldTypeId FieldType => ConvertedType switch
+    private FieldTypeId? _fieldTypeId; //Without caching the type the NESTED_STRUCTS_AND_LISTS() test is super slow while debugging
+    public FieldTypeId FieldType => _fieldTypeId ??= ConvertedType switch
     {
         "LIST" => FieldTypeId.List,
         "MAP" => FieldTypeId.Map,
