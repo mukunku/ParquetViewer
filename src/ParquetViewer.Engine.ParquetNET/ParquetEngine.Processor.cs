@@ -488,15 +488,20 @@ public partial class ParquetEngine
     private static SimpleProgress StructReadProgress(IProgress<int>? _progress, int fieldCount)
     {
         var progress = new SimpleProgress();
+        var reportedRowCount = 0;
         progress.ProgressChanged += (int progressSoFar) =>
         {
             if (fieldCount > 0)
             {
-                //To report progress accurately we'll need to divide the progress total  
-                //by the field count to convert it to row count in the main data table.
-                var increment = progressSoFar % fieldCount;
-                if (increment == 0)
-                    _progress?.Report(1);
+                //Progress is reported per struct field, so divide the cumulative total by the field
+                //count to convert it to row count in the main data table. 
+                var rowCount = progressSoFar / fieldCount;
+                var increment = rowCount - reportedRowCount;
+                if (increment > 0)
+                {
+                    _progress?.Report(increment);
+                    reportedRowCount = rowCount;
+                }
             }
             else
             {

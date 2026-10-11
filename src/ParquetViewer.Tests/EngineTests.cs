@@ -1,6 +1,7 @@
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Tests.TestAttributes;
+using ParquetViewer.Tests.TestHelpers;
 using System.Data;
 using System.Text.Json;
 
@@ -331,6 +332,20 @@ public abstract class EngineTests
             Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":[],\"configuration\":[],\"createdTime\":1564524294376}", dataTable.Rows[1][3].ToString());
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[0][4]);
         Assert.AreEqual("{\"minReaderVersion\":1,\"minWriterVersion\":2}", dataTable.Rows[0][4].ToString());
+    }
+
+    [SkippableTestMethod]
+    public async Task STRUCT_FIELD_PROGRESS_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/STRUCT_TYPE_TEST.parquet");
+
+        var expectedReportedProgress = parquetEngine.Fields.Count * parquetEngine.RecordCount;
+
+        var progress = new ProgressRecorder();
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, progress))(false);
+
+        Assert.AreEqual(expectedReportedProgress, progress.Total,
+            "Total reported progress did not equal the number of loaded cells. The loading bar would never reach 100%.");
     }
 
     [SkippableTestMethod]
