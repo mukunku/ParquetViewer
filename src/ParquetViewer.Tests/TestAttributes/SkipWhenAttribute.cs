@@ -1,4 +1,4 @@
-﻿namespace ParquetViewer.Tests;
+﻿namespace ParquetViewer.Tests.TestAttributes;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class SkipWhenAttribute : Attribute

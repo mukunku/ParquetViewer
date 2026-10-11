@@ -45,7 +45,7 @@ public static class Env
     private static SemanticVersion? _latestReleaseVersion = null;
     private static Uri? _releaseUri = null;
     private static DateTime? _latestReleaseLastCheckedOn = null;
-    public static async Task<(SemanticVersion? Version, Uri? Url)> FetchLatestRelease()
+    public static async Task<(SemanticVersion? Version, Uri? Url)> FetchLatestReleaseAsync()
     {
         //We cache the http response for 30 minutes (even if it failed) so we don't spam http requests
         if (_latestReleaseLastCheckedOn.HasValue && DateTime.UtcNow.Subtract(_latestReleaseLastCheckedOn.Value) < TimeSpan.FromMinutes(30))

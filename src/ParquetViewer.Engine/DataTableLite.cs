@@ -101,7 +101,7 @@ public class DataTableLite
                     {
                         if (values[columnIndex] != DBNull.Value && column.Type != values[columnIndex].GetType())
                         {
-                            throw new TypeMismatchException($"Value type '{values[columnIndex]?.GetType()}' doesn't match column type {column.Type} for field `{column.Name}`");
+                            throw new TypeMismatchException($"Value type '{values[columnIndex]?.GetType().Name}' doesn't match column type '{column.Type.Name}' for field `{column.Name}`");
                         }
                         columnIndex++;
                     }
