@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers;
@@ -51,14 +52,24 @@ public static class UtilityMethods
         return null;
     }
 
-    public static bool IsValidDateFormat(string? dateFormat)
+    public static bool IsSupportedDateFormat(string? dateFormat)
     {
         if (string.IsNullOrWhiteSpace(dateFormat))
             return false;
 
         try
         {
-            DateTime.UtcNow.ToString(dateFormat);
+            //Test on DateTime
+            _ = DateTime.UtcNow.ToString(dateFormat);
+
+            //Test on DateOnly
+            var dateOnlyFormat = UtilityMethods.StripTimeComponentsFromDateTimeFormat(dateFormat);
+            _ = DateOnly.FromDateTime(DateTime.UtcNow).ToString(dateOnlyFormat);
+
+            //Test on TimeOnly
+            var timeOnlyFormat = UtilityMethods.StripDateComponentsFromDateTimeFormat(dateFormat);
+            _ = TimeOnly.FromDateTime(DateTime.UtcNow).ToString(timeOnlyFormat);
+
             return true;
         }
         catch (Exception)
@@ -101,20 +112,23 @@ public static class UtilityMethods
         Application.Exit();
     }
 
+    private static readonly char[] _dateTimeSeparatorChars = ['/', '-', '.', ' ', ',', '_', ':', '\u202F', '\u200F'];
+
     /// <summary>
     /// Best effort attempt at stripping time components from a datetime format string.
     /// </summary>
     /// <param name="dateFormat">Date format with potential time components</param>
     /// <returns>Date format with no time components</returns>
+    /// <remarks>If empty string is returned, formatting with it will use the users default culture format</remarks>
     public static string StripTimeComponentsFromDateTimeFormat(string dateFormat)
     {
-        var timeComponents = new string[] { "H", "h", "m", "s", "f", "F", "t", "z", "K" };
+        var timeComponents = new string[] { "H", "h", "m", "s", "f", "F", "t", "z", "K", "'ч'" };
         foreach (var component in timeComponents)
         {
             dateFormat = dateFormat.Replace(component, string.Empty);
         }
-        dateFormat = dateFormat.Replace("  ", " ");
-        dateFormat = dateFormat.TrimEnd('/', '-', '.', ' ', ',', '_');
+        dateFormat = Regex.Replace(dateFormat, @"\s{2,}", " ");
+        dateFormat = dateFormat.Trim(_dateTimeSeparatorChars);
         return dateFormat.Trim();
     }
 
@@ -123,6 +137,7 @@ public static class UtilityMethods
     /// </summary>
     /// <param name="dateFormat">Date format with potential date components</param>
     /// <returns>Time format with no date components</returns>
+    /// <remarks>If empty string is returned, formatting with it will use the users default culture format</remarks>
     public static string StripDateComponentsFromDateTimeFormat(string dateFormat)
     {
         var dateComponents = new string[] { "y", "M", "d", "g" };
@@ -130,8 +145,8 @@ public static class UtilityMethods
         {
             dateFormat = dateFormat.Replace(component, string.Empty);
         }
-        dateFormat = dateFormat.Replace("  ", " ");
-        dateFormat = dateFormat.TrimStart('/', '-', '.', ' ', ',', '_');
+        dateFormat = Regex.Replace(dateFormat, @"\s{2,}", " ");
+        dateFormat = dateFormat.Trim(_dateTimeSeparatorChars);
         return dateFormat.Trim();
     }
 }

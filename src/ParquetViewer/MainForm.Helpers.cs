@@ -503,6 +503,9 @@ public partial class MainForm
                    DecimalOverflowException.MAX_DECIMAL_SCALE),
                Resources.Errors.DecimalValueTooLargeErrorTitle);
 
+    private static void HandleOutOfMemoryException(OutOfMemoryException ex)
+        => ShowError(ex.Message);
+
     private static void ShowError(string message, string? title = null)
         => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
 }

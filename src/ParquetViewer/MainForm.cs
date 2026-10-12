@@ -394,6 +394,10 @@ public partial class MainForm : FormBase
         {
             HandleDecimalOverflowException(ex);
         }
+        catch (OutOfMemoryException ex)
+        {
+            HandleOutOfMemoryException(ex);
+        }
         catch (Exception ex)
         {
             if (ex is not OperationCanceledException)
