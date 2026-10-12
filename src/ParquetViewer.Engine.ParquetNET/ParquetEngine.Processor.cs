@@ -281,6 +281,13 @@ public partial class ParquetEngine
                                     for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
                                     {
                                         var row = nestedStructFieldTable.GetRowAt(i);
+
+                                        //If every field of the struct is null, treat the struct as empty (matches DuckDB)
+                                        if (row.Row.All(IsNullValued))
+                                        {
+                                            continue;
+                                        }
+
                                         listValues.Add(new StructValueExt(row));
                                     }
                                     columnValue = new ListValue(listValues, typeof(StructValueExt));
@@ -291,6 +298,10 @@ public partial class ParquetEngine
                                 if (isFirstValueColumn)
                                 {
                                     newStructFieldTable.NewRow();
+
+                                    //Some pivoted columns don't have the same Data array lengths it seems.
+                                    //So pre-fill all values with DBNull to prevent NRE's later on.
+                                    Array.Fill(newStructFieldTable.Rows[newStructFieldTable.Rows.Count - 1], DBNull.Value);
                                 }
                                 newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
                             }
@@ -339,6 +350,23 @@ public partial class ParquetEngine
             ex.Data["last_milestone"] = lastMilestone;
             throw;
         }
+    }
+
+    /// <summary>
+    /// Determines whether a value is effectively null, recursing into structs and lists.
+    /// </summary>
+    private static bool IsNullValued(object? value)
+    {
+        if (value == DBNull.Value)
+            return true;
+
+        if (value is IStructValue @struct)
+            return @struct.Data.Row.All(IsNullValued);
+
+        if (value is IListValue list)
+            return list.Data.Cast<object?>().All(IsNullValued);
+
+        return false;
     }
 
     private static async Task ReadMapField(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,

@@ -422,7 +422,18 @@ public partial class MainForm
 }"
                             }
                         };
-                await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
+                try
+                {
+                    await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    HandleUnauthorizedAccessException(ex);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
             }, cancellationToken);
 
     private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
@@ -504,6 +515,9 @@ public partial class MainForm
                Resources.Errors.DecimalValueTooLargeErrorTitle);
 
     private static void HandleOutOfMemoryException(OutOfMemoryException ex)
+        => ShowError(ex.Message);
+
+    private static void HandleUnauthorizedAccessException(UnauthorizedAccessException ex)
         => ShowError(ex.Message);
 
     private static void ShowError(string message, string? title = null)

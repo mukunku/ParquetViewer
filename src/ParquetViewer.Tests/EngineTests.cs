@@ -520,6 +520,25 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
+    public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT_WITH_NULLS()
+    {
+        using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT_WITH_NULLS.parquet");
+        Assert.AreEqual(2, parquetEngine.RecordCount);
+        Assert.HasCount(1, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+
+        Assert.AreEqual(
+            @"[{""A"":[{""B"":[1,2],""C"":3,""D"":4}],""E"":0.1},{""A"":[],""E"":0.2}]",
+            dataTable.Rows[0][0].ToString());
+        //ParquetNET collapses an all-null nested list to an empty list; DuckDB distinguishes null and empty lists
+        var expectedRow1 = _canHandleNullComplexTypes
+            ? @"[{""A"":[],""E"":0.3},{""A"":[{""B"":null,""C"":5,""D"":6},{""B"":[7],""C"":null,""D"":8}],""E"":0.4}]"
+            : @"[{""A"":null,""E"":0.3},{""A"":[{""B"":[],""C"":5,""D"":6},{""B"":[7],""C"":null,""D"":8}],""E"":0.4}]";
+        Assert.AreEqual(expectedRow1, dataTable.Rows[1][0].ToString());
+    }
+
+    [SkippableTestMethod]
     public async Task TWO_TIER_REPEATED_LIST_FIELDS_TEST()
     {
         using var parquetEngine = await OpenFileOrFolderAsync("Data/TWO_TIER_TEPEATED_LIST_FIELDS_TEST.parquet");
