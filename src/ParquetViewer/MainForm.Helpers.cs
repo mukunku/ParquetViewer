@@ -25,17 +25,30 @@ public partial class MainForm
         var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
         loadingIcon.OnShow += (sender, e) =>
         {
-            mainTableLayoutPanel.Enabled = false;
             mainMenuStrip.Enabled = false;
+            ToggleUserActionableControls(false);
         };
         loadingIcon.OnHide += (sender, e) =>
         {
-            mainTableLayoutPanel.Enabled = true;
             mainMenuStrip.Enabled = true;
+            ToggleUserActionableControls(true);
         };
 
         loadingIcon.Show();
         return loadingIcon;
+
+        //Disabling `mainTableLayoutPanel` also disables Labels which breaks
+        //Dark Mode. So we disable individual user actionable controls instead.
+        void ToggleUserActionableControls(bool enabled)
+        {
+            searchFilterLabel.Enabled = enabled;
+            searchFilterTextBox.Enabled = enabled;
+            runQueryButton.Enabled = enabled;
+            clearFilterButton.Enabled = enabled;
+            offsetTextBox.Enabled = enabled;
+            recordCountTextBox.Enabled = enabled;
+            loadAllRowsButton.Enabled = enabled;
+        }
     }
 
     //TODO: Should we export floats and binary data with custom formatting if activated?
