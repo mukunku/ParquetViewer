@@ -539,6 +539,19 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
+    public async Task LIST_OF_STRUCT_NULL_NESTED_LIST_AND_PRIMITIVE()
+    {
+        //Regression test: a null nested list in the first column of a struct used to crash the
+        //pivot with an ArgumentOutOfRangeException when a later column had a value.
+        using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_NULL_NESTED_LIST_AND_PRIMITIVE.parquet");
+        Assert.AreEqual(1, parquetEngine.RecordCount);
+        Assert.HasCount(1, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(@"[{""A"":null,""E"":1}]", dataTable.Rows[0][0].ToString());
+    }
+
+    [SkippableTestMethod]
     public async Task TWO_TIER_REPEATED_LIST_FIELDS_TEST()
     {
         using var parquetEngine = await OpenFileOrFolderAsync("Data/TWO_TIER_TEPEATED_LIST_FIELDS_TEST.parquet");

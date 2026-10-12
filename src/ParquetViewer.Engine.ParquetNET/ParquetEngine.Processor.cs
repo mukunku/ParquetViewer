@@ -294,8 +294,9 @@ public partial class ParquetEngine
                                 }
                                 #endregion
 
-                                bool isFirstValueColumn = columnOrdinal == 0;
-                                if (isFirstValueColumn)
+                                //Columns can have different numbers of values (e.g. the first column is null/empty
+                                //while a later one isn't), so make sure a row exists before assigning into it.
+                                while (newStructFieldTable.Rows.Count <= rowValueIndex)
                                 {
                                     newStructFieldTable.NewRow();
 
