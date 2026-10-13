@@ -10,7 +10,7 @@ internal static class DuckDBHelper
 {
     internal record DuckDBField(string Name, DuckDBType DuckDBType, Type Type);
 
-    public static async Task<List<DuckDBField>> GetFields(DuckDBHandle db)
+    public static async Task<List<DuckDBField>> GetFieldsAsync(DuckDBHandle db)
     {
         var fields = new List<DuckDBField>();
         await using var result = await db.Connection.QueryAsync($"DESCRIBE TABLE '{db.ParquetFilePath}';");

@@ -161,7 +161,7 @@ public class ListValueBuilder
             {
                 if (data is LinkedArrayList childArray)
                 {
-                    convertedArray.Add(ConstructListValues(childArray));
+                    convertedArray.Add(ConstructListValues(childArray) ?? (object)DBNull.Value);
                     hasChildArrays = true;
                 }
                 else
