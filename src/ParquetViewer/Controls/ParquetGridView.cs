@@ -350,6 +350,9 @@ public class ParquetGridView : DataGridView
             && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
         {
             //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
+            if (existingQuickPeekForm.WindowState == FormWindowState.Minimized)
+                existingQuickPeekForm.WindowState = FormWindowState.Normal;
+
             existingQuickPeekForm.Focus();
             return;
         }
