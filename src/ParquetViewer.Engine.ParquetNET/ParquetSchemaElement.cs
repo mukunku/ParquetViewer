@@ -179,6 +179,34 @@ public class ParquetSchemaElement : IParquetSchemaElement
             || (@field._systemFieldType == SystemFieldTypeId.ListNode && @field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
         );
 
+    /// <summary>
+    /// The definition levels at which each list along the path from this field to the root is
+    /// considered "present but empty", ordered from the outermost list to the innermost.
+    /// A value whose definition level equals one of these is an empty list at that nesting depth.
+    /// </summary>
+    /// <remarks>This typically has a number of elements equal to <see cref="NumberOfListParents"/> but there could be edge cases.</remarks>
+    public IReadOnlyList<int> ListDefinitionLevels
+    {
+        get
+        {
+            var levels = new List<int>();
+            foreach (var node in ParentsExcludingRoot)
+            {
+                if (node.FieldType == FieldTypeId.List)
+                {
+                    //Count OPTIONAL and REPEATED fields to determine what definition level
+                    //means "empty list" instead of "null list". Lists with definition levels below this level
+                    //are considered null, at this level are considered empty, and above this are non-empty.
+                    levels.Add(node.ParentsExcludingRoot.Append(node)
+                        .Count(@field => @field.SchemaElement.RepetitionType != FieldRepetitionType.REQUIRED));
+                }
+            }
+
+            levels.Reverse();
+            return levels;
+        }
+    }
+
     public bool IsPrimitive => FieldType == FieldTypeId.Primitive;
 
     ICollection<IParquetSchemaElement> IParquetSchemaElement.Children => Children.ToList<IParquetSchemaElement>();

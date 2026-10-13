@@ -191,13 +191,17 @@ public partial class ParquetEngine
                 var dataEnumerable = dataColumn.GetDataWithPaddedNulls(itemField);
 
                 var numberOfListParents = itemField.NumberOfListParents;
+                var listDefinitionLevels = itemField.ListDefinitionLevels;
+
                 #region Fixes TWO_TIER_LIST_TYPE_TEST
+                //A legacy two-tier repeated field has no LIST-annotated ancestor, so it has no list
+                //parents and consequently no list definition levels of its own
                 numberOfListParents = numberOfListParents == 0 ? 1 : numberOfListParents;
+                listDefinitionLevels = listDefinitionLevels.Count == 0 ? [itemField.CurrentDefinitionLevel] : listDefinitionLevels;
                 #endregion
 
                 var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, dataColumn.Field.ClrType);
-                var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, numberOfListParents,
-                    itemField.CurrentDefinitionLevel, dataColumn.Field.MaxDefinitionLevel, cancellationToken);
+                var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, numberOfListParents, listDefinitionLevels, cancellationToken);
                 lastMilestone = "ReadRows";
 
                 foreach (var listValue in listValues)
@@ -209,7 +213,7 @@ public partial class ParquetEngine
                         dataTable.NewRow();
                     }
 
-                    dataTable.Rows[rowIndex][fieldIndex] = listValue;
+                    dataTable.Rows[rowIndex][fieldIndex] = listValue as object ?? DBNull.Value;
                     rowIndex++;
                     progress?.Report(1);
                 }
@@ -310,8 +314,14 @@ public partial class ParquetEngine
                         return newStructFieldTable;
                     }
 
-                    ArrayList GetListOfStructs(object[] _values)
+                    ArrayList? GetListOfStructs(object[] _values)
                     {
+                        //If every field of the struct is null, the entire list is null (not empty)
+                        if (_values.All(value => value == DBNull.Value))
+                        {
+                            return null;
+                        }
+
                         DataTableLite newStructFieldTable = PivotTable(_values);
 
                         var listValues = new ArrayList(newStructFieldTable.Rows.Count);
@@ -337,7 +347,9 @@ public partial class ParquetEngine
                     if (isFirstColumn)
                         dataTable.NewRow();
 
-                    dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValueExt));
+                    dataTable.Rows[rowIndex][fieldIndex] = listValues is null
+                        ? DBNull.Value
+                        : new ListValue(listValues, typeof(StructValueExt));
                     rowIndex++;
                 }
             }

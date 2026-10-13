@@ -49,8 +49,10 @@ public class ListValueBuilder
     /// <summary>
     /// Reads nested list values
     /// </summary>
-    /// <returns>Enumerable of ListValue's. We need to return object to support DBNull.Value</returns>
-    public IEnumerable<object> ReadRows(int skipRecords, int readRecords, int numberOfListParents, int currentDefinitionLevel, int _ /*MaxDefinitionLevel*/, CancellationToken cancellationToken)
+    /// <returns>Enumerable of ListValue's, possibly null.</returns>
+    /// <remarks>Callers will need to convert nulls to DBNull</remarks>
+    public IEnumerable<ListValue?> ReadRows(int skipRecords, int readRecords, int numberOfListParents,
+        IReadOnlyList<int> listDefinitionLevels, CancellationToken cancellationToken)
     {
         var ranges = GetRowRanges();
 
@@ -58,7 +60,7 @@ public class ListValueBuilder
         foreach (var rowRange in rowRangesToRead)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var listValue = ReadListValue(rowRange, numberOfListParents, () =>
+            var listValue = ReadListValue(rowRange, numberOfListParents, listDefinitionLevels, () =>
             {
                 //TODO: optimize to avoid skipping all rows every time
                 return _data
@@ -66,81 +68,89 @@ public class ListValueBuilder
                 .Skip(rowRange.Start.Value)
                 .Take(rowRange.End.Value - rowRange.Start.Value)
                 .ToArray();
-            },
-            (int index) =>
-            {
-                return _definitionLevels.Length > index && _definitionLevels[index] == currentDefinitionLevel;
             });
             yield return listValue;
         }
     }
 
-    private object ReadListValue(Range range, int numberOfListParents, Func<object[]> dataProvider, Func<int, bool> isEmptyProvider)
+    private ListValue? ReadListValue(Range range, int numberOfListParents, IReadOnlyList<int> listDefinitionLevels, Func<object[]> dataProvider)
     {
         var rangeRepetition = _repetitionLevels.AsSpan(range);
         var rangeData = dataProvider.Invoke();
 
-        if (rangeData.All(data => data == DBNull.Value))
-        {
-            if (isEmptyProvider(range.Start.Value))
-            {
-                return new ListValue([], _type);
-            }
-            else
-            {
-                return DBNull.Value;
-            }
-        }
+        var definitionStartLevel = _definitionLevels.Length > range.Start.Value ? _definitionLevels[range.Start.Value] : 0;
 
         LinkedArrayList root = new();
-        var node = root.GoDownToLevel(numberOfListParents);
+        var lastByDepth = new LinkedArrayList?[numberOfListParents + 1];
+
+        void AddPoint(LinkedArrayList listNode, int listDepth, object data, int definitionLevel)
+        {
+            lastByDepth[listDepth] = listNode;
+
+            if (listDefinitionLevels.Count >= listDepth) //This should be true in almost all cases. Maybe two-tier lists and a few other exceptions?
+            {
+                if (definitionLevel < listDefinitionLevels[listDepth - 1])
+                {
+                    //This list is null
+                    listNode.IsNull = true;
+                    return;
+                }
+
+                if (definitionLevel == listDefinitionLevels[listDepth - 1])
+                {
+                    //This list is present but empty
+                    listNode.IsEmpty = true;
+                    return;
+                }
+            }
+
+            if (listDepth == numberOfListParents)
+            {
+                //We've reached the innermost list, so this is the element value itself
+                listNode.Add(data);
+                return;
+            }
+
+            //Descend to the next nested list
+            var childNode = new LinkedArrayList(listDepth + 1, listNode);
+            listNode.Add(childNode);
+            AddPoint(childNode, listDepth + 1, data, definitionLevel);
+        }
 
         //First data point is always added to the most nested list
-        node.Add(rangeData[0]);
+        AddPoint(root, 1, rangeData[0], definitionStartLevel);
 
-        //Add everything else now
         for (var index = 1; index < rangeRepetition.Length; index++)
         {
             var repetitionLevel = rangeRepetition[index];
             var data = rangeData[index];
+            var definitionLevel = _definitionLevels.Length > range.Start.Value + index ? _definitionLevels[range.Start.Value + index] : 0;
 
+            //repetitionLevel can never be larger than numberOfListParents
             if (repetitionLevel == numberOfListParents)
             {
-                //We're still in the same level, append to the current list
-                node.Add(data);
+                //We're still in the same (deepest) list, append to it
+                lastByDepth[repetitionLevel]!.Add(data);
                 continue;
             }
 
-            if (repetitionLevel == numberOfListParents - 1)
-            {
-                node = node.NextList();
-                node.Add(data);
-                node.IsNull = data == DBNull.Value && !isEmptyProvider(range.Start.Value + index);
-                node.IsEmpty = data == DBNull.Value && isEmptyProvider(range.Start.Value + index);
-                continue;
-            }
+            //So, if we got here, we need to start a new sibling list at depth `repetitionLevel + 1`
+            var newDepth = repetitionLevel + 1;
+            var previousList = lastByDepth[newDepth] //We should already have a ListValue at this depth by now thanks to adding the first data point
+                ?? throw new Exceptions.ParquetEngineException("Failed to construct nested list structure. Your file might be malformed.");
 
-            var count = numberOfListParents;
-            while (repetitionLevel < count - 1)
-            {
-                node = node.Parent!;
-                count--;
-            }
-
-            node = node.NextList();
-            node = node.GoDownToLevel(numberOfListParents);
-            node.Add(data);
-            node.IsNull = data == DBNull.Value && !isEmptyProvider(range.Start.Value + index);
-            node.IsEmpty = data == DBNull.Value && isEmptyProvider(range.Start.Value + index);
+            //Start the sibling list and recurse
+            var newList = previousList.NextList();
+            AddPoint(newList, newDepth, data, definitionLevel);
         }
 
         return ConstructListValues(root);
     }
 
-    private object ConstructListValues(LinkedArrayList array)
+    private ListValue? ConstructListValues(LinkedArrayList array)
     {
         if (array.IsNull)
-            return DBNull.Value;
+            return null;
 
         var hasChildArrays = false;
         var convertedArray = new ArrayList();
@@ -172,41 +182,16 @@ public class ListValueBuilder
         public bool IsNull { get; set; }
         public bool IsEmpty { get; set; }
 
-        public LinkedArrayList Root
-        {
-            get
-            {
-                var node = this;
-                while (node.Parent is not null)
-                {
-                    node = node.Parent;
-                }
-                return node;
-            }
-        }
-
         public LinkedArrayList()
         {
             Level = 1;
             Parent = null;
         }
 
-        private LinkedArrayList(int level, LinkedArrayList? parent = null)
+        public LinkedArrayList(int level, LinkedArrayList? parent = null)
         {
             Level = level;
             Parent = parent;
-        }
-
-        public LinkedArrayList GoDownToLevel(int level)
-        {
-            var node = this;
-            while (node.Level < level)
-            {
-                var childNode = new LinkedArrayList(node.Level + 1, node);
-                node.Add(childNode);
-                node = childNode;
-            }
-            return node;
         }
 
         public LinkedArrayList NextList()

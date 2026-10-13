@@ -11,7 +11,6 @@ public class ParquetNETEngineTests : EngineTests
 {
     public ParquetNETEngineTests() : base(
         useDuckDBEngine: false,
-        canHandleNullComplexTypes: true,
         treatsTwoTierListAsStruct: true,
         "/")
     {
@@ -24,7 +23,6 @@ public class DuckDBEngineTests : EngineTests
 {
     public DuckDBEngineTests() : base(
         useDuckDBEngine: true,
-        canHandleNullComplexTypes: false,
         treatsTwoTierListAsStruct: false,
         ", ")
     {
@@ -35,11 +33,10 @@ public class DuckDBEngineTests : EngineTests
 public abstract class EngineTests
 {
     private readonly bool _useDuckDBEngine;
-    private readonly bool _canHandleNullComplexTypes;
     private readonly bool _treatsTwoTierListAsStruct;
     private readonly string _schemaPathSeperator;
 
-    public EngineTests(bool useDuckDBEngine, bool canHandleNullComplexTypes, bool treatsTwoTierListAsStruct, string schemaPathSeperator)
+    public EngineTests(bool useDuckDBEngine, bool treatsTwoTierListAsStruct, string schemaPathSeperator)
     {
         //Set a consistent date format for all tests
         ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
@@ -47,7 +44,6 @@ public abstract class EngineTests
         ParquetEngineSettings.TimeOnlyDisplayFormat = "HH:mm:ss";
 
         _useDuckDBEngine = useDuckDBEngine;
-        _canHandleNullComplexTypes = canHandleNullComplexTypes;
         _treatsTwoTierListAsStruct = treatsTwoTierListAsStruct;
         _schemaPathSeperator = schemaPathSeperator;
     }
@@ -324,10 +320,7 @@ public abstract class EngineTests
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[6][2]);
         Assert.AreEqual("{\"path\":\"part-00001-185eca06-e017-4dea-ae49-fc48b973e37e-c000.snappy.parquet\",\"deletionTimestamp\":1564524298214,\"dataChange\":false}", dataTable.Rows[6][2].ToString());
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[1][3]);
-        if (_canHandleNullComplexTypes)
-            Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":null,\"configuration\":[],\"createdTime\":1564524294376}", dataTable.Rows[1][3].ToString());
-        else
-            Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":[],\"configuration\":[],\"createdTime\":1564524294376}", dataTable.Rows[1][3].ToString());
+        Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":[],\"configuration\":[],\"createdTime\":1564524294376}", dataTable.Rows[1][3].ToString());
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[0][4]);
         Assert.AreEqual("{\"minReaderVersion\":1,\"minWriterVersion\":2}", dataTable.Rows[0][4].ToString());
     }
@@ -531,11 +524,9 @@ public abstract class EngineTests
         Assert.AreEqual(
             @"[{""A"":[{""B"":[1,2],""C"":3,""D"":4}],""E"":0.1},{""A"":[],""E"":0.2}]",
             dataTable.Rows[0][0].ToString());
-        //ParquetNET collapses an all-null nested list to an empty list; DuckDB distinguishes null and empty lists
-        var expectedRow1 = _canHandleNullComplexTypes
-            ? @"[{""A"":[],""E"":0.3},{""A"":[{""B"":null,""C"":5,""D"":6},{""B"":[7],""C"":null,""D"":8}],""E"":0.4}]"
-            : @"[{""A"":null,""E"":0.3},{""A"":[{""B"":[],""C"":5,""D"":6},{""B"":[7],""C"":null,""D"":8}],""E"":0.4}]";
-        Assert.AreEqual(expectedRow1, dataTable.Rows[1][0].ToString());
+        Assert.AreEqual(
+            @"[{""A"":null,""E"":0.3},{""A"":[{""B"":[],""C"":5,""D"":6},{""B"":[7],""C"":null,""D"":8}],""E"":0.4}]",
+            dataTable.Rows[1][0].ToString());
     }
 
     [SkippableTestMethod]
