@@ -655,7 +655,6 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
-    [SkipWhen(typeof(ParquetNETEngineTests), "List field is causing issues")]
     public async Task NESTED_STRUCTS_AND_LISTS()
     {
         using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet");

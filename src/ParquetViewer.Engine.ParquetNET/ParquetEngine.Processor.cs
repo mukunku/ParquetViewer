@@ -178,7 +178,7 @@ public partial class ParquetEngine
                 var nestedItemField = nestedListField.GetListItemField();
                 lastMilestone = "Read";
 
-                await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0,
+                await ReadListField(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex,
                     skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
             }
             else if (itemField.FieldType == FieldTypeId.Primitive)
