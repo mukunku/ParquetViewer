@@ -481,92 +481,60 @@ public partial class ParquetEngine
     private static async Task ReadMapFieldAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
     {
-        var keyValueField = field.GetMapKeyValueField();
+        var builder = await CreateMapValueBuilderAsync(field, groupReader, parentRepetitionBoundary: 0, cancellationToken);
+
+        var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
+        int rowIndex = rowBeginIndex;
+        foreach (var mapValue in builder.ReadRows(skipRecords, readRecords, cancellationToken))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (isFirstColumn)
+            {
+                dataTable.NewRow();
+            }
+
+            dataTable.Rows[rowIndex]![fieldIndex] = mapValue as object ?? DBNull.Value;
+            rowIndex++;
+            progress?.Report(1);
+        }
+    }
+
+    /// <summary>
+    /// Reads the leaf columns of a MAP and wraps them in a <see cref="MapValueBuilder"/>. Nested map
+    /// values are read recursively, with each outer entry becoming a parent element of the nested builder.
+    /// </summary>
+    private static async Task<MapValueBuilder> CreateMapValueBuilderAsync(ParquetSchemaElement mapField,
+        ParquetRowGroupReader groupReader, int parentRepetitionBoundary, CancellationToken cancellationToken)
+    {
+        var keyValueField = mapField.GetMapKeyValueField();
         var keyField = keyValueField.GetMapKeyField();
         var valueField = keyValueField.GetMapValueField();
 
-        if (keyField.Children.Any() || valueField.Children.Any())
-            throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested Map types are not supported");
+        var keyColumn = await ReadColumnAsync(groupReader, keyField, cancellationToken);
+        if (keyColumn.RepetitionLevels is null || keyColumn.DefinitionLevels is null)
+            throw new MalformedFieldException($"Map field `{mapField.PathWithParent}` is missing repetition/definition levels");
 
-        int rowIndex = rowBeginIndex;
+        var keyValues = keyColumn.Data.ToArray();
 
-        int skippedRecords = 0;
-        var keyDataColumn = await ReadColumnAsync(groupReader, keyField, cancellationToken);
-        var valueDataColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
-
-        var keyDataEnumerable = keyDataColumn.Data;
-        var valueDataEnumerable = valueDataColumn.Data;
-
-        var dataEnumerable = Engine.Helpers.PairEnumerables(keyDataEnumerable, valueDataEnumerable, DBNull.Value);
-
-        var levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
-        var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-        ArrayList? mapKeys = null;
-        ArrayList? mapValues = null;
-        int index = -1;
-        foreach (var (key, value) in dataEnumerable)
+        if (valueField.FieldType == FieldTypeId.Map)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            index++;
-
-            bool IsEndOfRow() => (index + 1) == levelCount
-                || GetRepetitionLevel(index + 1) == 0; //0 means new map
-
-            //Skip rows
-            if (skipRecords > skippedRecords)
-            {
-                if (IsEndOfRow())
-                    skippedRecords++;
-
-                continue;
-            }
-
-            mapKeys ??= [];
-            mapValues ??= [];
-            if (IsEndOfRow())
-            {
-                if (isFirstColumn)
-                {
-                    dataTable.NewRow();
-                }
-
-                mapKeys.Add(key);
-                mapValues.Add(value);
-
-                if (keyDataColumn.IsEmpty(index) || valueDataColumn.IsEmpty(index))
-                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue([], keyField.ClrType, [], valueField.ClrType);
-                else if (keyDataColumn.IsNull(index) || valueDataColumn.IsNull(index))
-                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                else
-                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.ClrType, mapValues, valueField.ClrType);
-
-                mapKeys = null;
-                mapValues = null;
-
-                rowIndex++;
-                progress?.Report(1);
-
-                if (rowIndex - rowBeginIndex >= readRecords)
-                    break;
-            }
-            else
-            {
-                mapKeys.Add(key);
-                mapValues.Add(value);
-            }
-
-            int GetRepetitionLevel(int dataIndex)
-            {
-                if (keyDataColumn.RepetitionLevels is null && valueDataColumn.RepetitionLevels is null)
-                    return 0; // assume each entry is a new row since we have no repetition levels
-                else if (keyDataColumn.RepetitionLevels?.Length > dataIndex)
-                    return keyDataColumn.RepetitionLevels[dataIndex];
-                else if (valueDataColumn.RepetitionLevels?.Length > dataIndex)
-                    return valueDataColumn.RepetitionLevels[dataIndex];
-                else
-                    throw new ArgumentOutOfRangeException(nameof(dataIndex));
-            }
+            var valueBuilder = await CreateMapValueBuilderAsync(valueField, groupReader,
+                keyField.Levels.MaxRepetitionLevel, cancellationToken);
+            return new MapValueBuilder(parentRepetitionBoundary, keyField.Levels, keyColumn.RepetitionLevels,
+                keyColumn.DefinitionLevels, keyValues, keyField.ClrType, valueField.ClrType, valueBuilder: valueBuilder);
         }
+
+        if (valueField.FieldType == FieldTypeId.Primitive && valueField.DataField?.IsArray != true)
+        {
+            var valueColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
+            return new MapValueBuilder(parentRepetitionBoundary, keyField.Levels, keyColumn.RepetitionLevels,
+                keyColumn.DefinitionLevels, keyValues, keyField.ClrType, valueField.ClrType,
+                valueValues: valueColumn.Data.ToArray());
+        }
+
+        throw new UnsupportedFieldException(
+            $"Cannot load field `{mapField.PathWithParent}`. Map values of type {valueField.FieldType} are not supported");
     }
 
     private async Task ReadStructFieldAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,

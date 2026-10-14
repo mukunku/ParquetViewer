@@ -619,7 +619,6 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
-    [SkipWhen(typeof(ParquetNETEngineTests), "Nested Maps not supported")]
     public async Task NESTED_MAPS_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_MAPS_TEST.parquet");
