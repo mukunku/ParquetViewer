@@ -51,8 +51,8 @@ public class ListValueBuilder
     /// </summary>
     /// <returns>Enumerable of ListValue's, possibly null.</returns>
     /// <remarks>Callers will need to convert nulls to DBNull</remarks>
-    public IEnumerable<ListValue?> ReadRows(int skipRecords, int readRecords, int numberOfListParents,
-        IReadOnlyList<int> listDefinitionLevels, CancellationToken cancellationToken)
+    public IEnumerable<ListValue?> ReadRows(int skipRecords, int readRecords, FieldLevels levels,
+        CancellationToken cancellationToken)
     {
         var ranges = GetRowRanges();
 
@@ -60,7 +60,7 @@ public class ListValueBuilder
         foreach (var rowRange in rowRangesToRead)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var listValue = ReadListValue(rowRange, numberOfListParents, listDefinitionLevels, () =>
+            var listValue = ReadListValue(rowRange, levels, () =>
             {
                 //TODO: optimize to avoid skipping all rows every time
                 return _data
@@ -73,7 +73,7 @@ public class ListValueBuilder
         }
     }
 
-    private ListValue? ReadListValue(Range range, int numberOfListParents, IReadOnlyList<int> listDefinitionLevels, Func<object[]> dataProvider)
+    private ListValue? ReadListValue(Range range, FieldLevels levels, Func<object[]> dataProvider)
     {
         var rangeRepetition = _repetitionLevels.AsSpan(range);
         var rangeData = dataProvider.Invoke();
@@ -81,37 +81,34 @@ public class ListValueBuilder
         var definitionStartLevel = _definitionLevels.Length > range.Start.Value ? _definitionLevels[range.Start.Value] : 0;
 
         LinkedArrayList root = new();
-        var lastByDepth = new LinkedArrayList?[numberOfListParents + 1];
+        var lastByDepth = new LinkedArrayList?[levels.MaxRepetitionLevel + 1]; //Use a 1-based (instead of 0-based) array for simplicity
 
         void AddPoint(LinkedArrayList listNode, int listDepth, object data, int definitionLevel)
         {
             lastByDepth[listDepth] = listNode;
 
-            if (listDefinitionLevels.Count >= listDepth) //This should be true in almost all cases. Maybe two-tier lists and a few other exceptions?
+            if (levels.IsNull(definitionLevel, listDepth))
             {
-                if (definitionLevel < listDefinitionLevels[listDepth - 1])
-                {
-                    //This list is null
-                    listNode.IsNull = true;
-                    return;
-                }
-
-                if (definitionLevel == listDefinitionLevels[listDepth - 1])
-                {
-                    //This list is present but empty
-                    listNode.IsEmpty = true;
-                    return;
-                }
+                //This list is null
+                listNode.IsNull = true;
+                return;
             }
 
-            if (listDepth == numberOfListParents)
+            if (levels.IsEmpty(definitionLevel, listDepth))
+            {
+                //This list is present but empty
+                listNode.IsEmpty = true;
+                return;
+            }
+
+            if (listDepth == levels.MaxRepetitionLevel)
             {
                 //We've reached the innermost list, so this is the element value itself
                 listNode.Add(data);
                 return;
             }
 
-            //Descend to the next nested list
+            //Descend a level to the next nested list
             var childNode = new LinkedArrayList(listDepth + 1, listNode);
             listNode.Add(childNode);
             AddPoint(childNode, listDepth + 1, data, definitionLevel);
@@ -126,8 +123,8 @@ public class ListValueBuilder
             var data = rangeData[index];
             var definitionLevel = _definitionLevels.Length > range.Start.Value + index ? _definitionLevels[range.Start.Value + index] : 0;
 
-            //repetitionLevel can never be larger than numberOfListParents
-            if (repetitionLevel == numberOfListParents)
+            //repetitionLevel can never be larger than maxRepetitionLevel
+            if (repetitionLevel == levels.MaxRepetitionLevel)
             {
                 //We're still in the same (deepest) list, append to it
                 lastByDepth[repetitionLevel]!.Add(data);

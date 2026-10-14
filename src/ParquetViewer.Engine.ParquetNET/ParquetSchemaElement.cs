@@ -17,25 +17,6 @@ public class ParquetSchemaElement : IParquetSchemaElement
     private readonly Dictionary<string, ParquetSchemaElement> _children = [];
     public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
 
-    private IEnumerable<ParquetSchemaElement> ParentsExcludingRoot
-    {
-        get
-        {
-            var current = Parent;
-            while (current is not null)
-            {
-                //Don't return the root node
-                var isRoot = current.Parent is null;
-                if (isRoot)
-                    break;
-
-                yield return current;
-
-                current = current.Parent;
-            }
-        }
-    }
-
     public FieldTypeId FieldType
     {
         get
@@ -169,43 +150,40 @@ public class ParquetSchemaElement : IParquetSchemaElement
         return field;
     }
     public bool BelongsToListField => _systemFieldType == SystemFieldTypeId.ListItemNode;
-    public bool BelongsToListOfStructsField =>
-        Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && Parent?.FieldType == FieldTypeId.Struct;
-    public int NumberOfListParents => ParentsExcludingRoot.Count(@field => @field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
-
-    public int CurrentDefinitionLevel => ParentsExcludingRoot.Append(this)
-        .Count(
-            @field => @field.SchemaElement.RepetitionType == FieldRepetitionType.OPTIONAL
-            || (@field._systemFieldType == SystemFieldTypeId.ListNode && @field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
-        );
 
     /// <summary>
-    /// The definition levels at which each list along the path from this field to the root is
-    /// considered "present but empty", ordered from the outermost list to the innermost.
-    /// A value whose definition level equals one of these is an empty list at that nesting depth.
+    /// True if this field lives inside a struct that is itself the element of a list (i.e. a
+    /// `list&lt;struct&lt;...&gt;&gt;`). This includes fields nested deeper inside the element struct so that
+    /// the entire subtree is read in a columnar (one <see cref="ListValue"/> per row) fashion.
     /// </summary>
-    /// <remarks>This typically has a number of elements equal to <see cref="NumberOfListParents"/> but there could be edge cases.</remarks>
-    public IReadOnlyList<int> ListDefinitionLevels
+    public bool BelongsToListOfStructsField
     {
         get
         {
-            var levels = new List<int>();
-            foreach (var node in ParentsExcludingRoot)
+            var current = Parent;
+            while (current is not null)
             {
-                if (node.FieldType == FieldTypeId.List)
-                {
-                    //Count OPTIONAL and REPEATED fields to determine what definition level
-                    //means "empty list" instead of "null list". Lists with definition levels below this level
-                    //are considered null, at this level are considered empty, and above this are non-empty.
-                    levels.Add(node.ParentsExcludingRoot.Append(node)
-                        .Count(@field => @field.SchemaElement.RepetitionType != FieldRepetitionType.REQUIRED));
-                }
+                if (current._systemFieldType == SystemFieldTypeId.ListItemNode)
+                    return current.FieldType == FieldTypeId.Struct;
+
+                //Stop at the first list/map ancestor. Those are handled by their own readers.
+                if (current.FieldType == FieldTypeId.List || current.FieldType == FieldTypeId.Map)
+                    return false;
+
+                current = current.Parent;
             }
 
-            levels.Reverse();
-            return levels;
+            return false;
         }
     }
+
+    private FieldLevels? _levels;
+
+    /// <summary>
+    /// The repetition/definition level arithmetic for this element, computed once and cached.
+    /// See <see cref="FieldLevels"/>.
+    /// </summary>
+    public FieldLevels Levels => _levels ??= FieldLevels.For(this);
 
     public bool IsPrimitive => FieldType == FieldTypeId.Primitive;
 

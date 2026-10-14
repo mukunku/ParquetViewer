@@ -607,7 +607,6 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
-    [SkipWhen(typeof(ParquetNETEngineTests), "Our implementation can't open this file")]
     public async Task LIST_OF_NESTED_STRUCTS_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_NESTED_STRUCTS_TEST.parquet");

@@ -65,6 +65,18 @@ internal sealed class ParquetColumnData
 
     public int[]? RepetitionLevels { get; }
 
+    /// <summary>
+    /// True when the value at <paramref name="index"/> is absent altogether (its outermost collection is null).
+    /// </summary>
+    public bool IsNull(int index)
+        => DefinitionLevels?.Length > index && _field.Levels.IsNull(DefinitionLevels[index]);
+
+    /// <summary>
+    /// True when the value at <paramref name="index"/> belongs to a collection that is present but has no entries.
+    /// </summary>
+    public bool IsEmpty(int index)
+        => DefinitionLevels?.Length > index && _field.Levels.IsEmpty(DefinitionLevels[index]);
+
     public ParquetColumnData(ParquetSchemaElement field, Array data, int[]? definitionLevels, int[]? repetitionLevels)
     {
         ArgumentNullException.ThrowIfNull(field);
