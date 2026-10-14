@@ -1,7 +1,6 @@
 ﻿using Parquet;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
-using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 using System.Data;
@@ -16,7 +15,7 @@ public partial class ParquetEngine
         ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
 
         long recordsLeftToRead = recordCount;
-        DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)RecordCount));
+        var result = BuildDataTableLite(null, selectedFields, Math.Min(recordCount, (int)RecordCount));
 
         foreach (var reader in GetReaders(offset))
         {
@@ -78,11 +77,11 @@ public partial class ParquetEngine
         int rowBeginIndex = dataTable.Rows.Count;
         bool isFirstColumn = true;
 
-        foreach (DataTableLite.ColumnLite column in dataTable.Columns.Values)
+        foreach (var columnLite in dataTable.Columns.Values)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var field = (ParquetSchemaElement)column.ParentSchema.GetChild(column.Name);
+            var field = (ParquetSchemaElement)columnLite.ParentSchema.GetChild(columnLite.Name);
             switch (field.FieldType)
             {
                 case FieldTypeId.Primitive:
@@ -105,7 +104,7 @@ public partial class ParquetEngine
                         readRecords, isFirstColumn, cancellationToken, progress);
                     break;
                 default:
-                    throw new InvalidDataException($"Field `{column.Name}` has an unknown type {field.FieldType}.");
+                    throw new InvalidDataException($"Field `{columnLite.Name}` has an unknown type {field.FieldType}.");
             }
 
             isFirstColumn = false;
@@ -252,7 +251,7 @@ public partial class ParquetEngine
         try
         {
             //Read struct data as a new datatable
-            DataTableLite structFieldTable = BuildDataTable(structField, structField.Children.Select(f => f.Path).ToList(), (int)readRecords);
+            var structFieldTable = BuildDataTableLite(structField, structField.Children.Select(f => f.Path).ToList(), (int)readRecords);
 
             //Need to calculate progress differently for structs
             var structFieldReadProgress = StructReadProgress(progress, structFieldTable.Columns.Count);
@@ -275,9 +274,9 @@ public partial class ParquetEngine
                 var presence = structRowIndex < structPresence.Count ? structPresence[structRowIndex] : null;
                 structRowIndex++;
 
-                DataTableLite PivotTable(object[] valueArray, DataTableLite? newStructFieldTableOverride = null)
+                DataTableLite PivotLiteTable(object[] valueArray, DataTableLite? newStructFieldTableOverride = null)
                 {
-                    var newStructFieldTable = newStructFieldTableOverride ?? BuildDataTable(structField, structField.Children.Select(f => f.Path).ToList(), (int)readRecords);
+                    var newStructFieldTable = newStructFieldTableOverride ?? BuildDataTableLite(structField, structField.Children.Select(f => f.Path).ToList(), (int)readRecords);
                     for (var columnOrdinal = 0; columnOrdinal < valueArray.Length; columnOrdinal++)
                     {
                         lastMilestone = $"#{rowIndex}-{columnOrdinal}";
@@ -305,21 +304,16 @@ public partial class ParquetEngine
 
                             var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("Column value missing during pivot");
                             #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
-                            if (columnValue is StructValueExt structValue && structValue.IsList)
+                            if (columnValue is StructValue structValue
+                                && newStructFieldTable.Columns.Values.ElementAt(columnOrdinal).Type == typeof(ListValue))
                             {
                                 //We need to convert `columnValue` from struct to a list of structs as it was a nested structure
-                                var areTypesAsExpected = newStructFieldTable.Columns.Values.ElementAt(columnOrdinal).Type == typeof(ListValue);
-                                if (!areTypesAsExpected)
-                                {
-                                    throw new UnsupportedFieldException("Failed to pivot list of structs.");
-                                }
-
                                 if (structValue.Data is not DataRowLite dataRowLite)
                                 {
                                     throw new InvalidDataException("Struct data wasn't the expected type.");
                                 }
 
-                                var nestedStructFieldTable = PivotTable(structValue.Data.Row, dataRowLite.Table.Clone());
+                                var nestedStructFieldTable = PivotLiteTable(structValue.Data.Row, dataRowLite.Table.Clone());
                                 var listValues = new ArrayList(nestedStructFieldTable.Rows.Count);
                                 for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
                                 {
@@ -331,9 +325,9 @@ public partial class ParquetEngine
                                         continue;
                                     }
 
-                                    listValues.Add(new StructValueExt(row));
+                                    listValues.Add(new StructValue(row));
                                 }
-                                columnValue = new ListValue(listValues, typeof(StructValueExt));
+                                columnValue = new ListValue(listValues, typeof(StructValue));
                             }
                             #endregion
 
@@ -361,7 +355,7 @@ public partial class ParquetEngine
                         return null;
                     }
 
-                    DataTableLite newStructFieldTable = PivotTable(valueArray);
+                    var newStructFieldTable = PivotLiteTable(valueArray);
 
                     var listValues = new ArrayList(newStructFieldTable.Rows.Count);
                     for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
@@ -379,7 +373,7 @@ public partial class ParquetEngine
                         }
                         else
                         {
-                            listValues.Add(new StructValueExt(dataRow) { IsList = structField.Levels.MaxRepetitionLevel > 1 });
+                            listValues.Add(new StructValue(dataRow));
                         }
                     }
                     return listValues;
@@ -394,7 +388,7 @@ public partial class ParquetEngine
 
                 dataTable.Rows[rowIndex][fieldIndex] = listValues is null
                     ? DBNull.Value
-                    : new ListValue(listValues, typeof(StructValueExt));
+                    : new ListValue(listValues, typeof(StructValue));
                 rowIndex++;
                 progress?.Report(1);
             }
@@ -551,7 +545,7 @@ public partial class ParquetEngine
         }
 
         //Read struct data as a new datatable
-        DataTableLite structFieldTable = BuildDataTable(field, field.Children.Select(f => f.Path).ToList(), 1);
+        var structFieldTable = BuildDataTableLite(field, field.Children.Select(f => f.Path).ToList(), 1);
 
         //Need to calculate progress differently for structs
         var structFieldReadProgress = StructReadProgress(progress, structFieldTable.Columns.Count);
@@ -580,7 +574,7 @@ public partial class ParquetEngine
             else
             {
                 var dataRow = structFieldTable.GetRowAt(i);
-                dataTable.Rows[rowIndex]![fieldIndex] = new StructValueExt(dataRow);
+                dataTable.Rows[rowIndex]![fieldIndex] = new StructValue(dataRow);
             }
             rowIndex++;
         }
@@ -613,7 +607,7 @@ public partial class ParquetEngine
         return progress;
     }
 
-    private DataTableLite BuildDataTable(ParquetSchemaElement? parent, List<string> fields, int expectedRecordCount)
+    private DataTableLite BuildDataTableLite(ParquetSchemaElement? parent, List<string> fields, int expectedRecordCount)
     {
         parent ??= (ParquetSchemaElement)Metadata.SchemaTree;
         DataTableLite dataTable = new(expectedRecordCount);
@@ -631,7 +625,7 @@ public partial class ParquetEngine
             }
             else if (schema.FieldType == FieldTypeId.Struct)
             {
-                dataTable.AddColumn(field, typeof(StructValueExt), parent);
+                dataTable.AddColumn(field, typeof(StructValue), parent);
             }
             else if (schema.SchemaElement.Type == Parquet.Meta.Type.BYTE_ARRAY
                 && schema.SchemaElement.LogicalType is null

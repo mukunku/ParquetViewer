@@ -1,7 +1,6 @@
 ﻿using Parquet.Meta;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
-using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 
 namespace ParquetViewer.Engine.ParquetNET;
@@ -200,7 +199,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
         {
             FieldTypeId.List => typeof(ListValue),
             FieldTypeId.Map => typeof(MapValue),
-            FieldTypeId.Struct => typeof(StructValueExt),
+            FieldTypeId.Struct => typeof(StructValue),
             FieldTypeId.Primitive => throw new InvalidOperationException($"Cannot determine CLR type for primitive field `{Path}` without ClrType information."),
             _ => throw new InvalidOperationException($"Unknown complex type {FieldType} detected for field `{Path}`")
         },
