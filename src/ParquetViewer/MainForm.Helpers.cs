@@ -27,11 +27,13 @@ public partial class MainForm
         {
             mainMenuStrip.Enabled = false;
             ToggleUserActionableControls(false);
+            loadAllRowsButton.Enabled = false;
         };
         loadingIcon.OnHide += (sender, e) =>
         {
             mainMenuStrip.Enabled = true;
             ToggleUserActionableControls(true);
+            loadAllRowsButton.Enabled = _mainDataSource?.Rows.Count < _openParquetEngine?.RecordCount;
         };
 
         loadingIcon.Show();
@@ -47,7 +49,6 @@ public partial class MainForm
             clearFilterButton.Enabled = enabled;
             offsetTextBox.Enabled = enabled;
             recordCountTextBox.Enabled = enabled;
-            loadAllRowsButton.Enabled = enabled;
         }
     }
 
