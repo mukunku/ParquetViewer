@@ -516,6 +516,48 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
+    public async Task NESTED_LIST_OF_UINTS()
+    {
+        //Regression test: `uint[]` was being matched by the `int[]` in ParquetColumnData (the CLR
+        //treats signed/unsigned integer arrays of the same width as compatible), so nested uint lists were
+        //read as `int` and threw an ArrayTypeMismatchException when building the ListValue.
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_LIST_OF_UINTS.parquet");
+
+        Assert.AreEqual(169, parquetEngine.RecordCount);
+        Assert.HasCount(6, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+
+        Assert.AreEqual((UInt32)0, dataTable.Rows[0][0]);
+        Assert.AreEqual((UInt32)814, dataTable.Rows[0][3]);
+        Assert.AreEqual((UInt32)576, dataTable.Rows[0][4]);
+        Assert.AreEqual("LuCa-7color_[13860,52919]_1x1component_data", dataTable.Rows[0][5]);
+        Assert.AreEqual("[[807,584],[805,581],[806,578],[805,575],[807,572],[810,571],[814,571],[818,571],[823,571],[822,574],[821,577],[819,579],[815,580],[812,581],[808,581],[807,584]]",
+            dataTable.Rows[0][1].ToString());
+        Assert.AreEqual("[[807,588],[805,584],[805,578],[805,572],[809,571],[815,571],[821,571],[827,571],[831,572],[830,577],[828,581],[823,582],[818,582],[813,583],[809,585],[807,588]]",
+            dataTable.Rows[0][2].ToString());
+
+        Assert.AreEqual((UInt32)100, dataTable.Rows[100][0]);
+        Assert.AreEqual((UInt32)1022, dataTable.Rows[100][3]);
+        Assert.AreEqual((UInt32)716, dataTable.Rows[100][4]);
+
+        Assert.AreEqual((UInt32)168, dataTable.Rows[168][0]);
+        Assert.AreEqual("[[1059,827],[1055,827],[1052,827],[1050,826],[1048,824],[1047,822],[1046,820],[1046,816],[1048,815],[1052,815],[1054,816],[1056,817],[1058,819],[1059,821],[1059,824],[1059,827]]",
+            dataTable.Rows[168][1].ToString());
+
+        var offset = Random.Shared.Next(0, (int)parquetEngine.RecordCount);
+        var recordCount = Random.Shared.Next(1, (int)parquetEngine.RecordCount - offset + 1);
+        var slice = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, offset, recordCount, default))(false);
+
+        Assert.HasCount(recordCount, slice.Rows);
+        for (var i = 0; i < recordCount; i++)
+        {
+            Assert.AreEqual(dataTable.Rows[offset + i][0], slice.Rows[i][0]);
+            Assert.AreEqual(dataTable.Rows[offset + i][1].ToString(), slice.Rows[i][1].ToString());
+        }
+    }
+
+    [SkippableTestMethod]
     public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT.parquet");
