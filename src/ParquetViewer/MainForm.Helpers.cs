@@ -49,6 +49,7 @@ public partial class MainForm
             clearFilterButton.Enabled = enabled;
             offsetTextBox.Enabled = enabled;
             recordCountTextBox.Enabled = enabled;
+            mainGridView.Enabled = enabled;
         }
     }
 
@@ -127,6 +128,11 @@ public partial class MainForm
             {
                 rerunType = FileType.XLSX;
             }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            CleanupFile(filePath);
+            HandleUnauthorizedAccessException(ex);
         }
         catch (Exception)
         {
@@ -423,18 +429,8 @@ public partial class MainForm
 }"
                             }
                         };
-                try
-                {
-                    await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    HandleUnauthorizedAccessException(ex);
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
+
+                await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
             }, cancellationToken);
 
     private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
