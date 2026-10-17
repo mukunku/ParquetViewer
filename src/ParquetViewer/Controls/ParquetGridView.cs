@@ -392,7 +392,10 @@ public class ParquetGridView : DataGridView
     private void ShowQuickPeekForm(ManagedImage image, DataGridViewCell clickedCell, QuickPeekEvent.DataTypeId dataType)
     {
         if (TryShowExistingQuickPeekForm(clickedCell))
+        {
+            image.DisposeSafely();
             return;
+        }
 
         var uniqueCellTag = Guid.NewGuid();
         var quickPeekForm = new QuickPeekForm(Columns[clickedCell.ColumnIndex].Name, image, uniqueCellTag, clickedCell.RowIndex, clickedCell.ColumnIndex);
