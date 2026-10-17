@@ -13,7 +13,6 @@ public class ParquetNETEngineTests : EngineTests
 {
     public ParquetNETEngineTests() : base(
         useDuckDBEngine: false,
-        canHandleNullComplexTypes: true,
         treatsTwoTierListAsStruct: true,
         "/")
     {
@@ -26,7 +25,6 @@ public class DuckDBEngineTests : EngineTests
 {
     public DuckDBEngineTests() : base(
         useDuckDBEngine: true,
-        canHandleNullComplexTypes: false,
         treatsTwoTierListAsStruct: false,
         ", ")
     {
@@ -37,11 +35,10 @@ public class DuckDBEngineTests : EngineTests
 public abstract class EngineTests
 {
     private readonly bool _useDuckDBEngine;
-    private readonly bool _canHandleNullComplexTypes;
     private readonly bool _treatsTwoTierListAsStruct;
     private readonly string _schemaPathSeperator;
 
-    public EngineTests(bool useDuckDBEngine, bool canHandleNullComplexTypes, bool treatsTwoTierListAsStruct, string schemaPathSeperator)
+    public EngineTests(bool useDuckDBEngine, bool treatsTwoTierListAsStruct, string schemaPathSeperator)
     {
         //Set a consistent date format for all tests
         ParquetEngineSettings.DateDisplayFormat = "yyyy-MM-dd HH:mm:ss";
@@ -49,7 +46,6 @@ public abstract class EngineTests
         ParquetEngineSettings.TimeOnlyDisplayFormat = "HH:mm:ss";
 
         _useDuckDBEngine = useDuckDBEngine;
-        _canHandleNullComplexTypes = canHandleNullComplexTypes;
         _treatsTwoTierListAsStruct = treatsTwoTierListAsStruct;
         _schemaPathSeperator = schemaPathSeperator;
     }
@@ -326,10 +322,7 @@ public abstract class EngineTests
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[6][2]);
         Assert.AreEqual("{\"path\":\"part-00001-185eca06-e017-4dea-ae49-fc48b973e37e-c000.snappy.parquet\",\"deletionTimestamp\":1564524298214,\"dataChange\":false}", dataTable.Rows[6][2].ToString());
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[1][3]);
-        if (_canHandleNullComplexTypes)
-            Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":null,\"configuration\":[],\"createdTime\":1564524294376}", dataTable.Rows[1][3].ToString());
-        else
-            Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":[],\"configuration\":[],\"createdTime\":1564524294376}", dataTable.Rows[1][3].ToString());
+        Assert.AreEqual("{\"id\":\"22ef18ba-191c-4c36-a606-3dad5cdf3830\",\"name\":null,\"description\":null,\"format\":{\"provider\":\"parquet\",\"options\":[]},\"schemaString\":\"{\\\"type\\\":\\\"struct\\\",\\\"fields\\\":[{\\\"name\\\":\\\"value\\\",\\\"type\\\":\\\"integer\\\",\\\"nullable\\\":true,\\\"metadata\\\":{}}]}\",\"partitionColumns\":[],\"configuration\":[],\"createdTime\":1564524294376}", dataTable.Rows[1][3].ToString());
         Assert.IsInstanceOfType<IStructValue>(dataTable.Rows[0][4]);
         Assert.AreEqual("{\"minReaderVersion\":1,\"minWriterVersion\":2}", dataTable.Rows[0][4].ToString());
     }
@@ -523,6 +516,48 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
+    public async Task NESTED_LIST_OF_UINTS()
+    {
+        //Regression test: `uint[]` was being matched by the `int[]` in ParquetColumnData (the CLR
+        //treats signed/unsigned integer arrays of the same width as compatible), so nested uint lists were
+        //read as `int` and threw an ArrayTypeMismatchException when building the ListValue.
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_LIST_OF_UINTS.parquet");
+
+        Assert.AreEqual(169, parquetEngine.RecordCount);
+        Assert.HasCount(6, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+
+        Assert.AreEqual((UInt32)0, dataTable.Rows[0][0]);
+        Assert.AreEqual((UInt32)814, dataTable.Rows[0][3]);
+        Assert.AreEqual((UInt32)576, dataTable.Rows[0][4]);
+        Assert.AreEqual("LuCa-7color_[13860,52919]_1x1component_data", dataTable.Rows[0][5]);
+        Assert.AreEqual("[[807,584],[805,581],[806,578],[805,575],[807,572],[810,571],[814,571],[818,571],[823,571],[822,574],[821,577],[819,579],[815,580],[812,581],[808,581],[807,584]]",
+            dataTable.Rows[0][1].ToString());
+        Assert.AreEqual("[[807,588],[805,584],[805,578],[805,572],[809,571],[815,571],[821,571],[827,571],[831,572],[830,577],[828,581],[823,582],[818,582],[813,583],[809,585],[807,588]]",
+            dataTable.Rows[0][2].ToString());
+
+        Assert.AreEqual((UInt32)100, dataTable.Rows[100][0]);
+        Assert.AreEqual((UInt32)1022, dataTable.Rows[100][3]);
+        Assert.AreEqual((UInt32)716, dataTable.Rows[100][4]);
+
+        Assert.AreEqual((UInt32)168, dataTable.Rows[168][0]);
+        Assert.AreEqual("[[1059,827],[1055,827],[1052,827],[1050,826],[1048,824],[1047,822],[1046,820],[1046,816],[1048,815],[1052,815],[1054,816],[1056,817],[1058,819],[1059,821],[1059,824],[1059,827]]",
+            dataTable.Rows[168][1].ToString());
+
+        var offset = Random.Shared.Next(0, (int)parquetEngine.RecordCount);
+        var recordCount = Random.Shared.Next(1, (int)parquetEngine.RecordCount - offset + 1);
+        var slice = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, offset, recordCount, default))(false);
+
+        Assert.HasCount(recordCount, slice.Rows);
+        for (var i = 0; i < recordCount; i++)
+        {
+            Assert.AreEqual(dataTable.Rows[offset + i][0], slice.Rows[i][0]);
+            Assert.AreEqual(dataTable.Rows[offset + i][1].ToString(), slice.Rows[i][1].ToString());
+        }
+    }
+
+    [SkippableTestMethod]
     public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT.parquet");
@@ -533,6 +568,36 @@ public abstract class EngineTests
         const string expectedJson = @"[{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0710999965667725},{""Name"":""INSULT"",""Score"":0.113300003111362},{""Name"":""GRAPHIC"",""Score"":0.0186000000685453},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.0710999965667725},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0838999971747398},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0702999979257584},{""Name"":""HATE_SPEECH"",""Score"":0.0883999988436699},{""Name"":""INSULT"",""Score"":0.132699996232986},{""Name"":""GRAPHIC"",""Score"":0.0186000000685453},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.0239000003784895},{""Name"":""SEXUAL"",""Score"":0.0710999965667725},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.097900003194809},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0797000005841255},{""Name"":""INSULT"",""Score"":0.117499999701977},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.143399998545647},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0276999995112419}],""Toxicity"":0.10249999910593},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0604000017046928},{""Name"":""HATE_SPEECH"",""Score"":0.0874999985098839},{""Name"":""INSULT"",""Score"":0.127399995923042},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.142199993133545},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.10809999704361},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.047800000756979},{""Name"":""HATE_SPEECH"",""Score"":0.0797000005841255},{""Name"":""INSULT"",""Score"":0.120399996638298},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.133100003004074},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0949999988079071},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0467999987304211},{""Name"":""HATE_SPEECH"",""Score"":0.0710999965667725},{""Name"":""INSULT"",""Score"":0.119699999690056},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.1300999969244},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.089699998497963},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0693999975919724},{""Name"":""HATE_SPEECH"",""Score"":0.0785999968647957},{""Name"":""INSULT"",""Score"":0.12219999730587},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.146300002932549},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0276999995112419}],""Toxicity"":0.089699998497963},{""Labels"":[{""Name"":""PROFANITY"",""Score"":0.0604000017046928},{""Name"":""HATE_SPEECH"",""Score"":0.0702999979257584},{""Name"":""INSULT"",""Score"":0.10249999910593},{""Name"":""GRAPHIC"",""Score"":0.0195000004023314},{""Name"":""HARASSMENT_OR_ABUSE"",""Score"":0.060699999332428},{""Name"":""SEXUAL"",""Score"":0.184000000357628},{""Name"":""VIOLENCE_OR_THREAT"",""Score"":0.0264999996870756}],""Toxicity"":0.0741999968886376}]";
 
         Assert.AreEqual(expectedJson, dataTable.Rows[0][0].ToString());
+    }
+
+    [SkippableTestMethod]
+    public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT_WITH_NULLS()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT_WITH_NULLS.parquet");
+        Assert.AreEqual(2, parquetEngine.RecordCount);
+        Assert.HasCount(1, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+
+        Assert.AreEqual(
+            @"[{""A"":[{""B"":[1,2],""C"":3,""D"":4}],""E"":0.1},{""A"":[],""E"":0.2}]",
+            dataTable.Rows[0][0].ToString());
+        Assert.AreEqual(
+            @"[{""A"":null,""E"":0.3},{""A"":[{""B"":[],""C"":5,""D"":6},{""B"":[7],""C"":null,""D"":8}],""E"":0.4}]",
+            dataTable.Rows[1][0].ToString());
+    }
+
+    [SkippableTestMethod]
+    public async Task LIST_OF_STRUCT_NULL_NESTED_LIST_AND_PRIMITIVE()
+    {
+        //Regression test: a null nested list in the first column of a struct used to crash the
+        //pivot with an ArgumentOutOfRangeException when a later column had a value.
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_NULL_NESTED_LIST_AND_PRIMITIVE.parquet");
+        Assert.AreEqual(1, parquetEngine.RecordCount);
+        Assert.HasCount(1, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(@"[{""A"":null,""E"":1}]", dataTable.Rows[0][0].ToString());
     }
 
     [SkippableTestMethod]
@@ -584,7 +649,6 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
-    [SkipWhen(typeof(ParquetNETEngineTests), "Our implementation can't open this file")]
     public async Task LIST_OF_NESTED_STRUCTS_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_NESTED_STRUCTS_TEST.parquet");
@@ -597,7 +661,6 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
-    [SkipWhen(typeof(ParquetNETEngineTests), "Nested Maps not supported")]
     public async Task NESTED_MAPS_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_MAPS_TEST.parquet");
@@ -648,7 +711,6 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
-    [SkipWhen(typeof(ParquetNETEngineTests), "List field is causing issues")]
     public async Task NESTED_STRUCTS_AND_LISTS()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_STRUCTS_AND_LISTS.parquet");

@@ -31,28 +31,31 @@ internal sealed class ParquetColumnData
                 return ExpandUntyped(_data, DataField.MaxDefinitionLevel, DefinitionLevels);
             }
 
-            return _data switch
+            //Use an exact type check instead of `is`/type-pattern checks. The CLR considers signed and unsigned
+            //integer arrays of the same width mutually compatible (`uint[] is int[]` is true), so a `uint[]`
+            //would match an `int[]` arm and get boxed as `int`.
+            return _data.GetType() switch
             {
-                bool[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                sbyte[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                byte[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                short[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                ushort[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                int[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                uint[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                long[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                ulong[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                float[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                double[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                decimal[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                DateTime[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                DateOnly[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                Guid[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                BigDecimal[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels, null), //TODO: Is it possible to handle these? Seems we get regular `decimal` as the ClrType so this is never called
+                var t when t == typeof(bool[]) => Expand((bool[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(sbyte[]) => Expand((sbyte[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(byte[]) => Expand((byte[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(short[]) => Expand((short[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(ushort[]) => Expand((ushort[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(int[]) => Expand((int[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(uint[]) => Expand((uint[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(long[]) => Expand((long[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(ulong[]) => Expand((ulong[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(float[]) => Expand((float[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(double[]) => Expand((double[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(decimal[]) => Expand((decimal[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(DateTime[]) => Expand((DateTime[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(DateOnly[]) => Expand((DateOnly[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(Guid[]) => Expand((Guid[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
+                var t when t == typeof(BigDecimal[]) => Expand((BigDecimal[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null), //TODO: Is it possible to handle these? Seems we get regular `decimal` as the ClrType so this is never called
 
-                ReadOnlyMemory<char>[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels,
+                var t when t == typeof(ReadOnlyMemory<char>[]) => Expand((ReadOnlyMemory<char>[])_data, DataField.MaxDefinitionLevel, DefinitionLevels,
                     static memory => new string(memory.Span)),
-                ReadOnlyMemory<byte>[] values => Expand(values, DataField.MaxDefinitionLevel, DefinitionLevels,
+                var t when t == typeof(ReadOnlyMemory<byte>[]) => Expand((ReadOnlyMemory<byte>[])_data, DataField.MaxDefinitionLevel, DefinitionLevels,
                     static memory => memory.ToArray()),
 
                 //An element type we have no case for. Try to read generically
@@ -64,6 +67,18 @@ internal sealed class ParquetColumnData
     public int[]? DefinitionLevels { get; }
 
     public int[]? RepetitionLevels { get; }
+
+    /// <summary>
+    /// True when the value at <paramref name="index"/> is absent altogether (its outermost collection is null).
+    /// </summary>
+    public bool IsNull(int index)
+        => DefinitionLevels?.Length > index && _field.Levels.IsNull(DefinitionLevels[index]);
+
+    /// <summary>
+    /// True when the value at <paramref name="index"/> belongs to a collection that is present but has no entries.
+    /// </summary>
+    public bool IsEmpty(int index)
+        => DefinitionLevels?.Length > index && _field.Levels.IsEmpty(DefinitionLevels[index]);
 
     public ParquetColumnData(ParquetSchemaElement field, Array data, int[]? definitionLevels, int[]? repetitionLevels)
     {

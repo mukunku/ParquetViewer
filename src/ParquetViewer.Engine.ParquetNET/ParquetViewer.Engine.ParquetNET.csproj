@@ -28,4 +28,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="ParquetViewer.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Types\" />
+  </ItemGroup>
 </Project>

@@ -281,26 +281,9 @@ public class ParquetGridView : DataGridView
                 && this[columnIndex, rowIndex].Value is IStructValue structValue
                 && structValue.IsHuggingFaceFormat(out var data))
             {
-                ManagedImage? image;
-                try
+                if (data.ToImage(out var image))
                 {
-                    image = new ManagedImage(data);
-                }
-                catch (ArgumentException)
-                {
-                    //Data is not an image
-                    image = null;
-                }
-                catch
-                {
-                    throw;
-                }
-
-                if (image is not null)
-                {
-                    var uniqueCellTag = Guid.NewGuid();
-                    var quickPeekForm = new QuickPeekForm(Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
-                    ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
+                    ShowQuickPeekForm(image, this[columnIndex, rowIndex], QuickPeekEvent.DataTypeId.Image);
                 }
             }
             //TODO: Add some kind of in-app notification to inform users of this useful shortcut
@@ -345,15 +328,8 @@ public class ParquetGridView : DataGridView
 
         var clickedCell = this[e.ColumnIndex, e.RowIndex];
 
-        //Check if there's already a quick peek open for this cell
-        if (clickedCell.Tag is Guid cellUniqueTag
-            && _openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var existingQuickPeekForm)
-            && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
-        {
-            //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
-            existingQuickPeekForm.Focus();
+        if (TryShowExistingQuickPeekForm(clickedCell))
             return;
-        }
 
         var dataType = QuickPeekEvent.DataTypeId.Unknown;
         QuickPeekForm? quickPeekForm = null;
@@ -410,11 +386,37 @@ public class ParquetGridView : DataGridView
             return;
         }
 
-        ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
+        ShowQuickPeekFormImpl(quickPeekForm, clickedCell, uniqueCellTag, dataType);
     }
 
-    private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell,
-        Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
+    private void ShowQuickPeekForm(ManagedImage image, DataGridViewCell clickedCell, QuickPeekEvent.DataTypeId dataType)
+    {
+        if (TryShowExistingQuickPeekForm(clickedCell))
+            return;
+
+        var uniqueCellTag = Guid.NewGuid();
+        var quickPeekForm = new QuickPeekForm(Columns[clickedCell.ColumnIndex].Name, image, uniqueCellTag, clickedCell.RowIndex, clickedCell.ColumnIndex);
+        ShowQuickPeekFormImpl(quickPeekForm, clickedCell, uniqueCellTag, dataType);
+    }
+
+    private bool TryShowExistingQuickPeekForm(DataGridViewCell clickedCell)
+    {
+        //Check if there's already a quick peek open for this cell
+        if (clickedCell.Tag is Guid cellUniqueTag
+            && _openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var existingQuickPeekForm)
+            && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
+        {
+            //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
+            if (existingQuickPeekForm.WindowState == FormWindowState.Minimized)
+                existingQuickPeekForm.WindowState = FormWindowState.Normal;
+
+            existingQuickPeekForm.Focus();
+            return true;
+        }
+        return false;
+    }
+
+    private void ShowQuickPeekFormImpl(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell, Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
     {
         clickedCell.Tag = uniqueCellTag;
 

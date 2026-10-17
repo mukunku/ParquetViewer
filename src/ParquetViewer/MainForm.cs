@@ -177,9 +177,9 @@ public partial class MainForm : FormBase
                 {
                     HandleSomeFilesSkippedException(sfse);
                 }
-                else if (ex is Engine.Exceptions.FileReadException fre)
+                else if (ex is FileReadException fre)
                 {
-                    MainForm.HandleFileReadException(fre);
+                    HandleFileReadException(fre);
                 }
                 else if (ex is MultipleSchemasFoundException msfe)
                 {
@@ -188,6 +188,14 @@ public partial class MainForm : FormBase
                 else if (ex is FileNotFoundException fnfe)
                 {
                     HandleFileNotFoundException(fnfe);
+                }
+                else if (ex is OutOfMemoryException oome)
+                {
+                    HandleOutOfMemoryException(oome);
+                }
+                else if (ex is UnauthorizedAccessException uae)
+                {
+                    HandleUnauthorizedAccessException(uae);
                 }
                 else if (ex is not OperationCanceledException)
                 {
@@ -422,6 +430,14 @@ public partial class MainForm : FormBase
         catch (DecimalOverflowException ex)
         {
             HandleDecimalOverflowException(ex);
+        }
+        catch (OutOfMemoryException ex)
+        {
+            HandleOutOfMemoryException(ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            HandleUnauthorizedAccessException(ex);
         }
         catch (Exception ex)
         {

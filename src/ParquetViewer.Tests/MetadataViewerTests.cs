@@ -1,6 +1,5 @@
 //These tests were written by AI (subject to change)
 
-using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 
 namespace ParquetViewer.Tests;
@@ -184,7 +183,7 @@ public abstract class MetadataViewerTests
         }
     }
 
-    private void AssertFileLevel(IParquetEngine engine, ExpectedFile expected)
+    private static void AssertFileLevel(IParquetEngine engine, ExpectedFile expected)
     {
         var metadata = engine.Metadata;
 
@@ -278,7 +277,7 @@ public abstract class MetadataViewerTests
         if (expected is byte[] expectedBytes)
         {
             Assert.IsInstanceOfType<byte[]>(actual, $"{label}: expected raw bytes, got {Describe(actual)}");
-            CollectionAssert.AreEqual(expectedBytes, (byte[])actual!, $"{label} bytes differ");
+            Assert.AreSequenceEqual(expectedBytes, (byte[])actual!, $"{label} bytes differ");
             return;
         }
 
@@ -298,7 +297,7 @@ public abstract class MetadataViewerTests
 
         if (expected.SchemaNodesAreComplete)
         {
-            Assert.AreEqual(expected.SchemaNodes.Count, actual.Count, "schema tree node count");
+            Assert.HasCount(expected.SchemaNodes.Count, actual, "schema tree node count");
             for (var i = 0; i < expected.SchemaNodes.Count; i++)
             {
                 AssertSchemaNode(expected.SchemaNodes[i], actual[i], $"schema node {i}");
@@ -395,12 +394,12 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValueExt)),
+                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValue)),
                     new(1, "int64_list", FieldTypeId.List, RepetitionTypeId.Optional, false, null, "LIST", typeof(ListValue)),
-                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
+                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
                     new(3, "item", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "INT64", null, typeof(long)),
                     new(1, "utf8_list", FieldTypeId.List, RepetitionTypeId.Optional, false, null, "LIST", typeof(ListValue)),
-                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
+                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
                     new(3, "item", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", "UTF8", typeof(string)),
                 ]),
 
@@ -427,18 +426,18 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValueExt)),
-                    new(1, "txn", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
+                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
+                    new(1, "txn", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
                     new(2, "version", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT64", null, typeof(long)),
-                    new(1, "add", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
+                    new(1, "add", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
                     new(2, "partitionValues", FieldTypeId.Map, RepetitionTypeId.Optional, false, null, "MAP", typeof(MapValue)),
-                    new(1, "metaData", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
-                    new(2, "format", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
+                    new(1, "metaData", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
+                    new(2, "format", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
                     //A map nested two structs deep, to prove the tree is walked all the way down.
                     new(3, "options", FieldTypeId.Map, RepetitionTypeId.Optional, false, null, "MAP", typeof(MapValue)),
-                    new(1, "protocol", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
+                    new(1, "protocol", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
                     new(2, "minReaderVersion", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT32", null, typeof(int)),
-                    new(1, "commitInfo", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
+                    new(1, "commitInfo", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
                     new(2, "operationParameters", FieldTypeId.Map, RepetitionTypeId.Optional, false, null, "MAP", typeof(MapValue)),
                 ],
                 SchemaNodesAreComplete: false),
@@ -461,9 +460,9 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValueExt)),
+                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValue)),
                     new(1, "col1", FieldTypeId.Map, RepetitionTypeId.Optional, false, null, "MAP", typeof(MapValue)),
-                    new(2, "key_value", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
+                    new(2, "key_value", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
                     //Map keys are always required, map values are not.
                     new(3, "key", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "BYTE_ARRAY", "UTF8", typeof(string)),
                     new(3, "value", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", "UTF8", typeof(string)),
@@ -492,12 +491,12 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValueExt)),
+                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
                     new(1, "a", FieldTypeId.Map, RepetitionTypeId.Optional, false, null, "MAP", typeof(MapValue)),
-                    new(2, "key_value", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
+                    new(2, "key_value", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
                     new(3, "key", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "BYTE_ARRAY", "UTF8", typeof(string)),
                     new(3, "value", FieldTypeId.Map, RepetitionTypeId.Optional, false, null, "MAP", typeof(MapValue)),
-                    new(4, "key_value", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
+                    new(4, "key_value", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
                     new(5, "key", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT32", null, typeof(int)),
                     new(5, "value", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "BOOLEAN", null, typeof(bool)),
                     new(1, "b", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT32", null, typeof(int)),
@@ -522,13 +521,13 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValueExt)),
+                    new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
                     new(1, "aws_scores", FieldTypeId.List, RepetitionTypeId.Optional, false, null, "LIST", typeof(ListValue)),
-                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
-                    new(3, "element", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
+                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
+                    new(3, "element", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
                     new(4, "Labels", FieldTypeId.List, RepetitionTypeId.Optional, false, null, "LIST", typeof(ListValue)),
-                    new(5, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
-                    new(6, "element", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValueExt)),
+                    new(5, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
+                    new(6, "element", FieldTypeId.Struct, RepetitionTypeId.Optional, false, null, null, typeof(StructValue)),
                     new(7, "Name", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", "UTF8", typeof(string)),
                     new(7, "Score", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "DOUBLE", null, typeof(double)),
                     new(4, "Toxicity", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "DOUBLE", null, typeof(double)),
@@ -554,11 +553,11 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValueExt)),
+                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
                     new(1, "Product", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", "UTF8", typeof(string)),
                     new(1, "Orders", FieldTypeId.List, RepetitionTypeId.Optional, false, null, "LIST", typeof(ListValue)),
-                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValueExt)),
-                    new(3, "element", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValueExt)),
+                    new(2, "list", FieldTypeId.Struct, RepetitionTypeId.Repeated, false, null, null, typeof(StructValue)),
+                    new(3, "element", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValue)),
                     new(4, "DateTime", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "INT96", null, typeof(DateTime)),
                     new(4, "Quantity", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "DOUBLE", null, typeof(double)),
                 ]),
@@ -587,7 +586,7 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValueExt)),
+                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValue)),
                     new(1, "DATE", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "INT32", "DATE", typeof(DateOnly)),
                     //No converted type, the TIME annotation lives purely in the logical type.
                     new(1, "TIME", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "INT64", null, typeof(TimeOnly)),
@@ -610,7 +609,7 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValueExt)),
+                    new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
                     new(1, "mesh", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", null, typeof(byte[])),
                 ]),
 
@@ -649,7 +648,7 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValueExt)),
+                    new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
                     new(1, "site_section_id", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT32", "INT_32", typeof(int)),
                     new(1, "event_id", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "FIXED_LEN_BYTE_ARRAY", null, typeof(Guid)),
                     new(1, "create_date", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT96", null, typeof(DateTime)),
@@ -686,7 +685,7 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValueExt)),
+                    new(0, "spark_schema", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
                     new(1, "id", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT32", null, typeof(int)),
                     new(1, "name", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", "UTF8", typeof(string)),
                     new(1, "age", FieldTypeId.Primitive, RepetitionTypeId.Required, true, "INT32", null, typeof(int)),
@@ -732,7 +731,7 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 ],
                 SchemaNodes:
                 [
-                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValueExt)),
+                    new(0, "schema", FieldTypeId.Struct, RepetitionTypeId.Required, false, null, null, typeof(StructValue)),
                     new(1, "Transmission_Number", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "INT64", null, typeof(long)),
                     new(1, "DC", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", "UTF8", typeof(string)),
                     new(1, "Base_UOM", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "DOUBLE", null, typeof(double)),

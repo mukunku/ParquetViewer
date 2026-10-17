@@ -334,4 +334,89 @@ public class HelperTests
         Assert.AreEqual("01-02-03-04-05-06-07-08-09-10", byteArrayValue.ToStringTruncated(29));
         Assert.AreEqual("01-02-03-04-05-06-07-08-09-10", byteArrayValue.ToString());
     }
+
+    /// <summary>
+    /// Verifies that the date/time format strings returned by <see cref="ExtensionMethods.GetDateOnlyFormat"/>
+    /// and <see cref="ExtensionMethods.GetTimeOnlyFormat"/> (and the custom-format strip helpers they rely on)
+    /// can actually be used to render a <see cref="DateOnly"/>/<see cref="TimeOnly"/> in many different cultures.
+    /// </summary>
+    /// <remarks>An empty formatting result is considered valid; only exceptions are treated as failures.</remarks>
+    [TestMethod]
+    public void GET_DATE_AND_TIME_ONLY_FORMATS_ARE_VALID_FOR_CULTURE()
+    {
+        string[] cultures = [
+            //Invariant-ish / common western cultures
+            "en-US", "en-GB", "en-CA", "en-AU", "en-IN",
+            "de-DE", "de-AT", "de-CH",
+            "fr-FR", "fr-CA", "fr-BE",
+            "es-ES", "es-MX", "es-AR",
+            "it-IT", "pt-BR", "pt-PT",
+            "nl-NL", "nb-NO", "sv-SE", "da-DK", "fi-FI",
+            //Central / eastern europe (some use '.' date separators)
+            "pl-PL", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "el-GR",
+            "ru-RU", "uk-UA", "tr-TR",
+            //Right-to-left / non-Gregorian calendars
+            "ar-SA", "ar-EG", "ar-AE", "he-IL", "fa-IR",
+            //Asia / pacific
+            "hi-IN", "bn-IN", "ta-IN", "th-TH", "vi-VN", "id-ID", "ms-MY",
+            "ja-JP", "ko-KR", "zh-CN", "zh-TW", "zh-HK",
+            //Africa / other
+            "af-ZA", "sw-KE", "am-ET", "ka-GE", "hy-AM", "az-AZ", "uz-UZ",
+            "kk-KZ", "mn-MN", "ne-NP", "si-LK", "km-KH", "lo-LA", "my-MM",
+            "ur-PK", "ps-AF",
+        ];
+
+        var originalCulture = CultureInfo.CurrentCulture;
+        var failures = new List<string>();
+        try
+        {
+            foreach (var cultureName in cultures)
+            {
+                var culture = new CultureInfo(cultureName);
+                CultureInfo.CurrentCulture = culture;
+
+                //The culture's own date+time layout, i.e. what a user of that culture would naturally
+                //enter into the custom date format dialog.
+                var customFormat =
+                    $"{culture.DateTimeFormat.ShortDatePattern} {culture.DateTimeFormat.LongTimePattern}";
+
+                foreach (var dateFormat in new[] { DateFormat.Default, DateFormat.ISO8601, DateFormat.Custom })
+                {
+                    var dateOnlyFormat = dateFormat == DateFormat.Custom
+                        ? UtilityMethods.StripTimeComponentsFromDateTimeFormat(customFormat)
+                        : dateFormat.GetDateOnlyFormat();
+                    var timeOnlyFormat = dateFormat == DateFormat.Custom
+                        ? UtilityMethods.StripDateComponentsFromDateTimeFormat(customFormat)
+                        : dateFormat.GetTimeOnlyFormat();
+
+                    try
+                    {
+                        //An empty result is fine; we only care that the format doesn't blow up.
+                        _ = new DateOnly(2024, 1, 2).ToString(dateOnlyFormat);
+                    }
+                    catch (Exception ex)
+                    {
+                        failures.Add($"{cultureName} | {dateFormat} | DateOnly | '{dateOnlyFormat}' -> {ex.GetType().Name}: {ex.Message}");
+                    }
+
+                    try
+                    {
+                        //An empty result is fine; we only care that the format doesn't blow up.
+                        _ = new TimeOnly(13, 45, 30).ToString(timeOnlyFormat);
+                    }
+                    catch (Exception ex)
+                    {
+                        failures.Add($"{cultureName} | {dateFormat} | TimeOnly | '{timeOnlyFormat}' -> {ex.GetType().Name}: {ex.Message}");
+                    }
+                }
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+
+        Assert.IsEmpty(failures,
+            $"The following culture/format combinations failed to render:{Environment.NewLine}{string.Join(Environment.NewLine, failures)}");
+    }
 }

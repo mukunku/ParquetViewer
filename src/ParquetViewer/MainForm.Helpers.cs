@@ -25,17 +25,31 @@ public partial class MainForm
         var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
         loadingIcon.OnShow += (sender, e) =>
         {
-            mainTableLayoutPanel.Enabled = false;
             mainMenuStrip.Enabled = false;
+            ToggleUserActionableControls(false);
+            loadAllRowsButton.Enabled = false;
         };
         loadingIcon.OnHide += (sender, e) =>
         {
-            mainTableLayoutPanel.Enabled = true;
             mainMenuStrip.Enabled = true;
+            ToggleUserActionableControls(true);
+            loadAllRowsButton.Enabled = _mainDataSource?.Rows.Count < _openParquetEngine?.RecordCount;
         };
 
         loadingIcon.Show();
         return loadingIcon;
+
+        //Disabling `mainTableLayoutPanel` also disables Labels which breaks
+        //Dark Mode. So we disable individual user actionable controls instead.
+        void ToggleUserActionableControls(bool enabled)
+        {
+            searchFilterLabel.Enabled = enabled;
+            searchFilterTextBox.Enabled = enabled;
+            runQueryButton.Enabled = enabled;
+            clearFilterButton.Enabled = enabled;
+            offsetTextBox.Enabled = enabled;
+            recordCountTextBox.Enabled = enabled;
+        }
     }
 
     //TODO: Should we export floats and binary data with custom formatting if activated?
@@ -409,7 +423,18 @@ public partial class MainForm
 }"
                             }
                         };
-                await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
+                try
+                {
+                    await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    HandleUnauthorizedAccessException(ex);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
             }, cancellationToken);
 
     private static void HandleAllFilesSkippedException(AllFilesSkippedException ex)
@@ -489,6 +514,12 @@ public partial class MainForm
                    DecimalOverflowException.MAX_DECIMAL_PRECISION,
                    DecimalOverflowException.MAX_DECIMAL_SCALE),
                Resources.Errors.DecimalValueTooLargeErrorTitle);
+
+    private static void HandleOutOfMemoryException(OutOfMemoryException ex)
+        => ShowError(ex.Message);
+
+    private static void HandleUnauthorizedAccessException(UnauthorizedAccessException ex)
+        => ShowError(ex.Message);
 
     private static void ShowError(string message, string? title = null)
         => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
