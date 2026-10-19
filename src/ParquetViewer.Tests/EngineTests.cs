@@ -588,6 +588,25 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
+    [SkipWhen(typeof(ParquetNETEngineTests), "We cant differentiate between null and empty for nested list of structs")]
+    public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT_NULL_ELEMENTS()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT_NULL_ELEMENTS.parquet");
+        Assert.AreEqual(7, parquetEngine.RecordCount);
+        Assert.HasCount(1, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+
+        Assert.AreEqual(@"[{""A"":[{""B"":null,""C"":null,""D"":null}],""E"":0.1}]", dataTable.Rows[0][0].ToString());
+        Assert.AreEqual(@"[{""A"":[{""B"":[],""C"":null,""D"":null}],""E"":0.2}]", dataTable.Rows[1][0].ToString());
+        Assert.AreEqual(@"[{""A"":[{""B"":null,""C"":null,""D"":null},{""B"":[1,2],""C"":3,""D"":4}],""E"":0.3}]", dataTable.Rows[2][0].ToString());
+        Assert.AreEqual(@"[{""A"":null,""E"":0.4}]", dataTable.Rows[3][0].ToString());
+        Assert.AreEqual(@"[{""A"":[],""E"":0.5}]", dataTable.Rows[4][0].ToString());
+        Assert.AreEqual(@"[{""A"":[{""B"":null,""C"":null,""D"":null}],""E"":0.6},{""A"":[{""B"":[9],""C"":8,""D"":7}],""E"":0.7}]", dataTable.Rows[5][0].ToString());
+        Assert.AreEqual(@"[{""A"":[null,{""B"":null,""C"":null,""D"":null}],""E"":0.8}]", dataTable.Rows[6][0].ToString());
+    }
+
+    [SkippableTestMethod]
     public async Task LIST_OF_STRUCT_NULL_NESTED_LIST_AND_PRIMITIVE()
     {
         //Regression test: a null nested list in the first column of a struct used to crash the
