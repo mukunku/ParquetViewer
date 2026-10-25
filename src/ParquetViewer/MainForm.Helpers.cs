@@ -223,7 +223,19 @@ public partial class MainForm
         sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
 
         using var fs = new FileStream(path, FileMode.OpenOrCreate);
-        await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
+
+        var hasQueryFilter = !string.IsNullOrWhiteSpace(mainDataSource.DefaultView.RowFilter);
+        var isSorted = !string.IsNullOrWhiteSpace(mainDataSource.DefaultView.Sort);
+        if (hasQueryFilter || isSorted)
+        {
+            //We need to create a new DataTable from the filtered/sorted view. This unfortunately will cost us time and memory...
+            using var cloneTable = mainDataSource.DefaultView.ToTable();
+            await fs.SaveAsAsync(cloneTable, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
+        }
+        else
+        {
+            await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
+        }
     }
 
     private static Task WriteDataToCSVFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
