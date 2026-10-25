@@ -261,18 +261,19 @@ public sealed partial class ParquetEngine : IParquetEngine
         var columnType = column.DataType == typeof(ByteArrayValue) ? typeof(byte[]) : column.DataType;
         columnType = columnSourceDataField.IsNullable ? GetNullableVersion(columnType) : columnType;
 
-        var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
+        var defaultView = dataTable.DefaultView;
+        var recordCountAfterSkip = defaultView.Count - skipCount;
         var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
         var values = Array.CreateInstance(columnType, recordCountToRead);
         var index = 0;
-        foreach (DataRow row in dataTable.Rows)
+        foreach (DataRowView row in defaultView)
         {
             if (skipCount-- > 0)
             {
                 continue;
             }
 
-            var value = row[column];
+            var value = row[column.Ordinal];
             if (value == DBNull.Value)
                 value = null;
             else if (value is IByteArrayValue byteArray)
