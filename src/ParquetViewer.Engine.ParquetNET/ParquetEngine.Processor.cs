@@ -240,8 +240,7 @@ public partial class ParquetEngine
 
     /// <summary>
     /// Reads a struct that is the element of a list (or nested inside such an element) as a single
-    /// columnar <see cref="ListValue"/> where each entry is a <see cref="StructValueExt"/> (or DBNull
-    /// when the struct instance itself is absent).
+    /// columnar <see cref="ListValue"/> where each entry is a <see cref="StructValue"/> or DBNull.
     /// </summary>
     private async Task ReadStructFieldAsListAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex,
         ParquetSchemaElement structField, int fieldIndex, long skipRecords, long readRecords, bool isFirstColumn,
