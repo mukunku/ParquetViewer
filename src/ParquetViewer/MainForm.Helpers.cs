@@ -64,51 +64,54 @@ public partial class MainForm
         filePathWithExtension = string.IsNullOrWhiteSpace(filePathWithExtension) ? null : filePathWithExtension;
         try
         {
-            if (MainDataSource?.DefaultView.Count > 0)
+            if (MainDataSource is null || MainDataSource.DefaultView.Count == 0)
+                return;
+
+            var rowCount = MainDataSource.DefaultView.Count;
+            var columnCount = MainDataSource.Columns.Count;
+
+            exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(rowCount);
+            exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
+            exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+
+            if (_openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
+                && _openParquetEngine is Engine.ParquetNET.ParquetEngine)
             {
-                exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(MainDataSource.DefaultView.Count);
-                exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
-                exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+                exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+            }
 
-                if (_openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
-                    && _openParquetEngine is Engine.ParquetNET.ParquetEngine)
+            if (filePathWithExtension is not null || exportFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                filePath = filePathWithExtension ?? exportFileDialog.FileName;
+                CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
+
+                var fileExtension = Path.GetExtension(filePath);
+                FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
+                var stopWatch = Stopwatch.StartNew();
+                loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, rowCount * columnCount);
+                await ExportResultsImplAsync(MainDataSource, selectedFileType.Value, _openParquetEngine,
+                    filePath, loadingIcon, _openFileOrFolderPath, loadingIcon.CancellationToken);
+
+                if (loadingIcon.CancellationToken.IsCancellationRequested)
                 {
-                    exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+                    CleanupFile(filePath);
+                    MessageBox.Show(Resources.Strings.ExportCancelledMessage, Resources.Strings.ExportCancelledTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-
-                if (filePathWithExtension is not null || exportFileDialog.ShowDialog() == DialogResult.OK)
+                else
                 {
-                    filePath = filePathWithExtension ?? exportFileDialog.FileName;
-                    CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
+                    long fileSizeInBytes = new FileInfo(filePath).Length;
 
-                    var fileExtension = Path.GetExtension(filePath);
-                    FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
-                    var stopWatch = Stopwatch.StartNew();
-                    loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
-                    await ExportResultsImplAsync(MainDataSource!, selectedFileType.Value, _openParquetEngine,
-                        filePath, loadingIcon, _openFileOrFolderPath, loadingIcon.CancellationToken);
+                    FileExportEvent.FireAndForget(
+                        selectedFileType.Value,
+                        fileSizeInBytes,
+                        rowCount,
+                        columnCount,
+                        stopWatch.ElapsedMilliseconds);
 
-                    if (loadingIcon.CancellationToken.IsCancellationRequested)
-                    {
-                        CleanupFile(filePath);
-                        MessageBox.Show(Resources.Strings.ExportCancelledMessage, Resources.Strings.ExportCancelledTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        long fileSizeInBytes = new FileInfo(filePath).Length;
-
-                        FileExportEvent.FireAndForget(
-                            selectedFileType.Value,
-                            fileSizeInBytes,
-                            mainGridView.RowCount,
-                            mainGridView.ColumnCount,
-                            stopWatch.ElapsedMilliseconds);
-
-                        MessageBox.Show(this,
-                            Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
-                            Resources.Strings.ExportSuccessfulTitle,
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+                    MessageBox.Show(this,
+                        Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
+                        Resources.Strings.ExportSuccessfulTitle,
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
