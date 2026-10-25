@@ -232,7 +232,7 @@ public partial class MainForm
         if (hasQueryFilter || isSorted)
         {
             //We need to create a new DataTable from the filtered/sorted view. This unfortunately will cost us time and memory...
-            using var cloneTable = mainDataSource.DefaultView.ToTable();
+            using var cloneTable = await Task.Run(() => mainDataSource.DefaultView.ToTable());
             await fs.SaveAsAsync(cloneTable, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
         }
         else
