@@ -842,4 +842,24 @@ public abstract class EngineTests
         Assert.AreEqual(DBNull.Value, dataTable.Rows[0][0]);
         Assert.AreEqual((double)0, dataTable.Rows[0][1]);
     }
+
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB can't read TIME_NS types right now: https://github.com/Giorgi/DuckDB.NET/issues/383")]
+    public async Task TIME_ONLY_MILLIS_MICROS_NANOS_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/TIME_ONLY_MILLIS_MICROS_NANOS_TEST.parquet");
+
+        Assert.AreEqual(9, parquetEngine.RecordCount);
+        Assert.HasCount(4, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
+        Assert.AreEqual(new DateOnly(2026,10,24), dataTable.Rows[2][0]);
+        Assert.AreEqual(new TimeOnly(), dataTable.Rows[2][1]);
+        Assert.AreEqual(new TimeOnly(10), dataTable.Rows[2][2]);
+        Assert.AreEqual(new TimeOnly(10), dataTable.Rows[2][3]);
+
+        Assert.AreEqual(new TimeOnly(12340000), dataTable.Rows[4][1]);
+        Assert.AreEqual(new TimeOnly(12345670), dataTable.Rows[4][2]);
+        Assert.AreEqual(new TimeOnly(12345678), dataTable.Rows[4][3]);
+    }
 }
