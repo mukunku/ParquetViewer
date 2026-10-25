@@ -172,10 +172,10 @@ public sealed partial class ParquetEngine : IParquetEngine
         {
             return await ParquetReader.CreateAsync(readOnlyNonLockingStream, parquetOptions, false);
         }
-        catch
+        catch (Exception ex)
         {
             await readOnlyNonLockingStream.DisposeAsync();
-            throw;
+            throw new FileReadException(ex.Message.Replace(filePath, $"`{filePath}`"), ex); // Mask file/folder path
         }
     }
 
