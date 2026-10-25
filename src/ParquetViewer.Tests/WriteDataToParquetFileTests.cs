@@ -363,4 +363,38 @@ public class WriteDataToParquetFileTests
                 $"cancelled write still produced all {rewritten.RecordCount} source rows");
         }
     }
+
+
+    /// <summary>
+    /// Verifies exporting a sorted and filtered DataTable writes the rows in its
+    /// DefaultView, matching the order and subset visible to the user.
+    /// </summary>
+    [TestMethod]
+    public async Task EXPORT_RESPECTS_DEFAULT_VIEW_SORT_AND_FILTER()
+    {
+        await using var engine = await OpenAsync("Data/DECIMALS_AND_BOOLS_TEST.parquet");
+        var original = await ReadAllAsync(engine);
+
+        Assert.HasCount(30, original.Rows);
+
+        // Apply a filter and sort to simulate the user's current grid view.
+        original.DefaultView.RowFilter = $"[{original.Columns[0].ColumnName}] < 180";
+        original.DefaultView.Sort = $"[{original.Columns[0].ColumnName}] DESC";
+
+        Assert.IsGreaterThan(0, original.DefaultView.Count, "test setup produced no visible rows");
+        Assert.IsLessThan(original.Rows.Count, original.DefaultView.Count,
+            "test setup should filter out at least one row");
+
+        // Snapshot the exact rows and order the user should see.
+        var expected = original.DefaultView.ToTable();
+
+        var path = NewTempPath();
+        await engine.WriteDataToParquetFileAsync(
+            original, path, new Progress<int>(), null, default);
+
+        await using var rewritten = await OpenAsync(path);
+        var actual = await ReadAllAsync(rewritten);
+
+        AssertTablesMatch(expected, actual);
+    }
 }
