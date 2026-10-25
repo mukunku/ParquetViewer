@@ -853,7 +853,7 @@ public abstract class EngineTests
         Assert.HasCount(4, parquetEngine.Fields);
 
         var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue, default))(false);
-        Assert.AreEqual(new DateOnly(2026,10,24), dataTable.Rows[2][0]);
+        Assert.AreEqual(new DateOnly(2026, 10, 24), dataTable.Rows[2][0]);
         Assert.AreEqual(new TimeOnly(), dataTable.Rows[2][1]);
         Assert.AreEqual(new TimeOnly(10), dataTable.Rows[2][2]);
         Assert.AreEqual(new TimeOnly(10), dataTable.Rows[2][3]);
