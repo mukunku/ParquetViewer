@@ -64,7 +64,7 @@ internal static class ReflectiveColumnReader
 
         var values = await ReadValuesAsync(groupReader, field, numValues, definitionLevels, repetitionLevels, cancellationToken);
 
-        return new ParquetColumnData(fieldSchemaElement, values, definitionLevels, repetitionLevels);
+        return ParquetColumnData.Create(fieldSchemaElement, values, definitionLevels, repetitionLevels);
     }
 
     /// <summary>
@@ -114,8 +114,8 @@ internal static class ReflectiveColumnReader
         [
             field,
             read.MemoryConstructor.Invoke([values]),
-            definitionLevels is not null ? new Memory<int>(definitionLevels) : (Memory<int>?)null,
-            repetitionLevels is not null ? new Memory<int>(repetitionLevels) : (Memory<int>?)null,
+            definitionLevels is not null ? new Memory<int>(definitionLevels) : (Memory<int>?)null, //Casting the null is required
+            repetitionLevels is not null ? new Memory<int>(repetitionLevels) : (Memory<int>?)null, //Casting the null is required
             cancellationToken
         ];
 

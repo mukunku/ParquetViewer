@@ -22,13 +22,14 @@ public sealed class FieldLevels
     {
         ArgumentNullException.ThrowIfNull(element);
 
-        //Walk the path once, root -> element, accumulating definition levels.
+        //We capture definition levels starting from the root and walking towards the leaf node.
+        //So we need to first walk towards the root from this element and then reverse the order.
         var path = new List<ParquetSchemaElement>();
         for (var node = element; node?.Parent is not null /*exclude root node*/; node = node.Parent)
         {
             path.Add(node);
         }
-        path.Reverse();
+        path.Reverse(); //Now we have a root-first list
 
         var maxDefinitionLevel = 0;
         var repeatedAncestorDefinitionLevels = new List<int>();
@@ -45,7 +46,36 @@ public sealed class FieldLevels
                 repeatedAncestorDefinitionLevels.Add(maxDefinitionLevel - 1);
         }
 
-        return new FieldLevels(maxDefinitionLevel, repeatedAncestorDefinitionLevels /*root -> element == outermost first*/);
+        /*
+           Example: a list<list<int>> in the standard three-tier layout.
+
+          ┌────────────────┬────────────┬─────────────────────────┬─────────────────────────┐
+          │  Schema node   │ Repetition │ Definition level so far │ Entry added to the list │
+          ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
+          │ a (LIST)       │ optional   │ 1                       │                         │
+          ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
+          │ list           │ repeated   │ 2                       │ 2 - 1 = 1               │
+          ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
+          │ element (LIST) │ optional   │ 3                       │                         │
+          ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
+          │ list           │ repeated   │ 4                       │ 4 - 1 = 3               │
+          ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
+          │ element (int)  │ optional   │ 5                       │                         │
+          └────────────────┴────────────┴─────────────────────────┴─────────────────────────┘
+
+          The result is MaxDefinitionLevel = 5 and RepeatedAncestorDefinitionLevels = [1, 3]. 
+          That's outer list first, then the inner list.
+
+          Reading a definition level against that:
+          - 0: the outer list is null (below [0] = 1).
+          - 1: the outer list is empty.
+          - 2: the inner list is null (below [1] = 3).
+          - 3: the inner list is empty.
+          - 4: the int element itself is null.
+          - 5: a real value.
+         */
+
+        return new FieldLevels(maxDefinitionLevel, repeatedAncestorDefinitionLevels /* from root to*/);
     }
 
     internal FieldLevels(int maxDefinitionLevel, IReadOnlyList<int> repeatedAncestorDefinitionLevels)

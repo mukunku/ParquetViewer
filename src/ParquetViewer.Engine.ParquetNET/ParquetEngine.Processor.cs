@@ -115,7 +115,6 @@ public partial class ParquetEngine
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
     {
         var rowIndex = rowBeginIndex;
-        var skippedRecords = 0;
         var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
 
         if (field.BelongsToListField || field.BelongsToListOfStructsField || field.DataField?.IsArray == true)
@@ -125,41 +124,20 @@ public partial class ParquetEngine
         else
         {
             var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
-            var dataEnumerable = dataColumn.Data;
 
-            var fieldType = dataTable.Columns[field.Path].Type;
             var progressUntilReport = 0;
             const int progressReportThreshold = 10;
-            foreach (object value in dataEnumerable)
+            var endIndex = Math.Min(dataColumn.Count, skipRecords + readRecords);
+            for (var index = (int)skipRecords; index < endIndex; index++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
-                if (skipRecords > skippedRecords)
-                {
-                    skippedRecords++;
-                    continue;
-                }
-
-                if (rowIndex - rowBeginIndex >= readRecords)
-                    break;
 
                 if (isFirstColumn)
                 {
                     dataTable.NewRow();
                 }
 
-                if (value == DBNull.Value || value is null)
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                }
-                else if (fieldType == typeof(ByteArrayValue))
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue((byte[])value);
-                }
-                else
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = value;
-                }
+                dataTable.Rows[rowIndex]![fieldIndex] = dataColumn[index];
 
                 rowIndex++;
                 progressUntilReport++;
@@ -201,9 +179,8 @@ public partial class ParquetEngine
                 var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
                 lastMilestone = "Read";
 
-                var dataEnumerable = dataColumn.Data;
-                var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, itemField.ClrType);
-                var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, itemField.Levels, cancellationToken);
+                var listValueBuilder = new ListValueBuilder(itemField.Levels, dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataColumn, dataColumn.ValueType);
+                var listValues = listValueBuilder.ReadRows(skipRecords, readRecords, cancellationToken);
                 lastMilestone = "ReadRows";
 
                 foreach (var listValue in listValues)
@@ -403,7 +380,7 @@ public partial class ParquetEngine
     /// For a List of Structs field, this method computes for each row in the current read range, the presence of each struct instance.
     /// A struct is present when the definition level of one of its leaves reaches the struct's <see cref="FieldLevels.MaxDefinitionLevel"/>.
     /// </summary>
-    private static async Task<List<List<bool>>> GetStructInstancePresenceAsync(ParquetSchemaElement structField,
+    private static async Task<List<List<bool>?>> GetStructInstancePresenceAsync(ParquetSchemaElement structField,
         ParquetRowGroupReader groupReader, long skipRecords, long readRecords, CancellationToken cancellationToken)
     {
         var leaf = GetFirstPrimitiveDescendant(structField);
@@ -413,34 +390,14 @@ public partial class ParquetEngine
         }
 
         var dataColumn = await ReadColumnAsync(groupReader, leaf, cancellationToken);
-        var repetitionLevels = dataColumn.RepetitionLevels;
-        var definitionLevels = dataColumn.DefinitionLevels;
-        if (repetitionLevels is null || definitionLevels is null)
+        if (dataColumn.RepetitionLevels is null || dataColumn.DefinitionLevels is null)
         {
             return [];
         }
 
-        var rows = new List<List<bool>>();
-        var currentRow = new List<bool>();
-        for (var i = 0; i < repetitionLevels.Length; i++)
-        {
-            if (i > 0 && repetitionLevels[i] == 0)
-            {
-                rows.Add(currentRow);
-                currentRow = [];
-            }
-
-            //Entries with a repetition level at or below the struct's own repetition nesting are the
-            //beginning of a new struct instance; deeper entries belong to nested lists within the same
-            //struct instance.
-            if (repetitionLevels[i] <= structField.Levels.MaxRepetitionLevel)
-            {
-                currentRow.Add(definitionLevels.Length > i && definitionLevels[i] >= structField.Levels.MaxDefinitionLevel);
-            }
-        }
-        rows.Add(currentRow);
-
-        return rows.Skip((int)skipRecords).Take((int)readRecords).ToList();
+        return new StructPresenceBuilder(structField.Levels, dataColumn.RepetitionLevels, dataColumn.DefinitionLevels)
+            .ReadRows(skipRecords, readRecords, cancellationToken)
+            .ToList();
     }
 
     private static ParquetSchemaElement? GetFirstPrimitiveDescendant(ParquetSchemaElement field)
@@ -508,22 +465,19 @@ public partial class ParquetEngine
         if (keyColumn.RepetitionLevels is null || keyColumn.DefinitionLevels is null)
             throw new MalformedFieldException($"Map field `{mapField.PathWithParent}` is missing repetition/definition levels");
 
-        var keyValues = keyColumn.Data.ToArray();
-
         if (valueField.FieldType == FieldTypeId.Map)
         {
             var valueBuilder = await CreateMapValueBuilderAsync(valueField, groupReader,
                 keyField.Levels.MaxRepetitionLevel, cancellationToken);
             return new MapValueBuilder(parentRepetitionBoundary, keyField.Levels, keyColumn.RepetitionLevels,
-                keyColumn.DefinitionLevels, keyValues, keyField.ClrType, valueField.ClrType, valueBuilder: valueBuilder);
+                keyColumn.DefinitionLevels, keyColumn, keyColumn.ValueType, valueField.ClrType, valueBuilder: valueBuilder);
         }
 
         if (valueField.FieldType == FieldTypeId.Primitive && valueField.DataField?.IsArray != true)
         {
             var valueColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
             return new MapValueBuilder(parentRepetitionBoundary, keyField.Levels, keyColumn.RepetitionLevels,
-                keyColumn.DefinitionLevels, keyValues, keyField.ClrType, valueField.ClrType,
-                valueValues: valueColumn.Data.ToArray());
+                keyColumn.DefinitionLevels, keyColumn, keyColumn.ValueType, valueColumn.ValueType, values: valueColumn);
         }
 
         throw new UnsupportedFieldException(

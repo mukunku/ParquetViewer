@@ -12,9 +12,9 @@ public class ListValueBuilderTests
 
     private static object Read(object[] data, int[] repetitionLevels, int[] definitionLevels, int[] listDefinitionLevels)
     {
-        var builder = new ListValueBuilder(repetitionLevels, definitionLevels, data, typeof(int));
         var levels = new FieldLevels(listDefinitionLevels[^1] + 1, listDefinitionLevels);
-        return builder.ReadRows(0, 1, levels, default).Single() as object ?? DBNull.Value;
+        var builder = new ListValueBuilder(levels, repetitionLevels, definitionLevels, data, typeof(int));
+        return builder.ReadRows(0, 1, default).Single() as object ?? DBNull.Value;
     }
 
     [TestMethod]

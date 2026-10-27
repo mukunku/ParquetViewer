@@ -1,5 +1,6 @@
-using Parquet.Data;
 using Parquet.Schema;
+using ParquetViewer.Engine.Types;
+using System.Collections;
 using System.Numerics;
 
 namespace ParquetViewer.Engine.ParquetNET;
@@ -9,155 +10,184 @@ namespace ParquetViewer.Engine.ParquetNET;
 /// V6 hands back pooled <see cref="Data.Span{T}"/> buffers that must be disposed of and
 /// cannot be held onto, so we copy the values out into a managed array instead.
 /// </summary>
-internal sealed class ParquetColumnData
+/// <remarks>
+/// The column is exposed as a list with one entry per definition/repetition level, which is what the rest
+/// of the engine expects. Values are converted (and boxed) only when they are read, so a partial read
+/// doesn't allocate anything for the values it doesn't touch.
+/// </remarks>
+internal abstract class ParquetColumnData : IReadOnlyList<object>
 {
-    private readonly Array _data;
-    private readonly ParquetSchemaElement _field;
-    private DataField DataField => _field.DataField!; //we check nullability in the constructor
-
-    public IEnumerable<object> Data
-    {
-        get
-        {
-            if (_field.ClrType == typeof(TimeOnly))
-            {
-                if (_data is int[] intValues)
-                    return Expand(intValues, DataField.MaxDefinitionLevel, DefinitionLevels, value => ConvertTimeValue(value));
-
-                if (_data is long[] longValues)
-                    return Expand(longValues, DataField.MaxDefinitionLevel, DefinitionLevels, value => ConvertTimeValue(value));
-
-                //Not sure if it makes sense to try read anyway at this point but going to for now.
-                return ExpandUntyped(_data, DataField.MaxDefinitionLevel, DefinitionLevels);
-            }
-
-            //Use an exact type check instead of `is`/type-pattern checks. The CLR considers signed and unsigned
-            //integer arrays of the same width mutually compatible (`uint[] is int[]` is true), so a `uint[]`
-            //would match an `int[]` arm and get boxed as `int`.
-            return _data.GetType() switch
-            {
-                var t when t == typeof(bool[]) => Expand((bool[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(sbyte[]) => Expand((sbyte[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(byte[]) => Expand((byte[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(short[]) => Expand((short[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(ushort[]) => Expand((ushort[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(int[]) => Expand((int[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(uint[]) => Expand((uint[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(long[]) => Expand((long[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(ulong[]) => Expand((ulong[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(float[]) => Expand((float[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(double[]) => Expand((double[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(decimal[]) => Expand((decimal[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(DateTime[]) => Expand((DateTime[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(DateOnly[]) => Expand((DateOnly[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(Guid[]) => Expand((Guid[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null),
-                var t when t == typeof(BigDecimal[]) => Expand((BigDecimal[])_data, DataField.MaxDefinitionLevel, DefinitionLevels, null), //TODO: Is it possible to handle these? Seems we get regular `decimal` as the ClrType so this is never called
-
-                var t when t == typeof(ReadOnlyMemory<char>[]) => Expand((ReadOnlyMemory<char>[])_data, DataField.MaxDefinitionLevel, DefinitionLevels,
-                    static memory => new string(memory.Span)),
-                var t when t == typeof(ReadOnlyMemory<byte>[]) => Expand((ReadOnlyMemory<byte>[])_data, DataField.MaxDefinitionLevel, DefinitionLevels,
-                    static memory => memory.ToArray()),
-
-                //An element type we have no case for. Try to read generically
-                _ => ExpandUntyped(_data, DataField.MaxDefinitionLevel, DefinitionLevels)
-            };
-        }
-    }
+    private readonly int _maxDefinitionLevel;
 
     public int[]? DefinitionLevels { get; }
 
     public int[]? RepetitionLevels { get; }
 
-    /// <summary>
-    /// True when the value at <paramref name="index"/> is absent altogether (its outermost collection is null).
-    /// </summary>
-    public bool IsNull(int index)
-        => DefinitionLevels?.Length > index && _field.Levels.IsNull(DefinitionLevels[index]);
+    public int Count { get; }
 
     /// <summary>
-    /// True when the value at <paramref name="index"/> belongs to a collection that is present but has no entries.
+    /// The value at <paramref name="index"/>, or <see cref="DBNull"/> if it's null or empty.
     /// </summary>
-    public bool IsEmpty(int index)
-        => DefinitionLevels?.Length > index && _field.Levels.IsEmpty(DefinitionLevels[index]);
+    public object this[int index]
+    {
+        get
+        {
+            if (DefinitionLevels is not null && DefinitionLevels[index] < _maxDefinitionLevel)
+                return DBNull.Value; //Null or empty
 
-    public ParquetColumnData(ParquetSchemaElement field, Array data, int[]? definitionLevels, int[]? repetitionLevels)
+            return GetDataValue(index);
+        }
+    }
+
+    /// <summary>
+    /// The type of the values this column hands out (after conversion), e.g. <see cref="ByteArrayValue"/> for binary columns.
+    /// </summary>
+    public abstract Type ValueType { get; }
+
+    protected abstract object GetDataValue(int index);
+
+    protected ParquetColumnData(ParquetSchemaElement field, int dataLength, int[]? definitionLevels, int[]? repetitionLevels)
     {
         ArgumentNullException.ThrowIfNull(field);
-        ArgumentNullException.ThrowIfNull(data);
 
         if (field.DataField is null)
             throw new ArgumentException("No data field found", nameof(field));
-        if (definitionLevels is not null && definitionLevels.Length != data.Length)
-            throw new ArgumentException("Data length doesn't match definition level length", nameof(data));
-        if (repetitionLevels is not null && repetitionLevels.Length != data.Length)
-            throw new ArgumentException("Data length doesn't match repetition level length", nameof(data));
+        if (definitionLevels is not null && definitionLevels.Length != dataLength)
+            throw new ArgumentException("Data length doesn't match definition level length", nameof(definitionLevels));
+        if (repetitionLevels is not null && repetitionLevels.Length != dataLength)
+            throw new ArgumentException("Data length doesn't match repetition level length", nameof(repetitionLevels));
 
-        _data = data;
-        _field = field;
+        Count = dataLength;
+        _maxDefinitionLevel = field.DataField.MaxDefinitionLevel;
         DefinitionLevels = definitionLevels;
         RepetitionLevels = repetitionLevels;
     }
 
     /// <summary>
-    /// Parquet stores nulls implicitly (they are simply absent from the data pages), so the raw values are
-    /// "compacted". This logic re-inserts them using the definition levels so that values line up 1:1 with
-    /// the definition/repetition levels, which is what the rest of the engine expects.
+    /// Wraps the raw values read for <paramref name="field"/> in the column type that knows how to convert them.
     /// </summary>
-    private static IEnumerable<object> Expand<T>(T[] values, int maxDefinitionLevel, int[]? definitionLevels,
-        Func<T, object?>? convert)
+    public static ParquetColumnData Create(ParquetSchemaElement field, Array data, int[]? definitionLevels, int[]? repetitionLevels)
     {
-        var valueIndex = 0;
-        var numValues = definitionLevels?.Length ?? values.Length;
-        for (var index = 0; index < numValues; index++)
+        ArgumentNullException.ThrowIfNull(field);
+        ArgumentNullException.ThrowIfNull(data);
+
+        var isTime = field.ClrType == typeof(TimeOnly);
+
+        //Use an exact type check instead of `is`/type-pattern checks. The CLR considers signed and unsigned
+        //integer arrays of the same width mutually compatible (`uint[] is int[]` is true), so a `uint[]`
+        //would match an `int[]` arm and get boxed as `int`.
+        return data.GetType() switch
         {
-            if (definitionLevels is not null && definitionLevels[index] < maxDefinitionLevel)
-            {
-                yield return DBNull.Value; //Null or empty
-                continue;
-            }
+            var t when t == typeof(int[]) && isTime => new TimeColumnData<int>(field, (int[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(long[]) && isTime => new TimeColumnData<long>(field, (long[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(ReadOnlyMemory<char>[]) => new StringColumnData(field, (ReadOnlyMemory<char>[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(ReadOnlyMemory<byte>[]) => new BinaryColumnData(field, (ReadOnlyMemory<byte>[])data, definitionLevels, repetitionLevels),
 
-            var value = values[valueIndex++];
-            object? converted = convert is null ? value : convert(value);
-            yield return converted ?? DBNull.Value;
-        }
-    }
+            var t when t == typeof(bool[]) => new ParquetColumnData<bool>(field, (bool[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(sbyte[]) => new ParquetColumnData<sbyte>(field, (sbyte[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(byte[]) => new ParquetColumnData<byte>(field, (byte[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(short[]) => new ParquetColumnData<short>(field, (short[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(ushort[]) => new ParquetColumnData<ushort>(field, (ushort[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(int[]) => new ParquetColumnData<int>(field, (int[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(uint[]) => new ParquetColumnData<uint>(field, (uint[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(long[]) => new ParquetColumnData<long>(field, (long[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(ulong[]) => new ParquetColumnData<ulong>(field, (ulong[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(float[]) => new ParquetColumnData<float>(field, (float[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(double[]) => new ParquetColumnData<double>(field, (double[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(decimal[]) => new ParquetColumnData<decimal>(field, (decimal[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(DateTime[]) => new ParquetColumnData<DateTime>(field, (DateTime[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(DateOnly[]) => new ParquetColumnData<DateOnly>(field, (DateOnly[])data, definitionLevels, repetitionLevels),
+            var t when t == typeof(Guid[]) => new ParquetColumnData<Guid>(field, (Guid[])data, definitionLevels, repetitionLevels),
 
-    /// <summary>
-    /// Fallback for element types not covered above. Just in-case.
-    /// </summary>
-    private static IEnumerable<object> ExpandUntyped(Array values, int maxDefinitionLevel, int[]? definitionLevels)
-    {
-        var valueIndex = 0;
-        var numValues = definitionLevels?.Length ?? values.Length;
-        for (var index = 0; index < numValues; index++)
-        {
-            if (definitionLevels is not null && definitionLevels[index] < maxDefinitionLevel)
-            {
-                yield return DBNull.Value; //Null or empty
-                continue;
-            }
-
-            var value = values.GetValue(valueIndex++);
-            yield return value ?? DBNull.Value; //We must replace all nulls with DBNull
-        }
-    }
-
-    /// <summary>
-    /// TIME columns are read as a raw <see cref="int"/> (millis) or <see cref="long"/> (micros/nanos)
-    /// count of time since midnight. Parquet.Net v6 removed the options that used to do this mapping,
-    /// so we do it here to keep <see cref="TimeOnly"/> flowing through the rest of the app.
-    /// </summary>
-    private TimeOnly ConvertTimeValue<T>(T value) where T : INumber<T>
-    {
-        if (DataField is not TimeDataField timeField)
-            throw new InvalidOperationException("Not a time type.");
-
-        return timeField.Precision switch
-        {
-            TimeUnitPrecision.Millis => TimeOnly.FromTimeSpan(TimeSpan.FromMilliseconds(int.CreateChecked(value))),
-            TimeUnitPrecision.Micros => TimeOnly.FromTimeSpan(TimeSpan.FromMicroseconds(long.CreateChecked(value))),
-            TimeUnitPrecision.Nanos => TimeOnly.FromTimeSpan(TimeSpan.FromTicks(long.CreateChecked(value) / 100)),
-            _ => throw new InvalidDataException($"'{timeField.Precision}' is not a recognized time unit.")
+            //An element type we have no case for. Try to read generically, just in-case.
+            _ => (ParquetColumnData)Activator.CreateInstance(
+                typeof(ParquetColumnData<>).MakeGenericType(data.GetType().GetElementType()!),
+                field, data, definitionLevels, repetitionLevels)!
         };
     }
+
+    public IEnumerator<object> GetEnumerator()
+    {
+        for (var index = 0; index < Count; index++)
+        {
+            yield return this[index];
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+internal class ParquetColumnData<T> : ParquetColumnData where T : struct
+{
+    private readonly T[] _data;
+
+    public ParquetColumnData(ParquetSchemaElement field, T[] data, int[]? definitionLevels, int[]? repetitionLevels)
+        : base(field, data.Length, definitionLevels, repetitionLevels)
+    {
+        if (definitionLevels is not null)
+        {
+            //Parquet stores nulls implicitly (they are simply absent from the data pages), so the reader packs
+            //the values at the front of the array. Move each value to its level index so the two line up 1:1.
+            //Walking backwards is safe because a value only ever moves to the same or a later slot.
+            var maxDefinitionLevel = field.DataField!.MaxDefinitionLevel;
+            var dataIndex = definitionLevels.Count(level => level >= maxDefinitionLevel) - 1;
+            for (var index = data.Length - 1; index >= 0; index--)
+            {
+                data[index] = definitionLevels[index] >= maxDefinitionLevel ? data[dataIndex--] : default;
+            }
+        }
+
+        _data = data;
+    }
+
+    public override Type ValueType => typeof(T);
+
+    protected override object GetDataValue(int index) => Convert(_data[index]);
+
+    protected virtual object Convert(T value) => value;
+}
+
+internal sealed class StringColumnData(ParquetSchemaElement field, ReadOnlyMemory<char>[] data, int[]? definitionLevels, int[]? repetitionLevels)
+    : ParquetColumnData<ReadOnlyMemory<char>>(field, data, definitionLevels, repetitionLevels)
+{
+    public override Type ValueType => typeof(string);
+
+    protected override object Convert(ReadOnlyMemory<char> value) => new string(value.Span);
+}
+
+internal sealed class BinaryColumnData(ParquetSchemaElement field, ReadOnlyMemory<byte>[] data, int[]? definitionLevels, int[]? repetitionLevels)
+    : ParquetColumnData<ReadOnlyMemory<byte>>(field, data, definitionLevels, repetitionLevels)
+{
+    public override Type ValueType => typeof(ByteArrayValue);
+
+    protected override object Convert(ReadOnlyMemory<byte> value) => new ByteArrayValue(value.ToArray());
+}
+
+/// <summary>
+/// TIME columns are read as a raw <see cref="int"/> (millis) or <see cref="long"/> (micros/nanos)
+/// count of time since midnight. Parquet.Net v6 removed the options that used to do this mapping,
+/// so we do it here to keep <see cref="TimeOnly"/> flowing through the rest of the app.
+/// </summary>
+internal sealed class TimeColumnData<T> : ParquetColumnData<T> where T : struct, INumber<T>
+{
+    private readonly TimeUnitPrecision _precision;
+
+    public TimeColumnData(ParquetSchemaElement field, T[] data, int[]? definitionLevels, int[]? repetitionLevels)
+        : base(field, data, definitionLevels, repetitionLevels)
+    {
+        if (field.DataField is not TimeDataField timeField)
+            throw new InvalidOperationException("Not a time type.");
+
+        _precision = timeField.Precision;
+    }
+
+    public override Type ValueType => typeof(TimeOnly);
+
+    protected override object Convert(T value) => _precision switch
+    {
+        TimeUnitPrecision.Millis => TimeOnly.FromTimeSpan(TimeSpan.FromMilliseconds(int.CreateChecked(value))),
+        TimeUnitPrecision.Micros => TimeOnly.FromTimeSpan(TimeSpan.FromMicroseconds(long.CreateChecked(value))),
+        TimeUnitPrecision.Nanos => TimeOnly.FromTimeSpan(TimeSpan.FromTicks(long.CreateChecked(value) / 100)),
+        _ => throw new InvalidDataException($"'{_precision}' is not a recognized time unit.")
+    };
 }

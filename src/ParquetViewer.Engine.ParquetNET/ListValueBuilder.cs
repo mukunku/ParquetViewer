@@ -3,90 +3,39 @@ using System.Collections;
 
 namespace ParquetViewer.Engine.ParquetNET;
 
-public class ListValueBuilder
+public class ListValueBuilder : RepeatedValueBuilder<ListValue>
 {
-    private readonly int[] _repetitionLevels;
-    private readonly int[] _definitionLevels;
-    private readonly IEnumerable<object> _data;
+    private readonly IReadOnlyList<object> _values;
     private readonly Type _type;
 
-    public ListValueBuilder(int[] repetitionLevels, int[] definitionLevels, IEnumerable<object> data, Type type)
+    public ListValueBuilder(FieldLevels levels, int[] repetitionLevels, int[] definitionLevels, IReadOnlyList<object> values, Type type)
+        : base(parentRepetitionBoundary: 0, levels, repetitionLevels, definitionLevels)
     {
-        ArgumentNullException.ThrowIfNull(definitionLevels);
-        ArgumentNullException.ThrowIfNull(repetitionLevels);
-        ArgumentNullException.ThrowIfNull(data);
+        ArgumentNullException.ThrowIfNull(values);
         ArgumentNullException.ThrowIfNull(type);
 
-        if (type == typeof(byte[]))
-            _type = typeof(ByteArrayValue);
-        else
-            _type = type;
+        if (values.Count != definitionLevels.Length)
+            throw new Exceptions.ParquetEngineException("List data and its levels must be the same length");
 
-        //We assume they all have the same length
-        _definitionLevels = definitionLevels;
-        _repetitionLevels = repetitionLevels;
-        _data = data;
-    }
-
-    private IEnumerable<Range> GetRowRanges()
-    {
-        int startIndex = 0;
-        int endIndex = 0;
-        for (int i = 1; i < _repetitionLevels.Length; i++)
-        {
-            if (_repetitionLevels[i] == 0)
-            {
-                endIndex = i;
-                yield return new(startIndex, endIndex);
-
-                startIndex = i;
-            }
-        }
-
-        yield return new(startIndex, _repetitionLevels.Length);
+        _values = values;
+        _type = type;
     }
 
     /// <summary>
-    /// Reads nested list values
+    /// Reads a (possibly nested) list value
     /// </summary>
-    /// <returns>Enumerable of ListValue's, possibly null.</returns>
-    /// <remarks>Callers will need to convert nulls to DBNull</remarks>
-    public IEnumerable<ListValue?> ReadRows(int skipRecords, int readRecords, FieldLevels levels,
-        CancellationToken cancellationToken)
+    protected override ListValue? Build(Range range)
     {
-        var ranges = GetRowRanges();
-
-        var rowRangesToRead = ranges.Skip(skipRecords).Take(readRecords);
-        foreach (var rowRange in rowRangesToRead)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var listValue = ReadListValue(rowRange, levels, () =>
-            {
-                //TODO: optimize to avoid skipping all rows every time
-                return _data
-                .Select(data => data is byte[] bytes ? new ByteArrayValue(bytes) : data) //Need to handle byte array type separately
-                .Skip(rowRange.Start.Value)
-                .Take(rowRange.End.Value - rowRange.Start.Value)
-                .ToArray();
-            });
-            yield return listValue;
-        }
-    }
-
-    private ListValue? ReadListValue(Range range, FieldLevels levels, Func<object[]> dataProvider)
-    {
-        var rangeRepetition = _repetitionLevels.AsSpan(range);
-        var rangeData = dataProvider.Invoke();
-
-        var definitionStartLevel = _definitionLevels.Length > range.Start.Value ? _definitionLevels[range.Start.Value] : 0;
+        var levels = Levels;
 
         LinkedArrayList root = new();
         var lastByDepth = new LinkedArrayList?[levels.MaxRepetitionLevel + 1]; //Use a 1-based (instead of 0-based) array for simplicity
 
-        void AddPoint(LinkedArrayList listNode, int listDepth, object data, int definitionLevel)
+        void AddPoint(LinkedArrayList listNode, int listDepth, int index)
         {
             lastByDepth[listDepth] = listNode;
 
+            var definitionLevel = DefinitionLevels[index];
             if (levels.IsNull(definitionLevel, listDepth))
             {
                 //This list is null
@@ -104,30 +53,28 @@ public class ListValueBuilder
             if (listDepth == levels.MaxRepetitionLevel)
             {
                 //We've reached the innermost list, so this is the element value itself
-                listNode.Add(data);
+                listNode.Add(_values[index]);
                 return;
             }
 
             //Descend a level to the next nested list
             var childNode = new LinkedArrayList(listDepth + 1, listNode);
             listNode.Add(childNode);
-            AddPoint(childNode, listDepth + 1, data, definitionLevel);
+            AddPoint(childNode, listDepth + 1, index);
         }
 
         //First data point is always added to the most nested list
-        AddPoint(root, 1, rangeData[0], definitionStartLevel);
+        AddPoint(root, 1, range.Start.Value);
 
-        for (var index = 1; index < rangeRepetition.Length; index++)
+        for (var index = range.Start.Value + 1; index < range.End.Value; index++)
         {
-            var repetitionLevel = rangeRepetition[index];
-            var data = rangeData[index];
-            var definitionLevel = _definitionLevels.Length > range.Start.Value + index ? _definitionLevels[range.Start.Value + index] : 0;
+            var repetitionLevel = RepetitionLevels[index];
 
             //repetitionLevel can never be larger than maxRepetitionLevel
             if (repetitionLevel == levels.MaxRepetitionLevel)
             {
                 //We're still in the same (deepest) list, append to it
-                lastByDepth[repetitionLevel]!.Add(data);
+                lastByDepth[repetitionLevel]!.Add(_values[index]);
                 continue;
             }
 
@@ -138,7 +85,7 @@ public class ListValueBuilder
 
             //Start the sibling list and recurse
             var newList = previousList.NextList();
-            AddPoint(newList, newDepth, data, definitionLevel);
+            AddPoint(newList, newDepth, index);
         }
 
         return ConstructListValues(root);
