@@ -98,6 +98,8 @@ public partial class ParquetEngine
         var builder = await CreateValueBuilderAsync(field, groupReader, cancellationToken);
 
         var rowIndex = rowBeginIndex;
+        var progressUntilReport = 0;
+        const int progressReportThreshold = 10;
         foreach (var value in builder.ReadRows(skipRecords, readRecords, cancellationToken))
         {
             if (isFirstColumn)
@@ -107,7 +109,19 @@ public partial class ParquetEngine
 
             dataTable.Rows[rowIndex]![fieldIndex] = value;
             rowIndex++;
-            progress?.Report(1);
+            progressUntilReport++;
+
+            //Report progress in bursts. Reporting every cell is measurably slower when loading tens of millions of cells
+            if (progressUntilReport >= progressReportThreshold)
+            {
+                progress?.Report(progressUntilReport);
+                progressUntilReport = 0;
+            }
+        }
+
+        if (progressUntilReport > 0)
+        {
+            progress?.Report(progressUntilReport);
         }
     }
 

@@ -130,7 +130,12 @@ internal class ParquetColumnData<T> : ParquetColumnData where T : struct
             //the values at the front of the array. Move each value to its level index so the two line up 1:1.
             //Walking backwards is safe because a value only ever moves to the same or a later slot.
             var maxDefinitionLevel = field.DataField!.MaxDefinitionLevel;
-            var dataIndex = definitionLevels.Count(level => level >= maxDefinitionLevel) - 1;
+            var dataIndex = -1;
+            foreach (var level in definitionLevels)
+            {
+                if (level >= maxDefinitionLevel)
+                    dataIndex++;
+            }
             for (var index = data.Length - 1; index >= 0; index--)
             {
                 data[index] = definitionLevels[index] >= maxDefinitionLevel ? data[dataIndex--] : default;
