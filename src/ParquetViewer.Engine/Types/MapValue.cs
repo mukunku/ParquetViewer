@@ -114,6 +114,8 @@ public class MapValue : IMapValue
         mapValuesStringBuilder.Append(']');
         return mapValuesStringBuilder.ToString();
 
+        //We don't handle keys or values that contain the reserved chars we format maps with: , [ ] ( )
+        //E.g. a key of "a,b" renders as (a,b,1). I can't decide what the best way to format Maps are so this is what I'm going with for now.
         static string FormatString((object Key, object Value) map)
         {
             string key;
