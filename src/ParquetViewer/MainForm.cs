@@ -397,7 +397,15 @@ public partial class MainForm : FormBase
                 showIndexingProgress = true;
             }
 
-            var finalResult = await Task.Run(() => intermediateResult.Invoke(showIndexingProgress), loadingIcon.CancellationToken);
+            var finalResult = await Task.Run(() =>
+            {
+                var dataTable = intermediateResult.Invoke(showIndexingProgress);
+
+                //Binding the grid creates the table's DefaultView, which indexes every row. Create it here so that
+                //work happens on this background thread instead of freezing the UI thread. The grid reuses it.
+                _ = dataTable.DefaultView;
+                return dataTable;
+            }, loadingIcon.CancellationToken);
             indexTime = stopwatch.Elapsed - loadTime;
 
             recordCountStatusBarLabel.Text = Resources.Strings.LoadedRecordCountRangeFormat.Format(CurrentOffset, CurrentOffset + finalResult.Rows.Count);
