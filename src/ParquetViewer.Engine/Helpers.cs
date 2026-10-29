@@ -1,5 +1,4 @@
 ﻿using ParquetViewer.Engine.Types;
-using System.Numerics;
 
 namespace ParquetViewer.Engine;
 
@@ -92,7 +91,7 @@ public static class Helpers
         }
         else if (value.GetType().IsNumber())
         {
-            jsonWriter.WriteNumberValue(Convert.ToDecimal(value));
+            jsonWriter.WriteNumberValue(value);
         }
         else if (value is IStructValue @struct)
         {
@@ -165,10 +164,14 @@ public static class Helpers
     }
 
     /// <summary>
-    /// Returns true if the type is a number type.
+    /// Returns true if the type is one of the built-in number types (<see cref="sbyte"/> through <see cref="decimal"/>).
     /// </summary>
+    /// <remarks>
+    /// Uses the type code rather than looking for <c>INumber&lt;T&gt;</c>, which would allocate on every call.
+    /// <see cref="Utf8JsonWriterWithRunningLength.WriteNumberValue(object)"/> handles exactly these types.
+    /// </remarks>
     public static bool IsNumber(this Type type) =>
-        Array.Exists(type.GetInterfaces(), i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INumber<>));
+        Type.GetTypeCode(type) is >= TypeCode.SByte and <= TypeCode.Decimal;
 
     public static IEnumerable<string> ListParquetFiles(string folderPath)
     {
