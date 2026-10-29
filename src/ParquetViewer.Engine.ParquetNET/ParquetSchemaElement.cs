@@ -148,33 +148,6 @@ public class ParquetSchemaElement : IParquetSchemaElement
         field._systemFieldType = SystemFieldTypeId.MapValueNode;
         return field;
     }
-    public bool BelongsToListField => _systemFieldType == SystemFieldTypeId.ListItemNode;
-
-    /// <summary>
-    /// True if this field lives inside a struct that is itself the element of a list (i.e. a
-    /// `list&lt;struct&lt;...&gt;&gt;`). This includes fields nested deeper inside the element struct so that
-    /// the entire subtree is read in a columnar (one <see cref="ListValue"/> per row) fashion.
-    /// </summary>
-    public bool BelongsToListOfStructsField
-    {
-        get
-        {
-            var current = Parent;
-            while (current is not null)
-            {
-                if (current._systemFieldType == SystemFieldTypeId.ListItemNode)
-                    return current.FieldType == FieldTypeId.Struct;
-
-                //Stop at the first list/map ancestor. Those are handled by their own readers.
-                if (current.FieldType == FieldTypeId.List || current.FieldType == FieldTypeId.Map)
-                    return false;
-
-                current = current.Parent;
-            }
-
-            return false;
-        }
-    }
 
     private FieldLevels? _levels;
 

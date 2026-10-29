@@ -10,11 +10,18 @@ public class ListValueBuilderTests
     //nodes (the optional LIST group and the repeated wrapper), and the _type is assumed required.
     //The values below are hand-built to exercise the null/empty classifier at each nesting depth.
 
+    /// <param name="listDefinitionLevels">For each list (outermost first), the definition level at which it is
+    /// present but empty. Its repeated node exists one level above that.</param>
     private static object Read(object[] data, int[] repetitionLevels, int[] definitionLevels, int[] listDefinitionLevels)
     {
-        var levels = new FieldLevels(listDefinitionLevels[^1] + 1, listDefinitionLevels);
-        var builder = new ListValueBuilder(levels, repetitionLevels, definitionLevels, data, typeof(int));
-        return builder.ReadRows(0, 1, default).Single() as object ?? DBNull.Value;
+        var leaf = new LeafCursor(data, repetitionLevels, definitionLevels, listDefinitionLevels[^1] + 1);
+        FieldValueBuilder builder = new PrimitiveValueBuilder(leaf, typeof(int));
+        for (var depth = listDefinitionLevels.Length; depth >= 1; depth--)
+        {
+            builder = new ListValueBuilder(listDefinitionLevels[depth - 1] + 1, depth, builder);
+        }
+
+        return builder.ReadRows(0, 1, default).Single();
     }
 
     [TestMethod]

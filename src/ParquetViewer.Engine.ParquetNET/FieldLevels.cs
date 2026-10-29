@@ -7,8 +7,10 @@ namespace ParquetViewer.Engine.ParquetNET;
 /// the repetition types of the nodes on the path from the root.
 /// </summary>
 /// <remarks>
-/// This is the one place in the engine that reasons about Dremel levels. Everything else can ask a
-/// <see cref="FieldLevels"/> what a given definition level means for a field.
+/// Derives the maximum definition and repetition levels of any node in our schema tree. Only leaves
+/// carry Parquet.Net's DataField (and its levels); group nodes such as lists, maps and structs don't,
+/// so their levels are worked out here. The value builders compare these against a leaf's per-value
+/// levels to decide whether an instance is null, empty or present.
 /// </remarks>
 public sealed class FieldLevels
 {
@@ -105,23 +107,6 @@ public sealed class FieldLevels
     /// </summary>
     /// <remarks>Used to be called "NumberOfListParents"</remarks>
     public int MaxRepetitionLevel => RepeatedAncestorDefinitionLevels.Count;
-
-    /// <summary>
-    /// True when the collection nested <paramref name="depth"/> levels deep (1-based, outermost first)
-    /// is null for the given definition level. The default depth (1) is the value's outermost collection.
-    /// </summary>
-    public bool IsNull(int definitionLevel, int depth = 1)
-        => depth <= RepeatedAncestorDefinitionLevels.Count
-            && definitionLevel < RepeatedAncestorDefinitionLevels[depth - 1];
-
-    /// <summary>
-    /// True when the collection nested <paramref name="depth"/> levels deep (1-based, outermost first)
-    /// is present but has no entries for the given definition level.
-    /// </summary>
-    public bool IsEmpty(int definitionLevel, int depth = 1)
-        => depth <= RepeatedAncestorDefinitionLevels.Count
-            && definitionLevel == RepeatedAncestorDefinitionLevels[depth - 1]
-            && definitionLevel < MaxDefinitionLevel;
 
     public override string ToString()
         => $"MaxDefinitionLevel={MaxDefinitionLevel}, MaxRepetitionLevel={MaxRepetitionLevel}, RepeatedAncestorDefinitionLevels=[{string.Join(',', RepeatedAncestorDefinitionLevels)}]";

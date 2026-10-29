@@ -249,10 +249,10 @@ public static class ExtensionMethods
     /// <returns>True if this is a struct with "bytes" and "path" fields</returns>
     public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out IByteArrayValue? data)
     {
-        if (structValue.Data.ColumnNames.Count == 2
-            && structValue.Data.ColumnNames.Contains("bytes")
-            && structValue.Data.ColumnNames.Contains("path")
-            && structValue.Data.GetValue("bytes") is IByteArrayValue byteArrayValue)
+        if (structValue.FieldNames.Count == 2
+            && structValue.FieldNames.Contains("bytes")
+            && structValue.FieldNames.Contains("path")
+            && structValue.GetValue("bytes") is IByteArrayValue byteArrayValue)
         {
             data = byteArrayValue;
             return true;

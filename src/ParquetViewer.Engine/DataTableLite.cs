@@ -1,6 +1,5 @@
 ﻿using ParquetViewer.Engine.Exceptions;
 using System.Data;
-using static ParquetViewer.Engine.DataTableLite;
 
 namespace ParquetViewer.Engine;
 
@@ -113,70 +112,4 @@ public class DataTableLite
             }
         }
     }
-
-    //Gets a reference to the row data at the specified index
-    public DataRowLite GetRowAt(int index)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _rows.Count, nameof(index));
-
-        return new DataRowLite(_rows[index], _columns.Values, this);
-    }
-
-    public DataTableLite Clone()
-    {
-        var clone = new DataTableLite();
-        foreach (var column in Columns.Values)
-        {
-            clone.AddColumn(column.Name, column.Type, column.ParentSchema);
-        }
-        return clone;
-    }
-}
-
-public class DataRowLite : IDataRowLite
-{
-    public IReadOnlyCollection<string> ColumnNames => Columns.Keys;
-    public Dictionary<string, ColumnLite> Columns { get; }
-    public object[] Row { get; }
-    public DataTableLite Table { get; }
-    public DataRowLite(object[] data, IEnumerable<ColumnLite> columns, DataTableLite table)
-    {
-        ArgumentNullException.ThrowIfNull(data);
-        ArgumentNullException.ThrowIfNull(columns);
-        ArgumentNullException.ThrowIfNull(table);
-
-        Table = table;
-        Row = data;
-        Columns = columns.ToDictionary(c => c.Name);
-        if (Row.Length != Columns.Count)
-        {
-            throw new ArgumentException($"Data length {data.Length} doesn't match number of columns {columns.Count()}", nameof(data));
-        }
-    }
-    public object GetValue(string columnName)
-    {
-        if (!Columns.ContainsKey(columnName))
-        {
-            throw new IndexOutOfRangeException($"Column `{columnName}` not found");
-        }
-
-        var index = 0;
-        foreach (var column in Columns.Keys)
-        {
-            if (column.Equals(columnName))
-            {
-                return Row[index];
-            }
-            index++;
-        }
-        throw new IndexOutOfRangeException($"Could not get value for column `{columnName}`");
-    }
-}
-
-public interface IDataRowLite
-{
-    IReadOnlyCollection<string> ColumnNames { get; }
-    object[] Row { get; }
-    object GetValue(string columnName);
 }

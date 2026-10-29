@@ -4,13 +4,32 @@ namespace ParquetViewer.Engine.Types;
 
 public class StructValue : IStructValue
 {
-    public IDataRowLite Data { get; }
+    private readonly string[] _fieldNames;
+    private readonly object[] _values;
 
-    public IReadOnlyCollection<string> FieldNames => Data.ColumnNames;
+    public IReadOnlyList<string> FieldNames => _fieldNames;
 
-    public StructValue(IDataRowLite data)
+    public IReadOnlyList<object> Values => _values;
+
+    /// <param name="fieldNames">Never modified, so it can be shared by every instance of the same struct field.</param>
+    public StructValue(string[] fieldNames, object[] values)
     {
-        Data = data ?? throw new ArgumentNullException(nameof(data));
+        ArgumentNullException.ThrowIfNull(fieldNames);
+        ArgumentNullException.ThrowIfNull(values);
+
+        if (fieldNames.Length != values.Length)
+            throw new ArgumentException($"Value count {values.Length} doesn't match field count {fieldNames.Length}", nameof(values));
+
+        _fieldNames = fieldNames;
+        _values = values;
+    }
+
+    public object GetValue(string fieldName)
+    {
+        var index = Array.IndexOf(_fieldNames, fieldName);
+        return index >= 0
+            ? _values[index]
+            : throw new IndexOutOfRangeException($"Field `{fieldName}` not found");
     }
 
     /// <summary>
@@ -18,10 +37,10 @@ public class StructValue : IStructValue
     /// </summary>
     public int CompareTo(IStructValue? other)
     {
-        if (other?.Data is null || other.FieldNames.Count == 0)
+        if (other is null || other.FieldNames.Count == 0)
             return 1;
 
-        if (Data is null || FieldNames.Count == 0)
+        if (FieldNames.Count == 0)
             return -1;
 
         var otherColumnNames = string.Join("|", other.FieldNames);
@@ -34,8 +53,8 @@ public class StructValue : IStructValue
         int fieldCount = FieldNames.Count;
         for (var i = 0; i < fieldCount; i++)
         {
-            var otherValue = other.Data.Row[i];
-            var value = Data.Row[i];
+            var otherValue = other.Values[i];
+            var value = _values[i];
             int comparison = Helpers.CompareTo(value, otherValue);
             if (comparison != 0)
                 return comparison;
@@ -55,7 +74,7 @@ public class StructValue : IStructValue
     public DataTable ToDataTable()
     {
         var dt = new DataTable();
-        foreach (var pair in Helpers.PairEnumerables(Data.ColumnNames, Data.Row))
+        foreach (var pair in Helpers.PairEnumerables(_fieldNames, _values))
         {
             var columnName = pair.Item1;
             var value = pair.Item2;
@@ -63,7 +82,7 @@ public class StructValue : IStructValue
             dt.Columns.Add(new DataColumn(columnName, valueType));
         }
         var row = dt.NewRow();
-        row.ItemArray = Data.Row;
+        row.ItemArray = _values;
         dt.Rows.Add(row);
         return dt;
     }
@@ -81,12 +100,11 @@ public class StructValue : IStructValue
             using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
             {
                 jsonWriter.WriteStartObject();
-                for (var i = 0; i < Data.ColumnNames.Count; i++)
+                for (var i = 0; i < _fieldNames.Length; i++)
                 {
-                    string columnName = Data.ColumnNames.ElementAt(i);
-                    jsonWriter.WritePropertyName(columnName);
+                    jsonWriter.WritePropertyName(_fieldNames[i]);
 
-                    object value = Data.Row[i];
+                    object value = _values[i];
                     Helpers.WriteValue(jsonWriter, value, desiredLength is not null);
 
                     if (desiredLength > 0 && jsonWriter.ApproximateStringLengthSoFar > desiredLength)

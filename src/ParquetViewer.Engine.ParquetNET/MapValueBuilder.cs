@@ -1,117 +1,46 @@
-using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Collections;
 
 namespace ParquetViewer.Engine.ParquetNET;
 
 /// <summary>
-/// Builds <see cref="MapValue"/>s from the leaf columns of a Parquet MAP, the map-shaped sibling of
-/// <see cref="ListValueBuilder"/>.
+/// Builds <see cref="MapValue"/>s, the map-shaped sibling of <see cref="ListValueBuilder"/>. A map is a
+/// repeated <c>key_value</c> group whose every occurrence is one entry, read by the key and value builders.
 /// </summary>
-/// <remarks>
-/// <para>
-/// A map is a repeated <c>key_value</c> group, so its keys and values are two parallel streams. For
-/// primitive values the key leaf drives the entries and the value leaf is index-aligned with it. When
-/// the value is itself a map its leaf columns sit one repetition level deeper than the key leaf, so it
-/// is built by a nested <see cref="MapValueBuilder"/> where each outer entry becomes a "parent element"
-/// of the nested builder.
-/// </para>
-/// <para>
-/// Null/empty classification is derived from the key leaf's <see cref="FieldLevels"/>, at the depth of
-/// the map's own repeated <c>key_value</c> group.
-/// </para>
-/// </remarks>
-public class MapValueBuilder : RepeatedValueBuilder<MapValue>
+/// <param name="keyValueDefinitionLevel">The definition level at which the <c>key_value</c> group exists, i.e.
+/// the map has at least one entry. One level below that the map is empty, and anything lower means it's null.</param>
+/// <param name="keyValueRepetitionLevel">The repetition level of the <c>key_value</c> group.</param>
+internal sealed class MapValueBuilder(int keyValueDefinitionLevel, int keyValueRepetitionLevel,
+    FieldValueBuilder key, FieldValueBuilder value) : FieldValueBuilder
 {
-    private readonly IReadOnlyList<object> _keys;
-    private readonly Type _keyType;
-    private readonly Type _valueType;
+    private readonly LeafCursor[] _leaves = [.. key.Leaves, .. value.Leaves];
 
-    //The primitive value side. Mutually exclusive with _valueBuilder.
-    private readonly IReadOnlyList<object>? _values;
+    public override Type ValueType => typeof(MapValue);
 
-    //The nested map value side. Each of this builder's key records corresponds to one element of the nested
-    //builder, in order, so we walk the nested builder's ranges in lockstep with our own key records.
-    private readonly MapValueBuilder? _valueBuilder;
-    private IEnumerator<Range>? _valueRanges;
+    public override LeafCursor FirstLeaf => key.FirstLeaf;
 
-    public MapValueBuilder(
-        int parentRepetitionBoundary,
-        FieldLevels keyLevels,
-        int[] repetitionLevels,
-        int[] definitionLevels,
-        IReadOnlyList<object> keys,
-        Type keyType,
-        Type valueType,
-        IReadOnlyList<object>? values = null,
-        MapValueBuilder? valueBuilder = null)
-        : base(parentRepetitionBoundary, keyLevels, repetitionLevels, definitionLevels)
+    public override IReadOnlyList<LeafCursor> Leaves => _leaves;
+
+    public override object Read()
     {
-        ArgumentNullException.ThrowIfNull(keys);
-        ArgumentNullException.ThrowIfNull(keyType);
-        ArgumentNullException.ThrowIfNull(valueType);
-
-        if (values is null == valueBuilder is null)
-            throw new ArgumentException("Exactly one of the primitive value or the nested value builder must be provided");
-
-        if (keys.Count != definitionLevels.Length || (values is not null && values.Count != keys.Count))
-            throw new ParquetEngineException("Map key data, value data and levels must all be the same length");
-
-        _keys = keys;
-        _keyType = keyType;
-        _valueType = valueType;
-        _values = values;
-        _valueBuilder = valueBuilder;
-    }
-
-    protected override MapValue? Build(Range range)
-    {
-        //The key leaf's innermost repeated ancestor is this map's key_value group
-        var mapDepth = Levels.MaxRepetitionLevel;
-        var definitionLevel = DefinitionLevels[range.Start.Value];
-
-        if (Levels.IsNull(definitionLevel, mapDepth))
+        var definitionLevel = FirstLeaf.DefinitionLevel;
+        if (definitionLevel < keyValueDefinitionLevel)
         {
-            Skip(range);
-            return null;
+            SkipEmptyInstance();
+            return definitionLevel < keyValueDefinitionLevel - 1
+                ? DBNull.Value
+                : new MapValue([], key.ValueType, [], value.ValueType);
         }
 
-        if (Levels.IsEmpty(definitionLevel, mapDepth))
+        var keys = new ArrayList();
+        var values = new ArrayList();
+        do
         {
-            Skip(range);
-            return new MapValue([], _keyType, [], _valueType);
+            keys.Add(key.Read());
+            values.Add(value.Read());
         }
+        while (!FirstLeaf.IsAtEnd && FirstLeaf.RepetitionLevel == keyValueRepetitionLevel);
 
-        var keys = new ArrayList(range.End.Value - range.Start.Value);
-        var values = new ArrayList(range.End.Value - range.Start.Value);
-        for (var index = range.Start.Value; index < range.End.Value; index++)
-        {
-            keys.Add(_keys[index]);
-            values.Add(_values is not null
-                ? _values[index]
-                : _valueBuilder!.Build(NextValueRange()) as object ?? DBNull.Value);
-        }
-
-        return new MapValue(keys, _keyType, values, _valueType);
-    }
-
-    protected override void Skip(Range range)
-    {
-        if (_valueBuilder is null)
-            return;
-
-        for (var index = range.Start.Value; index < range.End.Value; index++)
-        {
-            _valueBuilder.Skip(NextValueRange());
-        }
-    }
-
-    private Range NextValueRange()
-    {
-        _valueRanges ??= _valueBuilder!.GetRanges().GetEnumerator();
-        if (!_valueRanges.MoveNext())
-            throw new ParquetEngineException("Nested map values ended before their parent map's entries. Your file might be malformed.");
-
-        return _valueRanges.Current;
+        return new MapValue(keys, key.ValueType, values, value.ValueType);
     }
 }

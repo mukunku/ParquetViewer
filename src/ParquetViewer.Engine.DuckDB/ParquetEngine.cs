@@ -328,37 +328,18 @@ public sealed class ParquetEngine : IParquetEngine
             else if (parquetSchemaElement.FieldType == FieldTypeId.Struct)
             {
                 var @struct = (Dictionary<string, object?>)value;
-                var dataTable = new DataTableLite(1);
-                foreach (var fieldName in @struct.Keys)
-                {
-                    var field = parquetSchemaElement.GetSingleOrByName(fieldName);
-                    if (field.FieldType == FieldTypeId.List)
-                    {
-                        dataTable.AddColumn(fieldName, typeof(ListValue), field);
-                    }
-                    else if (field.FieldType == FieldTypeId.Struct)
-                    {
-                        dataTable.AddColumn(fieldName, typeof(StructValue), field);
-                    }
-                    else if (field.FieldType == FieldTypeId.Map)
-                    {
-                        dataTable.AddColumn(fieldName, typeof(MapValue), field);
-                    }
-                    else //Primitive
-                    {
-                        dataTable.AddColumn(fieldName, field.ClrType, field);
-                    }
-                }
-                dataTable.NewRow();
+                var fieldNames = new string[@struct.Count];
+                var values = new object[@struct.Count];
                 var fieldIndex = 0;
                 foreach (var keyValuePair in @struct)
                 {
                     var field = parquetSchemaElement.GetSingleOrByName(keyValuePair.Key);
-                    dataTable.Rows[0][fieldIndex] = ConvertValueTypeIfNeeded(keyValuePair.Value ?? DBNull.Value, field);
+                    fieldNames[fieldIndex] = keyValuePair.Key;
+                    values[fieldIndex] = ConvertValueTypeIfNeeded(keyValuePair.Value ?? DBNull.Value, field);
                     fieldIndex++;
                 }
 
-                return new StructValue(dataTable.GetRowAt(0));
+                return new StructValue(fieldNames, values);
             }
             else if (parquetSchemaElement.FieldType == FieldTypeId.Map)
             {

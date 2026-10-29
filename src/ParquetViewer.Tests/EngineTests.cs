@@ -588,7 +588,6 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
-    [SkipWhen(typeof(ParquetNETEngineTests), "We cant differentiate between null and empty for nested list of structs")]
     public async Task LIST_OF_STRUCT_OF_LIST_OF_STRUCT_NULL_ELEMENTS()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT_NULL_ELEMENTS.parquet");
@@ -634,7 +633,7 @@ public abstract class EngineTests
         Assert.AreEqual("hello", dataTable.Rows[0][3]);
         Assert.AreEqual("[10,20]", dataTable.Rows[0][4].ToString());
         if (_treatsTwoTierListAsStruct)
-            Assert.AreEqual("{\"nested\":\"nested!\"}", dataTable.Rows[0][5].ToString());
+            Assert.AreEqual("[{\"nested\":\"nested!\"}]", dataTable.Rows[0][5].ToString());
         else
             Assert.AreEqual(@"[""nested!""]", dataTable.Rows[0][5].ToString());
 
@@ -861,5 +860,75 @@ public abstract class EngineTests
         Assert.AreEqual(new TimeOnly(12340000), dataTable.Rows[4][1]);
         Assert.AreEqual(new TimeOnly(12345670), dataTable.Rows[4][2]);
         Assert.AreEqual(new TimeOnly(12345678), dataTable.Rows[4][3]);
+    }
+
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB.NET can't read null map values inside a list")]
+    public async Task NESTED_COMBINATIONS_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/NESTED_COMBINATIONS_TEST.parquet");
+        Assert.AreEqual(5, parquetEngine.RecordCount);
+        Assert.HasCount(5, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+
+        //list_of_maps
+        Assert.AreEqual(@"[[{""key"":""a"",""value"":1},{""key"":""b"",""value"":2}],[]]", dataTable.Rows[0][1].ToString());
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[1][1]);
+        Assert.AreEqual(@"[null,[{""key"":""c"",""value"":3}]]", dataTable.Rows[2][1].ToString());
+        Assert.AreEqual("[]", dataTable.Rows[3][1].ToString());
+        Assert.AreEqual(@"[[{""key"":""d"",""value"":null}]]", dataTable.Rows[4][1].ToString());
+
+        //map_of_structs
+        Assert.AreEqual(@"[(k,{""x"":1,""y"":""one""})]", dataTable.Rows[0][2].ToString());
+        Assert.AreEqual("[(k,)]", dataTable.Rows[1][2].ToString());
+        Assert.AreEqual("[]", dataTable.Rows[2][2].ToString());
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[3][2]);
+        Assert.AreEqual(@"[(k,{""x"":null,""y"":null})]", dataTable.Rows[4][2].ToString());
+
+        //map_of_lists
+        Assert.AreEqual("[(p,[1,2]),(q,[])]", dataTable.Rows[0][3].ToString());
+        Assert.AreEqual("[(p,)]", dataTable.Rows[1][3].ToString());
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[2][3]);
+        Assert.AreEqual("[]", dataTable.Rows[3][3].ToString());
+        Assert.AreEqual("[(r,[null,3])]", dataTable.Rows[4][3].ToString());
+
+        //struct_of_map
+        Assert.AreEqual(@"{""m"":[{""key"":""z"",""value"":9}],""n"":1}", dataTable.Rows[0][4].ToString());
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[1][4]);
+        Assert.AreEqual(@"{""m"":null,""n"":2}", dataTable.Rows[2][4].ToString());
+        Assert.AreEqual(@"{""m"":[],""n"":null}", dataTable.Rows[3][4].ToString());
+        Assert.AreEqual(@"{""m"":[{""key"":""w"",""value"":null}],""n"":4}", dataTable.Rows[4][4].ToString());
+    }
+
+    [SkippableTestMethod]
+    public async Task NESTED_FIELDS_READ_CONSISTENTLY_WITH_AN_OFFSET()
+    {
+        string[] files =
+        [
+            "Data/STRUCT_TYPE_TEST.parquet",
+            "Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT_NULL_ELEMENTS.parquet",
+            "Data/LIST_OF_STRUCT_OF_LIST_OF_STRUCT_WITH_NULLS.parquet",
+            "Data/NESTED_MAPS_TEST.parquet",
+            .. _useDuckDBEngine ? Array.Empty<string>() : ["Data/NESTED_COMBINATIONS_TEST.parquet"]
+        ];
+
+        foreach (var file in files)
+        {
+            await using var parquetEngine = await OpenFileOrFolderAsync(file);
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+
+            //Reading each row on its own means skipping every row before it
+            for (var offset = 0; offset < parquetEngine.RecordCount; offset++)
+            {
+                var slice = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, offset, 1))(false);
+                Assert.HasCount(1, slice.Rows);
+                for (var column = 0; column < dataTable.Columns.Count; column++)
+                {
+                    Assert.AreEqual(dataTable.Rows[offset][column].ToString(), slice.Rows[0][column].ToString(),
+                        $"`{file}` row {offset} column {column} differs when read with an offset");
+                }
+            }
+        }
     }
 }
