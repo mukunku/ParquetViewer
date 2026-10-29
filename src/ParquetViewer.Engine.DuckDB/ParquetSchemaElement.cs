@@ -11,6 +11,9 @@ public class ParquetSchemaElement : IParquetSchemaElement<ParquetSchemaElement>
 
     public ICollection<ParquetSchemaElement> Children { get; }
 
+    private string[]? _childNames; //Shared by every struct value of this field so each one doesn't carry its own copy
+    public string[] ChildNames => _childNames ??= Children.Select(child => child.Path).ToArray();
+
     public bool IsPrimitive => _clrType is not null;
 
     public Type ClrType => _clrType ?? FieldType switch

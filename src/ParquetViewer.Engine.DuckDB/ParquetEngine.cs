@@ -328,15 +328,12 @@ public sealed class ParquetEngine : IParquetEngine
             else if (parquetSchemaElement.FieldType == FieldTypeId.Struct)
             {
                 var @struct = (Dictionary<string, object?>)value;
-                var fieldNames = new string[@struct.Count];
-                var values = new object[@struct.Count];
+                var fieldNames = parquetSchemaElement.ChildNames;
+                var values = new object[fieldNames.Length];
                 var fieldIndex = 0;
-                foreach (var keyValuePair in @struct)
+                foreach (var field in parquetSchemaElement.Children)
                 {
-                    var field = parquetSchemaElement.GetSingleOrByName(keyValuePair.Key);
-                    fieldNames[fieldIndex] = keyValuePair.Key;
-                    values[fieldIndex] = ConvertValueTypeIfNeeded(keyValuePair.Value ?? DBNull.Value, field);
-                    fieldIndex++;
+                    values[fieldIndex++] = ConvertValueTypeIfNeeded(@struct.GetValueOrDefault(field.Path) ?? DBNull.Value, field);
                 }
 
                 return new StructValue(fieldNames, values);
