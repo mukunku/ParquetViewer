@@ -608,4 +608,11 @@ public partial class MainForm : FormBase
         _openFileOrFolderPath = null;
         await ResetFormAsync();
     }
+
+    /// <summary>
+    /// Gets the open file or folder's path and field names so analytics can mask them out of exception messages.
+    /// </summary>
+    /// <remarks>Rebuilt on every call since it's only needed when an exception gets recorded.</remarks>
+    public SensitiveFileDetails GetSensitiveFileDetails()
+        => new(_openParquetEngine?.Path ?? _openFileOrFolderPath, _openParquetEngine?.Fields ?? []);
 }

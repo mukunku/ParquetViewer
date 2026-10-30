@@ -149,11 +149,23 @@ public class ExceptionEvent : AmplitudeEvent
             //Mask sensitive text that is wrapped with ` `
             message = Regex.Replace(message, "`[^`]+`", MASK_SENTINEL);
 
+            //Mask user values (file paths, field names) that third-party libraries put in their messages
+            if (MainForm is not null && !MainForm.IsDisposed)
+            {
+                message = MainForm.GetSensitiveFileDetails().Mask(message);
+            }
+
             //Mask file paths that .NET IO exceptions wrap with ' ' (e.g. 'C:\foo' or '\\server\share')
             message = Regex.Replace(message, @"'(?:[A-Za-z]:\\|\\\\)[^']*'", MASK_SENTINEL);
+
             return message;
         }
     }
+
+    /// <summary>
+    /// Assigned once at startup. Used to get the open file's details so they can be masked (best effort).
+    /// </summary>
+    public static MainForm? MainForm { get; set; }
 
     public string? StackTrace => Exception.StackTrace?.ToString();
     public string? InnerException => Exception.InnerException?.ToString();

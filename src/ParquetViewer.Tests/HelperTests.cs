@@ -115,6 +115,18 @@ public class HelperTests
     }
 
     [TestMethod]
+    public void AMPLITUDE_EXCEPTION_SENSITIVE_FILE_DETAILS_MASKING_TEST()
+    {
+        //"SOURCE" is a substring of "INVESTOR_SOURCE_ID" so it must not leave part of the longer field name unmasked
+        var sensitiveFileDetails = new SensitiveFileDetails(@"C:\data\investors.parquet", ["SOURCE", "INVESTOR_SOURCE_ID"]);
+
+        var maskedMessage = sensitiveFileDetails.Mask(
+            @"column 'INVESTOR_SOURCE_ID' is missing data page header, file is corrupt: C:\data\investors.parquet");
+
+        Assert.AreEqual($"column '{ExceptionEvent.MASK_SENTINEL}' is missing data page header, file is corrupt: {ExceptionEvent.MASK_SENTINEL}", maskedMessage);
+    }
+
+    [TestMethod]
     public async Task AMPLITUDE_EXCEPTION_ADDITIONAL_DATA_IS_SERIALIZED_TEST()
     {
         var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
