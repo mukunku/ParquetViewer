@@ -70,97 +70,157 @@ public static class Helpers
         }
     }
 
-    public static void WriteValue(Utf8JsonWriterWithRunningLength jsonWriter, object value, bool truncateForDisplay)
+    /// <summary>
+    /// Writes <paramref name="value"/> as JSON, including any lists, maps and structs nested inside it.
+    /// </summary>
+    /// <param name="maxLength">For display: once the writer's running length passes this, stop before the next element
+    /// or field at whatever depth we're at. Binary values are also shortened. Leave null to write everything (e.g. exports).</param>
+    /// <returns>False if writing stopped early because of <paramref name="maxLength"/>. The JSON is then left incomplete.</returns>
+    public static bool WriteValue(Utf8JsonWriterWithRunningLength jsonWriter, object value, int? maxLength = null)
     {
-        if (value is null)
+        switch (value)
         {
-            //Value should never be null as we should be replacing all those with DBNull.Value
-            throw new ArgumentNullException(nameof(value));
-        }
-        else if (value == DBNull.Value)
-        {
-            jsonWriter.WriteNullValue();
-        }
-        else if (value is string str)
-        {
-            jsonWriter.WriteStringValue(str);
-        }
-        else if (value is bool @bool)
-        {
-            jsonWriter.WriteBooleanValue(@bool);
-        }
-        else if (value.GetType().IsNumber())
-        {
-            jsonWriter.WriteNumberValue(value);
-        }
-        else if (value is IStructValue @struct)
-        {
-            var json = @struct.ToJSON(out var success);
-            if (success)
-                jsonWriter.WriteRawValue(json);
-            else
-                jsonWriter.WriteStringValue(json);
-        }
-        else if (value is IMapValue map)
-        {
-            jsonWriter.WriteStartArray();
-            foreach ((object mapKey, object mapValue) in map)
-            {
+            case null:
+                //Value should never be null as we should be replacing all those with DBNull.Value
+                throw new ArgumentNullException(nameof(value));
+            case DBNull:
+                jsonWriter.WriteNullValue();
+                return true;
+            case string str:
+                return WriteStringValue(jsonWriter, str, maxLength);
+            case bool @bool:
+                jsonWriter.WriteBooleanValue(@bool);
+                return true;
+            case not null when value.GetType().IsNumber():
+                jsonWriter.WriteNumberValue(value);
+                return true;
+            case IStructValue @struct:
                 jsonWriter.WriteStartObject();
-                jsonWriter.WritePropertyName("key");
-                WriteValue(jsonWriter, mapKey, truncateForDisplay);
-                jsonWriter.WritePropertyName("value");
-                WriteValue(jsonWriter, mapValue, truncateForDisplay);
+                for (var i = 0; i < @struct.FieldNames.Count; i++)
+                {
+                    if (i > 0 && IsPastMaxLength(jsonWriter, maxLength))
+                        return false;
+
+                    jsonWriter.WritePropertyName(@struct.FieldNames[i]);
+                    if (!WriteValue(jsonWriter, @struct.Values[i], maxLength))
+                        return false;
+                }
                 jsonWriter.WriteEndObject();
-            }
-            jsonWriter.WriteEndArray();
+                return true;
+            case IMapValue map:
+                jsonWriter.WriteStartArray();
+                var isFirst = true;
+                foreach ((object mapKey, object mapValue) in map)
+                {
+                    //Only stop between elements
+                    if (!isFirst && IsPastMaxLength(jsonWriter, maxLength))
+                        return false;
+                    isFirst = false;
+
+                    jsonWriter.WriteStartObject();
+                    jsonWriter.WritePropertyName("key");
+                    if (!WriteValue(jsonWriter, mapKey, maxLength))
+                        return false;
+                    jsonWriter.WritePropertyName("value");
+                    if (!WriteValue(jsonWriter, mapValue, maxLength))
+                        return false;
+                    jsonWriter.WriteEndObject();
+                }
+                jsonWriter.WriteEndArray();
+                return true;
+            case IListValue list:
+                jsonWriter.WriteStartArray();
+                isFirst = true;
+                foreach (var listItem in list)
+                {
+                    //Only stop between elements
+                    if (!isFirst && IsPastMaxLength(jsonWriter, maxLength))
+                        return false;
+                    isFirst = false;
+
+                    if (!WriteValue(jsonWriter, listItem, maxLength))
+                        return false;
+                }
+                jsonWriter.WriteEndArray();
+                return true;
+            case IByteArrayValue byteArray:
+                if (maxLength is not null)
+                {
+                    const int byteArrayMaxStringLength = 24; //arbitrary number that I think looks good
+                    jsonWriter.WriteStringValue(byteArray.ToStringTruncated(byteArrayMaxStringLength));
+                }
+                else
+                {
+                    jsonWriter.WriteStringValue(byteArray.ToString()!); //All the bytes in hex, so exports don't lose data
+                }
+                return true;
+            case DateTime dt:
+                //Write dates as string
+                if (ParquetEngineSettings.DateDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(dt.ToString(ParquetEngineSettings.DateDisplayFormat));
+                else
+                    jsonWriter.WriteStringValue(dt.ToString());
+                return true;
+            case DateOnly dateOnly:
+                //Write dates as string
+                if (ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat));
+                else
+                    jsonWriter.WriteStringValue(dateOnly.ToString());
+                return true;
+            case TimeOnly timeOnly:
+                //Write time as string
+                if (ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
+                    jsonWriter.WriteStringValue(timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat));
+                else
+                    jsonWriter.WriteStringValue(timeOnly.ToString());
+                return true;
+            default:
+                //Everything else just try to write it as string
+                return WriteStringValue(jsonWriter, value.ToString()!, maxLength);
         }
-        else if (value is IListValue list)
+    }
+
+    private static bool IsPastMaxLength(Utf8JsonWriterWithRunningLength jsonWriter, int? maxLength)
+        => maxLength > 0 && jsonWriter.ApproximateStringLengthSoFar > maxLength;
+
+    /// <summary>
+    /// Writes <paramref name="text"/>, or only as much of it as fits in what's left of <paramref name="maxLength"/>
+    /// so a single long string can't blow past the limit.
+    /// </summary>
+    /// <returns>False if the text was cut short</returns>
+    private static bool WriteStringValue(Utf8JsonWriterWithRunningLength jsonWriter, string text, int? maxLength)
+    {
+        if (maxLength > 0)
         {
-            jsonWriter.WriteStartArray();
-            foreach (var item in list)
+            var remainingLength = Math.Max(1, maxLength.Value - jsonWriter.ApproximateStringLengthSoFar); //Always show something
+            if (text.Length > remainingLength)
             {
-                WriteValue(jsonWriter, item, truncateForDisplay);
+                jsonWriter.WriteStringValue(TruncateString(text, remainingLength));
+                return false;
             }
-            jsonWriter.WriteEndArray();
         }
-        else if (value is IByteArrayValue byteArray /*&& truncateForDisplay //should we use the entire byte array if 
-                                                    * we're not truncating for display? Seems kind of unreasonable 
-                                                    * for users to rely on binary data within a Struct value preview.*/)
-        {
-            const int byteArrayMaxStringLength = 24; //arbitrary number that I think looks good
-            var byteArrayAsString = byteArray.ToStringTruncated(byteArrayMaxStringLength);
-            jsonWriter.WriteStringValue(byteArrayAsString);
-        }
-        else if (value is DateTime dt)
-        {
-            //Write dates as string
-            if (ParquetEngineSettings.DateDisplayFormat is not null)
-                jsonWriter.WriteStringValue(dt.ToString(ParquetEngineSettings.DateDisplayFormat));
-            else
-                jsonWriter.WriteStringValue(dt.ToString());
-        }
-        else if (value is DateOnly dateOnly)
-        {
-            //Write dates as string
-            if (ParquetEngineSettings.DateOnlyDisplayFormat is not null)
-                jsonWriter.WriteStringValue(dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat));
-            else
-                jsonWriter.WriteStringValue(dateOnly.ToString());
-        }
-        else if (value is TimeOnly timeOnly)
-        {
-            //Write time as string
-            if (ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
-                jsonWriter.WriteStringValue(timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat));
-            else
-                jsonWriter.WriteStringValue(timeOnly.ToString());
-        }
-        else
-        {
-            //Everything else just try to write it as string
-            jsonWriter.WriteStringValue(value.ToString()!);
-        }
+
+        jsonWriter.WriteStringValue(text);
+        return true;
+    }
+
+    /// <summary>
+    /// Returns the first <paramref name="length"/> chars of <paramref name="text"/>, without splitting a surrogate pair
+    /// (e.g. an emoji) in half. Half a surrogate pair isn't valid text and makes the JSON writer throw.
+    /// </summary>
+    public static string TruncateString(string text, int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
+
+        if (text.Length <= length)
+            return text;
+
+        //Make sure we don't split on multichars like emojis as it breaks json writer.
+        if (char.IsHighSurrogate(text[length - 1]))
+            length++;
+
+        return text[..length];
     }
 
     /// <summary>

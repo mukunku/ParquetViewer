@@ -419,7 +419,7 @@ public partial class MainForm
                         jsonWriter.WritePropertyName(columnName);
 
                         object? value = row.Row.ItemArray[i];
-                        Engine.Helpers.WriteValue(jsonWriter, value!, false);
+                        _ = Engine.Helpers.WriteValue(jsonWriter, value!);
                         progress.Report(1);
                     }
                     jsonWriter.WriteEndObject();

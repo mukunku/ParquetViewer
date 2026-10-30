@@ -2,7 +2,7 @@
 
 namespace ParquetViewer.Engine.Types;
 
-public interface IStructValue : IComparable<IStructValue>, IComparable
+public interface IStructValue : IComparable<IStructValue>, IComparable, ITruncatable
 {
     /// <summary>
     /// The struct's field names, in order.
@@ -18,8 +18,6 @@ public interface IStructValue : IComparable<IStructValue>, IComparable
     /// The value of the field named <paramref name="fieldName"/>.
     /// </summary>
     object GetValue(string fieldName);
-
-    string ToStringTruncated(int desiredLength);
 
     DataTable ToDataTable();
 

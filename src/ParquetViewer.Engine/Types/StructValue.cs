@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text;
 
 namespace ParquetViewer.Engine.Types;
 
@@ -95,37 +96,16 @@ public class StructValue : IStructValue
     {
         try
         {
-            bool isTruncated = false;
+            bool isTruncated;
             using var ms = new MemoryStream();
             using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
             {
-                jsonWriter.WriteStartObject();
-                for (var i = 0; i < _fieldNames.Length; i++)
-                {
-                    jsonWriter.WritePropertyName(_fieldNames[i]);
-
-                    object value = _values[i];
-                    Helpers.WriteValue(jsonWriter, value, desiredLength is not null);
-
-                    if (desiredLength > 0 && jsonWriter.ApproximateStringLengthSoFar > desiredLength)
-                    {
-                        isTruncated = true;
-                        break;
-                    }
-                }
-                if (!isTruncated)
-                    jsonWriter.WriteEndObject();
+                isTruncated = !Helpers.WriteValue(jsonWriter, this, desiredLength);
             }
 
-            ms.Position = 0;
-            using var reader = new StreamReader(ms);
-            var json = reader.ReadToEnd();
-            if (isTruncated)
-            {
-                json += "[...]";
-            }
+            var json = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
             success = true;
-            return json;
+            return isTruncated ? json + "[...]" : json;
         }
         catch (Exception ex)
         {

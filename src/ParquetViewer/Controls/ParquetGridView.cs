@@ -577,14 +577,9 @@ public class ParquetGridView : DataGridView
                 e.FormattingApplied = true;
             }
         }
-        else if (cellValueType.ImplementsInterface<IStructValue>() && e.Value is IStructValue structValue)
+        else if (e.Value is ITruncatable truncatable) //Lists, maps and structs (binary values were formatted above)
         {
-            e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
-            e.FormattingApplied = true;
-        }
-        else if (cellValueType.ImplementsInterface<IListValue>() && e.Value is IListValue listValue)
-        {
-            e.Value = listValue.ToString()!.Left(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL - 3, "...");
+            e.Value = truncatable.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
             e.FormattingApplied = true;
         }
     }
@@ -763,11 +758,6 @@ public class ParquetGridView : DataGridView
                     .Select(row => row.Field<TimeOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat()))
                     .Take(25);
             }
-            else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
-            {
-                colStringCollection = nonNullColumnValues
-                    .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
-            }
             else if (gridTable.Columns[i].DataType == typeof(float)
                 && _floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
                 && displayFormat == FloatDisplayFormat.Decimal)
@@ -809,6 +799,11 @@ public class ParquetGridView : DataGridView
                 colStringCollection = nonNullColumnValues
                     .Select(row => FormatByteArrayString(row.Field<IByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
             }
+            else if (gridTable.Columns[i].DataType.ImplementsInterface<ITruncatable>()) //Lists, maps and structs (binary values were handled above)
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<ITruncatable>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
+            }
             else
             {
                 colStringCollection = nonNullColumnValues
@@ -816,8 +811,8 @@ public class ParquetGridView : DataGridView
                     .Where(value => value is not null)!;
             }
 
-            // Get the longest string in the array. (Limit to 10k values to improve render time)
-            string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 10_000).MaxBy(stringValue => stringValue.Length);
+            // Get the longest string in the array. (Limit to 4k values to improve render time. This number has changed multiple times over the years just for fun)
+            string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 4_000).MaxBy(stringValue => stringValue.Length);
             if (longestColString is not null)
                 newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, Font, longestColString, true));
 

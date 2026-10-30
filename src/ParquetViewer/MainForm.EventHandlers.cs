@@ -220,7 +220,7 @@ public partial class MainForm
             {
                 Cursor = Cursors.Default;
                 queryEvent.RunTimeMS = stopwatch.ElapsedMilliseconds;
-                var _ = queryEvent.RecordAsync(); //Fire and forget
+                _ = queryEvent.RecordAsync(); //Fire and forget
                 actualShownRecordCountLabel.Text = MainDataSource.DefaultView.Count.ToString();
             }
         }

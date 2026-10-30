@@ -98,17 +98,29 @@ public class MapValue : IMapValue
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public override string ToString()
+    public override string ToString() => ToString(null);
+
+    /// <summary>
+    /// Formats the map, but stops adding entries once the text passes <paramref name="desiredLength"/> (NOT GUARANTEED).
+    /// </summary>
+    public string ToStringTruncated(int desiredLength) => ToString(desiredLength);
+
+    private string ToString(int? desiredLength)
     {
         var mapValuesStringBuilder = new StringBuilder("[");
         for (var i = 0; i < Length; i++)
         {
             if (i != 0)
             {
+                if (desiredLength > 0 && mapValuesStringBuilder.Length > desiredLength)
+                {
+                    return mapValuesStringBuilder.Append("[...]").ToString();
+                }
+
                 mapValuesStringBuilder.Append(',');
             }
 
-            mapValuesStringBuilder.Append(FormatString(GetMapValue(i)));
+            mapValuesStringBuilder.Append(FormatString(GetMapValue(i), desiredLength - mapValuesStringBuilder.Length));
         }
 
         mapValuesStringBuilder.Append(']');
@@ -116,29 +128,33 @@ public class MapValue : IMapValue
 
         //We don't handle keys or values that contain the reserved chars we format maps with: , [ ] ( )
         //E.g. a key of "a,b" renders as (a,b,1). I can't decide what the best way to format Maps are so this is what I'm going with for now.
-        static string FormatString((object Key, object Value) map)
+        //remainingLength: how much of desiredLength is left for this entry, so nested lists, maps, structs and binary
+        //values stop early too instead of being fully formatted. Null when we aren't truncating.
+        static string FormatString((object Key, object Value) map, int? remainingLength)
         {
-            string key;
-            if (map.Key is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
-                key = dt.ToString(ParquetEngineSettings.DateDisplayFormat);
-            else if (map.Key is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
-                key = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
-            else if (map.Key is TimeOnly timeOnly && ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
-                key = timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat);
-            else
-                key = map.Key?.ToString() ?? string.Empty;
-
-            string value;
-            if (map.Value is DateTime dt2 && ParquetEngineSettings.DateDisplayFormat is not null)
-                value = dt2.ToString(ParquetEngineSettings.DateDisplayFormat);
-            else if (map.Value is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
-                value = dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
-            else if (map.Value is TimeOnly timeOnly && ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
-                value = timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat);
-            else
-                value = map.Value?.ToString() ?? string.Empty;
-
+            var key = FormatPart(map.Key, remainingLength);
+            var value = FormatPart(map.Value, remainingLength - key.Length); //The value gets whatever the key left over
             return $"({key},{value})";
+        }
+
+        static string FormatPart(object part, int? remainingLength)
+        {
+            //Always leave at least 1 so we show something. A used-up budget (0 or less) would mean "no limit" to
+            //ToStringTruncated and isn't a valid length for TruncateString.
+            int? budget = remainingLength is null ? null : Math.Max(1, remainingLength.Value);
+
+            if (part is DateTime dt && ParquetEngineSettings.DateDisplayFormat is not null)
+                return dt.ToString(ParquetEngineSettings.DateDisplayFormat);
+            else if (part is DateOnly dateOnly && ParquetEngineSettings.DateOnlyDisplayFormat is not null)
+                return dateOnly.ToString(ParquetEngineSettings.DateOnlyDisplayFormat);
+            else if (part is TimeOnly timeOnly && ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
+                return timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat);
+            else if (budget is not null && part is ITruncatable truncatable)
+                return truncatable.ToStringTruncated(budget.Value);
+            else if (budget is not null && part is string text && text.Length > budget)
+                return Helpers.TruncateString(text, budget.Value) + "[...]"; //So a single long string can't blow past the limit
+            else
+                return part?.ToString() ?? string.Empty;
         }
     }
 }

@@ -105,6 +105,25 @@ public class JsonWriterTests
     }
 
     [TestMethod]
+    public void BYTE_ARRAYS_ARE_WRITTEN_IN_FULL_WITHOUT_A_MAX_LENGTH()
+    {
+        //E.g. for JSON exports, which used to lose everything but the first and last 4 bytes
+        var bytes = Enumerable.Range(0, 20).Select(i => (byte)i).ToArray();
+        var list = new ListValue(new ArrayList { new ByteArrayValue(bytes) }, typeof(ByteArrayValue));
+
+        Assert.AreEqual($"[\"{BitConverter.ToString(bytes)}\"]", list.ToString());
+    }
+
+    [TestMethod]
+    public void BYTE_ARRAYS_ARE_SHORTENED_FOR_DISPLAY()
+    {
+        var bytes = Enumerable.Range(0, 20).Select(i => (byte)i).ToArray();
+        var list = new ListValue(new ArrayList { new ByteArrayValue(bytes) }, typeof(ByteArrayValue));
+
+        Assert.AreEqual("[\"00-01-02-03[...]10-11-12-13\"]", list.ToStringTruncated(1000));
+    }
+
+    [TestMethod]
     public void WRITING_A_NON_NUMBER_AS_A_NUMBER_THROWS()
     {
         using var stream = new MemoryStream();
