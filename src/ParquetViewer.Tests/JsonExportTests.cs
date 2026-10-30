@@ -1,4 +1,5 @@
 using ParquetViewer.Engine.Types;
+using ParquetViewer.Tests.TestHelpers;
 using System.Collections;
 using System.Data;
 using System.Text.Json;
@@ -88,7 +89,7 @@ public class JsonExportTests
     [TestMethod]
     public async Task PROGRESS_IS_REPORTED_ONCE_PER_ROW()
     {
-        var progress = new RecordingProgress();
+        var progress = new ProgressRecorder();
 
         await ExportAsync(BuildTable(), progress);
 
@@ -100,26 +101,12 @@ public class JsonExportTests
     public async Task CANCELLING_STOPS_AT_THE_NEXT_ROW()
     {
         using var cancellation = new CancellationTokenSource();
-        var progress = new RecordingProgress(onReport: cancellation.Cancel); //Cancel as soon as the first row is written
+        var progress = new ProgressRecorder(onReport: cancellation.Cancel); //Cancel as soon as the first row is written
 
         var json = await ExportAsync(BuildTable(), progress, cancellation.Token);
 
         //Only the first row is written, rather than empty objects for every remaining row
         Assert.AreEqual(1, json.GetArrayLength());
         Assert.AreEqual(1, json[0].GetProperty("id").GetInt32());
-    }
-
-    /// <summary>
-    /// Records reports synchronously, unlike <see cref="Progress{T}"/> which posts them to a sync context.
-    /// </summary>
-    private sealed class RecordingProgress(Action? onReport = null) : IProgress<int>
-    {
-        public List<int> Reports { get; } = [];
-
-        public void Report(int value)
-        {
-            Reports.Add(value);
-            onReport?.Invoke();
-        }
     }
 }

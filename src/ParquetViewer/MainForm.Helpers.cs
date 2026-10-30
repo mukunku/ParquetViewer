@@ -241,7 +241,7 @@ public partial class MainForm
         }
     }
 
-    private static Task WriteDataToCSVFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+    internal static Task WriteDataToCSVFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
         => Task.Run(() =>
             {
                 using var writer = new StreamWriter(path, false, Encoding.UTF8);
@@ -270,27 +270,24 @@ public partial class MainForm
                 string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                 string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
                 string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
+                var columnCount = dataTable.Columns.Count;
                 foreach (DataRowView row in dataTable.DefaultView)
                 {
-                    rowBuilder.Clear();
-
-                    isFirst = true;
-                    foreach (object? value in row.Row.ItemArray)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
+                        break;
+                    }
 
-                        if (!isFirst)
+                    rowBuilder.Clear();
+                    for (var i = 0; i < columnCount; i++)
+                    {
+                        if (i > 0)
                         {
                             rowBuilder.Append(',');
                         }
-                        else
-                        {
-                            isFirst = false;
-                        }
 
+                        //Read just this value. row.Row.ItemArray would copy (and box) the entire row.
+                        var value = row[i];
                         if (value is DateTime dt)
                         {
                             rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
@@ -305,14 +302,13 @@ public partial class MainForm
                         }
                         else
                         {
-                            var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
+                            var stringValue = value.ToString()!; //we never have `null` only `DBNull.Value`
                             rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
                         }
-
-                        progress.Report(1);
                     }
 
                     writer.WriteLine(rowBuilder.ToString());
+                    progress.Report(columnCount);
                 }
             }, cancellationToken);
 
