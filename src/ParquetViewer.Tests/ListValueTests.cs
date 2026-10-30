@@ -65,7 +65,7 @@ public class ListValueTests
     public void NESTED_LISTS_STOP_PART_WAY_THROUGH()
     {
         var inner = ListOf(Enumerable.Range(1000, 100));
-        var outer = new ListValue(new ArrayList { inner, inner }, typeof(ListValue));
+        var outer = new ListValue([inner, inner], typeof(ListValue));
 
         Assert.AreEqual("[[1000,1001,1002,1003[...]", outer.ToStringTruncated(20));
     }
@@ -83,7 +83,7 @@ public class ListValueTests
     {
         var keys = new ArrayList(Enumerable.Range(0, 100).ToArray());
         var map = new MapValue(keys, typeof(int), new ArrayList(Enumerable.Range(0, 100).ToArray()), typeof(int));
-        var list = new ListValue(new ArrayList { map }, typeof(MapValue));
+        var list = new ListValue([map], typeof(MapValue));
 
         var truncated = list.ToStringTruncated(30);
 
@@ -96,7 +96,7 @@ public class ListValueTests
     public void UNTRUNCATED_NESTED_VALUES_ARE_WRITTEN_IN_FULL()
     {
         var inner = ListOf(Enumerable.Range(0, 100));
-        var outer = new ListValue(new ArrayList { inner }, typeof(ListValue));
+        var outer = new ListValue([inner], typeof(ListValue));
 
         Assert.AreEqual($"[[{string.Join(",", Enumerable.Range(0, 100))}]]", outer.ToString());
     }
@@ -149,7 +149,7 @@ public class ListValueTests
     [TestMethod]
     public void TRUNCATED_LISTS_STILL_WRITE_NON_FINITE_NUMBERS()
     {
-        var list = new ListValue(new ArrayList { double.NaN, 1.5d, double.PositiveInfinity }, typeof(double));
+        var list = new ListValue([double.NaN, 1.5d, double.PositiveInfinity], typeof(double));
         Assert.AreEqual("[\"NaN\",1.5,\"Infinity\"]", list.ToStringTruncated(100));
     }
 }
