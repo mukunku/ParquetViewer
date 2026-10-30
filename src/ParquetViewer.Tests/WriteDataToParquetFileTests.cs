@@ -176,6 +176,25 @@ public class WriteDataToParquetFileTests
     }
 
     /// <summary>
+    /// Covers every TIME precision. TIME_MILLIS is stored as an int (micros and nanos are longs), so the write
+    /// path has to hand Parquet.Net boxed ints for it.
+    /// </summary>
+    [TestMethod]
+    public async Task ROUND_TRIP_PRESERVES_TIME_MILLIS_MICROS_NANOS_COLUMNS()
+    {
+        await using var engine = await OpenAsync("Data/TIME_ONLY_MILLIS_MICROS_NANOS_TEST.parquet");
+        var original = await ReadAllAsync(engine);
+        Assert.AreEqual(3, original.Columns.Cast<DataColumn>().Count(c => c.DataType == typeof(TimeOnly)),
+            "fixture should have a millis, micros and nanos TimeOnly column");
+
+        var path = NewTempPath();
+        await engine.WriteDataToParquetFileAsync(original, path, new Progress<int>(), null, default);
+
+        await using var rewritten = await OpenAsync(path);
+        AssertTablesMatch(original, await ReadAllAsync(rewritten));
+    }
+
+    /// <summary>
     /// Dates and date-times go through the display-format settings, so this also pins that a written file
     /// reads back to the same values the grid was showing.
     /// </summary>
