@@ -14,7 +14,7 @@ public partial class ParquetEngine
         ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
 
         long recordsLeftToRead = recordCount;
-        var result = BuildDataTableLite(selectedFields, Math.Min(recordCount, (int)RecordCount));
+        var result = BuildDataTableLite(selectedFields, (int)Math.Min(recordCount, RecordCount));
 
         foreach (var reader in GetReaders(offset))
         {

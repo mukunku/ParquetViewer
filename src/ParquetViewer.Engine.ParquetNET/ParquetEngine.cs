@@ -30,7 +30,7 @@ public sealed partial class ParquetEngine : IParquetEngine
     public string Path { get; }
 
     ParquetMetadata? _metadata = null;
-    public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(ThriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
+    public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(ThriftMetadata, BuildParquetSchemaTree(), RecordCount);
 
     private ParquetEngine(string fileOrFolderPath, params (string FilePath, ParquetReader Reader)[] parquetFiles)
     {
