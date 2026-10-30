@@ -415,18 +415,6 @@ public partial class MainForm : FormBase
             MainDataSource = finalResult;
             wasSuccessful = true;
         }
-        catch (AllFilesSkippedException ex)
-        {
-            HandleAllFilesSkippedException(ex);
-        }
-        catch (SomeFilesSkippedException ex)
-        {
-            HandleSomeFilesSkippedException(ex);
-        }
-        catch (MultipleSchemasFoundException ex)
-        {
-            HandleMultipleSchemasFoundException(ex);
-        }
         catch (MalformedFieldException ex)
         {
             HandleMalformedFieldException(ex);
