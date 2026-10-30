@@ -99,9 +99,9 @@ public sealed partial class ParquetEngine : IParquetEngine
             var parquetReader = await OpenReaderAsync(parquetFilePath, _defaultParquetOptions);
             return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException and not OutOfMemoryException) //Let these through so the UI can show a specific message
         {
-            throw new FileReadException(ex);
+            throw new FileOpenException(ex);
         }
     }
 

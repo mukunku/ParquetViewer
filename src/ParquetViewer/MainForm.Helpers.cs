@@ -468,7 +468,7 @@ public partial class MainForm
         ShowError(sb.ToString());
     }
 
-    private static void HandleFileReadException(FileReadException ex)
+    private static void HandleFileOpenException(FileOpenException ex)
     {
         ShowError(Resources.Errors.UnexpectedFileReadErrorMessageFormat.Format(ex));
     }

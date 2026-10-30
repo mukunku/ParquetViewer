@@ -177,9 +177,9 @@ public partial class MainForm : FormBase
                 {
                     HandleSomeFilesSkippedException(sfse);
                 }
-                else if (ex is FileReadException fre)
+                else if (ex is FileOpenException foe)
                 {
-                    HandleFileReadException(fre);
+                    HandleFileOpenException(foe);
                 }
                 else if (ex is MultipleSchemasFoundException msfe)
                 {
@@ -422,10 +422,6 @@ public partial class MainForm : FormBase
         catch (SomeFilesSkippedException ex)
         {
             HandleSomeFilesSkippedException(ex);
-        }
-        catch (FileReadException ex)
-        {
-            HandleFileReadException(ex);
         }
         catch (MultipleSchemasFoundException ex)
         {
