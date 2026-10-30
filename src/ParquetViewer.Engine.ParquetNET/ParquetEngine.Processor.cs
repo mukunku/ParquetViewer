@@ -39,7 +39,7 @@ public partial class ParquetEngine
         long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
     {
         //Read column by column to generate each row in the datatable
-        int totalRecordCountSoFar = 0;
+        long totalRecordCountSoFar = 0;
         long rowsLeftToRead = recordCount;
         for (int i = 0; i < parquetReader.RowGroupCount; i++)
         {
@@ -50,8 +50,8 @@ public partial class ParquetEngine
                 throw new ArgumentOutOfRangeException(
                     string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
 
-            int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
-            totalRecordCountSoFar += (int)groupReader.RowCount;
+            long rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
+            totalRecordCountSoFar += groupReader.RowCount;
 
             if (offset >= totalRecordCountSoFar)
                 continue;
