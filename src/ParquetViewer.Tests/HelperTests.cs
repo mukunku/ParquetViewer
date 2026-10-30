@@ -115,6 +115,32 @@ public class HelperTests
     }
 
     [TestMethod]
+    public async Task AMPLITUDE_EXCEPTION_INNER_EXCEPTION_MASKING_TEST()
+    {
+        var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+        var innerException = new IOException(@"Could not read `secret_column` from 'C:\secret\file.parquet'.");
+        var testEvent = new ExceptionEvent(new Exception("Outer exception", innerException), testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+        //mock the http response
+        _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+        {
+            string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+            var requestJson = JsonNode.Parse(requestJsonBody);
+            var innerExceptionText = requestJson?["events"]?[0]?["event_properties"]?["innerException"]?.GetValue<string>();
+            if (innerExceptionText is not null
+                && innerExceptionText.Contains($"System.IO.IOException: Could not read {ExceptionEvent.MASK_SENTINEL} from {ExceptionEvent.MASK_SENTINEL}.")
+                && !innerExceptionText.Contains("secret"))
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        });
+
+        bool wasSuccess = await testEvent.RecordAsync();
+        Assert.IsTrue(wasSuccess, "Inner exception message wasn't masked correctly");
+    }
+
+    [TestMethod]
     public void AMPLITUDE_EXCEPTION_SENSITIVE_FILE_DETAILS_MASKING_TEST()
     {
         //"SOURCE" is a substring of "INVESTOR_SOURCE_ID" so it must not leave part of the longer field name unmasked
