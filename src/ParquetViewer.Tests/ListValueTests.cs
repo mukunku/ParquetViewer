@@ -75,7 +75,7 @@ public class ListValueTests
     {
         var structValue = new StructValue(["a", "b"], [ListOf(Enumerable.Range(1000, 100)), 1]);
 
-        Assert.AreEqual("{\"a\":[1000,1001,1002,1003[...]", structValue.ToStringTruncated(20));
+        Assert.AreEqual("{\"a\":[1000,1001,1002[...]", structValue.ToStringTruncated(20));
     }
 
     [TestMethod]
@@ -112,9 +112,9 @@ public class ListValueTests
     [TestMethod]
     public void LONG_STRINGS_IN_STRUCTS_ARE_CUT_TO_THE_REMAINING_LENGTH()
     {
-        //'{' + "name:" uses 6 of the 20 chars
+        //'{' + "\"name\":" uses 8 of the 20 chars
         var structValue = new StructValue(["name", "other"], [new string('a', 5000), 1]);
-        Assert.AreEqual($"{{\"name\":\"{new string('a', 14)}\"[...]", structValue.ToStringTruncated(20));
+        Assert.AreEqual($"{{\"name\":\"{new string('a', 12)}\"[...]", structValue.ToStringTruncated(20));
     }
 
     [TestMethod]

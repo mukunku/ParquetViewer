@@ -37,7 +37,7 @@ public sealed class Utf8JsonWriterWithRunningLength : IDisposable
     {
         ArgumentNullException.ThrowIfNull(name);
         _writer.WritePropertyName(name);
-        ApproximateStringLengthSoFar += name.Length + 1; // +1 for the colon ':'
+        ApproximateStringLengthSoFar += name.Length + 3; // +2 for the quotes, +1 for the colon ':'
     }
 
     public void WriteNullValue()
@@ -50,7 +50,7 @@ public sealed class Utf8JsonWriterWithRunningLength : IDisposable
     public void WriteStringValue(string value)
     {
         _writer.WriteStringValue(value);
-        ApproximateStringLengthSoFar += value.Length;
+        ApproximateStringLengthSoFar += value.Length + 2; // +2 for the quotes
         IncrementForComma();
     }
 
