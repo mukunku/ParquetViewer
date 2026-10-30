@@ -88,29 +88,20 @@ public class StructValue : IStructValue
         return dt;
     }
 
-    public override string ToString() => ToJSON(out _);
+    public override string ToString() => ToJSON();
 
-    public string ToStringTruncated(int desiredLength) => ToJSON(out _, desiredLength);
+    public string ToStringTruncated(int desiredLength) => ToJSON(desiredLength);
 
-    public string ToJSON(out bool success, int? desiredLength = null)
+    public string ToJSON(int? desiredLength = null)
     {
-        try
+        bool isTruncated;
+        using var ms = new MemoryStream();
+        using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
         {
-            bool isTruncated;
-            using var ms = new MemoryStream();
-            using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
-            {
-                isTruncated = !Helpers.WriteValue(jsonWriter, this, desiredLength);
-            }
+            isTruncated = !Helpers.WriteValue(jsonWriter, this, desiredLength);
+        }
 
-            var json = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
-            success = true;
-            return isTruncated ? json + "[...]" : json;
-        }
-        catch (Exception ex)
-        {
-            success = false;
-            return $"Error while serializing Struct field: {Environment.NewLine}{Environment.NewLine}{ex}";
-        }
+        var json = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
+        return isTruncated ? json + "[...]" : json;
     }
 }

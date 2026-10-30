@@ -21,5 +21,5 @@ public interface IStructValue : IComparable<IStructValue>, IComparable, ITruncat
 
     DataTable ToDataTable();
 
-    string ToJSON(out bool success, int? desiredLength = null);
+    string ToJSON(int? desiredLength = null);
 }

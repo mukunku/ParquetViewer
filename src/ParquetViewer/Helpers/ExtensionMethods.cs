@@ -232,6 +232,22 @@ public static class ExtensionMethods
         catch { /*Swallow*/ }
     }
 
+    /// <summary>
+    /// Calls <see cref="ITruncatable.ToStringTruncated"/>, but returns <paramref name="errorText"/> instead of throwing
+    /// so a single value that can't be formatted doesn't break rendering (or loading) the grid.
+    /// </summary>
+    public static string ToStringTruncatedOrError(this ITruncatable value, int desiredLength, string errorText)
+    {
+        try
+        {
+            return value.ToStringTruncated(desiredLength);
+        }
+        catch
+        {
+            return errorText;
+        }
+    }
+
     public static bool ImplementsInterface<T>(this Type? type)
     {
         if (type is null)

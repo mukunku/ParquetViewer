@@ -587,7 +587,7 @@ public class ParquetGridView : DataGridView
         }
         else if (e.Value is ITruncatable truncatable) //Lists, maps and structs (binary values were formatted above)
         {
-            e.Value = truncatable.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
+            e.Value = truncatable.ToStringTruncatedOrError(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL, FORMATTING_ERROR_TEXT);
             e.FormattingApplied = true;
         }
     }
@@ -810,7 +810,7 @@ public class ParquetGridView : DataGridView
             else if (gridTable.Columns[i].DataType.ImplementsInterface<ITruncatable>()) //Lists, maps and structs (binary values were handled above)
             {
                 colStringCollection = nonNullColumnValues
-                    .Select(row => row.Field<ITruncatable>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
+                    .Select(row => row.Field<ITruncatable>(i)!.ToStringTruncatedOrError(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL, FORMATTING_ERROR_TEXT));
             }
             else
             {
