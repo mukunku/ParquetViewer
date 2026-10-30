@@ -398,31 +398,33 @@ public partial class MainForm
                 excelWriter.EndWrite();
             }, cancellationToken);
 
-    private static Task WriteDataToJSONFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+    internal static Task WriteDataToJSONFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
         => Task.Run(() =>
             {
                 using var fs = new FileStream(path, FileMode.OpenOrCreate);
                 using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
 
+                var columnCount = dataTable.Columns.Count;
                 jsonWriter.WriteStartArray();
                 foreach (DataRowView row in dataTable.DefaultView)
                 {
-                    jsonWriter.WriteStartObject();
-                    for (var i = 0; i < row.Row.ItemArray.Length; i++)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
+                        break;
+                    }
 
+                    jsonWriter.WriteStartObject();
+                    for (var i = 0; i < columnCount; i++)
+                    {
                         var columnName = dataTable.Columns[i].ColumnName;
                         jsonWriter.WritePropertyName(columnName);
 
-                        object? value = row.Row.ItemArray[i];
-                        _ = Engine.Helpers.WriteValue(jsonWriter, value!);
-                        progress.Report(1);
+                        //Read just this value. Accessing row.Row.ItemArray would copy (and box) the entire row every time.
+                        object value = row[i];
+                        _ = Engine.Helpers.WriteValue(jsonWriter, value);
                     }
                     jsonWriter.WriteEndObject();
+                    progress.Report(columnCount);
                 }
                 jsonWriter.WriteEndArray();
             }, cancellationToken);
