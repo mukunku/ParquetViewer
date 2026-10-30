@@ -288,9 +288,13 @@ public class ParquetGridView : DataGridView
                 && this[columnIndex, rowIndex].Value is IStructValue structValue
                 && structValue.IsHuggingFaceFormat(out var data))
             {
-                if (data.ToImage(out var image))
+                var clickedCell = this[columnIndex, rowIndex];
+
+                if (!TryShowExistingQuickPeekForm(clickedCell) && data.ToImage(out var image))
                 {
-                    ShowQuickPeekForm(image, this[columnIndex, rowIndex], QuickPeekEvent.DataTypeId.Image);
+                    var uniqueCellTag = Guid.NewGuid();
+                    var quickPeekForm = new QuickPeekForm(Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
+                    ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
                 }
             }
             //TODO: Add some kind of in-app notification to inform users of this useful shortcut
@@ -393,20 +397,7 @@ public class ParquetGridView : DataGridView
             return;
         }
 
-        ShowQuickPeekFormImpl(quickPeekForm, clickedCell, uniqueCellTag, dataType);
-    }
-
-    private void ShowQuickPeekForm(ManagedImage image, DataGridViewCell clickedCell, QuickPeekEvent.DataTypeId dataType)
-    {
-        if (TryShowExistingQuickPeekForm(clickedCell))
-        {
-            image.DisposeSafely();
-            return;
-        }
-
-        var uniqueCellTag = Guid.NewGuid();
-        var quickPeekForm = new QuickPeekForm(Columns[clickedCell.ColumnIndex].Name, image, uniqueCellTag, clickedCell.RowIndex, clickedCell.ColumnIndex);
-        ShowQuickPeekFormImpl(quickPeekForm, clickedCell, uniqueCellTag, dataType);
+        ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
     }
 
     private bool TryShowExistingQuickPeekForm(DataGridViewCell clickedCell)
@@ -426,7 +417,7 @@ public class ParquetGridView : DataGridView
         return false;
     }
 
-    private void ShowQuickPeekFormImpl(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell, Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
+    private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell, Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
     {
         clickedCell.Tag = uniqueCellTag;
 
