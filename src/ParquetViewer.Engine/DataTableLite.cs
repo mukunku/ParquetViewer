@@ -7,6 +7,7 @@ public class DataTableLite
 {
     public record ColumnLite(string Name, Type Type, IParquetSchemaElement ParentSchema, int Ordinal);
 
+    private bool _isDisposed;
     private int _ordinal = 0;
     private readonly Dictionary<string, ColumnLite> _columns = [];
     private readonly List<object[]> _rows;
@@ -25,7 +26,7 @@ public class DataTableLite
     /// <summary>
     /// Rows of the dataset
     /// </summary>
-    public IReadOnlyList<object[]> Rows => _rows;
+    public IReadOnlyList<object[]> Rows => !_isDisposed ? _rows : throw new ObjectDisposedException(nameof(DataTableLite));
 
     public DataTableLite(int expectedRowCount = 1000)
     {
@@ -36,6 +37,7 @@ public class DataTableLite
 
     public ColumnLite AddColumn(string name, Type type, IParquetSchemaElement parent)
     {
+        ObjectDisposedException.ThrowIf(_isDisposed, typeof(DataTableLite));
         if (_rows.Count > 0)
         {
             throw new InvalidOperationException("Can't add columns after creating rows");
@@ -48,12 +50,19 @@ public class DataTableLite
 
     public void NewRow()
     {
+        ObjectDisposedException.ThrowIf(_isDisposed, typeof(DataTableLite));
         var row = new object[Columns.Count];
         _rows.Add(row);
     }
 
-    public DataTable ToDataTable(CancellationToken token, IProgress<int>? progress = null)
+    /// <summary>
+    /// Destructively converts this object into a DataTable
+    /// </summary>
+    public DataTable ToDataTableDispose(CancellationToken token, IProgress<int>? progress = null)
     {
+        ObjectDisposedException.ThrowIf(_isDisposed, typeof(DataTableLite));
+        _isDisposed = true;
+
         var dataTable = new DataTable();
         foreach (var column in _columns)
         {
@@ -77,8 +86,10 @@ public class DataTableLite
         {
             token.ThrowIfCancellationRequested();
             LoadRow(dataTable, _rows[i]);
+            _rows[i] = null!; //The DataTable has its own copy now, free up memory asap
             progress?.Report(_columns.Count);
         }
+        _rows.Clear();
         dataTable.EndLoadData();
 
         return dataTable;

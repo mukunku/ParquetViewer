@@ -30,7 +30,7 @@ public partial class ParquetEngine
 
         return (logProgress) =>
         {
-            var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
+            var datatable = result.ToDataTableDispose(cancellationToken, logProgress ? progress : null);
             return datatable;
         };
     }
