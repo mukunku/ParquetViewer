@@ -89,6 +89,32 @@ public class HelperTests
     }
 
     [TestMethod]
+    [DataRow(@"Access to the path 'C:\Documents and Settings' is denied.", "Access to the path ***** is denied.")]
+    [DataRow(@"The request failed due to a fatal device hardware error. : 'D:\data\file.parquet'.", "The request failed due to a fatal device hardware error. : *****.")]
+    [DataRow(@"Could not find file '\\server\share\file.parquet'.", "Could not find file *****.")]
+    [DataRow("Unable to cast object of type 'System.String' to type 'System.Int32'.", "Unable to cast object of type 'System.String' to type 'System.Int32'.")]
+    public async Task AMPLITUDE_EXCEPTION_FILE_PATH_MASKING_TEST(string exceptionMessage, string expectedMessage)
+    {
+        var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+        var testEvent = new ExceptionEvent(new IOException(exceptionMessage), testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+        //mock the http response
+        _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+        {
+            string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+            var requestJson = JsonNode.Parse(requestJsonBody);
+            if (requestJson?["events"]?[0]?["event_properties"]?["message"]?.GetValue<string>() == expectedMessage)
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        });
+
+        bool wasSuccess = await testEvent.RecordAsync();
+        Assert.IsTrue(wasSuccess, "File path wasn't masked correctly");
+    }
+
+    [TestMethod]
     public async Task AMPLITUDE_EXCEPTION_ADDITIONAL_DATA_IS_SERIALIZED_TEST()
     {
         var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);

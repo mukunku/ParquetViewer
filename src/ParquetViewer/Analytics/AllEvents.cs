@@ -148,6 +148,9 @@ public class ExceptionEvent : AmplitudeEvent
 
             //Mask sensitive text that is wrapped with ` `
             message = Regex.Replace(message, "`[^`]+`", MASK_SENTINEL);
+
+            //Mask file paths that .NET IO exceptions wrap with ' ' (e.g. 'C:\foo' or '\\server\share')
+            message = Regex.Replace(message, @"'(?:[A-Za-z]:\\|\\\\)[^']*'", MASK_SENTINEL);
             return message;
         }
     }
