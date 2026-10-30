@@ -14,76 +14,64 @@ namespace ParquetViewer.Engine.ParquetNET;
 /// </remarks>
 public sealed class FieldLevels
 {
-    public static readonly FieldLevels None = new(0, []);
-
     /// <summary>
     /// Derives the levels for <paramref name="element"/> by walking the parent chain (root -> element,
-    /// outermost first) and accumulating definition levels from the repetition types.
+    /// outermost first) and accumulating levels from the repetition types.
     /// </summary>
     public static FieldLevels For(ParquetSchemaElement element)
     {
         ArgumentNullException.ThrowIfNull(element);
 
-        //We capture definition levels starting from the root and walking towards the leaf node.
-        //So we need to first walk towards the root from this element and then reverse the order.
-        var path = new List<ParquetSchemaElement>();
-        for (var node = element; node?.Parent is not null /*exclude root node*/; node = node.Parent)
-        {
-            path.Add(node);
-        }
-        path.Reverse(); //Now we have a root-first list
-
         var maxDefinitionLevel = 0;
-        var repeatedAncestorDefinitionLevels = new List<int>();
-        foreach (var node in path)
+        var maxRepetitionLevel = 0;
+        for (var node = element; node?.Parent is not null /*exclude root node*/; node = node.Parent)
         {
             if (node.SchemaElement.RepetitionType != FieldRepetitionType.REQUIRED)
                 maxDefinitionLevel++;
 
             //Any repeated node on the path is a collection frame. Standard lists, maps and legacy
             //two-tier repeated fields all encode their collection as a repeated node, so this single
-            //rule covers them all. A repeated node is empty (zero occurrences) one definition level
-            //below the level at which the repeated node itself becomes defined.
+            //rule covers them all.
             if (node.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED)
-                repeatedAncestorDefinitionLevels.Add(maxDefinitionLevel - 1);
+                maxRepetitionLevel++;
         }
 
         /*
-           Example: a list<list<int>> in the standard three-tier layout.
+          Example: a list<list<int>> in the standard three-tier layout.
 
           ┌────────────────┬────────────┬─────────────────────────┬─────────────────────────┐
-          │  Schema node   │ Repetition │ Definition level so far │ Entry added to the list │
+          │  Schema node   │ Repetition │ Definition level so far │ Repetition level so far │
           ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
-          │ a (LIST)       │ optional   │ 1                       │                         │
+          │ a (LIST)       │ optional   │ 1                       │ 0                       │
           ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
-          │ list           │ repeated   │ 2                       │ 2 - 1 = 1               │
+          │ list           │ repeated   │ 2                       │ 1                       │
           ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
-          │ element (LIST) │ optional   │ 3                       │                         │
+          │ element (LIST) │ optional   │ 3                       │ 1                       │
           ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
-          │ list           │ repeated   │ 4                       │ 4 - 1 = 3               │
+          │ list           │ repeated   │ 4                       │ 2                       │
           ├────────────────┼────────────┼─────────────────────────┼─────────────────────────┤
-          │ element (int)  │ optional   │ 5                       │                         │
+          │ element (int)  │ optional   │ 5                       │ 2                       │
           └────────────────┴────────────┴─────────────────────────┴─────────────────────────┘
 
-          The result is MaxDefinitionLevel = 5 and RepeatedAncestorDefinitionLevels = [1, 3]. 
-          That's outer list first, then the inner list.
+          The result is MaxDefinitionLevel = 5 and MaxRepetitionLevel = 2.
 
-          Reading a definition level against that:
-          - 0: the outer list is null (below [0] = 1).
-          - 1: the outer list is empty.
-          - 2: the inner list is null (below [1] = 3).
-          - 3: the inner list is empty.
+          A repeated node is empty (zero occurrences) one definition level below the level at which it
+          becomes defined. So reading a leaf's definition level against that:
+          - 0: the outer list is null.
+          - 1: the outer list is empty (its repeated node is defined at 2).
+          - 2: the inner list is null.
+          - 3: the inner list is empty (its repeated node is defined at 4).
           - 4: the int element itself is null.
           - 5: a real value.
          */
 
-        return new FieldLevels(maxDefinitionLevel, repeatedAncestorDefinitionLevels /* from root to*/);
+        return new FieldLevels(maxDefinitionLevel, maxRepetitionLevel);
     }
 
-    internal FieldLevels(int maxDefinitionLevel, IReadOnlyList<int> repeatedAncestorDefinitionLevels)
+    internal FieldLevels(int maxDefinitionLevel, int maxRepetitionLevel)
     {
         MaxDefinitionLevel = maxDefinitionLevel;
-        RepeatedAncestorDefinitionLevels = repeatedAncestorDefinitionLevels;
+        MaxRepetitionLevel = maxRepetitionLevel;
     }
 
     /// <summary>
@@ -94,20 +82,11 @@ public sealed class FieldLevels
     public int MaxDefinitionLevel { get; }
 
     /// <summary>
-    /// For every repeated ancestor on the path (outermost first), the definition level at which
-    /// that collection is "present but empty". A definition level below
-    /// <c>RepeatedAncestorDefinitionLevels[definitionLevel]</c> means the collection at depth <c>definitionLevel</c> is null;
-    /// equal to it means the collection is empty.
+    /// How deeply nested in repetitions this element is, i.e. the number of repeated nodes from the root
+    /// down to and including the element. Matches Parquet's <c>max_repetition_level</c>.
     /// </summary>
-    public IReadOnlyList<int> RepeatedAncestorDefinitionLevels { get; }
-
-    /// <summary>
-    /// How deeply nested in repetitions this element is, i.e. the number of repeated ancestors.
-    /// Matches the element's maximum repetition level (Parquet's <c>max_repetition_level</c>).
-    /// </summary>
-    /// <remarks>Used to be called "NumberOfListParents"</remarks>
-    public int MaxRepetitionLevel => RepeatedAncestorDefinitionLevels.Count;
+    public int MaxRepetitionLevel { get; }
 
     public override string ToString()
-        => $"MaxDefinitionLevel={MaxDefinitionLevel}, MaxRepetitionLevel={MaxRepetitionLevel}, RepeatedAncestorDefinitionLevels=[{string.Join(',', RepeatedAncestorDefinitionLevels)}]";
+        => $"MaxDefinitionLevel={MaxDefinitionLevel}, MaxRepetitionLevel={MaxRepetitionLevel}";
 }
