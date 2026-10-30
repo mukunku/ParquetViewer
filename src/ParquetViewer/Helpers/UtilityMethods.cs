@@ -52,6 +52,14 @@ public static class UtilityMethods
         return null;
     }
 
+    /// <summary>
+    /// Checks the format works for DateTime, and that its stripped down versions work for DateOnly and TimeOnly.
+    /// </summary>
+    /// <remarks>
+    /// Best effort by design. The stripping only understands custom formats, so some valid DateTime formats get rejected,
+    /// such as standard (single char) formats like "G" and patterns that leave a lone literal behind. That's okay: the
+    /// custom date format dialog won't save a rejected format, and users can always enter an equivalent custom format instead.
+    /// </remarks>
     public static bool IsSupportedDateFormat(string? dateFormat)
     {
         if (string.IsNullOrWhiteSpace(dateFormat))
