@@ -31,10 +31,10 @@ public class JsonExportTests
         table.Columns.Add("score", typeof(double));
         table.Columns.Add("tags", typeof(ListValue));
 
-        table.Rows.Add(1, "a", 1.5, new ListValue(new ArrayList { 1, 2 }, typeof(int)));
+        table.Rows.Add(1, "a", 1.5, new ListValue([1, 2], typeof(int)));
         table.Rows.Add(2, DBNull.Value, double.NaN, DBNull.Value);
-        table.Rows.Add(3, "c", 1e300, new ListValue(new ArrayList(), typeof(int)));
-        table.Rows.Add(4, "d", 0.25, new ListValue(new ArrayList { 3 }, typeof(int)));
+        table.Rows.Add(3, "c", 1e300, new ListValue([], typeof(int)));
+        table.Rows.Add(4, "d", 0.25, new ListValue([3], typeof(int)));
         return table;
     }
 

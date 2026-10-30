@@ -30,10 +30,10 @@ public class CsvExportTests
         table.Columns.Add("name", typeof(string));
         table.Columns.Add("tags", typeof(ListValue));
 
-        table.Rows.Add(1, "a", new ListValue(new ArrayList { 1, 2 }, typeof(int)));
+        table.Rows.Add(1, "a", new ListValue([1, 2], typeof(int)));
         table.Rows.Add(2, DBNull.Value, DBNull.Value);
-        table.Rows.Add(3, "say \"hi\", bye", new ListValue(new ArrayList(), typeof(int)));
-        table.Rows.Add(4, "d", new ListValue(new ArrayList { 3 }, typeof(int)));
+        table.Rows.Add(3, "say \"hi\", bye", new ListValue([], typeof(int)));
+        table.Rows.Add(4, "d", new ListValue([3], typeof(int)));
         return table;
     }
 

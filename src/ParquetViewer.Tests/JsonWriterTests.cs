@@ -11,7 +11,7 @@ namespace ParquetViewer.Tests;
 [TestClass]
 public class JsonWriterTests
 {
-    private static string ListOf(object value) => new ListValue(new ArrayList { value }, value.GetType()).ToString();
+    private static string ListOf(object value) => new ListValue([value], value.GetType()).ToString();
 
     public static IEnumerable<object[]> NumbersAndTheirJson =>
     [
@@ -60,7 +60,7 @@ public class JsonWriterTests
     [TestMethod]
     public void LISTS_MIX_NUMBERS_AND_NON_FINITE_VALUES()
     {
-        var list = new ListValue(new ArrayList { 1.5d, double.NaN, 1e300d, DBNull.Value }, typeof(double));
+        var list = new ListValue([1.5d, double.NaN, 1e300d, DBNull.Value], typeof(double));
         Assert.AreEqual("[1.5,\"NaN\",1E+300,null]", list.ToString());
     }
 
@@ -109,7 +109,7 @@ public class JsonWriterTests
     {
         //E.g. for JSON exports, which used to lose everything but the first and last 4 bytes
         var bytes = Enumerable.Range(0, 20).Select(i => (byte)i).ToArray();
-        var list = new ListValue(new ArrayList { new ByteArrayValue(bytes) }, typeof(ByteArrayValue));
+        var list = new ListValue([new ByteArrayValue(bytes)], typeof(ByteArrayValue));
 
         Assert.AreEqual($"[\"{BitConverter.ToString(bytes)}\"]", list.ToString());
     }
@@ -118,7 +118,7 @@ public class JsonWriterTests
     public void BYTE_ARRAYS_ARE_SHORTENED_FOR_DISPLAY()
     {
         var bytes = Enumerable.Range(0, 20).Select(i => (byte)i).ToArray();
-        var list = new ListValue(new ArrayList { new ByteArrayValue(bytes) }, typeof(ByteArrayValue));
+        var list = new ListValue([new ByteArrayValue(bytes)], typeof(ByteArrayValue));
 
         Assert.AreEqual("[\"00-01-02-03[...]10-11-12-13\"]", list.ToStringTruncated(1000));
     }

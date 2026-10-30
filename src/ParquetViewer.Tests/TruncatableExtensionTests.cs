@@ -10,7 +10,7 @@ public class TruncatableExtensionTests
     [TestMethod]
     public void RETURNS_THE_TRUNCATED_STRING()
     {
-        var list = new ListValue(new ArrayList { 1, 2, 3 }, typeof(int));
+        var list = new ListValue([1, 2, 3], typeof(int));
         Assert.AreEqual("[1,2,3]", list.ToStringTruncatedOrError(100, "#ERR"));
     }
 

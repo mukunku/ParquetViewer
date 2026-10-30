@@ -43,7 +43,7 @@ public class MapValueTests
     {
         //A map of embedding-like lists: the first value gets what's left of the 20 chars after "[(a," and stops early
         var list = new ListValue(new ArrayList(Enumerable.Range(1000, 100).ToArray()), typeof(int));
-        var map = new MapValue(new ArrayList { "a", "b" }, typeof(string), new ArrayList { list, list }, typeof(ListValue));
+        var map = new MapValue(["a", "b"], typeof(string), [list, list], typeof(ListValue));
 
         Assert.AreEqual("[(a,[1000,1001,1002,1003[...])[...]", map.ToStringTruncated(20));
     }
@@ -53,7 +53,7 @@ public class MapValueTests
     {
         //The first entry uses up the whole budget, but the second value still shows its first element
         var list = new ListValue(new ArrayList(Enumerable.Range(1000, 100).ToArray()), typeof(int));
-        var map = new MapValue(new ArrayList { "a" }, typeof(string), new ArrayList { list }, typeof(ListValue));
+        var map = new MapValue(["a"], typeof(string), [list], typeof(ListValue));
 
         Assert.AreEqual("[(a,[1000[...])]", map.ToStringTruncated(1));
     }
@@ -62,7 +62,7 @@ public class MapValueTests
     public void UNTRUNCATED_NESTED_VALUES_ARE_WRITTEN_IN_FULL()
     {
         var list = new ListValue(new ArrayList(Enumerable.Range(0, 50).ToArray()), typeof(int));
-        var map = new MapValue(new ArrayList { "a" }, typeof(string), new ArrayList { list }, typeof(ListValue));
+        var map = new MapValue(["a"], typeof(string), [list], typeof(ListValue));
 
         Assert.AreEqual($"[(a,[{string.Join(",", Enumerable.Range(0, 50))}])]", map.ToString());
     }
@@ -71,7 +71,7 @@ public class MapValueTests
     public void LONG_STRING_VALUES_ARE_CUT_TO_THE_REMAINING_LENGTH()
     {
         //After "[(" and the key "a" there are 18 chars left for the value
-        var map = new MapValue(new ArrayList { "a" }, typeof(string), new ArrayList { new string('b', 5000) }, typeof(string));
+        var map = new MapValue(["a"], typeof(string), [new string('b', 5000)], typeof(string));
         Assert.AreEqual($"[(a,{new string('b', 18)}[...])]", map.ToStringTruncated(20));
     }
 
@@ -79,7 +79,7 @@ public class MapValueTests
     public void LONG_STRING_VALUES_ARE_NOT_CUT_WITHOUT_A_DESIRED_LENGTH()
     {
         var longString = new string('b', 5000);
-        var map = new MapValue(new ArrayList { "a" }, typeof(string), new ArrayList { longString }, typeof(string));
+        var map = new MapValue(["a"], typeof(string), [longString], typeof(string));
         Assert.AreEqual($"[(a,{longString})]", map.ToString());
     }
 
