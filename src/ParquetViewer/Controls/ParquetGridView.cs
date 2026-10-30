@@ -57,6 +57,7 @@ public class ParquetGridView : DataGridView
     private ContextMenuStrip? _contextMenu;
     private ContextMenuStrip? _headerContextMenu;
     private static readonly Regex _validColumnNameRegex = new("^[a-zA-Z0-9_]+$");
+    private readonly Dictionary<Font, Font> _italicFontCache = [];
 
     //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
     private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = [];
@@ -185,12 +186,18 @@ public class ParquetGridView : DataGridView
                 e.Paint(e.CellBounds, DataGridViewPaintParts.All
                     & ~(DataGridViewPaintParts.ContentForeground));
 
-                var font = new Font(e.CellStyle!.Font!, FontStyle.Italic);
+                var baseFont = e.CellStyle?.Font ?? Font;
+                if (!_italicFontCache.TryGetValue(baseFont, out var italicFont))
+                {
+                    italicFont = new Font(baseFont, FontStyle.Italic);
+                    _italicFontCache.Add(baseFont, italicFont);
+                }
+
                 var color = GridTheme.CellPlaceholderTextColor;
                 if (e.State.HasFlag(DataGridViewElementStates.Selected))
                     color = Color.White;
 
-                TextRenderer.DrawText(e.Graphics!, "NULL", font, e.CellBounds, color,
+                TextRenderer.DrawText(e.Graphics!, "NULL", italicFont, e.CellBounds, color,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
 
                 e.Handled = true;
@@ -1478,6 +1485,14 @@ public class ParquetGridView : DataGridView
         }
     }
 
+    private void DisposeGdiResources()
+    {
+        foreach (var font in _italicFontCache.Values)
+        {
+            font.DisposeSafely();
+        }
+    }
+
     protected override void Dispose(bool disposing)
     {
         //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
@@ -1486,6 +1501,8 @@ public class ParquetGridView : DataGridView
 
         _contextMenu?.Dispose();
         _headerContextMenu?.Dispose();
+
+        DisposeGdiResources();
 
         base.Dispose(disposing);
     }
