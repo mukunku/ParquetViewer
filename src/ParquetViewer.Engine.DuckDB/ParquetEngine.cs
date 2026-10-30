@@ -333,7 +333,9 @@ public sealed class ParquetEngine : IParquetEngine
                 var fieldIndex = 0;
                 foreach (var field in parquetSchemaElement.Children)
                 {
-                    values[fieldIndex++] = ConvertValueTypeIfNeeded(@struct.GetValueOrDefault(field.Path) ?? DBNull.Value, field);
+                    var fieldValue = @struct.TryGetValue(field.Path, out var structFieldValue) ? structFieldValue
+                        : throw new MalformedFieldException($"Struct field `{parquetSchemaElement.Path}/{field.Path}` wasn't found in the data");
+                    values[fieldIndex++] = ConvertValueTypeIfNeeded(fieldValue ?? DBNull.Value, field);
                 }
 
                 return new StructValue(fieldNames, values);
