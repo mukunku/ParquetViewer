@@ -509,7 +509,8 @@ public class ParquetGridView : DataGridView
     {
         base.OnCellFormatting(e);
 
-        var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
+        //It's important to not access cell values or valuetypes directly as it unshares the row
+        var cellValueType = Columns[e.ColumnIndex].ValueType;
         if (_floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
         {
             if (!_floatColumnsWithFormatOverrides.TryGetValue(Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
