@@ -376,8 +376,8 @@ public partial class MainForm
 
                             excelWriter.WriteCell(i + 1, j, stringValue);
                         }
-                        progress.Report(1);
                     }
+                    progress.Report(dataTable.Columns.Count);
                 }
 
                 bool IsIntCastSafe(object value) => value.GetType() == typeof(int)

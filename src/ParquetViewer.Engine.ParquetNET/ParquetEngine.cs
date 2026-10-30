@@ -265,15 +265,9 @@ public sealed partial class ParquetEngine : IParquetEngine
         var recordCountAfterSkip = defaultView.Count - skipCount;
         var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
         var values = Array.CreateInstance(columnType, recordCountToRead);
-        var index = 0;
-        foreach (DataRowView row in defaultView)
+        for (var index = 0; index < recordCountToRead; index++)
         {
-            if (skipCount-- > 0)
-            {
-                continue;
-            }
-
-            var value = row[column.Ordinal];
+            var value = defaultView[skipCount + index][column.Ordinal];
             if (value == DBNull.Value)
                 value = null;
             else if (value is IByteArrayValue byteArray)
@@ -281,12 +275,7 @@ public sealed partial class ParquetEngine : IParquetEngine
             else if (value is IListValue || value is IMapValue || value is IStructValue)
                 throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
 
-            values.SetValue(value, index++);
-
-            if (--fetchCount <= 0)
-            {
-                break;
-            }
+            values.SetValue(value, index);
         }
 
         return values;

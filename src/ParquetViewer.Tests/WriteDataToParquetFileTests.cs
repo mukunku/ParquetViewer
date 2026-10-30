@@ -316,6 +316,41 @@ public class WriteDataToParquetFileTests
                 $"last row, column {column} differs");
     }
 
+    [TestMethod]
+    public async Task WRITES_EVERY_SORTED_AND_FILTERED_ROW_ACROSS_BATCHES()
+    {
+        //Batches pull rows by their position in the (sorted and filtered) view, so give every row a unique id
+        //and check each one lands in the right place, including across the batch boundary.
+        const int totalRows = 250_001;
+
+        await using var engine = await OpenAsync("Data/PARQUET-MR_1.15.0.parquet");
+        var template = await ReadAllAsync(engine);
+
+        var grown = template.Clone();
+        grown.BeginLoadData();
+        for (var id = 0; id < totalRows; id++)
+        {
+            var values = template.Rows[id % template.Rows.Count].ItemArray;
+            values[grown.Columns["id"]!.Ordinal] = id;
+            grown.LoadDataRow(values, true);
+        }
+        grown.EndLoadData();
+
+        grown.DefaultView.RowFilter = "id % 3 <> 0";
+        grown.DefaultView.Sort = "id DESC";
+        var expectedIds = Enumerable.Range(0, totalRows).Where(id => id % 3 != 0).Reverse().ToArray();
+        Assert.IsGreaterThan(100_000, expectedIds.Length, "test setup should span more than one batch");
+
+        var path = NewTempPath();
+        await engine.WriteDataToParquetFileAsync(grown, path, new Progress<int>(), null, default);
+
+        await using var rewritten = await OpenAsync(path);
+        var result = await ReadAllAsync(rewritten);
+
+        var actualIds = result.Rows.Cast<DataRow>().Select(row => (int)row["id"]).ToArray();
+        CollectionAssert.AreEqual(expectedIds, actualIds);
+    }
+
     /// <summary>
     /// Documented limitation rather than a bug: the write path can't reconstruct list, map or struct
     /// columns from the flat DataTable the grid uses, and refuses rather than writing something wrong.
