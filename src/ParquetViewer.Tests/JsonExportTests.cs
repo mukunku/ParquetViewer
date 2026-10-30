@@ -1,6 +1,5 @@
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Tests.TestHelpers;
-using System.Collections;
 using System.Data;
 using System.Text.Json;
 

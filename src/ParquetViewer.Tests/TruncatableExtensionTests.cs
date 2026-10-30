@@ -1,6 +1,5 @@
 using ParquetViewer.Engine.Types;
 using ParquetViewer.Helpers;
-using System.Collections;
 
 namespace ParquetViewer.Tests;
 
