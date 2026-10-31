@@ -572,7 +572,7 @@ public class ParquetGridView : DataGridView
             string value = e.Value!.ToString()!;
             if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
             {
-                e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
+                e.Value = Engine.Helpers.TruncateString(value, MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL) + "[...]";
                 e.FormattingApplied = true;
             }
         }
