@@ -619,6 +619,21 @@ public abstract class EngineTests
     }
 
     /// <summary>
+    /// A valid file whose schema has no fields (written by hand, pyarrow reads it as a table with 0 columns).
+    /// MainForm.OpenFieldSelectionDialogAsync catches Parquet.Net's exception for this by its message to show the
+    /// "no fields found" error instead, so this fails if a Parquet.Net upgrade changes that message.
+    /// </summary>
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB refuses to open files with no fields")]
+    public async Task NO_FIELDS_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/NO_FIELDS_TEST.parquet");
+
+        var ex = Assert.Throws<ArgumentException>(() => parquetEngine.Fields);
+        Assert.StartsWith("at least one field is required", ex.Message);
+    }
+
+    /// <summary>
     /// A LIST whose repeated node is the element itself because it isn't a group (an older writer layout):
     /// <c>optional group tags (LIST) { repeated int32 array; }</c>. Written by hand, pyarrow reads it as list&lt;int&gt;.
     /// </summary>
