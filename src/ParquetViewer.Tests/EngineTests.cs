@@ -728,6 +728,25 @@ public abstract class EngineTests
         Assert.AreEqual(expected, dataTable.Rows[0][0].ToString());
     }
 
+    /// <summary>
+    /// Raw FIXED_LEN_BYTE_ARRAY columns that aren't 16 bytes long (so they can't be read as Guids)
+    /// </summary>
+    [SkippableTestMethod]
+    public async Task FIXED_LEN_BYTE_ARRAY_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/FIXED_LEN_BYTE_ARRAY_TEST.parquet");
+        Assert.AreEqual(3, parquetEngine.RecordCount);
+        Assert.HasCount(3, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.IsInstanceOfType<IByteArrayValue>(dataTable.Rows[0]["hash"]);
+        Assert.AreEqual("00-01-02-03-04-05-06-07-08-09-0A-0B-0C-0D-0E-0F-10-11-12-13", dataTable.Rows[0]["hash"].ToString());
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[1]["hash"]);
+
+        Assert.IsInstanceOfType<IByteArrayValue>(dataTable.Rows[1]["code"]);
+        Assert.AreEqual("AA-BB-CC-DD", dataTable.Rows[1]["code"].ToString());
+    }
+
     [SkippableTestMethod]
     public async Task NESTED_STRUCTS_AND_LISTS()
     {

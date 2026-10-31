@@ -176,11 +176,11 @@ public class ParquetSchemaElement : IParquetSchemaElement
             FieldTypeId.Primitive => throw new InvalidOperationException($"Cannot determine CLR type for primitive field `{Path}` without ClrType information."),
             _ => throw new InvalidOperationException($"Unknown complex type {FieldType} detected for field `{Path}`")
         },
-        //Parquet.Net v6 handles byte[] and string values as ReadOnlyMemory types
+        //Parquet.Net v6 handles byte[] and string values as ReadOnlyMemory types.
         _ => DataField.ClrType switch
         {
             _ when DataField.ClrType == typeof(ReadOnlyMemory<char>) => typeof(string),
-            _ when DataField.ClrType == typeof(ReadOnlyMemory<byte>) => typeof(byte[]),
+            _ when DataField.ClrType == typeof(ReadOnlyMemory<byte>) => typeof(ByteArrayValue),
             _ => DataField.ClrType
         }
     };

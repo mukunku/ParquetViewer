@@ -1,5 +1,4 @@
 ﻿using Parquet;
-using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
 using ParquetViewer.Engine.Types;
 using System.Data;
@@ -175,42 +174,16 @@ public partial class ParquetEngine
         foreach (var field in fields)
         {
             var schema = parent.GetChild(field);
-            if (schema.FieldType == FieldTypeId.List
-                || schema.RepetitionType == RepetitionTypeId.Repeated
-                || schema.DataField?.IsArray == true)
-            {
-                dataTable.AddColumn(field, typeof(ListValue), parent);
-            }
-            else if (schema.FieldType == FieldTypeId.Map)
-            {
-                dataTable.AddColumn(field, typeof(MapValue), parent);
-            }
-            else if (schema.FieldType == FieldTypeId.Struct)
-            {
-                dataTable.AddColumn(field, typeof(StructValue), parent);
-            }
-            else if (schema.SchemaElement.Type == Parquet.Meta.Type.BYTE_ARRAY
-                && schema.SchemaElement.LogicalType is null
-                && schema.SchemaElement.ConvertedType is null)
-            {
-                dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
-            }
-            else if (schema.DataField is DateTimeDataField dateField)
-            {
-                if (dateField.DateTimeFormat == DateTimeFormat.Date)
-                {
-                    dataTable.AddColumn(field, typeof(DateOnly), parent);
-                }
-                else
-                {
-                    dataTable.AddColumn(field, typeof(DateTime), parent);
-                }
-            }
-            else
-            {
-                var clrType = schema.ClrType ?? throw new MalformedFieldException($"`{field}` has no data field");
-                dataTable.AddColumn(field, clrType, parent);
-            }
+
+            var isIllegalTwoTierMap = schema.RepetitionType == RepetitionTypeId.Repeated && schema.FieldType == FieldTypeId.Map;
+            if (isIllegalTwoTierMap)
+                throw new MalformedFieldException($"Repeated Maps are unsupported in the Parquet spec. Field: `{field}`");
+
+            //Legacy 2-tier lists have their underlying value's ClrType.
+            var isLegacyTwoTierList = schema.RepetitionType == RepetitionTypeId.Repeated && schema.FieldType != FieldTypeId.List;
+            var columnType = isLegacyTwoTierList ? typeof(ListValue) : schema.ClrType;
+
+            dataTable.AddColumn(field, columnType, parent);
         }
         return dataTable;
     }

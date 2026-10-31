@@ -100,10 +100,6 @@ public sealed record ExpectedFile(
 /// falls through to the raw thrift bytes.
 /// </description></item>
 /// <item><description>
-/// <see cref="IParquetSchemaElement.ClrType"/> of a raw BYTE_ARRAY leaf:
-/// <see cref="byte"/>[] vs <see cref="ByteArrayValue"/>.
-/// </description></item>
-/// <item><description>
 /// The repeated wrapper of a 2-tier list is a <see cref="FieldTypeId.Struct"/> for Parquet.NET but
 /// a <see cref="FieldTypeId.List"/> for DuckDB.
 /// </description></item>
@@ -592,7 +588,7 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                     new(1, "TIME", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "INT64", null, typeof(TimeOnly)),
                 ]),
 
-            //A BYTE_ARRAY with no UTF8 converted type, so the CLR type is a raw byte array.
+            //A BYTE_ARRAY with no UTF8 converted type, so the CLR type is ByteArrayValue rather than string.
             ["Data/BYTEARRAY_VALUE_TEST.parquet"] = new(
                 ParquetVersion: 1,
                 RowCount: 1,
@@ -610,7 +606,7 @@ public class ParquetNETMetadataViewerTests : MetadataViewerTests
                 SchemaNodes:
                 [
                     new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
-                    new(1, "mesh", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", null, typeof(byte[])),
+                    new(1, "mesh", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", null, typeof(ByteArrayValue)),
                 ]),
 
             //33 flat columns, only a sample is spelled out. create_date is an INT96 with no
@@ -985,7 +981,6 @@ public class DuckDBMetadataViewerTests : MetadataViewerTests
                 SchemaNodes:
                 [
                     new(0, "root", FieldTypeId.Struct, null, false, null, null, typeof(StructValue)),
-                    //DuckDB wraps an unconverted BYTE_ARRAY in its own display type.
                     new(1, "mesh", FieldTypeId.Primitive, RepetitionTypeId.Optional, true, "BYTE_ARRAY", null, typeof(ByteArrayValue)),
                 ]),
 
