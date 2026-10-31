@@ -88,7 +88,7 @@ public sealed class ParquetEngine : IParquetEngine
         }
         else
         {
-            throw new FileNotFoundException(parquetFilePath);
+            throw new FileNotFoundException($"Could not find file or folder at location: `{parquetFilePath}`");
         }
     }
 
@@ -96,7 +96,7 @@ public sealed class ParquetEngine : IParquetEngine
     {
         if (!File.Exists(parquetFilePath)) //Handles null
         {
-            throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
+            throw new FileNotFoundException($"Could not find parquet file at: `{parquetFilePath}`");
         }
 
         var db = await DuckDBHandle.OpenAsync(parquetFilePath);
@@ -118,7 +118,7 @@ public sealed class ParquetEngine : IParquetEngine
     {
         if (!Directory.Exists(folderPath)) //Handles null
         {
-            throw new DirectoryNotFoundException($"Directory doesn't exist: {folderPath}");
+            throw new DirectoryNotFoundException($"Directory doesn't exist: `{folderPath}`");
         }
 
         var skippedFiles = new Dictionary<string, Exception>();
@@ -214,7 +214,7 @@ public sealed class ParquetEngine : IParquetEngine
 
             if (offset >= metadata.RowCount)
             {
-                offset -= metadata.RowCount;
+                offset -= (int)metadata.RowCount; //Safe to cast since it's no bigger than offset
                 continue;
             }
 
@@ -328,37 +328,17 @@ public sealed class ParquetEngine : IParquetEngine
             else if (parquetSchemaElement.FieldType == FieldTypeId.Struct)
             {
                 var @struct = (Dictionary<string, object?>)value;
-                var dataTable = new DataTableLite(1);
-                foreach (var fieldName in @struct.Keys)
-                {
-                    var field = parquetSchemaElement.GetSingleOrByName(fieldName);
-                    if (field.FieldType == FieldTypeId.List)
-                    {
-                        dataTable.AddColumn(fieldName, typeof(ListValue), field);
-                    }
-                    else if (field.FieldType == FieldTypeId.Struct)
-                    {
-                        dataTable.AddColumn(fieldName, typeof(StructValue), field);
-                    }
-                    else if (field.FieldType == FieldTypeId.Map)
-                    {
-                        dataTable.AddColumn(fieldName, typeof(MapValue), field);
-                    }
-                    else //Primitive
-                    {
-                        dataTable.AddColumn(fieldName, field.ClrType, field);
-                    }
-                }
-                dataTable.NewRow();
+                var fieldNames = parquetSchemaElement.ChildNames;
+                var values = new object[fieldNames.Length];
                 var fieldIndex = 0;
-                foreach (var keyValuePair in @struct)
+                foreach (var field in parquetSchemaElement.Children)
                 {
-                    var field = parquetSchemaElement.GetSingleOrByName(keyValuePair.Key);
-                    dataTable.Rows[0][fieldIndex] = ConvertValueTypeIfNeeded(keyValuePair.Value ?? DBNull.Value, field);
-                    fieldIndex++;
+                    var fieldValue = @struct.TryGetValue(field.Path, out var structFieldValue) ? structFieldValue
+                        : throw new MalformedFieldException($"Struct field `{parquetSchemaElement.Path}/{field.Path}` wasn't found in the data");
+                    values[fieldIndex++] = ConvertValueTypeIfNeeded(fieldValue ?? DBNull.Value, field);
                 }
 
-                return new StructValue(dataTable.GetRowAt(0));
+                return new StructValue(fieldNames, values);
             }
             else if (parquetSchemaElement.FieldType == FieldTypeId.Map)
             {
@@ -443,7 +423,7 @@ public sealed class ParquetEngine : IParquetEngine
     {
         if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException($"Parquet file no longer exists at: {Path}");
+            throw new FileNotFoundException($"Parquet file no longer exists at: `{filePath}`");
         }
     }
 

@@ -2,7 +2,7 @@
 
 namespace ParquetViewer.Engine.Types;
 
-public interface IMapValue : IComparable<IMapValue>, IComparable, IEnumerable<(object Key, object Value)>
+public interface IMapValue : IComparable<IMapValue>, IComparable, IEnumerable<(object Key, object Value)>, ITruncatable
 {
     public ArrayList Keys { get; }
     public Type KeyType { get; }

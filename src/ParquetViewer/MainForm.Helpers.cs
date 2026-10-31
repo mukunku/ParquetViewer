@@ -25,17 +25,32 @@ public partial class MainForm
         var loadingIcon = new LoadingIcon(this, message, loadingBarMax);
         loadingIcon.OnShow += (sender, e) =>
         {
-            mainTableLayoutPanel.Enabled = false;
             mainMenuStrip.Enabled = false;
+            ToggleUserActionableControls(false);
+            loadAllRowsButton.Enabled = false;
         };
         loadingIcon.OnHide += (sender, e) =>
         {
-            mainTableLayoutPanel.Enabled = true;
             mainMenuStrip.Enabled = true;
+            ToggleUserActionableControls(true);
+            loadAllRowsButton.Enabled = _mainDataSource?.Rows.Count < _openParquetEngine?.RecordCount;
         };
 
         loadingIcon.Show();
         return loadingIcon;
+
+        //Disabling `mainTableLayoutPanel` also disables Labels which breaks
+        //Dark Mode. So we disable individual user actionable controls instead.
+        void ToggleUserActionableControls(bool enabled)
+        {
+            searchFilterLabel.Enabled = enabled;
+            searchFilterTextBox.Enabled = enabled;
+            runQueryButton.Enabled = enabled;
+            clearFilterButton.Enabled = enabled;
+            offsetTextBox.Enabled = enabled;
+            recordCountTextBox.Enabled = enabled;
+            mainGridView.Enabled = enabled;
+        }
     }
 
     //TODO: Should we export floats and binary data with custom formatting if activated?
@@ -49,51 +64,54 @@ public partial class MainForm
         filePathWithExtension = string.IsNullOrWhiteSpace(filePathWithExtension) ? null : filePathWithExtension;
         try
         {
-            if (MainDataSource?.DefaultView.Count > 0)
+            if (MainDataSource is null || MainDataSource.DefaultView.Count == 0)
+                return;
+
+            var rowCount = MainDataSource.DefaultView.Count;
+            var columnCount = MainDataSource.Columns.Count;
+
+            exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(rowCount);
+            exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
+            exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+
+            if (_openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
+                && _openParquetEngine is Engine.ParquetNET.ParquetEngine)
             {
-                exportFileDialog.Title = Resources.Strings.RecordsToBeExportedTitleFormat.Format(MainDataSource.DefaultView.Count);
-                exportFileDialog.Filter = "CSV file (*.csv)|*.csv|JSON file (*.json)|*.json|Excel '93 file (*.xls)|*.xls|Excel '07 file (*.xlsx)|*.xlsx";
-                exportFileDialog.FilterIndex = (int)defaultFileType + 1;
+                exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+            }
 
-                if (_openParquetEngine?.Metadata.SchemaTree?.Children.All(s => s.IsPrimitive) == true
-                    && _openParquetEngine is Engine.ParquetNET.ParquetEngine)
+            if (filePathWithExtension is not null || exportFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                filePath = filePathWithExtension ?? exportFileDialog.FileName;
+                CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
+
+                var fileExtension = Path.GetExtension(filePath);
+                FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
+                var stopWatch = Stopwatch.StartNew();
+                loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, rowCount * columnCount);
+                await ExportResultsImplAsync(MainDataSource, selectedFileType.Value, _openParquetEngine,
+                    filePath, loadingIcon, _openFileOrFolderPath, loadingIcon.CancellationToken);
+
+                if (loadingIcon.CancellationToken.IsCancellationRequested)
                 {
-                    exportFileDialog.Filter += "|Parquet file (*.parquet)|*.parquet";
+                    CleanupFile(filePath);
+                    MessageBox.Show(Resources.Strings.ExportCancelledMessage, Resources.Strings.ExportCancelledTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-
-                if (filePathWithExtension is not null || exportFileDialog.ShowDialog() == DialogResult.OK)
+                else
                 {
-                    filePath = filePathWithExtension ?? exportFileDialog.FileName;
-                    CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
+                    long fileSizeInBytes = new FileInfo(filePath).Length;
 
-                    var fileExtension = Path.GetExtension(filePath);
-                    FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
-                    var stopWatch = Stopwatch.StartNew();
-                    loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, MainDataSource.DefaultView.Count * MainDataSource.Columns.Count);
-                    await ExportResultsImplAsync(MainDataSource!, selectedFileType.Value, _openParquetEngine,
-                        filePath, loadingIcon, _openFileOrFolderPath, loadingIcon.CancellationToken);
+                    FileExportEvent.FireAndForget(
+                        selectedFileType.Value,
+                        fileSizeInBytes,
+                        rowCount,
+                        columnCount,
+                        stopWatch.ElapsedMilliseconds);
 
-                    if (loadingIcon.CancellationToken.IsCancellationRequested)
-                    {
-                        CleanupFile(filePath);
-                        MessageBox.Show(Resources.Strings.ExportCancelledMessage, Resources.Strings.ExportCancelledTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        long fileSizeInBytes = new FileInfo(filePath).Length;
-
-                        FileExportEvent.FireAndForget(
-                            selectedFileType.Value,
-                            fileSizeInBytes,
-                            mainGridView.RowCount,
-                            mainGridView.ColumnCount,
-                            stopWatch.ElapsedMilliseconds);
-
-                        MessageBox.Show(this,
-                            Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
-                            Resources.Strings.ExportSuccessfulTitle,
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+                    MessageBox.Show(this,
+                        Resources.Strings.ExportSuccessfulMessageFormat.Format(Math.Round((fileSizeInBytes / 1024.0) / 1024.0, 2)),
+                        Resources.Strings.ExportSuccessfulTitle,
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
@@ -113,6 +131,11 @@ public partial class MainForm
             {
                 rerunType = FileType.XLSX;
             }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            CleanupFile(filePath);
+            HandleUnauthorizedAccessException(ex);
         }
         catch (Exception)
         {
@@ -203,10 +226,22 @@ public partial class MainForm
         sheetName = Regex.Replace(sheetName, "[^a-zA-Z0-9 _\\-()]", string.Empty).Left(MAX_XLSX_SHEET_NAME_LENGTH);
 
         using var fs = new FileStream(path, FileMode.OpenOrCreate);
-        await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
+
+        var hasQueryFilter = !string.IsNullOrWhiteSpace(mainDataSource.DefaultView.RowFilter);
+        var isSorted = !string.IsNullOrWhiteSpace(mainDataSource.DefaultView.Sort);
+        if (hasQueryFilter || isSorted)
+        {
+            //We need to create a new DataTable from the filtered/sorted view. This unfortunately will cost us time and memory...
+            using var cloneTable = await Task.Run(() => mainDataSource.DefaultView.ToTable());
+            await fs.SaveAsAsync(cloneTable, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
+        }
+        else
+        {
+            await fs.SaveAsAsync(mainDataSource, printHeader: true, sheetName, ExcelType.XLSX, configuration: null, progress, cancellationToken);
+        }
     }
 
-    private static Task WriteDataToCSVFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+    internal static Task WriteDataToCSVFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
         => Task.Run(() =>
             {
                 using var writer = new StreamWriter(path, false, Encoding.UTF8);
@@ -235,27 +270,24 @@ public partial class MainForm
                 string dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
                 string dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
                 string timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
+                var columnCount = dataTable.Columns.Count;
                 foreach (DataRowView row in dataTable.DefaultView)
                 {
-                    rowBuilder.Clear();
-
-                    isFirst = true;
-                    foreach (object? value in row.Row.ItemArray)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
+                        break;
+                    }
 
-                        if (!isFirst)
+                    rowBuilder.Clear();
+                    for (var i = 0; i < columnCount; i++)
+                    {
+                        if (i > 0)
                         {
                             rowBuilder.Append(',');
                         }
-                        else
-                        {
-                            isFirst = false;
-                        }
 
+                        //Read just this value. row.Row.ItemArray would copy (and box) the entire row.
+                        var value = row[i];
                         if (value is DateTime dt)
                         {
                             rowBuilder.Append(UtilityMethods.CleanCSVValue(dt.ToString(dateFormat)));
@@ -270,14 +302,13 @@ public partial class MainForm
                         }
                         else
                         {
-                            var stringValue = value!.ToString()!; //we never have `null` only `DBNull.Value`
+                            var stringValue = value.ToString()!; //we never have `null` only `DBNull.Value`
                             rowBuilder.Append(UtilityMethods.CleanCSVValue(stringValue));
                         }
-
-                        progress.Report(1);
                     }
 
                     writer.WriteLine(rowBuilder.ToString());
+                    progress.Report(columnCount);
                 }
             }, cancellationToken);
 
@@ -345,8 +376,8 @@ public partial class MainForm
 
                             excelWriter.WriteCell(i + 1, j, stringValue);
                         }
-                        progress.Report(1);
                     }
+                    progress.Report(dataTable.Columns.Count);
                 }
 
                 bool IsIntCastSafe(object value) => value.GetType() == typeof(int)
@@ -363,31 +394,33 @@ public partial class MainForm
                 excelWriter.EndWrite();
             }, cancellationToken);
 
-    private static Task WriteDataToJSONFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
+    internal static Task WriteDataToJSONFileAsync(DataTable dataTable, string path, CancellationToken cancellationToken, IProgress<int> progress)
         => Task.Run(() =>
             {
                 using var fs = new FileStream(path, FileMode.OpenOrCreate);
                 using var jsonWriter = new Engine.Utf8JsonWriterWithRunningLength(fs);
 
+                var columnCount = dataTable.Columns.Count;
                 jsonWriter.WriteStartArray();
                 foreach (DataRowView row in dataTable.DefaultView)
                 {
-                    jsonWriter.WriteStartObject();
-                    for (var i = 0; i < row.Row.ItemArray.Length; i++)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
+                        break;
+                    }
 
+                    jsonWriter.WriteStartObject();
+                    for (var i = 0; i < columnCount; i++)
+                    {
                         var columnName = dataTable.Columns[i].ColumnName;
                         jsonWriter.WritePropertyName(columnName);
 
-                        object? value = row.Row.ItemArray[i];
-                        Engine.Helpers.WriteValue(jsonWriter, value!, false);
-                        progress.Report(1);
+                        //Read just this value. Accessing row.Row.ItemArray would copy (and box) the entire row every time.
+                        object value = row[i];
+                        _ = Engine.Helpers.WriteValue(jsonWriter, value);
                     }
                     jsonWriter.WriteEndObject();
+                    progress.Report(columnCount);
                 }
                 jsonWriter.WriteEndArray();
             }, cancellationToken);
@@ -409,6 +442,7 @@ public partial class MainForm
 }"
                             }
                         };
+
                 await engine.WriteDataToParquetFileAsync(dataTable, path, progress, customMetadata, cancellationToken);
             }, cancellationToken);
 
@@ -434,7 +468,7 @@ public partial class MainForm
         ShowError(sb.ToString());
     }
 
-    private static void HandleFileReadException(FileReadException ex)
+    private static void HandleFileOpenException(FileOpenException ex)
     {
         ShowError(Resources.Errors.UnexpectedFileReadErrorMessageFormat.Format(ex));
     }
@@ -489,6 +523,12 @@ public partial class MainForm
                    DecimalOverflowException.MAX_DECIMAL_PRECISION,
                    DecimalOverflowException.MAX_DECIMAL_SCALE),
                Resources.Errors.DecimalValueTooLargeErrorTitle);
+
+    private static void HandleOutOfMemoryException(OutOfMemoryException ex)
+        => ShowError(ex.Message);
+
+    private static void HandleUnauthorizedAccessException(UnauthorizedAccessException ex)
+        => ShowError(ex.Message);
 
     private static void ShowError(string message, string? title = null)
         => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);

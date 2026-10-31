@@ -1,9 +1,6 @@
 ﻿using Parquet;
-using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
-using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
-using System.Collections;
 using System.Data;
 
 namespace ParquetViewer.Engine.ParquetNET;
@@ -16,7 +13,7 @@ public partial class ParquetEngine
         ArgumentOutOfRangeException.ThrowIfNegative(offset, nameof(offset));
 
         long recordsLeftToRead = recordCount;
-        DataTableLite result = BuildDataTable(null, selectedFields, Math.Min(recordCount, (int)RecordCount));
+        var result = BuildDataTableLite(selectedFields, (int)Math.Min(recordCount, RecordCount));
 
         foreach (var reader in GetReaders(offset))
         {
@@ -32,7 +29,7 @@ public partial class ParquetEngine
 
         return (logProgress) =>
         {
-            var datatable = result.ToDataTable(cancellationToken, logProgress ? progress : null);
+            var datatable = result.ToDataTableDispose(cancellationToken, logProgress ? progress : null);
             return datatable;
         };
     }
@@ -41,7 +38,7 @@ public partial class ParquetEngine
         long offset, long recordCount, CancellationToken cancellationToken, IProgress<int>? progress)
     {
         //Read column by column to generate each row in the datatable
-        int totalRecordCountSoFar = 0;
+        long totalRecordCountSoFar = 0;
         long rowsLeftToRead = recordCount;
         for (int i = 0; i < parquetReader.RowGroupCount; i++)
         {
@@ -52,8 +49,8 @@ public partial class ParquetEngine
                 throw new ArgumentOutOfRangeException(
                     string.Format("Cannot handle row group sizes greater than {0}. Found {1} instead.", int.MaxValue, groupReader.RowCount));
 
-            int rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
-            totalRecordCountSoFar += (int)groupReader.RowCount;
+            long rowsPassedUntilThisRowGroup = totalRecordCountSoFar;
+            totalRecordCountSoFar += groupReader.RowCount;
 
             if (offset >= totalRecordCountSoFar)
                 continue;
@@ -78,482 +75,147 @@ public partial class ParquetEngine
         int rowBeginIndex = dataTable.Rows.Count;
         bool isFirstColumn = true;
 
-        foreach (DataTableLite.ColumnLite column in dataTable.Columns.Values)
+        foreach (var columnLite in dataTable.Columns.Values)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var field = (ParquetSchemaElement)column.ParentSchema.GetChild(column.Name);
-            switch (field.FieldType)
-            {
-                case FieldTypeId.Primitive:
-                    await ReadPrimitiveFieldAsync(dataTable, groupReader, rowBeginIndex, field, skipRecords,
-                        readRecords, isFirstColumn, cancellationToken, progress);
-                    break;
-                case FieldTypeId.List:
-                    var listField = field.GetListField();
-                    var itemField = listField.GetListItemField();
-                    var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-                    await ReadListFieldAsync(dataTable, groupReader, rowBeginIndex, itemField, fieldIndex,
-                        skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
-                    break;
-                case FieldTypeId.Map:
-                    await ReadMapFieldAsync(dataTable, groupReader, rowBeginIndex, field, skipRecords,
-                        readRecords, isFirstColumn, cancellationToken, progress);
-                    break;
-                case FieldTypeId.Struct:
-                    await ReadStructFieldAsync(dataTable, groupReader, rowBeginIndex, field, skipRecords,
-                        readRecords, isFirstColumn, cancellationToken, progress);
-                    break;
-                default:
-                    throw new InvalidDataException($"Field `{column.Name}` has an unknown type {field.FieldType}.");
-            }
+            var field = (ParquetSchemaElement)columnLite.ParentSchema.GetChild(columnLite.Name);
+            await ReadFieldAsync(dataTable, groupReader, rowBeginIndex, field, skipRecords,
+                readRecords, isFirstColumn, cancellationToken, progress);
 
             isFirstColumn = false;
         }
     }
 
-    private async Task ReadPrimitiveFieldAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
+    /// <summary>
+    /// Reads a field (primitive, or a list, map or struct nested to any depth) one row at a time.
+    /// </summary>
+    private static async Task ReadFieldAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
         long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
     {
-        var rowIndex = rowBeginIndex;
-        var skippedRecords = 0;
         var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
-
-        if (field.BelongsToListField || field.BelongsToListOfStructsField || field.DataField?.IsArray == true)
-        {
-            await ReadListFieldAsync(dataTable, groupReader, rowBeginIndex, field, fieldIndex, skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
-        }
-        else
-        {
-            var dataColumn = await ReadColumnAsync(groupReader, field, cancellationToken);
-            var dataEnumerable = dataColumn.Data;
-
-            var fieldType = dataTable.Columns[field.Path].Type;
-            var progressUntilReport = 0;
-            const int progressReportThreshold = 10;
-            foreach (object value in dataEnumerable)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (skipRecords > skippedRecords)
-                {
-                    skippedRecords++;
-                    continue;
-                }
-
-                if (rowIndex - rowBeginIndex >= readRecords)
-                    break;
-
-                if (isFirstColumn)
-                {
-                    dataTable.NewRow();
-                }
-
-                if (value == DBNull.Value || value is null)
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                }
-                else if (fieldType == typeof(ByteArrayValue))
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = new ByteArrayValue((byte[])value);
-                }
-                else
-                {
-                    dataTable.Rows[rowIndex]![fieldIndex] = value;
-                }
-
-                rowIndex++;
-                progressUntilReport++;
-
-                //Report progress in bursts. This is a micro-optimization when loading more than 50 million cells
-                if (progressUntilReport >= progressReportThreshold)
-                {
-                    progress?.Report(progressUntilReport);
-                    progressUntilReport = 0;
-                }
-            }
-
-            if (progressUntilReport > 0)
-            {
-                progress?.Report(progressUntilReport);
-            }
-        }
-    }
-
-    private async Task ReadListFieldAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement itemField, int fieldIndex,
-        long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
-    {
-        var lastMilestone = "Start";
-        try
-        {
-            if (itemField.FieldType == FieldTypeId.List)
-            {
-                var nestedListField = itemField.GetListField();
-                var nestedItemField = nestedListField.GetListItemField();
-                lastMilestone = "Read";
-
-                await ReadListFieldAsync(dataTable, groupReader, rowBeginIndex, nestedItemField, fieldIndex: 0,
-                    skipRecords, readRecords, isFirstColumn, cancellationToken, progress);
-            }
-            else if (itemField.FieldType == FieldTypeId.Primitive)
-            {
-                int rowIndex = rowBeginIndex;
-
-                var dataColumn = await ReadColumnAsync(groupReader, itemField, cancellationToken);
-                lastMilestone = "Read";
-
-                var dataEnumerable = dataColumn.Data;
-
-                var numberOfListParents = itemField.NumberOfListParents;
-                #region Fixes TWO_TIER_LIST_TYPE_TEST
-                numberOfListParents = numberOfListParents == 0 ? 1 : numberOfListParents;
-                #endregion
-
-                var listValueBuilder = new ListValueBuilder(dataColumn.RepetitionLevels!, dataColumn.DefinitionLevels!, dataEnumerable, itemField.ClrType);
-                var listValues = listValueBuilder.ReadRows((int)skipRecords, (int)readRecords, numberOfListParents,
-                    itemField.CurrentDefinitionLevel, cancellationToken);
-                lastMilestone = "ReadRows";
-
-                foreach (var listValue in listValues)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (isFirstColumn)
-                    {
-                        dataTable.NewRow();
-                    }
-
-                    dataTable.Rows[rowIndex][fieldIndex] = listValue;
-                    rowIndex++;
-                    progress?.Report(1);
-                }
-            }
-            else if (itemField.FieldType == FieldTypeId.Struct)
-            {
-                //Read struct data as a new datatable
-                DataTableLite structFieldTable = BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
-
-                //Need to calculate progress differently for structs
-                var structFieldReadProgress = StructReadProgress(progress, structFieldTable.Columns.Count);
-
-                //Read the struct data and populate the datatable
-                await ProcessRowGroupAsync(structFieldTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
-                lastMilestone = "Processed";
-
-                //We need to pivot the data into a new data table (because we read it in columnar fashion above)
-                int rowIndex = rowBeginIndex;
-                foreach (var values in structFieldTable.Rows)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    DataTableLite PivotTable(object[] valueArray, DataTableLite? newStructFieldTableOverride = null)
-                    {
-                        var newStructFieldTable = newStructFieldTableOverride ?? BuildDataTable(itemField, itemField.Children.Select(f => f.Path).ToList(), (int)readRecords);
-                        for (var columnOrdinal = 0; columnOrdinal < valueArray.Length; columnOrdinal++)
-                        {
-                            lastMilestone = $"#{rowIndex}-{columnOrdinal}";
-                            if (valueArray[columnOrdinal] == DBNull.Value)
-                            {
-                                //Empty array
-                                continue;
-                            }
-
-                            var columnValues = (ListValue)valueArray[columnOrdinal];
-
-                            if (columnValues.Data.Count == 0 && columnOrdinal != 0) //All values are null
-                            {
-                                for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
-                                {
-                                    newStructFieldTable.Rows[i][columnOrdinal] = DBNull.Value;
-                                }
-
-                                continue;
-                            }
-
-                            for (var rowValueIndex = 0; rowValueIndex < columnValues.Data.Count; rowValueIndex++)
-                            {
-                                lastMilestone = $"#{rowIndex}-{columnOrdinal}-{rowValueIndex}";
-
-                                var columnValue = columnValues.Data[rowValueIndex] ?? throw new SystemException("Column value missing during pivot");
-                                #region Hack for LIST_OF_STRUCT_OF_LIST_OF_STRUCT test
-                                if (columnValue is StructValueExt structValue && structValue.IsList)
-                                {
-                                    //We need to convert `columnValue` from struct to a list of structs as it was a nested structure
-                                    var areTypesAsExpected = newStructFieldTable.Columns.Values.ElementAt(columnOrdinal).Type == typeof(ListValue);
-                                    if (!areTypesAsExpected)
-                                    {
-                                        throw new UnsupportedFieldException("Failed to pivot list of structs.");
-                                    }
-
-                                    if (structValue.Data is not DataRowLite dataRowLite)
-                                    {
-                                        throw new InvalidDataException("Struct data wasn't the expected type.");
-                                    }
-
-                                    var nestedStructFieldTable = PivotTable(structValue.Data.Row, dataRowLite.Table.Clone());
-                                    var listValues = new ArrayList(nestedStructFieldTable.Rows.Count);
-                                    for (var i = 0; i < nestedStructFieldTable.Rows.Count; i++)
-                                    {
-                                        var row = nestedStructFieldTable.GetRowAt(i);
-                                        listValues.Add(new StructValueExt(row));
-                                    }
-                                    columnValue = new ListValue(listValues, typeof(StructValueExt));
-                                }
-                                #endregion
-
-                                bool isFirstValueColumn = columnOrdinal == 0;
-                                if (isFirstValueColumn)
-                                {
-                                    newStructFieldTable.NewRow();
-                                }
-                                newStructFieldTable.Rows[rowValueIndex][columnOrdinal] = columnValue;
-                            }
-                        }
-                        return newStructFieldTable;
-                    }
-
-                    ArrayList GetListOfStructs(object[] _values)
-                    {
-                        DataTableLite newStructFieldTable = PivotTable(_values);
-
-                        var listValues = new ArrayList(newStructFieldTable.Rows.Count);
-                        for (var i = 0; i < newStructFieldTable.Rows.Count; i++)
-                        {
-                            var dataRow = newStructFieldTable.GetRowAt(i);
-
-                            //If all the fields of the struct are null, we assume the struct itself is null
-                            if (dataRow.Row.All(value => value == DBNull.Value))
-                            {
-                                listValues.Add(DBNull.Value);
-                            }
-                            else
-                            {
-                                listValues.Add(new StructValueExt(dataRow) { IsList = itemField.NumberOfListParents > 1 });
-                            }
-                        }
-                        return listValues;
-                    }
-
-                    var listValues = GetListOfStructs(values);
-
-                    if (isFirstColumn)
-                        dataTable.NewRow();
-
-                    dataTable.Rows[rowIndex][fieldIndex] = new ListValue(listValues, typeof(StructValueExt));
-                    rowIndex++;
-                }
-            }
-            else
-            {
-                throw new NotSupportedException($"Lists of {itemField.FieldType}s are not currently supported");
-            }
-        }
-        catch (Exception ex)
-        {
-            ex.Data["last_milestone"] = lastMilestone;
-            throw;
-        }
-    }
-
-    private static async Task ReadMapFieldAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
-        long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
-    {
-        var keyValueField = field.GetMapKeyValueField();
-        var keyField = keyValueField.GetMapKeyField();
-        var valueField = keyValueField.GetMapValueField();
-
-        if (keyField.Children.Any() || valueField.Children.Any())
-            throw new UnsupportedFieldException($"Cannot load field `{field.Path}`. Nested Map types are not supported");
-
-        int rowIndex = rowBeginIndex;
-
-        int skippedRecords = 0;
-        var keyDataColumn = await ReadColumnAsync(groupReader, keyField, cancellationToken);
-        var valueDataColumn = await ReadColumnAsync(groupReader, valueField, cancellationToken);
-
-        var keyDataEnumerable = keyDataColumn.Data;
-        var valueDataEnumerable = valueDataColumn.Data;
-
-        var dataEnumerable = Engine.Helpers.PairEnumerables(keyDataEnumerable, valueDataEnumerable, DBNull.Value);
-
-        var levelCount = Math.Max(keyDataColumn.RepetitionLevels?.Length ?? 0, valueDataColumn.RepetitionLevels?.Length ?? 0);
-        var fieldIndex = dataTable.Columns[field.Path]!.Ordinal;
-        ArrayList? mapKeys = null;
-        ArrayList? mapValues = null;
-        int index = -1;
-        foreach (var (key, value) in dataEnumerable)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            index++;
-
-            bool IsEndOfRow() => (index + 1) == levelCount
-                || GetRepetitionLevel(index + 1) == 0; //0 means new map
-
-            //Skip rows
-            if (skipRecords > skippedRecords)
-            {
-                if (IsEndOfRow())
-                    skippedRecords++;
-
-                continue;
-            }
-
-            mapKeys ??= [];
-            mapValues ??= [];
-            if (IsEndOfRow())
-            {
-                if (isFirstColumn)
-                {
-                    dataTable.NewRow();
-                }
-
-                mapKeys.Add(key);
-                mapValues.Add(value);
-
-                if (keyDataColumn.IsEmpty(index, keyField) || valueDataColumn.IsEmpty(index, valueField))
-                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue([], keyField.ClrType, [], valueField.ClrType);
-                else if (keyDataColumn.IsNull(index, keyField) || valueDataColumn.IsNull(index, valueField))
-                    dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-                else
-                    dataTable.Rows[rowIndex]![fieldIndex] = new MapValue(mapKeys, keyField.ClrType, mapValues, valueField.ClrType);
-
-                mapKeys = null;
-                mapValues = null;
-
-                rowIndex++;
-                progress?.Report(1);
-
-                if (rowIndex - rowBeginIndex >= readRecords)
-                    break;
-            }
-            else
-            {
-                mapKeys.Add(key);
-                mapValues.Add(value);
-            }
-
-            int GetRepetitionLevel(int dataIndex)
-            {
-                if (keyDataColumn.RepetitionLevels is null && valueDataColumn.RepetitionLevels is null)
-                    return 0; // assume each entry is a new row since we have no repetition levels
-                else if (keyDataColumn.RepetitionLevels?.Length > dataIndex)
-                    return keyDataColumn.RepetitionLevels[dataIndex];
-                else if (valueDataColumn.RepetitionLevels?.Length > dataIndex)
-                    return valueDataColumn.RepetitionLevels[dataIndex];
-                else
-                    throw new ArgumentOutOfRangeException(nameof(dataIndex));
-            }
-        }
-    }
-
-    private async Task ReadStructFieldAsync(DataTableLite dataTable, ParquetRowGroupReader groupReader, int rowBeginIndex, ParquetSchemaElement field,
-       long skipRecords, long readRecords, bool isFirstColumn, CancellationToken cancellationToken, IProgress<int>? progress)
-    {
-        //Read struct data as a new datatable
-        DataTableLite structFieldTable = BuildDataTable(field, field.Children.Select(f => f.Path).ToList(), 1);
-
-        //Need to calculate progress differently for structs
-        var structFieldReadProgress = StructReadProgress(progress, structFieldTable.Columns.Count);
-
-        //Read the struct data and populate the datatable
-        await ProcessRowGroupAsync(structFieldTable, groupReader, skipRecords, readRecords, cancellationToken, structFieldReadProgress);
+        var builder = await CreateValueBuilderAsync(field, groupReader, cancellationToken);
 
         var rowIndex = rowBeginIndex;
-        var fieldIndex = dataTable.Columns[field.Path]?.Ordinal ?? throw new ParquetEngineException($"Column `{field.Path}` is missing");
-        for (var i = 0; i < structFieldTable.Rows.Count; i++)
+        var progressUntilReport = 0;
+        const int progressReportThreshold = 10;
+        foreach (var value in builder.ReadRows(skipRecords, readRecords, cancellationToken))
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             if (isFirstColumn)
             {
                 dataTable.NewRow();
             }
 
-            //If all the fields of the struct are null, we assume the struct itself is null
-            bool isNull = !structFieldTable.Rows[i].Any(item => item != DBNull.Value);
-
-            if (isNull)
-            {
-                dataTable.Rows[rowIndex]![fieldIndex] = DBNull.Value;
-            }
-            else
-            {
-                var dataRow = structFieldTable.GetRowAt(i);
-                dataTable.Rows[rowIndex]![fieldIndex] = new StructValueExt(dataRow);
-            }
+            dataTable.Rows[rowIndex]![fieldIndex] = value;
             rowIndex++;
+            progressUntilReport++;
+
+            //Report progress in bursts. Reporting every cell is measurably slower when loading tens of millions of cells
+            if (progressUntilReport >= progressReportThreshold)
+            {
+                progress?.Report(progressUntilReport);
+                progressUntilReport = 0;
+            }
+        }
+
+        if (progressUntilReport > 0)
+        {
+            progress?.Report(progressUntilReport);
         }
     }
 
-    private static SimpleProgress StructReadProgress(IProgress<int>? _progress, int fieldCount)
+    /// <summary>
+    /// Reads the leaf columns beneath <paramref name="field"/> and builds the matching tree of value builders.
+    /// </summary>
+    private static async Task<FieldValueBuilder> CreateValueBuilderAsync(ParquetSchemaElement field, ParquetRowGroupReader groupReader,
+        CancellationToken cancellationToken)
     {
-        var progress = new SimpleProgress();
-        var reportedRowCount = 0;
-        progress.ProgressChanged += (int progressSoFar) =>
+        FieldValueBuilder builder;
+        switch (field.FieldType)
         {
-            if (fieldCount > 0)
-            {
-                //Progress is reported per struct field, so divide the cumulative total by the field
-                //count to convert it to row count in the main data table. 
-                var rowCount = progressSoFar / fieldCount;
-                var increment = rowCount - reportedRowCount;
-                if (increment > 0)
+            case FieldTypeId.Primitive:
+                var column = await ReadColumnAsync(groupReader, field, cancellationToken);
+                var leaf = new LeafCursor(column, column.RepetitionLevels, column.DefinitionLevels, field.Levels.MaxDefinitionLevel);
+                builder = new PrimitiveValueBuilder(leaf, column.ValueType);
+                break;
+            case FieldTypeId.List:
+                var repeatedField = field.GetListField();
+
+                if (IsLegacyTwoLevelList(field, repeatedField))
+                    return await CreateValueBuilderAsync(repeatedField, groupReader, cancellationToken);
+
+                var element = await CreateValueBuilderAsync(repeatedField.GetListItemField(), groupReader, cancellationToken);
+                return new ListValueBuilder(repeatedField.Levels.MaxDefinitionLevel, repeatedField.Levels.MaxRepetitionLevel, element);
+            case FieldTypeId.Map:
+                var keyValueField = field.GetMapKeyValueField();
+                var key = await CreateValueBuilderAsync(keyValueField.GetMapKeyField(), groupReader, cancellationToken);
+                var value = await CreateValueBuilderAsync(keyValueField.GetMapValueField(), groupReader, cancellationToken);
+                return new MapValueBuilder(keyValueField.Levels.MaxDefinitionLevel, keyValueField.Levels.MaxRepetitionLevel, key, value);
+            case FieldTypeId.Struct:
+                var children = field.Children;
+                var fields = new List<FieldValueBuilder>(children.Count);
+                foreach (var child in children)
                 {
-                    _progress?.Report(increment);
-                    reportedRowCount = rowCount;
+                    fields.Add(await CreateValueBuilderAsync(child, groupReader, cancellationToken));
                 }
-            }
-            else
-            {
-                //If the struct field has no columns, then each read is one row.
-                _progress?.Report(1);
-            }
-        };
-        return progress;
+                builder = new StructValueBuilder(field.Levels.MaxDefinitionLevel, [.. children.Select(child => child.Path)], fields);
+                break;
+            default:
+                throw new UnsupportedFieldException($"Field `{field.PathWithParent}` has an unknown type {field.FieldType}.");
+        }
+
+        //The repeated nodes inside a LIST or MAP are handled by those cases above and never built on their own,
+        //so a repeated field reaching here repeats by itself (a legacy "two-tier" list) so it's a list of itself
+        return field.RepetitionType == RepetitionTypeId.Repeated
+            ? new ListValueBuilder(field.Levels.MaxDefinitionLevel, field.Levels.MaxRepetitionLevel, builder)
+            : builder;
     }
 
-    private DataTableLite BuildDataTable(ParquetSchemaElement? parent, List<string> fields, int expectedRecordCount)
+    /// <summary>
+    /// Older writers left out the middle level of a LIST, making the repeated node the element itself. The Parquet spec's
+    /// backward compatibility rules say that's the case when the repeated node:
+    /// <list type="number">
+    /// <item>isn't a group, e.g. <c>repeated int32 array</c></item>
+    /// <item>is a group with more than one field</item>
+    /// <item>is a group with one field, named <c>array</c> or <c>&lt;list name&gt;_tuple</c></item>
+    /// </list>
+    /// Otherwise it's the standard three-level list, where the repeated node's only child is the element.
+    /// </summary>
+    private static bool IsLegacyTwoLevelList(ParquetSchemaElement listField, ParquetSchemaElement repeatedField)
+        => repeatedField.FieldType == FieldTypeId.Primitive
+            || repeatedField.Children.Count > 1
+            || repeatedField.Path == "array"
+            || repeatedField.Path == $"{listField.Path}_tuple";
+
+    private DataTableLite BuildDataTableLite(List<string> fields, int expectedRecordCount)
     {
-        parent ??= (ParquetSchemaElement)Metadata.SchemaTree;
+        var parent = (ParquetSchemaElement)Metadata.SchemaTree;
         DataTableLite dataTable = new(expectedRecordCount);
         foreach (var field in fields)
         {
             var schema = parent.GetChild(field);
-            if (schema.FieldType == FieldTypeId.List
-                || schema.DataField?.IsArray == true)
+
+            var columnType = schema.ClrType;
+            if (schema.RepetitionType == RepetitionTypeId.Repeated)
             {
-                dataTable.AddColumn(field, typeof(ListValue), parent);
-            }
-            else if (schema.FieldType == FieldTypeId.Map)
-            {
-                dataTable.AddColumn(field, typeof(MapValue), parent);
-            }
-            else if (schema.FieldType == FieldTypeId.Struct)
-            {
-                dataTable.AddColumn(field, typeof(StructValueExt), parent);
-            }
-            else if (schema.SchemaElement.Type == Parquet.Meta.Type.BYTE_ARRAY
-                && schema.SchemaElement.LogicalType is null
-                && schema.SchemaElement.ConvertedType is null)
-            {
-                dataTable.AddColumn(field, typeof(ByteArrayValue), parent);
-            }
-            else if (schema.DataField is DateTimeDataField dateField)
-            {
-                if (dateField.DateTimeFormat == DateTimeFormat.Date)
+                //Because we're going through top level fields, none of them should be REPEATED according to the Parquet spec.
+                //Only exception is legacy 2-tier Lists. Which can be of primitives or Structs only.
+                switch (schema.FieldType)
                 {
-                    dataTable.AddColumn(field, typeof(DateOnly), parent);
-                }
-                else
-                {
-                    dataTable.AddColumn(field, typeof(DateTime), parent);
+                    case FieldTypeId.Map:
+                    case FieldTypeId.List:
+                        throw new MalformedFieldException($"Repeated LIST and MAP fields aren't allowed by the Parquet spec. Field: `{field}`");
+                    case FieldTypeId.Primitive:
+                    case FieldTypeId.Struct:
+                        //A legacy two tier list. Its ClrType is the element's type, but we read it as a list
+                        columnType = typeof(ListValue);
+                        break;
+                    default:
+                        break;
                 }
             }
-            else
-            {
-                var clrType = schema.ClrType ?? throw new MalformedFieldException($"`{(parent is not null ? parent + "/" : string.Empty)}/{field}` has no data field");
-                dataTable.AddColumn(field, clrType, parent);
-            }
+
+            dataTable.AddColumn(field, columnType, parent);
         }
         return dataTable;
     }

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
@@ -15,6 +16,7 @@ using System.Runtime.Versioning;
 [assembly: SupportedOSPlatform("windows")]
 [assembly: ComVisible(false)]
 [assembly: Guid("134e9435-2fb2-4297-ac49-d44477a427bc")]
+[assembly: InternalsVisibleTo("ParquetViewer.Tests")]
 
 // Version information for an assembly consists of the following four values:
 //      Major Version

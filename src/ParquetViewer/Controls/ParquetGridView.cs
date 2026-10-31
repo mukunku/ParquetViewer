@@ -57,6 +57,7 @@ public class ParquetGridView : DataGridView
     private ContextMenuStrip? _contextMenu;
     private ContextMenuStrip? _headerContextMenu;
     private static readonly Regex _validColumnNameRegex = new("^[a-zA-Z0-9_]+$");
+    private readonly Dictionary<Font, Font> _italicFontCache = [];
 
     //We keep track of format overrides with the column name so we can keep formatting the same if the user adds/removes fields from the same file
     private readonly Dictionary<string, IByteArrayValue.DisplayFormat> _byteArrayColumnsWithFormatOverrides = [];
@@ -185,12 +186,18 @@ public class ParquetGridView : DataGridView
                 e.Paint(e.CellBounds, DataGridViewPaintParts.All
                     & ~(DataGridViewPaintParts.ContentForeground));
 
-                var font = new Font(e.CellStyle!.Font!, FontStyle.Italic);
+                var baseFont = e.CellStyle?.Font ?? Font;
+                if (!_italicFontCache.TryGetValue(baseFont, out var italicFont))
+                {
+                    italicFont = new Font(baseFont, FontStyle.Italic);
+                    _italicFontCache.Add(baseFont, italicFont);
+                }
+
                 var color = GridTheme.CellPlaceholderTextColor;
                 if (e.State.HasFlag(DataGridViewElementStates.Selected))
                     color = Color.White;
 
-                TextRenderer.DrawText(e.Graphics!, "NULL", font, e.CellBounds, color,
+                TextRenderer.DrawText(e.Graphics!, "NULL", italicFont, e.CellBounds, color,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.PreserveGraphicsClipping);
 
                 e.Handled = true;
@@ -281,26 +288,13 @@ public class ParquetGridView : DataGridView
                 && this[columnIndex, rowIndex].Value is IStructValue structValue
                 && structValue.IsHuggingFaceFormat(out var data))
             {
-                ManagedImage? image;
-                try
-                {
-                    image = new ManagedImage(data);
-                }
-                catch (ArgumentException)
-                {
-                    //Data is not an image
-                    image = null;
-                }
-                catch
-                {
-                    throw;
-                }
+                var clickedCell = this[columnIndex, rowIndex];
 
-                if (image is not null)
+                if (!TryShowExistingQuickPeekForm(clickedCell) && data.ToImage(out var image))
                 {
                     var uniqueCellTag = Guid.NewGuid();
                     var quickPeekForm = new QuickPeekForm(Columns[columnIndex].Name, image, uniqueCellTag, rowIndex, columnIndex);
-                    ShowQuickPeekForm(quickPeekForm, this[columnIndex, rowIndex], uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
+                    ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, QuickPeekEvent.DataTypeId.Image);
                 }
             }
             //TODO: Add some kind of in-app notification to inform users of this useful shortcut
@@ -345,15 +339,8 @@ public class ParquetGridView : DataGridView
 
         var clickedCell = this[e.ColumnIndex, e.RowIndex];
 
-        //Check if there's already a quick peek open for this cell
-        if (clickedCell.Tag is Guid cellUniqueTag
-            && _openQuickPeekForms.TryGetValue((e.RowIndex, e.ColumnIndex), out var existingQuickPeekForm)
-            && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
-        {
-            //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
-            existingQuickPeekForm.Focus();
+        if (TryShowExistingQuickPeekForm(clickedCell))
             return;
-        }
 
         var dataType = QuickPeekEvent.DataTypeId.Unknown;
         QuickPeekForm? quickPeekForm = null;
@@ -413,8 +400,24 @@ public class ParquetGridView : DataGridView
         ShowQuickPeekForm(quickPeekForm, clickedCell, uniqueCellTag, dataType);
     }
 
-    private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell,
-        Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
+    private bool TryShowExistingQuickPeekForm(DataGridViewCell clickedCell)
+    {
+        //Check if there's already a quick peek open for this cell
+        if (clickedCell.Tag is Guid cellUniqueTag
+            && _openQuickPeekForms.TryGetValue((clickedCell.RowIndex, clickedCell.ColumnIndex), out var existingQuickPeekForm)
+            && existingQuickPeekForm.UniqueTag.Equals(cellUniqueTag))
+        {
+            //Idea: Move the form to the cursor location, maybe? Might help for multi monitor setups.
+            if (existingQuickPeekForm.WindowState == FormWindowState.Minimized)
+                existingQuickPeekForm.WindowState = FormWindowState.Normal;
+
+            existingQuickPeekForm.Focus();
+            return true;
+        }
+        return false;
+    }
+
+    private void ShowQuickPeekForm(QuickPeekForm quickPeekForm, DataGridViewCell clickedCell, Guid uniqueCellTag, QuickPeekEvent.DataTypeId dataType)
     {
         clickedCell.Tag = uniqueCellTag;
 
@@ -497,7 +500,8 @@ public class ParquetGridView : DataGridView
     {
         base.OnCellFormatting(e);
 
-        var cellValueType = this[e.ColumnIndex, e.RowIndex].ValueType;
+        //It's important to not access cell values or valuetypes directly as it unshares the row
+        var cellValueType = Columns[e.ColumnIndex].ValueType;
         if (_floatColumnsWithFormatOverrides.Count > 0 && cellValueType == typeof(float) && e.Value is float f)
         {
             if (!_floatColumnsWithFormatOverrides.TryGetValue(Columns[e.ColumnIndex].Name, out var userSelectedDisplayFormat))
@@ -568,18 +572,13 @@ public class ParquetGridView : DataGridView
             string value = e.Value!.ToString()!;
             if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
             {
-                e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
+                e.Value = Engine.Helpers.TruncateString(value, MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL) + "[...]";
                 e.FormattingApplied = true;
             }
         }
-        else if (cellValueType.ImplementsInterface<IStructValue>() && e.Value is IStructValue structValue)
+        else if (e.Value is ITruncatable truncatable) //Lists, maps and structs (binary values were formatted above)
         {
-            e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
-            e.FormattingApplied = true;
-        }
-        else if (cellValueType.ImplementsInterface<IListValue>() && e.Value is IListValue listValue)
-        {
-            e.Value = listValue.ToString()!.Left(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL - 3, "...");
+            e.Value = truncatable.ToStringTruncatedOrError(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL, FORMATTING_ERROR_TEXT);
             e.FormattingApplied = true;
         }
     }
@@ -758,11 +757,6 @@ public class ParquetGridView : DataGridView
                     .Select(row => row.Field<TimeOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat()))
                     .Take(25);
             }
-            else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
-            {
-                colStringCollection = nonNullColumnValues
-                    .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
-            }
             else if (gridTable.Columns[i].DataType == typeof(float)
                 && _floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
                 && displayFormat == FloatDisplayFormat.Decimal)
@@ -804,6 +798,11 @@ public class ParquetGridView : DataGridView
                 colStringCollection = nonNullColumnValues
                     .Select(row => FormatByteArrayString(row.Field<IByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
             }
+            else if (gridTable.Columns[i].DataType.ImplementsInterface<ITruncatable>()) //Lists, maps and structs (binary values were handled above)
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<ITruncatable>(i)!.ToStringTruncatedOrError(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL, FORMATTING_ERROR_TEXT));
+            }
             else
             {
                 colStringCollection = nonNullColumnValues
@@ -811,8 +810,8 @@ public class ParquetGridView : DataGridView
                     .Where(value => value is not null)!;
             }
 
-            // Get the longest string in the array. (Limit to 10k values to improve render time)
-            string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 10_000).MaxBy(stringValue => stringValue.Length);
+            // Get the longest string in the array. (Limit to 4k values to improve render time. This number has changed multiple times over the years just for fun)
+            string? longestColString = colStringCollection.Take(forceAutoSizeColumnIndex is not null ? int.MaxValue : 4_000).MaxBy(stringValue => stringValue.Length);
             if (longestColString is not null)
                 newColumnSize = Math.Max(newColumnSize, MeasureStringWidth(gfx, Font, longestColString, true));
 
@@ -1478,6 +1477,14 @@ public class ParquetGridView : DataGridView
         }
     }
 
+    private void DisposeGdiResources()
+    {
+        foreach (var font in _italicFontCache.Values)
+        {
+            font.DisposeSafely();
+        }
+    }
+
     protected override void Dispose(bool disposing)
     {
         //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
@@ -1486,6 +1493,8 @@ public class ParquetGridView : DataGridView
 
         _contextMenu?.Dispose();
         _headerContextMenu?.Dispose();
+
+        DisposeGdiResources();
 
         base.Dispose(disposing);
     }

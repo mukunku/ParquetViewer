@@ -75,6 +75,7 @@ internal static class DuckDBHelper
             "BLOB" => (DuckDBType.Blob, typeof(ByteArrayValue)),
             "DATE" => (DuckDBType.Date, typeof(DateOnly)),
             "TIME" => (DuckDBType.Time, typeof(TimeOnly)),
+            "TIME_NS" => (DuckDBType.Time, typeof(TimeOnly)),
             "INTERVAL" => (DuckDBType.Interval, typeof(TimeSpan)),
             "UUID" => (DuckDBType.Uuid, typeof(Guid)),
             _ => throw new ArgumentOutOfRangeException(nameof(duckDBTypeName), $"Unsupported DuckDB type: {duckDBTypeName}({columnTypeName})")

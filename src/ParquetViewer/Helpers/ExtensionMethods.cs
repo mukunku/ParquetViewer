@@ -232,6 +232,22 @@ public static class ExtensionMethods
         catch { /*Swallow*/ }
     }
 
+    /// <summary>
+    /// Calls <see cref="ITruncatable.ToStringTruncated"/>, but returns <paramref name="errorText"/> instead of throwing
+    /// so a single value that can't be formatted doesn't break rendering (or loading) the grid.
+    /// </summary>
+    public static string ToStringTruncatedOrError(this ITruncatable value, int desiredLength, string errorText)
+    {
+        try
+        {
+            return value.ToStringTruncated(desiredLength);
+        }
+        catch
+        {
+            return errorText;
+        }
+    }
+
     public static bool ImplementsInterface<T>(this Type? type)
     {
         if (type is null)
@@ -247,14 +263,14 @@ public static class ExtensionMethods
     /// https://huggingface.co/docs/hub/en/datasets-image#parquet-format
     /// </summary>
     /// <returns>True if this is a struct with "bytes" and "path" fields</returns>
-    public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
+    public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out IByteArrayValue? data)
     {
-        if (structValue.Data.ColumnNames.Count == 2
-            && structValue.Data.ColumnNames.Contains("bytes")
-            && structValue.Data.ColumnNames.Contains("path")
-            && structValue.Data.GetValue("bytes") is IByteArrayValue byteArrayValue)
+        if (structValue.FieldNames.Count == 2
+            && structValue.FieldNames.Contains("bytes")
+            && structValue.FieldNames.Contains("path")
+            && structValue.GetValue("bytes") is IByteArrayValue byteArrayValue)
         {
-            data = byteArrayValue.Data;
+            data = byteArrayValue;
             return true;
         }
         data = null;

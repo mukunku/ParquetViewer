@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -137,23 +138,57 @@ public class ExceptionEvent : AmplitudeEvent
     [JsonIgnore]
     public Exception Exception { get; }
 
-    public string Message
+    public string Message => MaskSensitiveText(Exception.Message);
+
+    private static string MaskSensitiveText(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return message;
+
+        //Mask sensitive text that is wrapped with ` `
+        message = Regex.Replace(message, "`[^`]+`", MASK_SENTINEL);
+
+        //Mask file paths that .NET IO exceptions wrap with ' ' (e.g. 'C:\foo' or '\\server\share'). A path ends at the first ' that's
+        //followed by a separator, since paths can contain apostrophes themselves (e.g. 'C:\O'Brien\file.parquet')
+        message = Regex.Replace(message, @"'([A-Za-z]:\\|\\\\).*?'(?=[\s.,;:)]|$)", MASK_SENTINEL);
+
+        //Mask user values (file paths, field names) that third-party libraries put in their messages
+        if (SensitiveFileDetailsProvider is not null)
+        {
+            message = SensitiveFileDetailsProvider().Mask(message);
+        }
+
+        return message;
+    }
+
+    /// <summary>
+    /// Assigned once at startup. Used to get the last opened file's details so they can be masked (best effort).
+    /// </summary>
+    public static Func<SensitiveFileDetails>? SensitiveFileDetailsProvider { get; set; }
+
+    public string? StackTrace => Exception.StackTrace?.ToString();
+
+    /// <summary>
+    /// Same info as <see cref="Exception.ToString"/> on the inner exception, but with each message masked.
+    /// </summary>
+    /// <remarks>Stack traces are left as-is since they're only code locations, and masking them would make them unreadable.</remarks>
+    public string? InnerException
     {
         get
         {
-            var message = Exception.Message;
+            if (Exception.InnerException is null)
+                return null;
 
-            if (string.IsNullOrWhiteSpace(message))
-                return message;
-
-            //Mask sensitive text that is wrapped with ` `
-            message = Regex.Replace(message, "`[^`]+`", MASK_SENTINEL);
-            return message;
+            var sb = new StringBuilder();
+            for (var inner = Exception.InnerException; inner is not null; inner = inner.InnerException)
+            {
+                sb.AppendLine($"{inner.GetType().FullName}: {MaskSensitiveText(inner.Message)}");
+                sb.AppendLine(inner.StackTrace);
+            }
+            return sb.ToString();
         }
     }
 
-    public string? StackTrace => Exception.StackTrace?.ToString();
-    public string? InnerException => Exception.InnerException?.ToString();
     public string Type => Exception.GetType().Name;
 
     [JsonExtensionData]
