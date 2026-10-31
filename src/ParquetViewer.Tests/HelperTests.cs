@@ -115,6 +115,42 @@ public class HelperTests
     }
 
     [TestMethod]
+    [DoNotParallelize] //SensitiveFileDetailsProvider is static, so other masking tests mustn't see our provider
+    public async Task AMPLITUDE_EXCEPTION_FILE_PATHS_ARE_MASKED_BEFORE_FIELD_NAMES_TEST()
+    {
+        //A field named like a drive letter. If field names were masked first, 'Z:\...' would become '*****:\...',
+        //the file path regex would no longer match it, and the rest of the path would be sent.
+        var sensitiveFileDetails = new SensitiveFileDetails(@"Y:\opened\file.parquet", ["Z"]);
+        var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+        var testEvent = new ExceptionEvent(new IOException(@"Access to the path 'Z:\secret\file.parquet' is denied."),
+            testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+        //mock the http response
+        _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+        {
+            string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+            var requestJson = JsonNode.Parse(requestJsonBody);
+            if (requestJson?["events"]?[0]?["event_properties"]?["message"]?.GetValue<string>()
+                == $"Access to the path {ExceptionEvent.MASK_SENTINEL} is denied.")
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        });
+
+        try
+        {
+            ExceptionEvent.SensitiveFileDetailsProvider = () => sensitiveFileDetails;
+            bool wasSuccess = await testEvent.RecordAsync();
+            Assert.IsTrue(wasSuccess, "File path wasn't fully masked");
+        }
+        finally
+        {
+            ExceptionEvent.SensitiveFileDetailsProvider = null;
+        }
+    }
+
+    [TestMethod]
     public async Task AMPLITUDE_EXCEPTION_INNER_EXCEPTION_MASKING_TEST()
     {
         var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);

@@ -33,7 +33,7 @@ static class Program
         //Prepare main form
         string? pathToOpen = GetPathToOpen(args);
         var mainForm = new MainForm(pathToOpen); //Form must be created after calling SetCompatibleTextRenderingDefault();
-        ExceptionEvent.MainForm = mainForm; //So exception analytics can mask the open file's details
+        ExceptionEvent.SensitiveFileDetailsProvider = mainForm.GetSensitiveFileDetails; //So exception analytics can mask the open file's details
         AppSettings.DarkMode = AppSettings.DarkMode; // Trigger Theming
 
         RouteUnhandledExceptions();
