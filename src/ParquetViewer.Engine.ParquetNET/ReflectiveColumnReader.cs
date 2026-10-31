@@ -95,13 +95,23 @@ internal static class ReflectiveColumnReader
         }
         catch (OverflowException)
         {
+            //Let ParquetEngine.ReadColumnAsync handle this error
             throw;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (ParquetException)
+        {
+            //Let ParquetEngine.ReadColumnAsync handle this error
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            //LoadFileToGridviewImplAsync will swallow this so bubble it up
+            throw;
+        }
+        catch (Exception ex)
         {
             throw new ParquetEngineException(
-                $"Parquet.Net describes column `{field.Path}` as '{clrType}', which could not be read " +
-                $"({ex.Message}).", ex);
+                $"Parquet.Net describes column `{field.Path}` as '{clrType}', which could not be read.", ex);
         }
 
         return values;
