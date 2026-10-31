@@ -74,7 +74,7 @@ public class DataTableLite
             {
                 //DataTable's don't support case sensitive field names unfortunately
                 var columnPath = columnLite.ParentSchema + "/" + columnLite.Name;
-                throw new NotSupportedException($"Duplicate column '{columnPath}' detected. Column names are case insensitive and must be unique.");
+                throw new NotSupportedException($"Duplicate column `{columnPath}` detected. Column names are case insensitive and must be unique.");
             }
 
             var columnType = columnLite.Type;

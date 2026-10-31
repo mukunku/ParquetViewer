@@ -27,13 +27,14 @@ public class MapValue : IMapValue
         Keys = keys;
         Values = values;
 
-        var mismatchedType = keys.Cast<object?>().Where(key => key != DBNull.Value).FirstOrDefault(key => key!.GetType() != keyType);
-        if (mismatchedType is not null)
-            throw new ArgumentException($"The key's type {mismatchedType} doesn't match the passed key-type {keyType}");
+        //Only put the type in the message, never the value itself since it's user data
+        var mismatchedKey = keys.Cast<object?>().Where(key => key != DBNull.Value).FirstOrDefault(key => key!.GetType() != keyType);
+        if (mismatchedKey is not null)
+            throw new ArgumentException($"The key's type {mismatchedKey.GetType()} doesn't match the passed key-type {keyType}");
 
-        mismatchedType = values.Cast<object?>().Where(value => value != DBNull.Value).FirstOrDefault(value => value!.GetType() != valueType);
-        if (mismatchedType is not null)
-            throw new ArgumentException($"The value's type {mismatchedType} doesn't match the passed value-type {valueType}");
+        var mismatchedValue = values.Cast<object?>().Where(value => value != DBNull.Value).FirstOrDefault(value => value!.GetType() != valueType);
+        if (mismatchedValue is not null)
+            throw new ArgumentException($"The value's type {mismatchedValue.GetType()} doesn't match the passed value-type {valueType}");
 
         //We need the types because if the key/value arraylists are empty
         //there's no way to determine what the type's supposed to be

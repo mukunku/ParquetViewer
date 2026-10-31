@@ -88,7 +88,7 @@ public sealed class ParquetEngine : IParquetEngine
         }
         else
         {
-            throw new FileNotFoundException(parquetFilePath);
+            throw new FileNotFoundException($"Could not find file or folder at location: `{parquetFilePath}`");
         }
     }
 
@@ -96,7 +96,7 @@ public sealed class ParquetEngine : IParquetEngine
     {
         if (!File.Exists(parquetFilePath)) //Handles null
         {
-            throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
+            throw new FileNotFoundException($"Could not find parquet file at: `{parquetFilePath}`");
         }
 
         var db = await DuckDBHandle.OpenAsync(parquetFilePath);
@@ -118,7 +118,7 @@ public sealed class ParquetEngine : IParquetEngine
     {
         if (!Directory.Exists(folderPath)) //Handles null
         {
-            throw new DirectoryNotFoundException($"Directory doesn't exist: {folderPath}");
+            throw new DirectoryNotFoundException($"Directory doesn't exist: `{folderPath}`");
         }
 
         var skippedFiles = new Dictionary<string, Exception>();
@@ -423,7 +423,7 @@ public sealed class ParquetEngine : IParquetEngine
     {
         if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException($"Parquet file no longer exists at: {Path}");
+            throw new FileNotFoundException($"Parquet file no longer exists at: `{filePath}`");
         }
     }
 

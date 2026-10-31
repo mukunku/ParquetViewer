@@ -83,7 +83,7 @@ public sealed partial class ParquetEngine : IParquetEngine
         }
         else
         {
-            throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
+            throw new FileNotFoundException($"Could not find file or folder at location: `{fileOrFolderPath}`");
         }
     }
 
@@ -91,7 +91,7 @@ public sealed partial class ParquetEngine : IParquetEngine
     {
         if (!File.Exists(parquetFilePath)) //Handles null
         {
-            throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
+            throw new FileNotFoundException($"Could not find parquet file at: `{parquetFilePath}`");
         }
 
         try
@@ -109,7 +109,7 @@ public sealed partial class ParquetEngine : IParquetEngine
     {
         if (!Directory.Exists(folderPath)) //Handles null
         {
-            throw new DirectoryNotFoundException($"Directory doesn't exist: {folderPath}");
+            throw new DirectoryNotFoundException($"Directory doesn't exist: `{folderPath}`");
         }
 
         var skippedFiles = new Dictionary<string, Exception>();

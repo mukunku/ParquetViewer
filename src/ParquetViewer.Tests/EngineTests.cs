@@ -144,7 +144,7 @@ public abstract class EngineTests
 
         var ex = await Assert.ThrowsAsync<NotSupportedException>(async ()
             => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false));
-        Assert.AreEqual("Duplicate column 'schema/TransPlan_NORMAL_v2' detected. Column names are case insensitive and must be unique.", ex.Message);
+        Assert.AreEqual("Duplicate column `schema/TransPlan_NORMAL_v2` detected. Column names are case insensitive and must be unique.", ex.Message);
     }
 
     [SkippableTestMethod]
