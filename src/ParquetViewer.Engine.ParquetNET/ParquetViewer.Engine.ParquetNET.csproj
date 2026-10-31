@@ -4,11 +4,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
-    <Configurations>Debug;Release;Release_SelfContained</Configurations>
+    <Configurations>Debug;Release;Release_SelfContained;Debug_SelfContained</Configurations>
     <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
     <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_SelfContained|AnyCPU'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>True</Optimize>
@@ -17,9 +19,13 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Parquet.Net.mukunku" />
+    <PackageReference Include="Parquet.Net" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ParquetViewer.Engine\ParquetViewer.Engine.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParquetViewer.Tests" />
   </ItemGroup>
 </Project>

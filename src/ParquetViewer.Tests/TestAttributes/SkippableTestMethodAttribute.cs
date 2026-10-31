@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace ParquetViewer.Tests;
+namespace ParquetViewer.Tests.TestAttributes;
 
 internal class SkippableTestMethodAttribute : TestMethodAttribute
 {

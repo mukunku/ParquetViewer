@@ -50,7 +50,7 @@ public class ListValueBuilder
     /// Reads nested list values
     /// </summary>
     /// <returns>Enumerable of ListValue's. We need to return object to support DBNull.Value</returns>
-    public IEnumerable<object> ReadRows(int skipRecords, int readRecords, int numberOfListParents, int currentDefinitionLevel, int _ /*MaxDefinitionLevel*/, CancellationToken cancellationToken)
+    public IEnumerable<object> ReadRows(int skipRecords, int readRecords, int numberOfListParents, int currentDefinitionLevel, CancellationToken cancellationToken)
     {
         var ranges = GetRowRanges();
 

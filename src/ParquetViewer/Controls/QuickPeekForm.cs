@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,6 +14,8 @@ public partial class QuickPeekForm : FormBase
     private readonly string _originalTitle = string.Empty;
 
     private string _titleSuffix = string.Empty;
+    private readonly ManagedImage? _imageToPreview = null;
+
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     public string TitleSuffix
     {
@@ -41,11 +44,13 @@ public partial class QuickPeekForm : FormBase
 
     public event EventHandler<TakeMeBackEventArgs>? TakeMeBackEvent;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. InitializeComponent() instantiates everything.
     public QuickPeekForm()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. InitializeComponent() instantiates everything.
     {
         InitializeComponent();
         _originalTitle = Text;
-        closeWindowButton.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
+        closeWindowButton!.Size = new Size(1, 1); //hide the close button. We only use it as the form's `CloseButton` so the user can close the window by hitting ESC.
         MaximumSize = new Size(Screen.FromControl(this).WorkingArea.Width, Screen.FromControl(this).WorkingArea.Height); //In case we have really large images
     }
 
@@ -59,14 +64,14 @@ public partial class QuickPeekForm : FormBase
         mainTableLayoutPanel.Controls.Remove(mainPictureBox);
         mainTableLayoutPanel.Controls.Remove(saveImageToFileButton);
         mainTableLayoutPanel.RowCount -= 1; //Remove the bottom row to get rid of the image save button
-        mainTableLayoutPanel.SetColumnSpan(mainGridView, 2);
+        mainTableLayoutPanel.SetColumnSpan(mainGridView!, 2);
         mainPictureBox = null;
 
-        mainGridView.DataSource = data ?? throw new ArgumentNullException(nameof(data));
+        mainGridView!.DataSource = data ?? throw new ArgumentNullException(nameof(data));
         mainGridView.ClearSelection();
     }
 
-    public QuickPeekForm(string titleSuffix, Image image, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
+    public QuickPeekForm(string titleSuffix, ManagedImage image, Guid uniqueTag, int sourceRowIndex, int sourceColumnIndex) : this()
     {
         TitleSuffix = titleSuffix;
         UniqueTag = uniqueTag;
@@ -76,12 +81,14 @@ public partial class QuickPeekForm : FormBase
         mainTableLayoutPanel.Controls.Remove(mainGridView);
         mainGridView = null;
 
-        mainPictureBox.Image = image ?? throw new ArgumentNullException(nameof(image));
+        _imageToPreview = image ?? throw new ArgumentNullException(nameof(image));
+
+        mainPictureBox!.Image = _imageToPreview.Image;
         mainTableLayoutPanel.SetColumn(mainPictureBox, 0);
         mainTableLayoutPanel.SetColumnSpan(mainPictureBox, 2);
     }
 
-    private void QuickPeekForm_Load(object sender, EventArgs e)
+    private void QuickPeekForm_Load(object? sender, EventArgs? e)
     {
         if (mainGridView is not null)
         {
@@ -132,9 +139,9 @@ public partial class QuickPeekForm : FormBase
             Top -= yOverflow;
     }
 
-    private void TakeMeBackLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+    private void TakeMeBackLinkLabel_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs? e)
     {
-        if (e.Button == MouseButtons.Left)
+        if (e?.Button == MouseButtons.Left)
             TakeMeBackEvent?.Invoke(this, new TakeMeBackEventArgs(UniqueTag, SourceRowIndex, SourceColumnIndex));
     }
 
@@ -143,13 +150,16 @@ public partial class QuickPeekForm : FormBase
         takeMeBackLinkLabel.Text = $"<<< {Resources.Strings.CantGoBackLinkButtonText}";
     }
 
-    private void CloseWindowButton_Click(object sender, EventArgs e)
+    private void CloseWindowButton_Click(object? sender, EventArgs? e)
     {
         Close();
     }
 
-    private void SaveImageToFileButton_Click(object sender, EventArgs e)
+    private void SaveImageToFileButton_Click(object? sender, EventArgs? e)
     {
+        if (mainPictureBox is null)
+            return;
+
         using var saveFileDialog = new SaveFileDialog
         {
             Filter = $"{mainPictureBox.Image!.RawFormat.ToString().ToUpperInvariant()} image|*.{mainPictureBox.Image.RawFormat.ToString().ToLowerInvariant()}",
@@ -170,8 +180,11 @@ public partial class QuickPeekForm : FormBase
         }
     }
 
-    private async void CopyToClipboardToolStripMenuItem_Click(object sender, EventArgs e)
+    private async void CopyToClipboardToolStripMenuItem_Click(object? sender, EventArgs? e)
     {
+        if (mainPictureBox is null)
+            return;
+
         try
         {
             mainPictureBox.Cursor = Cursors.WaitCursor;
@@ -205,4 +218,31 @@ public class TakeMeBackEventArgs(Guid uniqueTag, int sourceRowIndex, int sourceC
     public Guid UniqueTag { get; } = uniqueTag;
     public int SourceRowIndex { get; } = sourceRowIndex;
     public int SourceColumnIndex { get; } = sourceColumnIndex;
+}
+
+public class ManagedImage : IDisposable
+{
+    private readonly MemoryStream _stream;
+
+    public Image Image { get; init; }
+
+    public ManagedImage(byte[] data)
+    {
+        _stream = new MemoryStream(data);
+        try
+        {
+            Image = Image.FromStream(_stream);
+        }
+        catch
+        {
+            _stream.DisposeSafely();
+            throw;
+        }
+    }
+
+    public void Dispose()
+    {
+        Image.DisposeSafely();
+        _stream.DisposeSafely();
+    }
 }
