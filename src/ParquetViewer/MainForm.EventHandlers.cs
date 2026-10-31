@@ -165,7 +165,9 @@ public partial class MainForm
         {
             LoadAllRowsButton_Click(null, null);
         }
-        else if (e.Control && e.KeyCode == Keys.R && _openParquetEngine is not null) //Reload shortcut
+        //Reload shortcut
+        else if (e.Control && e.KeyCode == Keys.R && _openParquetEngine is not null
+            && !_isLoadingFileToGridview)
         {
             LoadFileToGridview();
         }

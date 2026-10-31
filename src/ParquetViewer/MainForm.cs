@@ -97,6 +97,7 @@ public partial class MainForm : FormBase
 
     private bool _reloadEngine;
     private IParquetEngine? _openParquetEngine;
+    private bool _isLoadingFileToGridview;
 
     private FileModifiedInfo? _originalModifiedInfo;
     #endregion
@@ -295,40 +296,48 @@ public partial class MainForm : FormBase
         if (!IsAnyFileOpen)
             return;
 
-        await ReloadEngineIfRequiredAsync();
-
-#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
-        //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
+        _isLoadingFileToGridview = true;
         try
         {
-            await LoadFileToGridviewImplAsync(_openParquetEngine!);
-        }
-        catch (Exception unhandledEx)
-        {
-            //Try DuckDB if Parquet.NET fails (unless this was already DuckDB)
-            if (_openParquetEngine is Engine.DuckDB.ParquetEngine)
-                throw;
+            await ReloadEngineIfRequiredAsync();
 
+#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
+            //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
             try
             {
-                var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
-                await LoadFileToGridviewImplAsync(duckDbEngine);
-
-                //Swap engines
-                await _openParquetEngine!.DisposeAsync();
-                _openParquetEngine = duckDbEngine;
+                await LoadFileToGridviewImplAsync(_openParquetEngine!);
             }
-            catch (Exception duckDbEx)
+            catch (Exception unhandledEx)
             {
-                //If DuckDB fails too, bail
-                throw new Exceptions.RowsReadException(unhandledEx, duckDbEx);
+                //Try DuckDB if Parquet.NET fails (unless this was already DuckDB)
+                if (_openParquetEngine is Engine.DuckDB.ParquetEngine)
+                    throw;
+
+                try
+                {
+                    var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
+                    await LoadFileToGridviewImplAsync(duckDbEngine);
+
+                    //Swap engines
+                    await _openParquetEngine!.DisposeAsync();
+                    _openParquetEngine = duckDbEngine;
+                }
+                catch (Exception duckDbEx)
+                {
+                    //If DuckDB fails too, bail
+                    throw new Exceptions.RowsReadException(unhandledEx, duckDbEx);
+                }
             }
-        }
 #else
-        await LoadFileToGridviewImplAsync(_openParquetEngine!);
+            await LoadFileToGridviewImplAsync(_openParquetEngine!);
 #endif
 
-        _originalModifiedInfo = null;
+            _originalModifiedInfo = null;
+        }
+        finally
+        {
+            _isLoadingFileToGridview = false;
+        }
     }
 
     private async Task ReloadEngineIfRequiredAsync()
