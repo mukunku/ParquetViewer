@@ -175,13 +175,25 @@ public partial class ParquetEngine
         {
             var schema = parent.GetChild(field);
 
-            var isIllegalTwoTierMap = schema.RepetitionType == RepetitionTypeId.Repeated && schema.FieldType == FieldTypeId.Map;
-            if (isIllegalTwoTierMap)
-                throw new MalformedFieldException($"Repeated Maps are unsupported in the Parquet spec. Field: `{field}`");
-
-            //Legacy 2-tier lists have their underlying value's ClrType.
-            var isLegacyTwoTierList = schema.RepetitionType == RepetitionTypeId.Repeated && schema.FieldType != FieldTypeId.List;
-            var columnType = isLegacyTwoTierList ? typeof(ListValue) : schema.ClrType;
+            var columnType = schema.ClrType;
+            if (schema.RepetitionType == RepetitionTypeId.Repeated)
+            {
+                //Because we're going through top level fields, none of them should be REPEATED according to the Parquet spec.
+                //Only exception is legacy 2-tier Lists. Which can be of primitives or Structs only.
+                switch (schema.FieldType)
+                {
+                    case FieldTypeId.Map:
+                    case FieldTypeId.List:
+                        throw new MalformedFieldException($"Repeated LIST and MAP fields aren't allowed by the Parquet spec. Field: `{field}`");
+                    case FieldTypeId.Primitive:
+                    case FieldTypeId.Struct:
+                        //A legacy two tier list. Its ClrType is the element's type, but we read it as a list
+                        columnType = typeof(ListValue);
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             dataTable.AddColumn(field, columnType, parent);
         }

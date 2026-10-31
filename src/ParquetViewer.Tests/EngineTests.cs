@@ -747,6 +747,40 @@ public abstract class EngineTests
         Assert.AreEqual("AA-BB-CC-DD", dataTable.Rows[1]["code"].ToString());
     }
 
+    /// <summary>
+    /// The outer LIST group must be optional or required according to the Parquet spec. This file was written by hand
+    /// (pyarrow refuses to write or read it) with a top-level `repeated group my_list (LIST)`.
+    /// </summary>
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads repeated LIST groups as a list of lists, which our DuckDB engine doesn't handle")]
+    public async Task REPEATED_LIST_GROUP_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/REPEATED_LIST_GROUP_TEST.parquet");
+        Assert.AreEqual(3, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
+        var ex = await Assert.ThrowsAsync<MalformedFieldException>(async ()
+            => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false));
+        Assert.Contains("`my_list`", ex.Message);
+    }
+
+    /// <summary>
+    /// The outer MAP group must be optional or required according to the Parquet spec. This file was written by hand
+    /// (pyarrow refuses to write or read it) with a top-level `repeated group my_map (MAP)`.
+    /// </summary>
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads repeated MAP groups as a list of maps, which our DuckDB engine doesn't handle")]
+    public async Task REPEATED_MAP_GROUP_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/REPEATED_MAP_GROUP_TEST.parquet");
+        Assert.AreEqual(3, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
+        var ex = await Assert.ThrowsAsync<MalformedFieldException>(async ()
+            => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false));
+        Assert.Contains("`my_map`", ex.Message);
+    }
+
     [SkippableTestMethod]
     public async Task NESTED_STRUCTS_AND_LISTS()
     {
