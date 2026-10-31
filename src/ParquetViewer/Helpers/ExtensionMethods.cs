@@ -8,6 +8,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ParquetViewer.Helpers;
@@ -228,6 +229,18 @@ public static class ExtensionMethods
         try
         {
             disposable?.Dispose();
+        }
+        catch { /*Swallow*/ }
+    }
+
+    public static async ValueTask DisposeSafelyAsync(this IAsyncDisposable? disposable)
+    {
+        if (disposable is null)
+            return;
+
+        try
+        {
+            await disposable.DisposeAsync();
         }
         catch { /*Swallow*/ }
     }

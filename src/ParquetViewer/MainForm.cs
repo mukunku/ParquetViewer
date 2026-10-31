@@ -163,16 +163,13 @@ public partial class MainForm : FormBase
         {
             try
             {
+                //This should be the only statement in this try-catch for correct exception handling. Beware when making changes.
                 _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath);
-                _lastOpenedFileDetails = new(_openParquetEngine.Path, _openParquetEngine.Fields);
             }
             catch (Exception ex)
             {
-                if (_openParquetEngine is null)
-                {
-                    //cancel the file open
-                    await CloseOpenFileOrFolderAsync();
-                }
+                //cancel the file open
+                await CloseOpenFileOrFolderAsync();
 
                 if (ex is AllFilesSkippedException afse)
                 {
@@ -222,6 +219,9 @@ public partial class MainForm : FormBase
         {
             throw new Parquet.ParquetException(Resources.Errors.ParquetSchemaReadErrorMessage, ex);
         }
+
+        //We're now sure the file has been opened successfully. Even if it may not have any fields.
+        _lastOpenedFileDetails = new(_openParquetEngine.Path, fields ?? []);
 
         if (fields?.Count > 0)
         {
@@ -354,23 +354,33 @@ public partial class MainForm : FormBase
 
         //ParquetNET caches file metadata so we need to reload the engine if the parquet files were modified.
         //DuckDB reads the file from scratch each time so that engine doesn't need this.
-        if (_openParquetEngine is Engine.ParquetNET.ParquetEngine engine)
+        if (_openParquetEngine is not Engine.ParquetNET.ParquetEngine oldEngine)
+            return;
+
+        try
         {
-            try
+            _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(oldEngine.Path);
+
+            var fields = _openParquetEngine.Fields; //This can throw in some cases like if there are no fields in the file
+
+            //Save the new field names as they might have changed
+            _lastOpenedFileDetails = new(_openParquetEngine.Path, fields);
+
+            if (SelectedFields is not null && !SelectedFields.IsSubsetOf(fields))
             {
-                var oldEngine = _openParquetEngine;
-                _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(engine.Path);
-                if (SelectedFields is not null && !SelectedFields.IsSubsetOf(_openParquetEngine.Fields))
-                {
-                    //The file doesn't have the fields we want anymore. Reset to the fields that are there.
-                    _selectedFields = _openParquetEngine.Fields; //Since we're setting the backing field directly, there's a chance this new set of fields has dupes but I think we're okay risking it.
-                }
-                await oldEngine.DisposeAsync();
+                //The file doesn't have the fields we want anymore. Reset to the fields that are there.
+                _selectedFields = fields; //Since we're setting the backing field directly, there's a chance this new set of fields has dupes but I think we're okay risking it.
             }
-            catch (Exception)
-            {
-                //Swallow the exception.
-            }
+        }
+        catch (Exception)
+        {
+            //Swallow the exception.
+        }
+        finally
+        {
+            //Dispose the old engine if it was swapped out above
+            if (!ReferenceEquals(_openParquetEngine, oldEngine))
+                await oldEngine.DisposeSafelyAsync();
         }
     }
 
