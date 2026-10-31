@@ -25,6 +25,9 @@ public partial class MainForm : FormBase
 
     private string? _openFileOrFolderPath = null;
 
+    //Never cleared, so exceptions recorded after the file was closed (error handlers close it before rethrowing) still get masked
+    private SensitiveFileDetails _lastOpenedFileDetails = new(null, []);
+
     private List<string>? _selectedFields = null;
     private List<string>? SelectedFields
     {
@@ -161,6 +164,7 @@ public partial class MainForm : FormBase
             try
             {
                 _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath);
+                _lastOpenedFileDetails = new(_openParquetEngine.Path, _openParquetEngine.Fields);
             }
             catch (Exception ex)
             {
@@ -489,6 +493,7 @@ public partial class MainForm : FormBase
     private async Task OpenNewFileOrFolderAsync(string fileOrFolderPath)
     {
         _openFileOrFolderPath = fileOrFolderPath;
+        _lastOpenedFileDetails = new(fileOrFolderPath, []); //Field names get added once the engine is instantiated
         await ResetFormAsync();
 
         var fieldList = await OpenFieldSelectionDialogAsync(false);
@@ -603,9 +608,7 @@ public partial class MainForm : FormBase
     }
 
     /// <summary>
-    /// Gets the open file or folder's path and field names so analytics can mask them out of exception messages.
+    /// Gets the last opened file or folder's path and field names so analytics can mask them out of exception messages.
     /// </summary>
-    /// <remarks>Rebuilt on every call since it's only needed when an exception gets recorded.</remarks>
-    public SensitiveFileDetails GetSensitiveFileDetails()
-        => new(_openParquetEngine?.Path ?? _openFileOrFolderPath, _openParquetEngine?.Fields ?? []);
+    public SensitiveFileDetails GetSensitiveFileDetails() => _lastOpenedFileDetails;
 }
