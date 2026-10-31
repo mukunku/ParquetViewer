@@ -140,6 +140,10 @@ public partial class ParquetEngine
                 break;
             case FieldTypeId.List:
                 var repeatedField = field.GetListField();
+
+                if (IsLegacyTwoLevelList(field, repeatedField))
+                    return await CreateValueBuilderAsync(repeatedField, groupReader, cancellationToken);
+
                 var element = await CreateValueBuilderAsync(repeatedField.GetListItemField(), groupReader, cancellationToken);
                 return new ListValueBuilder(repeatedField.Levels.MaxDefinitionLevel, repeatedField.Levels.MaxRepetitionLevel, element);
             case FieldTypeId.Map:
@@ -166,6 +170,22 @@ public partial class ParquetEngine
             ? new ListValueBuilder(field.Levels.MaxDefinitionLevel, field.Levels.MaxRepetitionLevel, builder)
             : builder;
     }
+
+    /// <summary>
+    /// Older writers left out the middle level of a LIST, making the repeated node the element itself. The Parquet spec's
+    /// backward compatibility rules say that's the case when the repeated node:
+    /// <list type="number">
+    /// <item>isn't a group, e.g. <c>repeated int32 array</c></item>
+    /// <item>is a group with more than one field</item>
+    /// <item>is a group with one field, named <c>array</c> or <c>&lt;list name&gt;_tuple</c></item>
+    /// </list>
+    /// Otherwise it's the standard three-level list, where the repeated node's only child is the element.
+    /// </summary>
+    private static bool IsLegacyTwoLevelList(ParquetSchemaElement listField, ParquetSchemaElement repeatedField)
+        => repeatedField.FieldType == FieldTypeId.Primitive
+            || repeatedField.Children.Count > 1
+            || repeatedField.Path == "array"
+            || repeatedField.Path == $"{listField.Path}_tuple";
 
     private DataTableLite BuildDataTableLite(List<string> fields, int expectedRecordCount)
     {

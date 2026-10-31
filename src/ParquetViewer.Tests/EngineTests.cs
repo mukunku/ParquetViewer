@@ -618,6 +618,53 @@ public abstract class EngineTests
         Assert.AreEqual(@"[{""A"":null,""E"":1}]", dataTable.Rows[0][0].ToString());
     }
 
+    /// <summary>
+    /// A LIST whose repeated node is the element itself because it isn't a group (an older writer layout):
+    /// <c>optional group tags (LIST) { repeated int32 array; }</c>. Written by hand, pyarrow reads it as list&lt;int&gt;.
+    /// </summary>
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "Our DuckDB engine can't read legacy two-level lists")]
+    public async Task LEGACY_TWO_LEVEL_LIST_OF_PRIMITIVES_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/LEGACY_TWO_LEVEL_LIST_OF_PRIMITIVES_TEST.parquet");
+        Assert.AreEqual(4, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(0, dataTable.Rows[0]["id"]);
+        Assert.AreEqual("[1,2]", dataTable.Rows[0]["tags"].ToString());
+        Assert.AreEqual(1, dataTable.Rows[1]["id"]);
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[1]["tags"]);
+        Assert.AreEqual(2, dataTable.Rows[2]["id"]);
+        Assert.AreEqual("[]", dataTable.Rows[2]["tags"].ToString());
+        Assert.AreEqual(3, dataTable.Rows[3]["id"]);
+        Assert.AreEqual("[3]", dataTable.Rows[3]["tags"].ToString());
+    }
+
+    /// <summary>
+    /// A LIST whose repeated node is the element itself because it's a single field group named `array` (an older writer layout):
+    /// <c>optional group tags (LIST) { repeated group array { optional int32 b; } }</c>. Written by hand, pyarrow reads it as
+    /// list&lt;struct&lt;b&gt;&gt;. Without the legacy rule the struct is lost and it's read as list&lt;int&gt;.
+    /// </summary>
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "Our DuckDB engine can't read legacy two-level lists")]
+    public async Task LEGACY_TWO_LEVEL_LIST_OF_STRUCTS_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/LEGACY_TWO_LEVEL_LIST_OF_STRUCTS_TEST.parquet");
+        Assert.AreEqual(4, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(0, dataTable.Rows[0]["id"]);
+        Assert.AreEqual("[{\"b\":10},{\"b\":null}]", dataTable.Rows[0]["tags"].ToString());
+        Assert.AreEqual(1, dataTable.Rows[1]["id"]);
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[1]["tags"]);
+        Assert.AreEqual(2, dataTable.Rows[2]["id"]);
+        Assert.AreEqual("[]", dataTable.Rows[2]["tags"].ToString());
+        Assert.AreEqual(3, dataTable.Rows[3]["id"]);
+        Assert.AreEqual("[{\"b\":30}]", dataTable.Rows[3]["tags"].ToString());
+    }
+
     [SkippableTestMethod]
     public async Task TWO_TIER_REPEATED_LIST_FIELDS_TEST()
     {
