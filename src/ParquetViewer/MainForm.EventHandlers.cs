@@ -152,6 +152,10 @@ public partial class MainForm
     {
         if (_openParquetEngine is not null)
         {
+            //Reset starting row without triggering a file load
+            offsetTextBox.SetTextQuiet("0");
+            _currentOffset = 0;
+
             //Force file reload to happen instantly by triggering the event handler ourselves
             recordCountTextBox.SetTextQuiet(_openParquetEngine.RecordCount.ToString());
             RecordsToTextBox_TextChanged(recordCountTextBox, null);
