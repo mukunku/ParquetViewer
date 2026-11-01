@@ -44,9 +44,9 @@ public static class UtilityMethods
     /// <returns>null if no matching file type is found</returns>
     public static FileType? ExtensionToFileType(string extension)
     {
-        foreach (FileType fileType in Enum.GetValues<FileType>())
+        foreach (var fileType in Enum.GetValues<FileType>())
         {
-            if (fileType.GetExtension().Equals(extension))
+            if (fileType.GetExtension().Equals(extension, StringComparison.OrdinalIgnoreCase))
                 return fileType;
         }
         return null;

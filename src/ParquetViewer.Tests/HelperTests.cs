@@ -222,6 +222,48 @@ public class HelperTests
     }
 
     [TestMethod]
+    [DataRow(".csv", FileType.CSV)]
+    [DataRow(".xls", FileType.XLS)]
+    [DataRow(".json", FileType.JSON)]
+    [DataRow(".parquet", FileType.PARQUET)]
+    [DataRow(".xlsx", FileType.XLSX)]
+    [DataRow(".CSV", FileType.CSV)] //Windows file names aren't case sensitive, e.g. Path.GetExtension("Report.CSV")
+    [DataRow(".Parquet", FileType.PARQUET)]
+    public void EXTENSION_TO_FILE_TYPE_TEST(string extension, FileType expectedFileType)
+    {
+        Assert.AreEqual(expectedFileType, UtilityMethods.ExtensionToFileType(extension));
+    }
+
+    [TestMethod]
+    [DataRow(".txt")]
+    [DataRow("csv")] //Missing the leading '.'
+    [DataRow(".csv ")]
+    [DataRow(".")]
+    [DataRow("")]
+    public void UNSUPPORTED_EXTENSION_TO_FILE_TYPE_TEST(string extension)
+    {
+        Assert.IsNull(UtilityMethods.ExtensionToFileType(extension));
+    }
+
+    [TestMethod]
+    public void FILE_TYPE_EXTENSION_ROUND_TRIP_TEST()
+    {
+        //Every file type's extension should map back to the same file type
+        foreach (var fileType in Enum.GetValues<FileType>())
+        {
+            var extension = fileType.GetExtension();
+            Assert.StartsWith(".", extension);
+            Assert.AreEqual(fileType, UtilityMethods.ExtensionToFileType(extension), $"Extension `{extension}` didn't map back to {fileType}");
+        }
+    }
+
+    [TestMethod]
+    public void UNDEFINED_FILE_TYPE_HAS_NO_EXTENSION_TEST()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => ((FileType)999).GetExtension());
+    }
+
+    [TestMethod]
     [DataRow("1.0", null)]
     [DataRow("1.0.0", "1.0.0.0")]
     [DataRow("1.0.0.0", "1.0.0.0")]

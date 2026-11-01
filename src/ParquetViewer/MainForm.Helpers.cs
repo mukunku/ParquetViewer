@@ -86,9 +86,10 @@ public partial class MainForm
                 CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
 
                 var fileExtension = Path.GetExtension(filePath);
-                FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension) ?? throw new ArgumentOutOfRangeException(fileExtension);
+                FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension)
+                    ?? throw new UnsupportedFileTypeException(fileExtension);
                 var stopWatch = Stopwatch.StartNew();
-                loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, rowCount * columnCount);
+                loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, (long)rowCount * columnCount);
                 await ExportResultsImplAsync(MainDataSource, selectedFileType.Value, _openParquetEngine,
                     filePath, loadingIcon, _openFileOrFolderPath, loadingIcon.CancellationToken);
 
@@ -116,6 +117,11 @@ public partial class MainForm
             }
         }
         catch (IOException ex)
+        {
+            CleanupFile(filePath);
+            ShowError(ex.Message, Resources.Errors.ExportFailedErrorTitle);
+        }
+        catch (UnsupportedFileTypeException ex)
         {
             CleanupFile(filePath);
             ShowError(ex.Message, Resources.Errors.ExportFailedErrorTitle);

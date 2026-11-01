@@ -835,7 +835,7 @@ public abstract class EngineTests
 
         var ex = await Assert.ThrowsAsync<MalformedFieldException>(async ()
             => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false));
-        Assert.AreEqual("LIST field `tags` must have a repeated child", ex.Message);
+        Assert.AreEqual("Invalid LIST field `tags` has no repeated child", ex.Message);
     }
 
     #endregion
