@@ -477,7 +477,7 @@ public partial class MainForm : FormBase
 
             if (wasSuccessful)
             {
-                var engineType = _openParquetEngine is Engine.ParquetNET.ParquetEngine
+                var engineType = engine is Engine.ParquetNET.ParquetEngine
                     ? FileOpenEvent.ParquetEngineTypeId.ParquetNET
                     : FileOpenEvent.ParquetEngineTypeId.DuckDB;
 
