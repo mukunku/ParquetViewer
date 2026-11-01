@@ -638,7 +638,7 @@ public abstract class EngineTests
     /// <c>optional group tags (LIST) { repeated int32 array; }</c>. Written by hand, pyarrow reads it as list&lt;int&gt;.
     /// </summary>
     [SkippableTestMethod]
-    [SkipWhen(typeof(DuckDBEngineTests), "Our DuckDB engine can't read legacy two-level lists")]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads this file, but our DuckDB engine's value conversion doesn't support legacy two-level lists yet")]
     public async Task LEGACY_TWO_LEVEL_LIST_OF_PRIMITIVES_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/LEGACY_TWO_LEVEL_LIST_OF_PRIMITIVES_TEST.parquet");
@@ -662,7 +662,7 @@ public abstract class EngineTests
     /// list&lt;struct&lt;b&gt;&gt;. Without the legacy rule the struct is lost and it's read as list&lt;int&gt;.
     /// </summary>
     [SkippableTestMethod]
-    [SkipWhen(typeof(DuckDBEngineTests), "Our DuckDB engine can't read legacy two-level lists")]
+    [SkipWhen(typeof(DuckDBEngineTests), "Our DuckDB engine doesn't support legacy two-level lists of structs yet")]
     public async Task LEGACY_TWO_LEVEL_LIST_OF_STRUCTS_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/LEGACY_TWO_LEVEL_LIST_OF_STRUCTS_TEST.parquet");
@@ -811,36 +811,85 @@ public abstract class EngineTests
 
     /// <summary>
     /// The outer LIST group must be optional or required according to the Parquet spec. This file was written by hand
-    /// (pyarrow refuses to write or read it) with a top-level `repeated group my_list (LIST)`.
+    /// (pyarrow refuses to write or read it) with a top-level `repeated group my_list (LIST)`, which we read as a list of lists.
     /// </summary>
     [SkippableTestMethod]
-    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads repeated LIST groups as a list of lists, which our DuckDB engine doesn't handle")]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads this file (as a list of lists), but our DuckDB engine's value conversion doesn't support repeated LIST groups yet")]
     public async Task REPEATED_LIST_GROUP_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/REPEATED_LIST_GROUP_TEST.parquet");
         Assert.AreEqual(3, parquetEngine.RecordCount);
         Assert.HasCount(2, parquetEngine.Fields);
 
-        var ex = await Assert.ThrowsAsync<MalformedFieldException>(async ()
-            => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false));
-        Assert.Contains("`my_list`", ex.Message);
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(0, dataTable.Rows[0]["id"]);
+        Assert.AreEqual("[[1,2],[3]]", dataTable.Rows[0]["my_list"].ToString());
+        Assert.AreEqual(1, dataTable.Rows[1]["id"]);
+        Assert.AreEqual("[]", dataTable.Rows[1]["my_list"].ToString()); //A repeated field can't be null, zero occurrences is an empty list
+        Assert.AreEqual(2, dataTable.Rows[2]["id"]);
+        Assert.AreEqual("[[4]]", dataTable.Rows[2]["my_list"].ToString());
     }
 
     /// <summary>
     /// The outer MAP group must be optional or required according to the Parquet spec. This file was written by hand
-    /// (pyarrow refuses to write or read it) with a top-level `repeated group my_map (MAP)`.
+    /// (pyarrow refuses to write or read it) with a top-level `repeated group my_map (MAP)`, which we read as a list of maps.
     /// </summary>
     [SkippableTestMethod]
-    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads repeated MAP groups as a list of maps, which our DuckDB engine doesn't handle")]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads this file (as a list of maps), but our DuckDB engine's value conversion doesn't support repeated MAP groups yet")]
     public async Task REPEATED_MAP_GROUP_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/REPEATED_MAP_GROUP_TEST.parquet");
         Assert.AreEqual(3, parquetEngine.RecordCount);
         Assert.HasCount(2, parquetEngine.Fields);
 
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(0, dataTable.Rows[0]["id"]);
+        Assert.AreEqual("[[{\"key\":1,\"value\":10}],[{\"key\":2,\"value\":20},{\"key\":3,\"value\":30}]]", dataTable.Rows[0]["my_map"].ToString());
+        Assert.AreEqual(1, dataTable.Rows[1]["id"]);
+        Assert.AreEqual("[]", dataTable.Rows[1]["my_map"].ToString()); //A repeated field can't be null, zero occurrences is an empty list
+        Assert.AreEqual(2, dataTable.Rows[2]["id"]);
+        Assert.AreEqual("[[{\"key\":4,\"value\":40}]]", dataTable.Rows[2]["my_map"].ToString());
+    }
+
+    /// <summary>
+    /// A malformed LIST whose child isn't repeated: <c>optional group tags (LIST) { optional int32 array; }</c>.
+    /// Written by hand, pyarrow refuses it with "Non-repeated nodes in a LIST-annotated group are not supported".
+    /// </summary>
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "Only the Parquet.NET engine validates LIST fields")]
+    public async Task LIST_WITHOUT_REPEATED_CHILD_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/LIST_WITHOUT_REPEATED_CHILD_TEST.parquet");
+        Assert.AreEqual(2, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
         var ex = await Assert.ThrowsAsync<MalformedFieldException>(async ()
             => (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false));
-        Assert.Contains("`my_map`", ex.Message);
+        Assert.AreEqual("LIST field `tags` must have a repeated child", ex.Message);
+    }
+
+    /// <summary>
+    /// A legacy list of lists where the element of a two-level LIST is itself a repeated LIST group:
+    /// <c>optional group a (LIST) { repeated group array (LIST) { repeated int32 array; } }</c>.
+    /// Written by hand, pyarrow reads it as [[1,2],[3]], null, [], [[]].
+    /// </summary>
+    [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB reads this file, but our DuckDB engine's value conversion doesn't support legacy two-level lists yet")]
+    public async Task LEGACY_NESTED_TWO_LEVEL_LIST_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/LEGACY_NESTED_TWO_LEVEL_LIST_TEST.parquet");
+        Assert.AreEqual(4, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(0, dataTable.Rows[0]["id"]);
+        Assert.AreEqual("[[1,2],[3]]", dataTable.Rows[0]["a"].ToString());
+        Assert.AreEqual(1, dataTable.Rows[1]["id"]);
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[1]["a"]);
+        Assert.AreEqual(2, dataTable.Rows[2]["id"]);
+        Assert.AreEqual("[]", dataTable.Rows[2]["a"].ToString());
+        Assert.AreEqual(3, dataTable.Rows[3]["id"]);
+        Assert.AreEqual("[[]]", dataTable.Rows[3]["a"].ToString());
     }
 
     [SkippableTestMethod]

@@ -141,16 +141,30 @@ public partial class ParquetEngine
             case FieldTypeId.List:
                 var repeatedField = field.GetListField();
 
-                if (IsLegacyTwoLevelList(field, repeatedField))
-                    return await CreateValueBuilderAsync(repeatedField, groupReader, cancellationToken);
+                //Both the standard three-level and the legacy two-level layouts need a repeated node, otherwise there's nothing to make a list
+                if (repeatedField.RepetitionType != RepetitionTypeId.Repeated)
+                    throw new MalformedFieldException($"LIST field `{field.PathWithParent}` must have a repeated child");
 
-                var element = await CreateValueBuilderAsync(repeatedField.GetListItemField(), groupReader, cancellationToken);
-                return new ListValueBuilder(repeatedField.Levels.MaxDefinitionLevel, repeatedField.Levels.MaxRepetitionLevel, element);
+                if (IsLegacyTwoLevelList(field))
+                {
+                    //The repeated node is the element itself, and its own repetition makes it the list.
+                    //So we let this recursive call to CreateValueBuilderAsync create the list wrapper at the end.
+                    builder = await CreateValueBuilderAsync(repeatedField, groupReader, cancellationToken);
+                }
+                else
+                {
+                    //This is a regular three-tier list; we need to go one level deeper
+                    var elementField = repeatedField.GetListItemField();
+                    var element = await CreateValueBuilderAsync(elementField, groupReader, cancellationToken);
+                    builder = new ListValueBuilder(repeatedField.Levels.MaxDefinitionLevel, repeatedField.Levels.MaxRepetitionLevel, element);
+                }
+                break;
             case FieldTypeId.Map:
                 var keyValueField = field.GetMapKeyValueField();
                 var key = await CreateValueBuilderAsync(keyValueField.GetMapKeyField(), groupReader, cancellationToken);
                 var value = await CreateValueBuilderAsync(keyValueField.GetMapValueField(), groupReader, cancellationToken);
-                return new MapValueBuilder(keyValueField.Levels.MaxDefinitionLevel, keyValueField.Levels.MaxRepetitionLevel, key, value);
+                builder = new MapValueBuilder(keyValueField.Levels.MaxDefinitionLevel, keyValueField.Levels.MaxRepetitionLevel, key, value);
+                break;
             case FieldTypeId.Struct:
                 var children = field.Children;
                 var fields = new List<FieldValueBuilder>(children.Count);
@@ -164,11 +178,19 @@ public partial class ParquetEngine
                 throw new UnsupportedFieldException($"Field `{field.PathWithParent}` has an unknown type {field.FieldType}.");
         }
 
-        //The repeated nodes inside a LIST or MAP are handled by those cases above and never built on their own,
-        //so a repeated field reaching here repeats by itself (a legacy "two-tier" list) so it's a list of itself
-        return field.RepetitionType == RepetitionTypeId.Repeated
-            ? new ListValueBuilder(field.Levels.MaxDefinitionLevel, field.Levels.MaxRepetitionLevel, builder)
-            : builder;
+        //Only legacy layouts get here with a repeated field: a legacy two-tier list, where the repeated node is the element
+        //and the list at the same time (there's no LIST wrapper). E.g.
+        //  - a bare repeated primitive or struct field
+        //  - the repeated node of a legacy two-level LIST (This is the IsLegacyTwoLevelList case above)
+        //  - a repeated LIST or MAP group, i.e. a two-tier list whose elements are lists or maps
+        //The repeated `list` and `key_value` nodes of standard three-level LISTs and MAPs never get here, those cases build them.
+        var belongsToLegacyTwoLevelList = field.RepetitionType == RepetitionTypeId.Repeated;
+        if (belongsToLegacyTwoLevelList)
+        {
+            return new ListValueBuilder(field.Levels.MaxDefinitionLevel, field.Levels.MaxRepetitionLevel, builder);
+        }
+
+        return builder;
     }
 
     /// <summary>
@@ -181,11 +203,18 @@ public partial class ParquetEngine
     /// </list>
     /// Otherwise it's the standard three-level list, where the repeated node's only child is the element.
     /// </summary>
-    private static bool IsLegacyTwoLevelList(ParquetSchemaElement listField, ParquetSchemaElement repeatedField)
-        => repeatedField.FieldType == FieldTypeId.Primitive
+    /// <returns>False if <paramref name="listField"/> isn't a two level LIST</returns>
+    private static bool IsLegacyTwoLevelList(ParquetSchemaElement listField)
+    {
+        if (listField.FieldType != FieldTypeId.List)
+            return false;
+
+        var repeatedField = listField.GetListField();
+        return repeatedField.FieldType == FieldTypeId.Primitive
             || repeatedField.Children.Count > 1
             || repeatedField.Path == "array"
             || repeatedField.Path == $"{listField.Path}_tuple";
+    }
 
     private DataTableLite BuildDataTableLite(List<string> fields, int expectedRecordCount)
     {
@@ -199,12 +228,17 @@ public partial class ParquetEngine
             if (schema.RepetitionType == RepetitionTypeId.Repeated)
             {
                 //Because we're going through top level fields, none of them should be REPEATED according to the Parquet spec.
-                //Only exception is legacy 2-tier Lists. Which can be of primitives or Structs only.
+                //But legacy writers do it so a field can be a list of itself. CreateValueBuilderAsync reads all of these as lists.
                 switch (schema.FieldType)
                 {
-                    case FieldTypeId.Map:
                     case FieldTypeId.List:
-                        throw new MalformedFieldException($"Repeated LIST and MAP fields aren't allowed by the Parquet spec. Field: `{field}`");
+                        //A list of lists. Its ClrType is already ListValue
+                        columnType = typeof(ListValue);
+                        break;
+                    case FieldTypeId.Map:
+                        //A list of maps. Its ClrType is MapValue, but we read it as a list
+                        columnType = typeof(ListValue);
+                        break;
                     case FieldTypeId.Primitive:
                     case FieldTypeId.Struct:
                         //A legacy two tier list. Its ClrType is the element's type, but we read it as a list
