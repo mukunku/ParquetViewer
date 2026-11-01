@@ -44,8 +44,7 @@ public class StructValue : IStructValue
         if (FieldNames.Count == 0)
             return -1;
 
-        //Structs from the same field share one field names array, so the schema check can be skipped
-        if (other is not StructValue otherStruct || !ReferenceEquals(_fieldNames, otherStruct._fieldNames))
+        if (!FieldNames.SequenceEqual(other.FieldNames))
         {
             var otherColumnNames = string.Join("|", other.FieldNames);
             var columnNames = string.Join("|", FieldNames);
