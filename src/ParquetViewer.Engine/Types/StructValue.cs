@@ -44,12 +44,16 @@ public class StructValue : IStructValue
         if (FieldNames.Count == 0)
             return -1;
 
-        var otherColumnNames = string.Join("|", other.FieldNames);
-        var columnNames = string.Join("|", FieldNames);
+        //Structs from the same field share one field names array, so the schema check can be skipped
+        if (other is not StructValue otherStruct || !ReferenceEquals(_fieldNames, otherStruct._fieldNames))
+        {
+            var otherColumnNames = string.Join("|", other.FieldNames);
+            var columnNames = string.Join("|", FieldNames);
 
-        int schemaComparison = columnNames.CompareTo(otherColumnNames);
-        if (schemaComparison != 0)
-            return schemaComparison;
+            int schemaComparison = columnNames.CompareTo(otherColumnNames);
+            if (schemaComparison != 0)
+                return schemaComparison;
+        }
 
         int fieldCount = FieldNames.Count;
         for (var i = 0; i < fieldCount; i++)
