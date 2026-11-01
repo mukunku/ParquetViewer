@@ -231,7 +231,7 @@ public static class Helpers
     /// <see cref="Utf8JsonWriterWithRunningLength.WriteNumberValue(object)"/> handles exactly these types.
     /// </remarks>
     public static bool IsNumber(this Type type) =>
-        Type.GetTypeCode(type) is >= TypeCode.SByte and <= TypeCode.Decimal;
+        !type.IsEnum && Type.GetTypeCode(type) is >= TypeCode.SByte and <= TypeCode.Decimal;
 
     public static IEnumerable<string> ListParquetFiles(string folderPath)
     {

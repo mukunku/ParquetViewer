@@ -98,6 +98,7 @@ public class JsonWriterTests
     [DataRow(typeof(Half))] //Not a built-in type code, so these are treated as non-numbers
     [DataRow(typeof(Int128))]
     [DataRow(typeof(BigInteger))]
+    [DataRow(typeof(DayOfWeek))] //An enum's type code is its underlying integer type, but it isn't a number
     public void OTHER_TYPES_ARE_NOT_NUMBERS(Type type)
     {
         Assert.IsFalse(type.IsNumber());
