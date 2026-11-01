@@ -711,6 +711,9 @@ public class ParquetGridView : DataGridView
             return;
 
         var maxWidth = MAX_WIDTH;
+        var dateFormat = AppSettings.DateTimeDisplayFormat.GetDateFormat();
+        var dateOnlyFormat = AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat();
+        var timeOnlyFormat = AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat();
 
         // Create a graphics object from the target grid. Used for measuring text size.
         using var gfx = CreateGraphics();
@@ -738,7 +741,7 @@ public class ParquetGridView : DataGridView
                 //All date time's will probably have the same string length so no need to go through all values.
                 //We can just measure a few without going through all of them.
                 colStringCollection = nonNullColumnValues
-                    .Select(row => row.Field<DateTime>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateFormat()))
+                    .Select(row => row.Field<DateTime>(i).ToString(dateFormat))
                     .Take(25);
             }
             else if (gridTable.Columns[i].DataType == typeof(DateOnly))
@@ -746,7 +749,7 @@ public class ParquetGridView : DataGridView
                 //All date only's will probably have the same string length so no need to go through all values.
                 //We can just measure a few without going through all of them.
                 colStringCollection = nonNullColumnValues
-                    .Select(row => row.Field<DateOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetDateOnlyFormat()))
+                    .Select(row => row.Field<DateOnly>(i).ToString(dateOnlyFormat))
                     .Take(10);
             }
             else if (gridTable.Columns[i].DataType == typeof(TimeOnly))
@@ -754,7 +757,7 @@ public class ParquetGridView : DataGridView
                 //All date only's will probably have the same string length so no need to go through all values.
                 //We can just measure a few without going through all of them.
                 colStringCollection = nonNullColumnValues
-                    .Select(row => row.Field<TimeOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat()))
+                    .Select(row => row.Field<TimeOnly>(i).ToString(timeOnlyFormat))
                     .Take(25);
             }
             else if (gridTable.Columns[i].DataType == typeof(float)
