@@ -22,7 +22,7 @@ namespace ParquetViewer.Engine.ParquetNET;
 /// 
 /// Advantages of reflection approach:
 /// - Reflection has no type list to maintain. New primitive types can automatically work in theory.
-/// - Don't have to maintain a giant list of if/else's like we do in <see cref="ParquetColumnData.Data"/>.
+/// - Don't have to maintain a giant list of if/else's like we do in <see cref="ParquetColumnData.Create"/>.
 /// - Performance seemed the same in my local testing.
 /// </para>
 /// </remarks>
