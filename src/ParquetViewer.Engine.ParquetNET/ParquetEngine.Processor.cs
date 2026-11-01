@@ -141,10 +141,6 @@ public partial class ParquetEngine
             case FieldTypeId.List:
                 var repeatedField = field.GetListField();
 
-                //Both the standard three-level and the legacy two-level layouts need a repeated node, otherwise there's nothing to make a list
-                if (repeatedField.RepetitionType != RepetitionTypeId.Repeated)
-                    throw new MalformedFieldException($"LIST field `{field.PathWithParent}` must have a repeated child");
-
                 if (IsLegacyTwoLevelList(field))
                 {
                     //The repeated node is the element itself, and its own repetition makes it the list.

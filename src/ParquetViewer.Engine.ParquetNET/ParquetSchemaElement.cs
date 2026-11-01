@@ -104,7 +104,16 @@ public class ParquetSchemaElement : IParquetSchemaElement
     /// <summary>
     /// Gets the repeated node of this LIST field.
     /// </summary>
-    public ParquetSchemaElement GetListField() => GetSingleOrByName("list");
+    public ParquetSchemaElement GetListField()
+    {
+        var field = GetSingleOrByName("list");
+
+        //Both the standard three-level and the legacy two-level layouts need a repeated node, otherwise there's nothing to make a list
+        if (field.RepetitionType != RepetitionTypeId.Repeated)
+            throw new MalformedFieldException($"Invalid LIST field `{PathWithParent}` has no repeated child");
+
+        return field;
+    }
 
     /// <summary>
     /// Gets the element of a three-level list. Must be called on a LIST field's repeated node (see <see cref="GetListField"/>).
@@ -128,7 +137,15 @@ public class ParquetSchemaElement : IParquetSchemaElement
     /// <summary>
     /// Gets the repeated key_value node of this MAP field.
     /// </summary>
-    public ParquetSchemaElement GetMapKeyValueField() => GetSingleOrByName("key_value");
+    public ParquetSchemaElement GetMapKeyValueField()
+    {
+        var field = GetSingleOrByName("key_value");
+
+        if (field.RepetitionType != RepetitionTypeId.Repeated)
+            throw new MalformedFieldException($"Invalid MAP field `{PathWithParent}` has no repeated child");
+
+        return field;
+    }
 
     /// <summary>
     /// Gets the map's key. Must be called on a MAP field's key_value node (see <see cref="GetMapKeyValueField"/>).
