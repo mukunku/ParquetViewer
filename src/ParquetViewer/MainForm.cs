@@ -317,18 +317,20 @@ public partial class MainForm : FormBase
                 if (_openParquetEngine is Engine.DuckDB.ParquetEngine)
                     throw;
 
+                Engine.DuckDB.ParquetEngine? duckDbEngine = null;
                 try
                 {
-                    var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
+                    duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
                     await LoadFileToGridviewImplAsync(duckDbEngine);
 
                     //Swap engines
-                    await _openParquetEngine!.DisposeAsync();
+                    await _openParquetEngine.DisposeSafelyAsync();
                     _openParquetEngine = duckDbEngine;
                 }
                 catch (Exception duckDbEx)
                 {
-                    //If DuckDB fails too, bail
+                    //If DuckDB fails too, bail. Close DuckDB's handles to the file first, we won't be using it
+                    await duckDbEngine.DisposeSafelyAsync();
                     throw new Exceptions.RowsReadException(unhandledEx, duckDbEx);
                 }
             }
