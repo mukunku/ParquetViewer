@@ -101,52 +101,57 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     public override string ToString() => Path;
 
-    private SystemFieldTypeId? _systemFieldType = null;
-    public ParquetSchemaElement GetListField()
-    {
-        var field = GetSingleOrByName("list");
-        field._systemFieldType = SystemFieldTypeId.ListNode;
-        return field;
-    }
+    /// <summary>
+    /// Gets the repeated node of this LIST field.
+    /// </summary>
+    public ParquetSchemaElement GetListField() => GetSingleOrByName("list");
+
+    /// <summary>
+    /// Gets the element of a three-level list. Must be called on a LIST field's repeated node (see <see cref="GetListField"/>).
+    /// </summary>
     public ParquetSchemaElement GetListItemField()
     {
-        if (_systemFieldType != SystemFieldTypeId.ListNode)
-            throw GetSystemFieldAccessException(SystemFieldTypeId.ListItemNode);
+        //Checked using the schema structure so it doesn't matter how this node was reached
+        if (Parent?.FieldType != FieldTypeId.List)
+            throw new InvalidOperationException($"Can't get the list item of `{PathWithParent}` as it isn't the repeated node of a LIST field");
 
         try
         {
-            var field = GetSingleOrByName("item");
-            field._systemFieldType = SystemFieldTypeId.ListItemNode;
-            return field;
+            return GetSingleOrByName("item");
         }
         catch (Exception ex)
         {
             throw new UnsupportedFieldException($"Cannot load field `{Path}`. Invalid List type.", ex);
         }
     }
-    public ParquetSchemaElement GetMapKeyValueField()
-    {
-        var field = GetSingleOrByName("key_value");
-        field._systemFieldType = SystemFieldTypeId.MapKeyValueNode;
-        return field;
-    }
+
+    /// <summary>
+    /// Gets the repeated key_value node of this MAP field.
+    /// </summary>
+    public ParquetSchemaElement GetMapKeyValueField() => GetSingleOrByName("key_value");
+
+    /// <summary>
+    /// Gets the map's key. Must be called on a MAP field's key_value node (see <see cref="GetMapKeyValueField"/>).
+    /// </summary>
     public ParquetSchemaElement GetMapKeyField()
     {
-        if (_systemFieldType != SystemFieldTypeId.MapKeyValueNode)
-            throw GetSystemFieldAccessException(SystemFieldTypeId.MapKeyNode);
+        //Checked using the schema structure so it doesn't matter how this node was reached
+        if (Parent?.FieldType != FieldTypeId.Map)
+            throw new InvalidOperationException($"Can't get the map key of `{PathWithParent}` as it isn't the key_value node of a MAP field");
 
-        var field = GetChildCI("key");
-        field._systemFieldType = SystemFieldTypeId.MapKeyNode;
-        return field;
+        return GetChildCI("key");
     }
+
+    /// <summary>
+    /// Gets the map's value. Must be called on a MAP field's key_value node (see <see cref="GetMapKeyValueField"/>).
+    /// </summary>
     public ParquetSchemaElement GetMapValueField()
     {
-        if (_systemFieldType != SystemFieldTypeId.MapKeyValueNode)
-            throw GetSystemFieldAccessException(SystemFieldTypeId.MapValueNode);
+        //Checked using the schema structure so it doesn't matter how this node was reached
+        if (Parent?.FieldType != FieldTypeId.Map)
+            throw new InvalidOperationException($"Can't get the map value of `{PathWithParent}` as it isn't the key_value node of a MAP field");
 
-        var field = GetChildCI("value");
-        field._systemFieldType = SystemFieldTypeId.MapValueNode;
-        return field;
+        return GetChildCI("value");
     }
 
     private FieldLevels? _levels;
@@ -202,10 +207,6 @@ public class ParquetSchemaElement : IParquetSchemaElement
     public int? Precision => SchemaElement.Precision;
     public string? Type => SchemaElement.Type?.ToString();
 
-    private InvalidOperationException GetSystemFieldAccessException(SystemFieldTypeId fieldType)
-        => new($"Can't get {fieldType} node from '{Parent?._systemFieldType}' " +
-                $"for `{Parent?.Path + '/' + Path}` with types '{Parent?.FieldType.ToString() + '/' + FieldType.ToString()}'");
-
     object? IParquetSchemaElement.LogicalType => LogicalType;
 
     IParquetSchemaElement IParquetSchemaElement.GetChildCI(string name)
@@ -231,14 +232,4 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     IParquetSchemaElement IParquetSchemaElement.GetMapValueField()
         => GetMapValueField();
-
-    private enum SystemFieldTypeId
-    {
-        ListNode,
-        ListItemNode,
-        StructValueNode,
-        MapKeyValueNode,
-        MapKeyNode,
-        MapValueNode
-    }
 }
