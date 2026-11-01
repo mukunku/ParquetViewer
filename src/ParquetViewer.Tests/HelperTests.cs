@@ -96,7 +96,8 @@ public class HelperTests
     [DataRow(@"Could not find file 'C:\private\O'Brien\customer.parquet'.", "Could not find file *****.")] //Apostrophes are valid in paths
     [DataRow(@"Access to the path '\\server\O'Brien's share\file.parquet' is denied.", "Access to the path ***** is denied.")]
     [DataRow(@"One or more errors occurred. (Could not find file 'C:\a.parquet'.) (Unable to cast object of type 'System.String' to type 'System.Int32'.)",
-        "One or more errors occurred. (Could not find file *****.) (Unable to cast object of type 'System.String' to type 'System.Int32'.)")] //Only the path gets masked
+        "One or more errors occurred. (Could not find file *****.)")] //Masks up to the last ' on the line, so more than the path gets masked here. That's accepted.
+    [DataRow(@"Some library failed with ['C:\a\b.parquet']", "Some library failed with [*****]")]
     public async Task AMPLITUDE_EXCEPTION_FILE_PATH_MASKING_TEST(string exceptionMessage, string expectedMessage)
     {
         var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
