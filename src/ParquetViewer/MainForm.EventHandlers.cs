@@ -89,7 +89,7 @@ public partial class MainForm
 
     private void MainForm_DragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
+        if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true && !_isLoadingFileToGridview)
             e.Effect = DragDropEffects.Copy;
     }
 
