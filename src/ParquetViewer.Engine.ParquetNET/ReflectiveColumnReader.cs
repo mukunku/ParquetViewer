@@ -51,16 +51,11 @@ internal static class ReflectiveColumnReader
         var columnChunk = groupReader.GetMetadata(field)
             ?? throw new ParquetException($"`{field.Path}` does not exist in this file");
 
-        var numValues = checked((int)(columnChunk.MetaData?.NumValues
-            ?? throw new ParquetException($"Column chunk metadata is missing for `{field.Path}`, meaning the file is most probably corrupt")));
+        var numValues = int.CreateChecked(columnChunk.MetaData?.NumValues
+            ?? throw new ParquetException($"Column chunk metadata is missing for `{field.Path}`, meaning the file is most probably corrupt"));
 
-        int[]? definitionLevels = null;
-        int[]? repetitionLevels = null;
-        if (field.MaxDefinitionLevel > 0 || field.MaxRepetitionLevel > 0)
-        {
-            definitionLevels = new int[numValues];
-            repetitionLevels = new int[numValues];
-        }
+        var definitionLevels = field.MaxDefinitionLevel > 0 ? new int[numValues] : null;
+        var repetitionLevels = field.MaxRepetitionLevel > 0 ? new int[numValues] : null;
 
         var values = await ReadValuesAsync(groupReader, field, numValues, definitionLevels, repetitionLevels, cancellationToken);
 
