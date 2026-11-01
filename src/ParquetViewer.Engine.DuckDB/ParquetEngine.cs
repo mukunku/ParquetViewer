@@ -214,7 +214,7 @@ public sealed class ParquetEngine : IParquetEngine
 
             if (offset >= metadata.RowCount)
             {
-                offset -= (int)metadata.RowCount; //Safe to cast since it's no bigger than offset
+                offset -= (int)metadata.RowCount;
                 continue;
             }
 
