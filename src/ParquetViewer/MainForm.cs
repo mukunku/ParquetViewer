@@ -265,7 +265,6 @@ public partial class MainForm : FormBase
         recordCountStatusBarLabel.Text = "0";
         totalRowCountStatusBarLabel.Text = "0";
         actualShownRecordCountLabel.Text = "0";
-        mainGridView.DisposeAudioCells();
         MainDataSource?.Dispose();
         MainDataSource = null; //This also sets: mainGridView.DataSource = null
         loadAllRowsButton.Enabled = false;

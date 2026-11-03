@@ -1468,18 +1468,6 @@ public class ParquetGridView : DataGridView
         }
     }
 
-    public void DisposeAudioCells()
-    {
-        foreach (var audioColumn in Columns.Cast<DataGridViewColumn>()
-            .Where(column => column.CellTemplate?.GetType() == typeof(AudioPlayerDataGridViewCell)))
-        {
-            foreach (DataGridViewRow row in Rows)
-            {
-                row.Cells[audioColumn.Index].Dispose();
-            }
-        }
-    }
-
     private void DisposeGdiResources()
     {
         foreach (var font in _italicFontCache.Values)
@@ -1490,10 +1478,6 @@ public class ParquetGridView : DataGridView
 
     protected override void Dispose(bool disposing)
     {
-        //DGV doesn't call Dispose on individual cells when it is disposed. So we need to manually 
-        //dispose any AudioPlayerDataGridViewCells to free resources and stop ongoing playback.
-        DisposeAudioCells();
-
         _contextMenu?.Dispose();
         _headerContextMenu?.Dispose();
 
