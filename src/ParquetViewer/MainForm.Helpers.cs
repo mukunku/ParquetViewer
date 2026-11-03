@@ -117,12 +117,12 @@ public partial class MainForm
                 }
             }
         }
-        catch (IOException ex)
+        catch (UnsupportedFileTypeException ex)
         {
-            CleanupFile(filePath);
+            //Don't clean up since we didn't do anything yet
             ShowError(ex.Message, Resources.Errors.ExportFailedErrorTitle);
         }
-        catch (UnsupportedFileTypeException ex)
+        catch (IOException ex)
         {
             CleanupFile(filePath);
             ShowError(ex.Message, Resources.Errors.ExportFailedErrorTitle);
@@ -224,7 +224,7 @@ public partial class MainForm
         }
         else
         {
-            throw new UnsupportedFileTypeException(selectedFileType.ToString());
+            throw new InvalidOperationException($"Provided file type is not supported: '{selectedFileType}'"); //file extensions aren't private info so we don't wrap it in `backticks`
         }
     }
 
