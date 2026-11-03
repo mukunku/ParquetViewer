@@ -89,7 +89,7 @@ public partial class MainForm
 
     private void MainForm_DragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
+        if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true && !_isLoadingFileToGridview)
             e.Effect = DragDropEffects.Copy;
     }
 
@@ -165,7 +165,9 @@ public partial class MainForm
         {
             LoadAllRowsButton_Click(null, null);
         }
-        else if (e.Control && e.KeyCode == Keys.R && _openParquetEngine is not null) //Reload shortcut
+        //Reload shortcut
+        else if (e.Control && e.KeyCode == Keys.R && _openParquetEngine is not null
+            && !_isLoadingFileToGridview)
         {
             LoadFileToGridview();
         }

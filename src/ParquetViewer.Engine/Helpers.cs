@@ -279,8 +279,12 @@ public static class Helpers
             {
                 if (disposable is not null)
                 {
-                    var task = disposable.DisposeAsync();
-                    tasks.Add(task);
+                    try
+                    {
+                        var task = disposable.DisposeAsync();
+                        tasks.Add(task);
+                    }
+                    catch { /* Swallow */ }
                 }
             }
 

@@ -89,6 +89,111 @@ public class HelperTests
     }
 
     [TestMethod]
+    [DataRow(@"Access to the path 'C:\Documents and Settings' is denied.", "Access to the path ***** is denied.")]
+    [DataRow(@"The request failed due to a fatal device hardware error. : 'D:\data\file.parquet'.", "The request failed due to a fatal device hardware error. : *****.")]
+    [DataRow(@"Could not find file '\\server\share\file.parquet'.", "Could not find file *****.")]
+    [DataRow("Unable to cast object of type 'System.String' to type 'System.Int32'.", "Unable to cast object of type 'System.String' to type 'System.Int32'.")]
+    [DataRow(@"Could not find file 'C:\private\O'Brien\customer.parquet'.", "Could not find file *****.")] //Apostrophes are valid in paths
+    [DataRow(@"Access to the path '\\server\O'Brien's share\file.parquet' is denied.", "Access to the path ***** is denied.")]
+    [DataRow(@"One or more errors occurred. (Could not find file 'C:\a.parquet'.) (Unable to cast object of type 'System.String' to type 'System.Int32'.)",
+        "One or more errors occurred. (Could not find file *****.)")] //Masks up to the last ' on the line, so more than the path gets masked here. That's accepted.
+    [DataRow(@"Some library failed with ['C:\a\b.parquet']", "Some library failed with [*****]")]
+    public async Task AMPLITUDE_EXCEPTION_FILE_PATH_MASKING_TEST(string exceptionMessage, string expectedMessage)
+    {
+        var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+        var testEvent = new ExceptionEvent(new IOException(exceptionMessage), testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+        //mock the http response
+        _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+        {
+            string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+            var requestJson = JsonNode.Parse(requestJsonBody);
+            if (requestJson?["events"]?[0]?["event_properties"]?["message"]?.GetValue<string>() == expectedMessage)
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        });
+
+        bool wasSuccess = await testEvent.RecordAsync();
+        Assert.IsTrue(wasSuccess, "File path wasn't masked correctly");
+    }
+
+    [TestMethod]
+    [DoNotParallelize] //SensitiveFileDetailsProvider is static, so other masking tests mustn't see our provider
+    public async Task AMPLITUDE_EXCEPTION_FILE_PATHS_ARE_MASKED_BEFORE_FIELD_NAMES_TEST()
+    {
+        //A field named like a drive letter. If field names were masked first, 'Z:\...' would become '*****:\...',
+        //the file path regex would no longer match it, and the rest of the path would be sent.
+        var sensitiveFileDetails = new SensitiveFileDetails(@"Y:\opened\file.parquet", ["Z"]);
+        var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+        var testEvent = new ExceptionEvent(new IOException(@"Access to the path 'Z:\secret\file.parquet' is denied."),
+            testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+        //mock the http response
+        _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+        {
+            string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+            var requestJson = JsonNode.Parse(requestJsonBody);
+            if (requestJson?["events"]?[0]?["event_properties"]?["message"]?.GetValue<string>()
+                == $"Access to the path {ExceptionEvent.MASK_SENTINEL} is denied.")
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        });
+
+        try
+        {
+            ExceptionEvent.SensitiveFileDetailsProvider = () => sensitiveFileDetails;
+            bool wasSuccess = await testEvent.RecordAsync();
+            Assert.IsTrue(wasSuccess, "File path wasn't fully masked");
+        }
+        finally
+        {
+            ExceptionEvent.SensitiveFileDetailsProvider = null;
+        }
+    }
+
+    [TestMethod]
+    public async Task AMPLITUDE_EXCEPTION_INNER_EXCEPTION_MASKING_TEST()
+    {
+        var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+        var innerException = new IOException(@"Could not read `secret_column` from 'C:\secret\file.parquet'.");
+        var testEvent = new ExceptionEvent(new Exception("Outer exception", innerException), testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+        //mock the http response
+        _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+        {
+            string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+            var requestJson = JsonNode.Parse(requestJsonBody);
+            var innerExceptionText = requestJson?["events"]?[0]?["event_properties"]?["innerException"]?.GetValue<string>();
+            if (innerExceptionText is not null
+                && innerExceptionText.Contains($"System.IO.IOException: Could not read {ExceptionEvent.MASK_SENTINEL} from {ExceptionEvent.MASK_SENTINEL}.")
+                && !innerExceptionText.Contains("secret"))
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        });
+
+        bool wasSuccess = await testEvent.RecordAsync();
+        Assert.IsTrue(wasSuccess, "Inner exception message wasn't masked correctly");
+    }
+
+    [TestMethod]
+    public void AMPLITUDE_EXCEPTION_SENSITIVE_FILE_DETAILS_MASKING_TEST()
+    {
+        //"SOURCE" is a substring of "INVESTOR_SOURCE_ID" so it must not leave part of the longer field name unmasked
+        var sensitiveFileDetails = new SensitiveFileDetails(@"C:\data\investors.parquet", ["SOURCE", "INVESTOR_SOURCE_ID"]);
+
+        var maskedMessage = sensitiveFileDetails.Mask(
+            @"column 'INVESTOR_SOURCE_ID' is missing data page header, file is corrupt: C:\data\investors.parquet");
+
+        Assert.AreEqual($"column '{ExceptionEvent.MASK_SENTINEL}' is missing data page header, file is corrupt: {ExceptionEvent.MASK_SENTINEL}", maskedMessage);
+    }
+
+    [TestMethod]
     public async Task AMPLITUDE_EXCEPTION_ADDITIONAL_DATA_IS_SERIALIZED_TEST()
     {
         var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);

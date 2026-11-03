@@ -127,6 +127,11 @@ public partial class MainForm
                 rerunType = FileType.XLSX;
             }
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            CleanupFile(filePath);
+            HandleUnauthorizedAccessException(ex);
+        }
         catch (Exception)
         {
             CleanupFile(filePath);
@@ -458,7 +463,7 @@ public partial class MainForm
         ShowError(sb.ToString());
     }
 
-    private static void HandleFileReadException(FileReadException ex)
+    private static void HandleFileOpenException(FileOpenException ex)
     {
         ShowError(Resources.Errors.UnexpectedFileReadErrorMessageFormat.Format(ex));
     }
@@ -513,6 +518,12 @@ public partial class MainForm
                    DecimalOverflowException.MAX_DECIMAL_PRECISION,
                    DecimalOverflowException.MAX_DECIMAL_SCALE),
                Resources.Errors.DecimalValueTooLargeErrorTitle);
+
+    private static void HandleOutOfMemoryException(OutOfMemoryException ex)
+        => ShowError(ex.Message);
+
+    private static void HandleUnauthorizedAccessException(UnauthorizedAccessException ex)
+        => ShowError(ex.Message);
 
     private static void ShowError(string message, string? title = null)
         => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);

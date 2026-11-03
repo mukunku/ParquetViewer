@@ -25,6 +25,9 @@ public partial class MainForm : FormBase
 
     private string? _openFileOrFolderPath = null;
 
+    //Never cleared, so exceptions recorded after the file was closed (error handlers close it before rethrowing) still get masked
+    private SensitiveFileDetails _lastOpenedFileDetails = new(null, []);
+
     private List<string>? _selectedFields = null;
     private List<string>? SelectedFields
     {
@@ -97,6 +100,7 @@ public partial class MainForm : FormBase
 
     private bool _reloadEngine;
     private IParquetEngine? _openParquetEngine;
+    private bool _isLoadingFileToGridview;
 
     private FileModifiedInfo? _originalModifiedInfo;
     #endregion
@@ -159,15 +163,13 @@ public partial class MainForm : FormBase
         {
             try
             {
+                //This should be the only statement in this try-catch for correct exception handling. Beware when making changes.
                 _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath);
             }
             catch (Exception ex)
             {
-                if (_openParquetEngine is null)
-                {
-                    //cancel the file open
-                    await CloseOpenFileOrFolderAsync();
-                }
+                //cancel the file open
+                await CloseOpenFileOrFolderAsync();
 
                 if (ex is AllFilesSkippedException afse)
                 {
@@ -177,9 +179,9 @@ public partial class MainForm : FormBase
                 {
                     HandleSomeFilesSkippedException(sfse);
                 }
-                else if (ex is Engine.Exceptions.FileReadException fre)
+                else if (ex is FileOpenException foe)
                 {
-                    MainForm.HandleFileReadException(fre);
+                    HandleFileOpenException(foe);
                 }
                 else if (ex is MultipleSchemasFoundException msfe)
                 {
@@ -188,6 +190,14 @@ public partial class MainForm : FormBase
                 else if (ex is FileNotFoundException fnfe)
                 {
                     HandleFileNotFoundException(fnfe);
+                }
+                else if (ex is OutOfMemoryException oome)
+                {
+                    HandleOutOfMemoryException(oome);
+                }
+                else if (ex is UnauthorizedAccessException uae)
+                {
+                    HandleUnauthorizedAccessException(uae);
                 }
                 else if (ex is not OperationCanceledException)
                 {
@@ -209,6 +219,9 @@ public partial class MainForm : FormBase
         {
             throw new Parquet.ParquetException(Resources.Errors.ParquetSchemaReadErrorMessage, ex);
         }
+
+        //We're now sure the file has been opened successfully. Even if it may not have any fields.
+        _lastOpenedFileDetails = new(_openParquetEngine.Path, fields ?? []);
 
         if (fields?.Count > 0)
         {
@@ -287,40 +300,50 @@ public partial class MainForm : FormBase
         if (!IsAnyFileOpen)
             return;
 
-        await ReloadEngineIfRequiredAsync();
-
-#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
-        //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
+        _isLoadingFileToGridview = true;
         try
         {
-            await LoadFileToGridviewImplAsync(_openParquetEngine!);
-        }
-        catch (Exception unhandledEx)
-        {
-            //Try DuckDB if Parquet.NET fails (unless this was already DuckDB)
-            if (_openParquetEngine is Engine.DuckDB.ParquetEngine)
-                throw;
+            await ReloadEngineIfRequiredAsync();
 
+#if RELEASE_SELFCONTAINED || DEBUG_SELFCONTAINED
+            //Self contained release has both Parquet.NET and DuckDB engines included as the file size remains the same.
             try
             {
-                var duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
-                await LoadFileToGridviewImplAsync(duckDbEngine);
-
-                //Swap engines
-                await _openParquetEngine!.DisposeAsync();
-                _openParquetEngine = duckDbEngine;
+                await LoadFileToGridviewImplAsync(_openParquetEngine!);
             }
-            catch (Exception duckDbEx)
+            catch (Exception unhandledEx)
             {
-                //If DuckDB fails too, bail
-                throw new Exceptions.RowsReadException(unhandledEx, duckDbEx);
+                //Try DuckDB if Parquet.NET fails (unless this was already DuckDB)
+                if (_openParquetEngine is Engine.DuckDB.ParquetEngine)
+                    throw;
+
+                Engine.DuckDB.ParquetEngine? duckDbEngine = null;
+                try
+                {
+                    duckDbEngine = await Engine.DuckDB.ParquetEngine.OpenFileOrFolderAsync(_openFileOrFolderPath!);
+                    await LoadFileToGridviewImplAsync(duckDbEngine);
+
+                    //Swap engines
+                    await _openParquetEngine.DisposeSafelyAsync();
+                    _openParquetEngine = duckDbEngine;
+                }
+                catch (Exception duckDbEx)
+                {
+                    //If DuckDB fails too, bail. Close DuckDB's handles to the file first, we won't be using it
+                    await duckDbEngine.DisposeSafelyAsync();
+                    throw new Exceptions.RowsReadException(unhandledEx, duckDbEx);
+                }
             }
-        }
 #else
-        await LoadFileToGridviewImplAsync(_openParquetEngine!);
+            await LoadFileToGridviewImplAsync(_openParquetEngine!);
 #endif
 
-        _originalModifiedInfo = null;
+            _originalModifiedInfo = null;
+        }
+        finally
+        {
+            _isLoadingFileToGridview = false;
+        }
     }
 
     private async Task ReloadEngineIfRequiredAsync()
@@ -333,23 +356,33 @@ public partial class MainForm : FormBase
 
         //ParquetNET caches file metadata so we need to reload the engine if the parquet files were modified.
         //DuckDB reads the file from scratch each time so that engine doesn't need this.
-        if (_openParquetEngine is Engine.ParquetNET.ParquetEngine engine)
+        if (_openParquetEngine is not Engine.ParquetNET.ParquetEngine oldEngine)
+            return;
+
+        try
         {
-            try
+            _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(oldEngine.Path);
+
+            var fields = _openParquetEngine.Fields; //This can throw in some cases like if there are no fields in the file
+
+            //Save the new field names as they might have changed
+            _lastOpenedFileDetails = new(_openParquetEngine.Path, fields);
+
+            if (SelectedFields is not null && !SelectedFields.IsSubsetOf(fields))
             {
-                var oldEngine = _openParquetEngine;
-                _openParquetEngine = await Engine.ParquetNET.ParquetEngine.OpenFileOrFolderAsync(engine.Path);
-                if (SelectedFields is not null && !SelectedFields.IsSubsetOf(_openParquetEngine.Fields))
-                {
-                    //The file doesn't have the fields we want anymore. Reset to the fields that are there.
-                    _selectedFields = _openParquetEngine.Fields; //Since we're setting the backing field directly, there's a chance this new set of fields has dupes but I think we're okay risking it.
-                }
-                await oldEngine.DisposeAsync();
+                //The file doesn't have the fields we want anymore. Reset to the fields that are there.
+                _selectedFields = fields; //Since we're setting the backing field directly, there's a chance this new set of fields has dupes but I think we're okay risking it.
             }
-            catch (Exception)
-            {
-                //Swallow the exception.
-            }
+        }
+        catch (Exception)
+        {
+            //Swallow the exception.
+        }
+        finally
+        {
+            //Dispose the old engine if it was swapped out above
+            if (!ReferenceEquals(_openParquetEngine, oldEngine))
+                await oldEngine.DisposeSafelyAsync();
         }
     }
 
@@ -410,22 +443,6 @@ public partial class MainForm : FormBase
             MainDataSource = finalResult;
             wasSuccessful = true;
         }
-        catch (AllFilesSkippedException ex)
-        {
-            HandleAllFilesSkippedException(ex);
-        }
-        catch (SomeFilesSkippedException ex)
-        {
-            HandleSomeFilesSkippedException(ex);
-        }
-        catch (FileReadException ex)
-        {
-            HandleFileReadException(ex);
-        }
-        catch (MultipleSchemasFoundException ex)
-        {
-            HandleMultipleSchemasFoundException(ex);
-        }
         catch (MalformedFieldException ex)
         {
             HandleMalformedFieldException(ex);
@@ -433,6 +450,14 @@ public partial class MainForm : FormBase
         catch (DecimalOverflowException ex)
         {
             HandleDecimalOverflowException(ex);
+        }
+        catch (OutOfMemoryException ex)
+        {
+            HandleOutOfMemoryException(ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            HandleUnauthorizedAccessException(ex);
         }
         catch (Exception ex)
         {
@@ -457,7 +482,7 @@ public partial class MainForm : FormBase
 
             if (wasSuccessful)
             {
-                var engineType = _openParquetEngine is Engine.ParquetNET.ParquetEngine
+                var engineType = engine is Engine.ParquetNET.ParquetEngine
                     ? FileOpenEvent.ParquetEngineTypeId.ParquetNET
                     : FileOpenEvent.ParquetEngineTypeId.DuckDB;
 
@@ -483,6 +508,7 @@ public partial class MainForm : FormBase
     private async Task OpenNewFileOrFolderAsync(string fileOrFolderPath)
     {
         _openFileOrFolderPath = fileOrFolderPath;
+        _lastOpenedFileDetails = new(fileOrFolderPath, []); //Field names get added once the engine is instantiated
         await ResetFormAsync();
 
         var fieldList = await OpenFieldSelectionDialogAsync(false);
@@ -595,4 +621,9 @@ public partial class MainForm : FormBase
         _openFileOrFolderPath = null;
         await ResetFormAsync();
     }
+
+    /// <summary>
+    /// Gets the last opened file or folder's path and field names so analytics can mask them out of exception messages.
+    /// </summary>
+    public SensitiveFileDetails GetSensitiveFileDetails() => _lastOpenedFileDetails;
 }
