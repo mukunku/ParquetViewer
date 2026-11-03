@@ -1,6 +1,5 @@
 ﻿using ParquetViewer.Engine.Exceptions;
 using System.Data;
-using static ParquetViewer.Engine.DataTableLite;
 
 namespace ParquetViewer.Engine;
 
@@ -8,6 +7,7 @@ public class DataTableLite
 {
     public record ColumnLite(string Name, Type Type, IParquetSchemaElement ParentSchema, int Ordinal);
 
+    private bool _isDisposed;
     private int _ordinal = 0;
     private readonly Dictionary<string, ColumnLite> _columns = [];
     private readonly List<object[]> _rows;
@@ -26,7 +26,7 @@ public class DataTableLite
     /// <summary>
     /// Rows of the dataset
     /// </summary>
-    public IReadOnlyList<object[]> Rows => _rows;
+    public IReadOnlyList<object[]> Rows => !_isDisposed ? _rows : throw new ObjectDisposedException(nameof(DataTableLite));
 
     public DataTableLite(int expectedRowCount = 1000)
     {
@@ -37,6 +37,7 @@ public class DataTableLite
 
     public ColumnLite AddColumn(string name, Type type, IParquetSchemaElement parent)
     {
+        ObjectDisposedException.ThrowIf(_isDisposed, typeof(DataTableLite));
         if (_rows.Count > 0)
         {
             throw new InvalidOperationException("Can't add columns after creating rows");
@@ -49,12 +50,19 @@ public class DataTableLite
 
     public void NewRow()
     {
+        ObjectDisposedException.ThrowIf(_isDisposed, typeof(DataTableLite));
         var row = new object[Columns.Count];
         _rows.Add(row);
     }
 
-    public DataTable ToDataTable(CancellationToken token, IProgress<int>? progress = null)
+    /// <summary>
+    /// Destructively converts this object into a DataTable
+    /// </summary>
+    public DataTable ToDataTableDispose(CancellationToken token, IProgress<int>? progress = null)
     {
+        ObjectDisposedException.ThrowIf(_isDisposed, typeof(DataTableLite));
+        _isDisposed = true;
+
         var dataTable = new DataTable();
         foreach (var column in _columns)
         {
@@ -66,7 +74,7 @@ public class DataTableLite
             {
                 //DataTable's don't support case sensitive field names unfortunately
                 var columnPath = columnLite.ParentSchema + "/" + columnLite.Name;
-                throw new NotSupportedException($"Duplicate column '{columnPath}' detected. Column names are case insensitive and must be unique.");
+                throw new NotSupportedException($"Duplicate column `{columnPath}` detected. Column names are case insensitive and must be unique.");
             }
 
             var columnType = columnLite.Type;
@@ -78,8 +86,10 @@ public class DataTableLite
         {
             token.ThrowIfCancellationRequested();
             LoadRow(dataTable, _rows[i]);
+            _rows[i] = null!; //The DataTable has its own copy now, free up memory asap
             progress?.Report(_columns.Count);
         }
+        _rows.Clear();
         dataTable.EndLoadData();
 
         return dataTable;
@@ -113,70 +123,4 @@ public class DataTableLite
             }
         }
     }
-
-    //Gets a reference to the row data at the specified index
-    public DataRowLite GetRowAt(int index)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(index, 0, nameof(index));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _rows.Count, nameof(index));
-
-        return new DataRowLite(_rows[index], _columns.Values, this);
-    }
-
-    public DataTableLite Clone()
-    {
-        var clone = new DataTableLite();
-        foreach (var column in Columns.Values)
-        {
-            clone.AddColumn(column.Name, column.Type, column.ParentSchema);
-        }
-        return clone;
-    }
-}
-
-public class DataRowLite : IDataRowLite
-{
-    public IReadOnlyCollection<string> ColumnNames => Columns.Keys;
-    public Dictionary<string, ColumnLite> Columns { get; }
-    public object[] Row { get; }
-    public DataTableLite Table { get; }
-    public DataRowLite(object[] data, IEnumerable<ColumnLite> columns, DataTableLite table)
-    {
-        ArgumentNullException.ThrowIfNull(data);
-        ArgumentNullException.ThrowIfNull(columns);
-        ArgumentNullException.ThrowIfNull(table);
-
-        Table = table;
-        Row = data;
-        Columns = columns.ToDictionary(c => c.Name);
-        if (Row.Length != Columns.Count)
-        {
-            throw new ArgumentException($"Data length {data.Length} doesn't match number of columns {columns.Count()}", nameof(data));
-        }
-    }
-    public object GetValue(string columnName)
-    {
-        if (!Columns.ContainsKey(columnName))
-        {
-            throw new IndexOutOfRangeException($"Column `{columnName}` not found");
-        }
-
-        var index = 0;
-        foreach (var column in Columns.Keys)
-        {
-            if (column.Equals(columnName))
-            {
-                return Row[index];
-            }
-            index++;
-        }
-        throw new IndexOutOfRangeException($"Could not get value for column `{columnName}`");
-    }
-}
-
-public interface IDataRowLite
-{
-    IReadOnlyCollection<string> ColumnNames { get; }
-    object[] Row { get; }
-    object GetValue(string columnName);
 }

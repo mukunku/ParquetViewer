@@ -568,18 +568,13 @@ public class ParquetGridView : DataGridView
             string value = e.Value!.ToString()!;
             if (value.Length > MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL)
             {
-                e.Value = value[..MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL] + "[...]";
+                e.Value = Engine.Helpers.TruncateString(value, MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL) + "[...]";
                 e.FormattingApplied = true;
             }
         }
-        else if (cellValueType.ImplementsInterface<IStructValue>() && e.Value is IStructValue structValue)
+        else if (e.Value is ITruncatable truncatable) //Lists, maps and structs (binary values were formatted above)
         {
-            e.Value = structValue.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL);
-            e.FormattingApplied = true;
-        }
-        else if (cellValueType.ImplementsInterface<IListValue>() && e.Value is IListValue listValue)
-        {
-            e.Value = listValue.ToString()!.Left(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL - 3, "...");
+            e.Value = truncatable.ToStringTruncatedOrError(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL, FORMATTING_ERROR_TEXT);
             e.FormattingApplied = true;
         }
     }
@@ -758,11 +753,6 @@ public class ParquetGridView : DataGridView
                     .Select(row => row.Field<TimeOnly>(i).ToString(AppSettings.DateTimeDisplayFormat.GetTimeOnlyFormat()))
                     .Take(25);
             }
-            else if (gridTable.Columns[i].DataType.ImplementsInterface<IStructValue>())
-            {
-                colStringCollection = nonNullColumnValues
-                    .Select(row => row.Field<IStructValue>(i)!.ToStringTruncated(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL));
-            }
             else if (gridTable.Columns[i].DataType == typeof(float)
                 && _floatColumnsWithFormatOverrides.TryGetValue(gridTable.Columns[i].ColumnName, out var displayFormat)
                 && displayFormat == FloatDisplayFormat.Decimal)
@@ -803,6 +793,11 @@ public class ParquetGridView : DataGridView
             {
                 colStringCollection = nonNullColumnValues
                     .Select(row => FormatByteArrayString(row.Field<IByteArrayValue>(i)!, byteArrayDisplayFormat, 1000 /*1000 chars seems like a good max limit*/));
+            }
+            else if (gridTable.Columns[i].DataType.ImplementsInterface<ITruncatable>()) //Lists, maps and structs (binary values were handled above)
+            {
+                colStringCollection = nonNullColumnValues
+                    .Select(row => row.Field<ITruncatable>(i)!.ToStringTruncatedOrError(MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL, FORMATTING_ERROR_TEXT));
             }
             else
             {
