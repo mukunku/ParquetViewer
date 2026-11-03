@@ -83,11 +83,12 @@ public partial class MainForm
             if (filePathWithExtension is not null || exportFileDialog.ShowDialog() == DialogResult.OK)
             {
                 filePath = filePathWithExtension ?? exportFileDialog.FileName;
-                CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
-
                 var fileExtension = Path.GetExtension(filePath);
                 FileType? selectedFileType = UtilityMethods.ExtensionToFileType(fileExtension)
                     ?? throw new UnsupportedFileTypeException(fileExtension);
+
+                CleanupFile(filePath); //Delete any existing file (user already confirmed any overwrite)
+
                 var stopWatch = Stopwatch.StartNew();
                 loadingIcon = ShowLoadingIcon(Resources.Strings.ExportingDataLabelText, (long)rowCount * columnCount);
                 await ExportResultsImplAsync(MainDataSource, selectedFileType.Value, _openParquetEngine,
@@ -135,6 +136,9 @@ public partial class MainForm
                 Resources.Strings.SwitchFromXlsToXlsxMessageTitle,
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == DialogResult.OK)
             {
+                //On re-run we will create the same file with the .xlsx extension.
+                //If such a file already exists, we will overwrite it. I think this is fine
+                //since the user was already okay with overwriting the .xls file.
                 rerunType = FileType.XLSX;
             }
         }

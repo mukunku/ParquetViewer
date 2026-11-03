@@ -44,7 +44,8 @@ public class StructValue : IStructValue
         if (FieldNames.Count == 0)
             return -1;
 
-        if (!FieldNames.SequenceEqual(other.FieldNames))
+        //Check if the columns are the same. If not, we return the sort order based on the column names.
+        if (!ReferenceEquals(FieldNames, other.FieldNames) && !FieldNames.SequenceEqual(other.FieldNames))
         {
             var otherColumnNames = string.Join("|", other.FieldNames);
             var columnNames = string.Join("|", FieldNames);
