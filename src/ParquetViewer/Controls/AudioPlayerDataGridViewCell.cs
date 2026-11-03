@@ -95,6 +95,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         if (value is null || value == DBNull.Value)
         {
+            _initializationTimer.Stop(); //There's no audio to initialize
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
                 paintParts & ~DataGridViewPaintParts.ContentForeground);
             return;
@@ -209,7 +210,8 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         var columnIndex = ColumnIndex;
         dataGridView?.BeginInvoke(() =>
         {
-            if (dataGridView.IsDisposed || rowIndex >= dataGridView.Rows.Count) //The rows might have changed since
+            var isGridStillValid = !dataGridView.IsDisposed && rowIndex < dataGridView.Rows.Count && columnIndex < dataGridView.Columns.Count;
+            if (!isGridStillValid) //just in case
                 return;
 
             _ = dataGridView.Rows[rowIndex]; //Accessing the row through the indexer unshares it
@@ -428,7 +430,15 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         if (disposing)
         {
-            _audioPlayer.DisposeSafely();
+            if (_initializationTask?.IsCompleted == false)
+            {
+                //Still initializing, so dispose the player once it's created
+                _initializationTask.ContinueWith(_ => _audioPlayer.DisposeSafely());
+            }
+            else
+            {
+                _audioPlayer.DisposeSafely();
+            }
             _updateTimer.DisposeSafely();
             _initializationTimer.DisposeSafely();
         }
