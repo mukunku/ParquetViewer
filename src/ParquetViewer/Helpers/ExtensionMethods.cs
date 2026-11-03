@@ -276,14 +276,14 @@ public static class ExtensionMethods
     /// https://huggingface.co/docs/hub/en/datasets-image#parquet-format
     /// </summary>
     /// <returns>True if this is a struct with "bytes" and "path" fields</returns>
-    public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out byte[]? data)
+    public static bool IsHuggingFaceFormat(this IStructValue structValue, [NotNullWhen(true)] out IByteArrayValue? data)
     {
         if (structValue.FieldNames.Count == 2
             && structValue.FieldNames.Contains("bytes")
             && structValue.FieldNames.Contains("path")
             && structValue.GetValue("bytes") is IByteArrayValue byteArrayValue)
         {
-            data = byteArrayValue.Data;
+            data = byteArrayValue;
             return true;
         }
         data = null;
