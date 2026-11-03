@@ -96,10 +96,11 @@ internal static class ColumnWriter
 
             converted.SetValue(timeField.Precision switch
             {
+                //The (object) cast matters: without it the switch's type becomes long and int[] can't store a boxed long
                 TimeUnitPrecision.Millis => (object)(int)(time.Ticks / TimeSpan.TicksPerMillisecond),
                 //1 tick is 100ns, so 1 microsecond is 10 ticks and 1 nanosecond is 1/100th of a tick
-                TimeUnitPrecision.Micros => (object)(time.Ticks / 10L),
-                TimeUnitPrecision.Nanos => (object)(time.Ticks * 100L),
+                TimeUnitPrecision.Micros => time.Ticks / 10L,
+                TimeUnitPrecision.Nanos => time.Ticks * 100L,
                 _ => throw new NotSupportedException($"Unsupported TIME precision '{timeField.Precision}' for field `{field.Path}`")
             }, index);
         }
