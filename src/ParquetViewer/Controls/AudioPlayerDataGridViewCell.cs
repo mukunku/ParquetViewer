@@ -42,7 +42,6 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
                 RedrawCell();
             }
         };
-        _initializationTimer.Start();
     }
 
     private void RedrawCell() => DataGridView?.InvalidateCell(this);
@@ -57,6 +56,8 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         if (_initializationTask is not null)
             return _initializationTask;
+
+        _initializationTimer.Start();
 
         //Read the cell state here rather than inside the task.
         var cellValue = Value;
@@ -95,7 +96,6 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         if (value is null || value == DBNull.Value)
         {
-            _initializationTimer.Stop(); //There's no audio to initialize
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
                 paintParts & ~DataGridViewPaintParts.ContentForeground);
             return;
