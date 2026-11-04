@@ -101,6 +101,7 @@ public partial class MainForm : FormBase
     private bool _reloadEngine;
     private IParquetEngine? _openParquetEngine;
     private bool _isLoadingFileToGridview;
+    private FieldsToLoadForm? _openFieldSelectionForm;
 
     private FileModifiedInfo? _originalModifiedInfo;
     #endregion
@@ -232,7 +233,11 @@ public partial class MainForm : FormBase
             else
             {
                 using var fieldSelectionForm = new FieldsToLoadForm(fields, MainDataSource?.GetColumnNames() ?? Array.Empty<string>());
-                if (fieldSelectionForm.ShowDialog(this) == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
+                _openFieldSelectionForm = fieldSelectionForm;
+                var dialogResult = fieldSelectionForm.ShowDialog(this);
+                _openFieldSelectionForm = null;
+
+                if (dialogResult == DialogResult.OK && fieldSelectionForm.NewSelectedFields?.Count > 0)
                 {
                     return fieldSelectionForm.NewSelectedFields;
                 }
@@ -507,6 +512,9 @@ public partial class MainForm : FormBase
 
     private async Task OpenNewFileOrFolderAsync(string fileOrFolderPath)
     {
+        //A file can be dropped while the previous file's field selection dialog is still open. Cancel that one.
+        _openFieldSelectionForm?.Close();
+
         _openFileOrFolderPath = fileOrFolderPath;
         _lastOpenedFileDetails = new(fileOrFolderPath, []); //Field names get added once the engine is instantiated
         await ResetFormAsync();
