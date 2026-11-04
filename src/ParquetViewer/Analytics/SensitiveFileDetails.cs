@@ -13,7 +13,7 @@ public readonly record struct SensitiveFileDetails(string? Path, IReadOnlyList<s
         //Longest first so a value that's a substring of another can't leave part of the longer one unmasked
         var sensitiveValues = FieldNames
             .Append(Path)
-            .Where(value => !string.IsNullOrEmpty(value))
+            .Where(value => value?.Length > 2)
             .OrderByDescending(value => value!.Length);
 
         foreach (var sensitiveValue in sensitiveValues)
