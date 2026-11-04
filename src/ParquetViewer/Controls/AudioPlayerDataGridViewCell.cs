@@ -208,6 +208,7 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
 
         var dataGridView = DataGridView;
         var columnIndex = ColumnIndex;
+        //Use BeginInvoke to schedule this so we don't block the current Paint operation
         dataGridView?.BeginInvoke(() =>
         {
             var isGridStillValid = !dataGridView.IsDisposed && rowIndex < dataGridView.Rows.Count && columnIndex < dataGridView.Columns.Count;
