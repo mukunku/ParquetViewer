@@ -159,8 +159,9 @@ public class MapValue : IMapValue
             {
                 var formatted = truncatable.ToStringTruncated(budget.Value);
 
-                //A nested list or struct that got cut ends with [...], and a nested map with [...])
-                isCut = formatted.EndsWith("[...]", StringComparison.Ordinal) || formatted.EndsWith("[...])", StringComparison.Ordinal);
+                //A nested list or struct that got cut ends with [...], and a nested map with [...]) (or more ')' when maps nest deeper).
+                //|= so a value that wasn't cut can't reset a cut made by the key.
+                isCut |= formatted.TrimEnd(')').EndsWith("[...]", StringComparison.Ordinal);
                 return formatted;
             }
             else if (budget is not null && part is string text && text.Length > budget)
