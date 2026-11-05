@@ -23,4 +23,4 @@ using System.Runtime.Versioning;
 //      Minor Version 
 //      Patch Version
 //      Revision
-[assembly: AssemblyVersion("4.3.0.1")]
+[assembly: AssemblyVersion("4.4.0.0")]
