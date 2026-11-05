@@ -196,6 +196,7 @@ public partial class ParquetEngine
     /// <list type="number">
     /// <item>isn't a group, e.g. <c>repeated int32 array</c></item>
     /// <item>is a group with more than one field</item>
+    /// <item>is a group with one field that is itself repeated</item>
     /// <item>is a group with one field, named <c>array</c> or <c>&lt;list name&gt;_tuple</c></item>
     /// </list>
     /// Otherwise it's the standard three-level list, where the repeated node's only child is the element.
@@ -209,6 +210,7 @@ public partial class ParquetEngine
         var repeatedField = listField.GetListField();
         return repeatedField.FieldType == FieldTypeId.Primitive
             || repeatedField.Children.Count > 1
+            || (repeatedField.Children.Count == 1 && repeatedField.Children[0].RepetitionType == RepetitionTypeId.Repeated)
             || repeatedField.Path == "array"
             || repeatedField.Path == $"{listField.Path}_tuple";
     }
