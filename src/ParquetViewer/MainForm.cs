@@ -394,8 +394,11 @@ public partial class MainForm : FormBase
                 var dataTable = intermediateResult.Invoke(showIndexingProgress);
 
                 //Binding the grid creates the table's DefaultView, which indexes every row. Create it here so that
-                //work happens on this background thread instead of freezing the UI thread. The grid reuses it.
+                //work happens on this background thread instead of freezing the UI thread.
                 _ = dataTable.DefaultView;
+
+                //Building the index can't be interrupted, so honor a cancel that came in while it was running even though we did all the work already
+                loadingIcon.CancellationToken.ThrowIfCancellationRequested();
                 return dataTable;
             }, loadingIcon.CancellationToken);
             indexTime = stopwatch.Elapsed - loadTime;
