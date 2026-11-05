@@ -20,7 +20,7 @@ public class ParquetGridView : DataGridView
 {
     //Actual number is around 43k (https://stackoverflow.com/q/52792876/1458738)
     //But let's use something smaller to increase rendering performance.
-    public const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 2000;
+    public const int MAX_CHARACTERS_THAT_CAN_BE_RENDERED_IN_A_CELL = 500;
     const string FORMATTING_ERROR_TEXT = "#ERR";
 
     private Theme _gridTheme = Theme.LightModeTheme;

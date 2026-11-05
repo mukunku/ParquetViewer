@@ -124,9 +124,9 @@ public class MapValue : IMapValue
 
             mapValuesStringBuilder.Append(FormatString(GetMapValue(i), desiredLength - mapValuesStringBuilder.Length));
 
-            //A long string was cut short, so stop here with a single [...]
+            //Something in this entry was cut short and already shows [...], so stop here
             if (isCut)
-                return mapValuesStringBuilder.Append("[...]").ToString();
+                return mapValuesStringBuilder.ToString();
         }
 
         mapValuesStringBuilder.Append(']');
@@ -156,12 +156,17 @@ public class MapValue : IMapValue
             else if (part is TimeOnly timeOnly && ParquetEngineSettings.TimeOnlyDisplayFormat is not null)
                 return timeOnly.ToString(ParquetEngineSettings.TimeOnlyDisplayFormat);
             else if (budget is not null && part is ITruncatable truncatable)
-                return truncatable.ToStringTruncated(budget.Value);
+            {
+                var formatted = truncatable.ToStringTruncated(budget.Value);
+
+                //A nested list or struct that got cut ends with [...], and a nested map with [...])
+                isCut = formatted.EndsWith("[...]", StringComparison.Ordinal) || formatted.EndsWith("[...])", StringComparison.Ordinal);
+                return formatted;
+            }
             else if (budget is not null && part is string text && text.Length > budget)
             {
-                //So a single long string can't blow past the limit. The loop adds the [...]
                 isCut = true;
-                return Helpers.TruncateString(text, budget.Value);
+                return Helpers.TruncateString(text, budget.Value) + "[...]";
             }
             else
                 return part?.ToString() ?? string.Empty;

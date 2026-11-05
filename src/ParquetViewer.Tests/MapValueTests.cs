@@ -45,7 +45,7 @@ public class MapValueTests
         var list = new ListValue(new ArrayList(Enumerable.Range(1000, 100).ToArray()), typeof(int));
         var map = new MapValue(["a", "b"], typeof(string), [list, list], typeof(ListValue));
 
-        Assert.AreEqual("[(a,[1000,1001,1002,1003[...])[...]", map.ToStringTruncated(20));
+        Assert.AreEqual("[(a,[1000,1001,1002,1003[...])", map.ToStringTruncated(20));
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public class MapValueTests
         var list = new ListValue(new ArrayList(Enumerable.Range(1000, 100).ToArray()), typeof(int));
         var map = new MapValue(["a"], typeof(string), [list], typeof(ListValue));
 
-        Assert.AreEqual("[(a,[1000[...])]", map.ToStringTruncated(1));
+        Assert.AreEqual("[(a,[1000[...])", map.ToStringTruncated(1));
     }
 
     [TestMethod]
@@ -72,7 +72,7 @@ public class MapValueTests
     {
         //After "[(" and the key "a" there are 18 chars left for the value
         var map = new MapValue(["a"], typeof(string), [new string('b', 5000)], typeof(string));
-        Assert.AreEqual($"[(a,{new string('b', 18)})[...]", map.ToStringTruncated(20));
+        Assert.AreEqual($"[(a,{new string('b', 18)}[...])", map.ToStringTruncated(20));
     }
 
     [TestMethod]
@@ -80,7 +80,16 @@ public class MapValueTests
     {
         //Without stopping, the second entry would add a second [...]
         var map = new MapValue(["a", "c"], typeof(string), [new string('b', 5000), "d"], typeof(string));
-        Assert.AreEqual($"[(a,{new string('b', 18)})[...]", map.ToStringTruncated(20));
+        Assert.AreEqual($"[(a,{new string('b', 18)}[...])", map.ToStringTruncated(20));
+    }
+
+    [TestMethod]
+    public void A_CUT_NESTED_MAP_STOPS_THE_OUTER_MAP_WITH_A_SINGLE_MARKER()
+    {
+        //The inner map ends with [...]) when cut, so the outer map must stop there instead of adding its own [...]
+        var inner = new MapValue(["k"], typeof(string), [new string('v', 5000)], typeof(string));
+        var outer = new MapValue(["a", "c"], typeof(string), [inner, inner], typeof(MapValue));
+        Assert.AreEqual($"[(a,[(k,{new string('v', 16)}[...]))", outer.ToStringTruncated(20));
     }
 
     [TestMethod]
