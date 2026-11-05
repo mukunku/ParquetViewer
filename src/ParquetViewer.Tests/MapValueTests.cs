@@ -72,7 +72,15 @@ public class MapValueTests
     {
         //After "[(" and the key "a" there are 18 chars left for the value
         var map = new MapValue(["a"], typeof(string), [new string('b', 5000)], typeof(string));
-        Assert.AreEqual($"[(a,{new string('b', 18)}[...])]", map.ToStringTruncated(20));
+        Assert.AreEqual($"[(a,{new string('b', 18)})[...]", map.ToStringTruncated(20));
+    }
+
+    [TestMethod]
+    public void A_CUT_STRING_STOPS_THE_MAP_WITH_A_SINGLE_MARKER()
+    {
+        //Without stopping, the second entry would add a second [...]
+        var map = new MapValue(["a", "c"], typeof(string), [new string('b', 5000), "d"], typeof(string));
+        Assert.AreEqual($"[(a,{new string('b', 18)})[...]", map.ToStringTruncated(20));
     }
 
     [TestMethod]

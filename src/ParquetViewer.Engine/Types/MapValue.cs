@@ -109,6 +109,7 @@ public class MapValue : IMapValue
     private string ToString(int? desiredLength)
     {
         var mapValuesStringBuilder = new StringBuilder("[");
+        var isCut = false;
         for (var i = 0; i < Length; i++)
         {
             if (i != 0)
@@ -122,6 +123,10 @@ public class MapValue : IMapValue
             }
 
             mapValuesStringBuilder.Append(FormatString(GetMapValue(i), desiredLength - mapValuesStringBuilder.Length));
+
+            //A long string was cut short, so stop here with a single [...]
+            if (isCut)
+                return mapValuesStringBuilder.Append("[...]").ToString();
         }
 
         mapValuesStringBuilder.Append(']');
@@ -131,14 +136,14 @@ public class MapValue : IMapValue
         //E.g. a key of "a,b" renders as (a,b,1). I can't decide what the best way to format Maps are so this is what I'm going with for now.
         //remainingLength: how much of desiredLength is left for this entry, so nested lists, maps, structs and binary
         //values stop early too instead of being fully formatted. Null when we aren't truncating.
-        static string FormatString((object Key, object Value) map, int? remainingLength)
+        string FormatString((object Key, object Value) map, int? remainingLength)
         {
             var key = FormatPart(map.Key, remainingLength);
             var value = FormatPart(map.Value, remainingLength - key.Length); //The value gets whatever the key left over
             return $"({key},{value})";
         }
 
-        static string FormatPart(object part, int? remainingLength)
+        string FormatPart(object part, int? remainingLength)
         {
             //Always leave at least 1 so we show something. A used-up budget (0 or less) would mean "no limit" to
             //ToStringTruncated and isn't a valid length for TruncateString.
@@ -153,7 +158,11 @@ public class MapValue : IMapValue
             else if (budget is not null && part is ITruncatable truncatable)
                 return truncatable.ToStringTruncated(budget.Value);
             else if (budget is not null && part is string text && text.Length > budget)
-                return Helpers.TruncateString(text, budget.Value) + "[...]"; //So a single long string can't blow past the limit
+            {
+                //So a single long string can't blow past the limit. The loop adds the [...]
+                isCut = true;
+                return Helpers.TruncateString(text, budget.Value);
+            }
             else
                 return part?.ToString() ?? string.Empty;
         }
