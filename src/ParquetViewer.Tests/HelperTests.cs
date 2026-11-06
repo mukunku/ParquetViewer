@@ -118,12 +118,23 @@ public class HelperTests
     public void AMPLITUDE_EXCEPTION_SENSITIVE_FILE_DETAILS_MASKING_TEST()
     {
         //"SOURCE" is a substring of "INVESTOR_SOURCE_ID" so it must not leave part of the longer field name unmasked
-        var sensitiveFileDetails = new SensitiveFileDetails(@"C:\data\investors.parquet", ["SOURCE", "INVESTOR_SOURCE_ID"]);
+        var sensitiveFileDetails = new SensitiveFileDetails([@"C:\data\investors.parquet"], ["SOURCE", "INVESTOR_SOURCE_ID"]);
 
         var maskedMessage = sensitiveFileDetails.Mask(
             @"column 'INVESTOR_SOURCE_ID' is missing data page header, file is corrupt: C:\data\investors.parquet");
 
         Assert.AreEqual($"column '{ExceptionEvent.MASK_SENTINEL}' is missing data page header, file is corrupt: {ExceptionEvent.MASK_SENTINEL}", maskedMessage);
+    }
+
+    [TestMethod]
+    public void AMPLITUDE_EXCEPTION_SENSITIVE_FOLDER_DETAILS_MASKING_TEST()
+    {
+        //When a folder is open, each file's full path must be masked, not just the folder prefix
+        var filePath = @"\\server\share\Hazard Cache\region=O'Brien EMEA\Event 1.parquet";
+        var sensitiveFileDetails = new SensitiveFileDetails([@"\\server\share\Hazard Cache\other.parquet", filePath], []);
+
+        var maskedMessage = sensitiveFileDetails.Mask($"An unexpected network error occurred. : '{filePath}'.");
+        Assert.AreEqual($"An unexpected network error occurred. : '{ExceptionEvent.MASK_SENTINEL}'.", maskedMessage);
     }
 
     [TestMethod]

@@ -26,7 +26,7 @@ public partial class MainForm : FormBase
     private string? _openFileOrFolderPath = null;
 
     //Never cleared, so exceptions recorded after the file was closed (error handlers close it before rethrowing) still get masked
-    private SensitiveFileDetails _lastOpenedFileDetails = new(null, []);
+    private SensitiveFileDetails _lastOpenedFileDetails = new([], []);
 
     private List<string>? _selectedFields = null;
     private List<string>? SelectedFields
@@ -222,7 +222,7 @@ public partial class MainForm : FormBase
         }
 
         //We're now sure the file has been opened successfully. Even if it may not have any fields.
-        _lastOpenedFileDetails = new(_openParquetEngine.Path, fields ?? []);
+        _lastOpenedFileDetails = new([.. _openParquetEngine.GetOpenParquetFilePaths()], fields ?? []);
 
         if (fields?.Count > 0)
         {
@@ -370,7 +370,7 @@ public partial class MainForm : FormBase
             var fields = _openParquetEngine.Fields; //This can throw in some cases like if there are no fields in the file
 
             //Save the new field names as they might have changed
-            _lastOpenedFileDetails = new(_openParquetEngine.Path, fields);
+            _lastOpenedFileDetails = new([.. _openParquetEngine.GetOpenParquetFilePaths()], fields);
 
             if (SelectedFields is not null && !SelectedFields.IsSubsetOf(fields))
             {
@@ -515,7 +515,7 @@ public partial class MainForm : FormBase
         _openFieldSelectionForm?.Close();
 
         _openFileOrFolderPath = fileOrFolderPath;
-        _lastOpenedFileDetails = new(fileOrFolderPath, []); //Field names get added once the engine is instantiated
+        _lastOpenedFileDetails = new([fileOrFolderPath], []); //File paths and field names get added once the engine is instantiated
         await ResetFormAsync();
 
         var fieldList = await OpenFieldSelectionDialogAsync(false);

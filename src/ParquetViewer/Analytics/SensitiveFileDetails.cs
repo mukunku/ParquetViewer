@@ -6,13 +6,13 @@ namespace ParquetViewer.Analytics;
 /// <summary>
 /// User values from the open file or folder that must be masked out of analytics.
 /// </summary>
-public readonly record struct SensitiveFileDetails(string? Path, IReadOnlyList<string> FieldNames)
+public readonly record struct SensitiveFileDetails(string[] Paths, IReadOnlyList<string> FieldNames)
 {
     public string Mask(string message)
     {
         //Longest first so a value that's a substring of another can't leave part of the longer one unmasked
         var sensitiveValues = FieldNames
-            .Append(Path)
+            .Concat(Paths)
             .Where(value => value?.Length > 2)
             .OrderByDescending(value => value!.Length);
 
