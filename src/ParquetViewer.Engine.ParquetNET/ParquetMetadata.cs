@@ -14,9 +14,9 @@ public class ParquetMetadata : IParquetMetadata
 
     public IParquetSchemaElement SchemaTree { get; }
 
-    public int RowCount { get; }
+    public long RowCount { get; }
 
-    public ParquetMetadata(FileMetaData thriftMetadata, ParquetSchemaElement schemaTree, int recordCount)
+    public ParquetMetadata(FileMetaData thriftMetadata, ParquetSchemaElement schemaTree, long recordCount)
     {
         RowCount = recordCount;
         RowGroupCount = thriftMetadata.RowGroups.Count;

@@ -41,7 +41,8 @@ public static class AppSettings
 
     public static SemanticVersion? ConsentLastAskedOnVersion
     {
-        get => ReadRegistryValue(CONSENT_LAST_ASKED_ON_VERSION, out string? value) ? SemanticVersion.TryParse(value, out var semanticVersion) ? semanticVersion : null : null;
+        get => ReadRegistryValue(CONSENT_LAST_ASKED_ON_VERSION, out string? value) ?
+            (SemanticVersion.TryParse(value, out var semanticVersion) ? semanticVersion : null) : null;
         set => SetRegistryValue(CONSENT_LAST_ASKED_ON_VERSION, value?.ToString() ?? string.Empty);
     }
 
@@ -82,7 +83,8 @@ public static class AppSettings
     private static string? _customDateFormat;
     public static string? CustomDateFormat
     {
-        get => _customDateFormat ??= ReadRegistryValue(CUSTOM_DATE_FORMAT, out string? value) && UtilityMethods.IsValidDateFormat(value) ? value : null;
+        get => _customDateFormat ??= ReadRegistryValue(CUSTOM_DATE_FORMAT, out string? value)
+            && UtilityMethods.IsSupportedDateFormat(value) ? value : null;
         set
         {
             _customDateFormat = value;

@@ -42,7 +42,6 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
                 RedrawCell();
             }
         };
-        _initializationTimer.Start();
     }
 
     private void RedrawCell() => DataGridView?.InvalidateCell(this);
@@ -57,6 +56,8 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
     {
         if (_initializationTask is not null)
             return _initializationTask;
+
+        _initializationTimer.Start();
 
         //Read the cell state here rather than inside the task.
         var cellValue = Value;
@@ -93,8 +94,6 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
 
     protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object? value, object? formattedValue, string? errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
     {
-        InitializePlayerAsync(); //Trigger initialization if it wasn't performed yet
-
         if (value is null || value == DBNull.Value)
         {
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
@@ -105,6 +104,15 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         //Call base render so we have a nice base to draw on
         base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle,
             paintParts & ~DataGridViewPaintParts.ContentForeground & ~DataGridViewPaintParts.SelectionBackground);
+
+        if (!EnsureUnsharedRow(rowIndex))
+        {
+            //This cell can't hold the row's audio until the row is unshared, so show a placeholder for now
+            TextRenderer.DrawText(graphics, _loadingMessage, cellStyle.Font, cellBounds, cellStyle.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+            return;
+        }
+
+        InitializePlayerAsync(); //Trigger initialization if it wasn't performed yet
 
         if (!_isInitialized)
         {
@@ -187,6 +195,31 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         string currentTime = _audioPlayer.CurrentTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
         string totalTime = _audioPlayer.TotalTime.ToString(timeFormat) ?? TimeSpan.FromSeconds(0).ToString(timeFormat);
         TextRenderer.DrawText(graphics, $"{currentTime} / {totalTime}", cellStyle.Font, _trackBarBounds, Theme.LightModeTheme.TextColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+    }
+
+    /// <summary>
+    /// If this is a shared row's cell which can't hold this row's audio), asks the grid to unshare the row.
+    /// </summary>
+    /// <returns>True if the row is already unshared. False if it is shared and triggers unsharing.</returns>
+    private bool EnsureUnsharedRow(int rowIndex)
+    {
+        if (RowIndex >= 0)
+            return true;
+
+        var dataGridView = DataGridView;
+        var columnIndex = ColumnIndex;
+        //Use BeginInvoke to schedule this so we don't block the current Paint operation
+        dataGridView?.BeginInvoke(() =>
+        {
+            var isGridStillValid = !dataGridView.IsDisposed && rowIndex < dataGridView.Rows.Count && columnIndex < dataGridView.Columns.Count;
+            if (!isGridStillValid) //just in case
+                return;
+
+            _ = dataGridView.Rows[rowIndex]; //Accessing the row through the indexer unshares it
+            dataGridView.InvalidateCell(columnIndex, rowIndex);
+        });
+
+        return false;
     }
 
     protected override void OnMouseMove(DataGridViewCellMouseEventArgs e)
@@ -384,11 +417,29 @@ internal class AudioPlayerDataGridViewCell : DataGridViewTextBoxCell
         }
     }
 
+    protected override void OnDataGridViewChanged()
+    {
+        base.OnDataGridViewChanged();
+
+        //The grid never disposes its cells (sorting, filtering, loading a new file or replacing this cell just drop it).
+        //Thankfully this event is dispatched so we dispose ourselves here when the cell is removed from the grid for whatever reason.
+        if (DataGridView is null)
+            Dispose();
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            _audioPlayer.DisposeSafely();
+            if (_initializationTask?.IsCompleted == false)
+            {
+                //Still initializing, so dispose the player once it's created
+                _initializationTask.ContinueWith(_ => _audioPlayer.DisposeSafely());
+            }
+            else
+            {
+                _audioPlayer.DisposeSafely();
+            }
             _updateTimer.DisposeSafely();
             _initializationTimer.DisposeSafely();
         }

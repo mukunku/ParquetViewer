@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace ParquetViewer.Helpers;
 
-public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
+public readonly struct SemanticVersion : IComparable<SemanticVersion>, IComparable, IEquatable<SemanticVersion>
 {
     private const string VALIDATION_REGEX = @"^v?\d+\.\d+\.\d+(\.\d+)?$";
 
@@ -27,10 +27,9 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
 
     public static bool TryParse(string version, out SemanticVersion semanticVersion)
     {
-        ArgumentNullException.ThrowIfNull(version);
         semanticVersion = default;
 
-        if (!Regex.IsMatch(version, VALIDATION_REGEX))
+        if (version is null || !Regex.IsMatch(version, VALIDATION_REGEX))
             return false;
 
         var parts = version.Replace("v", string.Empty, StringComparison.OrdinalIgnoreCase).Split('.');
@@ -83,10 +82,13 @@ public struct SemanticVersion : IComparable<SemanticVersion>, IComparable
 
     public readonly int CompareTo(object? obj)
     {
-        if (obj is SemanticVersion semanticVersion)
-            return CompareTo(semanticVersion);
-        else
-            return -1;
+        if (obj is null)
+            return 1;
+
+        if (obj is SemanticVersion other)
+            return CompareTo(other);
+
+        throw new ArgumentException($"Object must be of type {nameof(SemanticVersion)}.");
     }
 
     public static bool operator <(SemanticVersion left, SemanticVersion right) =>

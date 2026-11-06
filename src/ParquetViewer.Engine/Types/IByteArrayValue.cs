@@ -3,7 +3,7 @@ using System.Net;
 
 namespace ParquetViewer.Engine.Types;
 
-public interface IByteArrayValue : IComparable<IByteArrayValue>, IComparable
+public interface IByteArrayValue : IComparable<IByteArrayValue>, IComparable, ITruncatable
 {
     byte[] Data { get; }
     DisplayFormat[] PossibleDisplayFormats { get; }
@@ -23,8 +23,6 @@ public interface IByteArrayValue : IComparable<IByteArrayValue>, IComparable
         Base64,     // Base64 encoded string (any size)
         Size        // Size information (any size)
     }
-
-    string ToStringTruncated(int desiredLength);
 
     bool ToIPv6([NotNullWhen(true)] out IPAddress? ipAddress);
     bool ToIPv4([NotNullWhen(true)] out IPAddress? ipAddress);

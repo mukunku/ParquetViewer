@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text;
 
 namespace ParquetViewer.Engine.Types;
 
@@ -23,16 +24,25 @@ public class ListValue : IListValue
         }
     }
 
-    public override string ToString()
+    public override string ToString() => ToJSON(null);
+
+    /// <summary>
+    /// Serializes the list, but stops once the text passes <paramref name="desiredLength"/> (NOT GUARANTEED), at any
+    /// depth of nesting. So large lists (e.g. embeddings) aren't fully serialized just to be cut off for display.
+    /// </summary>
+    public string ToStringTruncated(int desiredLength) => ToJSON(desiredLength);
+
+    private string ToJSON(int? desiredLength)
     {
+        bool isTruncated;
         using var ms = new MemoryStream();
         using (var jsonWriter = new Utf8JsonWriterWithRunningLength(ms))
         {
-            Helpers.WriteValue(jsonWriter, this, false);
+            isTruncated = !Helpers.WriteValue(jsonWriter, this, desiredLength);
         }
-        ms.Position = 0;
-        using var sr = new StreamReader(ms);
-        return sr.ReadToEnd();
+
+        var json = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
+        return isTruncated ? json + "[...]" : json;
     }
 
     public int CompareTo(IListValue? other)
