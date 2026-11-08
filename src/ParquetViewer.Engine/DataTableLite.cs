@@ -63,7 +63,10 @@ public class DataTableLite
         ObjectDisposedException.ThrowIf(_isDisposed, typeof(DataTableLite));
         _isDisposed = true;
 
-        var dataTable = new DataTable();
+        var dataTable = new DataTable()
+        {
+            MinimumCapacity = _rows.Count
+        };
         foreach (var column in _columns)
         {
             token.ThrowIfCancellationRequested();
