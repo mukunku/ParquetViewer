@@ -41,10 +41,15 @@ public partial class CustomDateFormatInputForm : FormBase
                 livePreviewTextBox.Text = string.Empty;
                 saveDateFormatButton.Enabled = false;
             }
-            else
+            else if (UtilityMethods.IsSupportedDateFormat(desiredDateFormatTextBox.Text))
             {
                 livePreviewTextBox.Text = DateTime.Now.ToString(desiredDateFormatTextBox.Text);
                 saveDateFormatButton.Enabled = true;
+            }
+            else
+            {
+                livePreviewTextBox.Text = Resources.Strings.InvalidDateFormatErrorText;
+                saveDateFormatButton.Enabled = false;
             }
         }
         catch (Exception)
@@ -75,7 +80,7 @@ public partial class CustomDateFormatInputForm : FormBase
 
     private void SaveDateFormatButton_Click(object sender, EventArgs e)
     {
-        if (UtilityMethods.IsValidDateFormat(desiredDateFormatTextBox.Text))
+        if (UtilityMethods.IsSupportedDateFormat(desiredDateFormatTextBox.Text))
         {
             DialogResult = DialogResult.OK;
             Close();

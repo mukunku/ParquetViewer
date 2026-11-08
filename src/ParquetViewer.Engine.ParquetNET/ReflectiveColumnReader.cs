@@ -22,7 +22,7 @@ namespace ParquetViewer.Engine.ParquetNET;
 /// 
 /// Advantages of reflection approach:
 /// - Reflection has no type list to maintain. New primitive types can automatically work in theory.
-/// - Don't have to maintain a giant list of if/else's like we do in <see cref="ParquetColumnData.Data"/>.
+/// - Don't have to maintain a giant list of if/else's like we do in <see cref="ParquetColumnData.Create"/>.
 /// - Performance seemed the same in my local testing.
 /// </para>
 /// </remarks>
@@ -51,20 +51,15 @@ internal static class ReflectiveColumnReader
         var columnChunk = groupReader.GetMetadata(field)
             ?? throw new ParquetException($"`{field.Path}` does not exist in this file");
 
-        var numValues = checked((int)(columnChunk.MetaData?.NumValues
-            ?? throw new ParquetException($"Column chunk metadata is missing for `{field.Path}`, meaning the file is most probably corrupt")));
+        var numValues = int.CreateChecked(columnChunk.MetaData?.NumValues
+            ?? throw new ParquetException($"Column chunk metadata is missing for `{field.Path}`, meaning the file is most probably corrupt"));
 
-        int[]? definitionLevels = null;
-        int[]? repetitionLevels = null;
-        if (field.MaxDefinitionLevel > 0 || field.MaxRepetitionLevel > 0)
-        {
-            definitionLevels = new int[numValues];
-            repetitionLevels = new int[numValues];
-        }
+        var definitionLevels = field.MaxDefinitionLevel > 0 ? new int[numValues] : null;
+        var repetitionLevels = field.MaxRepetitionLevel > 0 ? new int[numValues] : null;
 
         var values = await ReadValuesAsync(groupReader, field, numValues, definitionLevels, repetitionLevels, cancellationToken);
 
-        return new ParquetColumnData(fieldSchemaElement, values, definitionLevels, repetitionLevels);
+        return ParquetColumnData.Create(fieldSchemaElement, values, definitionLevels, repetitionLevels);
     }
 
     /// <summary>
@@ -95,13 +90,23 @@ internal static class ReflectiveColumnReader
         }
         catch (OverflowException)
         {
+            //Let ParquetEngine.ReadColumnAsync handle this error
             throw;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (ParquetException)
+        {
+            //Let ParquetEngine.ReadColumnAsync handle this error
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            //LoadFileToGridviewImplAsync will swallow this so bubble it up
+            throw;
+        }
+        catch (Exception ex)
         {
             throw new ParquetEngineException(
-                $"Parquet.Net describes column `{field.Path}` as '{clrType}', which could not be read " +
-                $"({ex.Message}).", ex);
+                $"Parquet.Net describes column `{field.Path}` as '{clrType}', which could not be read.", ex);
         }
 
         return values;
@@ -114,8 +119,8 @@ internal static class ReflectiveColumnReader
         [
             field,
             read.MemoryConstructor.Invoke([values]),
-            definitionLevels is not null ? new Memory<int>(definitionLevels) : (Memory<int>?)null,
-            repetitionLevels is not null ? new Memory<int>(repetitionLevels) : (Memory<int>?)null,
+            definitionLevels is not null ? new Memory<int>(definitionLevels) : (Memory<int>?)null, //Casting the null is required
+            repetitionLevels is not null ? new Memory<int>(repetitionLevels) : (Memory<int>?)null, //Casting the null is required
             cancellationToken
         ];
 
