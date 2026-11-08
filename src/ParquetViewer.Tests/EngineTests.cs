@@ -1149,4 +1149,36 @@ public abstract class EngineTests
             }
         }
     }
+
+    [SkippableTestMethod]
+    public async Task DELTA_BINARY_PACKED_TEST()
+    {
+        //Same data in all three files: PLAIN encoded, and DELTA_BINARY_PACKED with v1 and v2 data pages.
+        //Covers timestamps, dates, times, int-backed decimals and int8/uint8 (aloneguid/parquet-dotnet#778).
+        await using var plainEngine = await OpenFileOrFolderAsync("Data/DELTA_BINARY_PACKED_PLAIN_TEST.parquet");
+        var expected = (await plainEngine.ReadRowsAsync(plainEngine.Fields, 0, int.MaxValue))(false);
+        Assert.AreEqual(2500, expected.Rows.Count);
+        Assert.HasCount(12, plainEngine.Fields);
+
+        foreach (var file in new[] { "Data/DELTA_BINARY_PACKED_V1_TEST.parquet", "Data/DELTA_BINARY_PACKED_V2_TEST.parquet" })
+        {
+            await using var parquetEngine = await OpenFileOrFolderAsync(file);
+            var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, int.MaxValue))(false);
+            Assert.AreEqual(expected.Rows.Count, dataTable.Rows.Count);
+
+            for (var row = 0; row < expected.Rows.Count; row++)
+            {
+                for (var column = 0; column < expected.Columns.Count; column++)
+                {
+                    Assert.AreEqual(expected.Rows[row][column], dataTable.Rows[row][column],
+                        $"`{file}` row {row} column `{expected.Columns[column].ColumnName}` differs from PLAIN");
+                }
+            }
+
+            Assert.AreEqual(new DateOnly(2020, 1, 2), dataTable.Rows[2499]["date"]);
+            Assert.AreEqual(new TimeOnly(1, 41, 3, 307), dataTable.Rows[2499]["time_ms"]);
+            Assert.AreEqual(new TimeOnly(1, 41, 3, 307, 377), dataTable.Rows[2499]["time_us"]);
+            Assert.AreEqual(DBNull.Value, dataTable.Rows[7]["ts_nullable"]);
+        }
+    }
 }

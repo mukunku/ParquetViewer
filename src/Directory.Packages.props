@@ -11,7 +11,7 @@
     <PackageVersion Include="MSTest.TestFramework" Version="4.5.1" />
     <PackageVersion Include="NAudio" Version="3.3.0" />
     <PackageVersion Include="NAudio.WinForms" Version="3.3.0" />
-    <PackageVersion Include="Parquet.Net" Version="6.1.0" />
+    <PackageVersion Include="Parquet.Net.mukunku" Version="6.1.0-mukunku" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
     <PackageVersion Include="RichardSzalay.MockHttp" Version="7.1.0" />
