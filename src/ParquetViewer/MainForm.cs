@@ -88,7 +88,17 @@ public partial class MainForm : FormBase
         set
         {
             _mainDataSource = value;
-            mainGridView.DataSource = _mainDataSource;
+            try
+            {
+                mainGridView.DataSource = _mainDataSource;
+            }
+            catch (ArgumentOutOfRangeException ex) when (ex.StackTrace?.Contains("System.Windows.Forms.ScrollBar.set_Value") == true)
+            {
+                //The grid adds up all row heights in an int to lay out its scroll bar, which overflows when there are too many rows.
+                //The DataSource is already bound at this point so to prevent this error being thrown over and over again on every paint we need to null out the MainDataSource.
+                MainDataSource = null;
+                throw new Exception("Too many rows to display.", ex);
+            }
 
             if (_mainDataSource is not null)
             {
