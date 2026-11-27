@@ -171,6 +171,15 @@ public class ParquetSchemaElement : IParquetSchemaElement
         return GetChildCI("value");
     }
 
+    /// <summary>
+    /// A MAP whose key_value node has a key but no value. There are no values to pair the keys with, so we read
+    /// it as a list of its keys, the same as pyarrow and Parquet.Net do.
+    /// </summary>
+    /// <remarks>Doesn't throw on malformed maps, those fail when they get read instead.</remarks>
+    public bool IsKeyOnlyMap => FieldType == FieldTypeId.Map
+        && _children.Count == 1
+        && _children.Values.First()._children.Count == 1;
+
     private FieldLevels? _levels;
 
     /// <summary>
@@ -193,7 +202,7 @@ public class ParquetSchemaElement : IParquetSchemaElement
         null => FieldType switch
         {
             FieldTypeId.List => typeof(ListValue),
-            FieldTypeId.Map => typeof(MapValue),
+            FieldTypeId.Map => IsKeyOnlyMap ? typeof(ListValue) : typeof(MapValue),
             FieldTypeId.Struct => typeof(StructValue),
             FieldTypeId.Primitive => throw new InvalidOperationException($"Cannot determine CLR type for primitive field `{Path}` without ClrType information."),
             _ => throw new InvalidOperationException($"Unknown complex type {FieldType} detected for field `{Path}`")

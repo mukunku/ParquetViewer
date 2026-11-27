@@ -306,6 +306,25 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB doesn't support key-only maps")]
+    public async Task KEY_ONLY_MAP_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/KEY_ONLY_MAP_TEST.parquet");
+
+        Assert.AreEqual(4, parquetEngine.RecordCount);
+        Assert.HasCount(2, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 4, default))(false);
+
+        //A map without values is read as a list of its keys
+        Assert.IsInstanceOfType<IListValue>(dataTable.Rows[0][1]);
+        Assert.AreEqual("[\"a\",\"b\"]", dataTable.Rows[0][1].ToString());
+        Assert.AreEqual("[]", dataTable.Rows[1][1].ToString());
+        Assert.AreEqual(DBNull.Value, dataTable.Rows[2][1]);
+        Assert.AreEqual("[\"c\"]", dataTable.Rows[3][1].ToString());
+    }
+
+    [SkippableTestMethod]
     public async Task STRUCT_TYPE_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/STRUCT_TYPE_TEST.parquet");
