@@ -9,7 +9,7 @@ public class MapValueTests
     private static MapValue MapOf(int count)
     {
         var entries = Enumerable.Range(0, count).ToArray();
-        return new MapValue(new ArrayList(entries), typeof(int), new ArrayList(entries), typeof(int));
+        return new MapValue([with(entries)], typeof(int), [with(entries)], typeof(int));
     }
 
     [TestMethod]
@@ -42,7 +42,7 @@ public class MapValueTests
     public void NESTED_VALUES_SHARE_THE_REMAINING_LENGTH()
     {
         //A map of embedding-like lists: the first value gets what's left of the 20 chars after "[(a," and stops early
-        var list = new ListValue(new ArrayList(Enumerable.Range(1000, 100).ToArray()), typeof(int));
+        var list = new ListValue([with(Enumerable.Range(1000, 100).ToArray())], typeof(int));
         var map = new MapValue(["a", "b"], typeof(string), [list, list], typeof(ListValue));
 
         Assert.AreEqual("[(a,[1000,1001,1002,1003[...])", map.ToStringTruncated(20));
@@ -52,7 +52,7 @@ public class MapValueTests
     public void NESTED_VALUES_ALWAYS_SHOW_THEIR_FIRST_ELEMENT()
     {
         //The first entry uses up the whole budget, but the second value still shows its first element
-        var list = new ListValue(new ArrayList(Enumerable.Range(1000, 100).ToArray()), typeof(int));
+        var list = new ListValue([with(Enumerable.Range(1000, 100).ToArray())], typeof(int));
         var map = new MapValue(["a"], typeof(string), [list], typeof(ListValue));
 
         Assert.AreEqual("[(a,[1000[...])", map.ToStringTruncated(1));
@@ -61,7 +61,7 @@ public class MapValueTests
     [TestMethod]
     public void UNTRUNCATED_NESTED_VALUES_ARE_WRITTEN_IN_FULL()
     {
-        var list = new ListValue(new ArrayList(Enumerable.Range(0, 50).ToArray()), typeof(int));
+        var list = new ListValue([with(Enumerable.Range(0, 50).ToArray())], typeof(int));
         var map = new MapValue(["a"], typeof(string), [list], typeof(ListValue));
 
         Assert.AreEqual($"[(a,[{string.Join(",", Enumerable.Range(0, 50))}])]", map.ToString());

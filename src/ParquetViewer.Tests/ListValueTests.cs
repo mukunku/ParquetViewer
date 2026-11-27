@@ -7,7 +7,7 @@ namespace ParquetViewer.Tests;
 public class ListValueTests
 {
     private static ListValue ListOf<T>(IEnumerable<T> values) where T : notnull
-        => new(new ArrayList(values.ToArray()), typeof(T));
+        => new([with(values.ToArray())], typeof(T));
 
     [TestMethod]
     public void TO_STRING_WRITES_THE_WHOLE_LIST()
@@ -82,7 +82,7 @@ public class ListValueTests
     public void MAPS_NESTED_IN_LISTS_STOP_PART_WAY_THROUGH()
     {
         var keys = new ArrayList(Enumerable.Range(0, 100).ToArray());
-        var map = new MapValue(keys, typeof(int), new ArrayList(Enumerable.Range(0, 100).ToArray()), typeof(int));
+        var map = new MapValue(keys, typeof(int), [with(Enumerable.Range(0, 100).ToArray())], typeof(int));
         var list = new ListValue([map], typeof(MapValue));
 
         var truncated = list.ToStringTruncated(30);
