@@ -325,6 +325,33 @@ public abstract class EngineTests
     }
 
     [SkippableTestMethod]
+    [SkipWhen(typeof(DuckDBEngineTests), "DuckDB.NET can't open dates outside years 1 to 9999")]
+    public async Task OUT_OF_RANGE_DATES_TEST()
+    {
+        await using var parquetEngine = await OpenFileOrFolderAsync("Data/OUT_OF_RANGE_DATES_TEST.parquet");
+
+        Assert.AreEqual(5, parquetEngine.RecordCount);
+        Assert.HasCount(3, parquetEngine.Fields);
+
+        var dataTable = (await parquetEngine.ReadRowsAsync(parquetEngine.Fields, 0, 5, default))(false);
+
+        //Written by DuckDB: a regular value, then infinity, a value past year 9999, -infinity and a value before year 1.
+        //Anything outside years 1 to 9999 is clamped
+        Assert.AreEqual(new DateOnly(2024, 5, 17), dataTable.Rows[0][1]);
+        Assert.AreEqual(new DateTime(2024, 5, 17, 8, 30, 0), dataTable.Rows[0][2]);
+
+        Assert.AreEqual(DateOnly.MaxValue, dataTable.Rows[1][1]);
+        Assert.AreEqual(DateTime.MaxValue, dataTable.Rows[1][2]);
+        Assert.AreEqual(DateOnly.MaxValue, dataTable.Rows[2][1]);
+        Assert.AreEqual(DateTime.MaxValue, dataTable.Rows[2][2]);
+
+        Assert.AreEqual(DateOnly.MinValue, dataTable.Rows[3][1]);
+        Assert.AreEqual(DateTime.MinValue, dataTable.Rows[3][2]);
+        Assert.AreEqual(DateOnly.MinValue, dataTable.Rows[4][1]);
+        Assert.AreEqual(DateTime.MinValue, dataTable.Rows[4][2]);
+    }
+
+    [SkippableTestMethod]
     public async Task STRUCT_TYPE_TEST()
     {
         await using var parquetEngine = await OpenFileOrFolderAsync("Data/STRUCT_TYPE_TEST.parquet");

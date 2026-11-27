@@ -9,7 +9,11 @@ namespace ParquetViewer.Engine.ParquetNET;
 
 public sealed partial class ParquetEngine : IParquetEngine
 {
-    private static readonly ParquetOptions _defaultParquetOptions = new() { UseDateOnlyTypeForDates = true };
+    private static readonly ParquetOptions _defaultParquetOptions = new()
+    {
+        UseDateOnlyTypeForDates = true,
+        DateTimeOutOfRangeHandling = DateTimeOutOfRangeHandling.Clamp
+    };
     private readonly (string ParquetFilePath, ParquetReader Reader)[] _parquetFiles;
     private long? _recordCount;
 
