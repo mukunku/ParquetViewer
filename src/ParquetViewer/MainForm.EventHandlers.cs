@@ -187,10 +187,12 @@ public partial class MainForm
             string queryText = searchFilterTextBox.Text ?? string.Empty;
             queryText = QueryUselessPartRegex().Replace(queryText, string.Empty).Trim();
 
-            //Treat list, map, and struct types as strings by casting them automatically
+            //Treat list, map, and struct types as strings by casting them automatically.
+            //Same for DateOnly, TimeOnly, and byte arrays.
             foreach (var complexField in mainGridView.Columns.OfType<DataGridViewColumn>()
                 .Where(c => c.ValueType.ImplementsInterface<IListValue>() || c.ValueType.ImplementsInterface<IMapValue>()
-                    || c.ValueType.ImplementsInterface<IStructValue>() || c.ValueType.ImplementsInterface<IByteArrayValue>())
+                    || c.ValueType.ImplementsInterface<IStructValue>() || c.ValueType.ImplementsInterface<IByteArrayValue>()
+                    || c.ValueType == typeof(DateOnly) || c.ValueType == typeof(TimeOnly))
                 .Select(c => c.Name))
             {
                 //This isn't perfect but it should handle most cases
