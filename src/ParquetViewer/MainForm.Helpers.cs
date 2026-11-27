@@ -540,6 +540,9 @@ public partial class MainForm
     private static void HandleUnauthorizedAccessException(UnauthorizedAccessException ex)
         => ShowError(ex.Message);
 
+    private static void HandleTooManyRowsException(Exceptions.TooManyRowsException ex)
+        => ShowError(ex.Message);
+
     private static void ShowError(string message, string? title = null)
         => MessageBox.Show(message, title ?? Resources.Errors.GenericErrorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error);
 }
