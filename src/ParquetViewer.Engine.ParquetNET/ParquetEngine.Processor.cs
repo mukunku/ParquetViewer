@@ -159,8 +159,16 @@ public partial class ParquetEngine
             case FieldTypeId.Map:
                 var keyValueField = field.GetMapKeyValueField();
                 var key = await CreateValueBuilderAsync(keyValueField.GetMapKeyField(), groupReader, cancellationToken);
-                var value = await CreateValueBuilderAsync(keyValueField.GetMapValueField(), groupReader, cancellationToken);
-                builder = new MapValueBuilder(keyValueField.Levels.MaxDefinitionLevel, keyValueField.Levels.MaxRepetitionLevel, key, value);
+                if (field.IsKeyOnlyMap)
+                {
+                    //No values, so the repeated key_value node makes a list of the keys (like the repeated node of a LIST does)
+                    builder = new ListValueBuilder(keyValueField.Levels.MaxDefinitionLevel, keyValueField.Levels.MaxRepetitionLevel, key);
+                }
+                else
+                {
+                    var value = await CreateValueBuilderAsync(keyValueField.GetMapValueField(), groupReader, cancellationToken);
+                    builder = new MapValueBuilder(keyValueField.Levels.MaxDefinitionLevel, keyValueField.Levels.MaxRepetitionLevel, key, value);
+                }
                 break;
             case FieldTypeId.Struct:
                 var children = field.Children;
