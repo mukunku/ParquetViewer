@@ -4,7 +4,7 @@ public interface IParquetMetadata
 {
     int ParquetVersion { get; }
     int RowGroupCount { get; }
-    int RowCount { get; }
+    long RowCount { get; }
     string CreatedBy { get; }
     ICollection<IRowGroupMetadata> RowGroups { get; }
     IParquetSchemaElement SchemaTree { get; }

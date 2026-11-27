@@ -10,6 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Parquet.Net" />
+    <PackageReference Include="Parquet.Net.mukunku" />
   </ItemGroup>
 </Project>

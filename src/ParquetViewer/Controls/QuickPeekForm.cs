@@ -150,9 +150,13 @@ public partial class QuickPeekForm : FormBase
         takeMeBackLinkLabel.Text = $"<<< {Resources.Strings.CantGoBackLinkButtonText}";
     }
 
+    //Only reached via ESC since the button is hidden (it's the form's CancelButton)
     private void CloseWindowButton_Click(object? sender, EventArgs? e)
     {
+        //Return focus to the form that opened us.
+        var owner = Owner;
         Close();
+        owner?.Activate();
     }
 
     private void SaveImageToFileButton_Click(object? sender, EventArgs? e)

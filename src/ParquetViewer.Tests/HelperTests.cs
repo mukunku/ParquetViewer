@@ -89,6 +89,55 @@ public class HelperTests
     }
 
     [TestMethod]
+    public async Task AMPLITUDE_EXCEPTION_INNER_EXCEPTION_MASKING_TEST()
+    {
+        var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
+        var innerException = new IOException(@"Could not read `secret_column` from `C:\secret\file.parquet`.");
+        var testEvent = new ExceptionEvent(new Exception("Outer exception", innerException), testAmplitudeEvent.CloneAmplitudeConfiguration());
+
+        //mock the http response
+        _ = mockHttpHandler.Expect(HttpMethod.Post, "*").Respond(async (request) =>
+        {
+            string requestJsonBody = await (request.Content?.ReadAsStringAsync() ?? Task.FromResult(string.Empty));
+
+            var requestJson = JsonNode.Parse(requestJsonBody);
+            var innerExceptionText = requestJson?["events"]?[0]?["event_properties"]?["innerException"]?.GetValue<string>();
+            if (innerExceptionText is not null
+                && innerExceptionText.Contains($"System.IO.IOException: Could not read {ExceptionEvent.MASK_SENTINEL} from {ExceptionEvent.MASK_SENTINEL}.")
+                && !innerExceptionText.Contains("secret"))
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        });
+
+        bool wasSuccess = await testEvent.RecordAsync();
+        Assert.IsTrue(wasSuccess, "Inner exception message wasn't masked correctly");
+    }
+
+    [TestMethod]
+    public void AMPLITUDE_EXCEPTION_SENSITIVE_FILE_DETAILS_MASKING_TEST()
+    {
+        //"SOURCE" is a substring of "INVESTOR_SOURCE_ID" so it must not leave part of the longer field name unmasked
+        var sensitiveFileDetails = new SensitiveFileDetails([@"C:\data\investors.parquet"], ["SOURCE", "INVESTOR_SOURCE_ID"]);
+
+        var maskedMessage = sensitiveFileDetails.Mask(
+            @"column 'INVESTOR_SOURCE_ID' is missing data page header, file is corrupt: C:\data\investors.parquet");
+
+        Assert.AreEqual($"column '{ExceptionEvent.MASK_SENTINEL}' is missing data page header, file is corrupt: {ExceptionEvent.MASK_SENTINEL}", maskedMessage);
+    }
+
+    [TestMethod]
+    public void AMPLITUDE_EXCEPTION_SENSITIVE_FOLDER_DETAILS_MASKING_TEST()
+    {
+        //When a folder is open, each file's full path must be masked, not just the folder prefix
+        var filePath = @"\\server\share\Hazard Cache\region=O'Brien EMEA\Event 1.parquet";
+        var sensitiveFileDetails = new SensitiveFileDetails([@"\\server\share\Hazard Cache\other.parquet", filePath], []);
+
+        var maskedMessage = sensitiveFileDetails.Mask($"An unexpected network error occurred. : '{filePath}'.");
+        Assert.AreEqual($"An unexpected network error occurred. : '{ExceptionEvent.MASK_SENTINEL}'.", maskedMessage);
+    }
+
+    [TestMethod]
     public async Task AMPLITUDE_EXCEPTION_ADDITIONAL_DATA_IS_SERIALIZED_TEST()
     {
         var testAmplitudeEvent = TestAmplitudeEvent.MockRequest(out var mockHttpHandler);
@@ -114,6 +163,48 @@ public class HelperTests
 
         bool wasSuccess = await testEvent.RecordAsync();
         Assert.IsTrue(wasSuccess, "Additional exception data wasn't added to the amplitude event as expected");
+    }
+
+    [TestMethod]
+    [DataRow(".csv", FileType.CSV)]
+    [DataRow(".xls", FileType.XLS)]
+    [DataRow(".json", FileType.JSON)]
+    [DataRow(".parquet", FileType.PARQUET)]
+    [DataRow(".xlsx", FileType.XLSX)]
+    [DataRow(".CSV", FileType.CSV)] //Windows file names aren't case sensitive, e.g. Path.GetExtension("Report.CSV")
+    [DataRow(".Parquet", FileType.PARQUET)]
+    public void EXTENSION_TO_FILE_TYPE_TEST(string extension, FileType expectedFileType)
+    {
+        Assert.AreEqual(expectedFileType, UtilityMethods.ExtensionToFileType(extension));
+    }
+
+    [TestMethod]
+    [DataRow(".txt")]
+    [DataRow("csv")] //Missing the leading '.'
+    [DataRow(".csv ")]
+    [DataRow(".")]
+    [DataRow("")]
+    public void UNSUPPORTED_EXTENSION_TO_FILE_TYPE_TEST(string extension)
+    {
+        Assert.IsNull(UtilityMethods.ExtensionToFileType(extension));
+    }
+
+    [TestMethod]
+    public void FILE_TYPE_EXTENSION_ROUND_TRIP_TEST()
+    {
+        //Every file type's extension should map back to the same file type
+        foreach (var fileType in Enum.GetValues<FileType>())
+        {
+            var extension = fileType.GetExtension();
+            Assert.StartsWith(".", extension);
+            Assert.AreEqual(fileType, UtilityMethods.ExtensionToFileType(extension), $"Extension `{extension}` didn't map back to {fileType}");
+        }
+    }
+
+    [TestMethod]
+    public void UNDEFINED_FILE_TYPE_HAS_NO_EXTENSION_TEST()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => ((FileType)999).GetExtension());
     }
 
     [TestMethod]
@@ -333,5 +424,90 @@ public class HelperTests
         Assert.AreEqual("01-02-03-04[...]07-08-09-10", byteArrayValue.ToStringTruncated(28));
         Assert.AreEqual("01-02-03-04-05-06-07-08-09-10", byteArrayValue.ToStringTruncated(29));
         Assert.AreEqual("01-02-03-04-05-06-07-08-09-10", byteArrayValue.ToString());
+    }
+
+    /// <summary>
+    /// Verifies that the date/time format strings returned by <see cref="ExtensionMethods.GetDateOnlyFormat"/>
+    /// and <see cref="ExtensionMethods.GetTimeOnlyFormat"/> (and the custom-format strip helpers they rely on)
+    /// can actually be used to render a <see cref="DateOnly"/>/<see cref="TimeOnly"/> in many different cultures.
+    /// </summary>
+    /// <remarks>An empty formatting result is considered valid; only exceptions are treated as failures.</remarks>
+    [TestMethod]
+    public void GET_DATE_AND_TIME_ONLY_FORMATS_ARE_VALID_FOR_CULTURE()
+    {
+        string[] cultures = [
+            //Invariant-ish / common western cultures
+            "en-US", "en-GB", "en-CA", "en-AU", "en-IN",
+            "de-DE", "de-AT", "de-CH",
+            "fr-FR", "fr-CA", "fr-BE",
+            "es-ES", "es-MX", "es-AR",
+            "it-IT", "pt-BR", "pt-PT",
+            "nl-NL", "nb-NO", "sv-SE", "da-DK", "fi-FI",
+            //Central / eastern europe (some use '.' date separators)
+            "pl-PL", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "el-GR",
+            "ru-RU", "uk-UA", "tr-TR",
+            //Right-to-left / non-Gregorian calendars
+            "ar-SA", "ar-EG", "ar-AE", "he-IL", "fa-IR",
+            //Asia / pacific
+            "hi-IN", "bn-IN", "ta-IN", "th-TH", "vi-VN", "id-ID", "ms-MY",
+            "ja-JP", "ko-KR", "zh-CN", "zh-TW", "zh-HK",
+            //Africa / other
+            "af-ZA", "sw-KE", "am-ET", "ka-GE", "hy-AM", "az-AZ", "uz-UZ",
+            "kk-KZ", "mn-MN", "ne-NP", "si-LK", "km-KH", "lo-LA", "my-MM",
+            "ur-PK", "ps-AF",
+        ];
+
+        var originalCulture = CultureInfo.CurrentCulture;
+        var failures = new List<string>();
+        try
+        {
+            foreach (var cultureName in cultures)
+            {
+                var culture = new CultureInfo(cultureName);
+                CultureInfo.CurrentCulture = culture;
+
+                //The culture's own date+time layout, i.e. what a user of that culture would naturally
+                //enter into the custom date format dialog.
+                var customFormat =
+                    $"{culture.DateTimeFormat.ShortDatePattern} {culture.DateTimeFormat.LongTimePattern}";
+
+                foreach (var dateFormat in new[] { DateFormat.Default, DateFormat.ISO8601, DateFormat.Custom })
+                {
+                    var dateOnlyFormat = dateFormat == DateFormat.Custom
+                        ? UtilityMethods.StripTimeComponentsFromDateTimeFormat(customFormat)
+                        : dateFormat.GetDateOnlyFormat();
+                    var timeOnlyFormat = dateFormat == DateFormat.Custom
+                        ? UtilityMethods.StripDateComponentsFromDateTimeFormat(customFormat)
+                        : dateFormat.GetTimeOnlyFormat();
+
+                    try
+                    {
+                        //An empty result is fine; we only care that the format doesn't blow up.
+                        _ = new DateOnly(2024, 1, 2).ToString(dateOnlyFormat);
+                    }
+                    catch (Exception ex)
+                    {
+                        failures.Add($"{cultureName} | {dateFormat} | DateOnly | '{dateOnlyFormat}' -> {ex.GetType().Name}: {ex.Message}");
+                    }
+
+                    try
+                    {
+                        //An empty result is fine; we only care that the format doesn't blow up.
+                        _ = new TimeOnly(13, 45, 30).ToString(timeOnlyFormat);
+                    }
+                    catch (Exception ex)
+                    {
+                        failures.Add($"{cultureName} | {dateFormat} | TimeOnly | '{timeOnlyFormat}' -> {ex.GetType().Name}: {ex.Message}");
+                    }
+                }
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+
+        Assert.IsEmpty(failures,
+            $"The following culture/format combinations failed to render:{Environment.NewLine}{string.Join(Environment.NewLine, failures)}");
     }
 }

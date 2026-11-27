@@ -1,7 +1,6 @@
 ﻿using Parquet.Meta;
 using Parquet.Schema;
 using ParquetViewer.Engine.Exceptions;
-using ParquetViewer.Engine.ParquetNET.Types;
 using ParquetViewer.Engine.Types;
 
 namespace ParquetViewer.Engine.ParquetNET;
@@ -16,25 +15,6 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     private readonly Dictionary<string, ParquetSchemaElement> _children = [];
     public IReadOnlyList<ParquetSchemaElement> Children => _children.Values.ToList();
-
-    private IEnumerable<ParquetSchemaElement> ParentsExcludingRoot
-    {
-        get
-        {
-            var current = Parent;
-            while (current is not null)
-            {
-                //Don't return the root node
-                var isRoot = current.Parent is null;
-                if (isRoot)
-                    break;
-
-                yield return current;
-
-                current = current.Parent;
-            }
-        }
-    }
 
     public FieldTypeId FieldType
     {
@@ -121,63 +101,83 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     public override string ToString() => Path;
 
-    private SystemFieldTypeId? _systemFieldType = null;
+    /// <summary>
+    /// Gets the repeated node of this LIST field.
+    /// </summary>
     public ParquetSchemaElement GetListField()
     {
         var field = GetSingleOrByName("list");
-        field._systemFieldType = SystemFieldTypeId.ListNode;
+
+        //Both the standard three-level and the legacy two-level layouts need a repeated node, otherwise there's nothing to make a list
+        if (field.RepetitionType != RepetitionTypeId.Repeated)
+            throw new MalformedFieldException($"Invalid LIST field `{PathWithParent}` has no repeated child");
+
         return field;
     }
+
+    /// <summary>
+    /// Gets the element of a three-level list. Must be called on a LIST field's repeated node (see <see cref="GetListField"/>).
+    /// </summary>
     public ParquetSchemaElement GetListItemField()
     {
-        if (_systemFieldType != SystemFieldTypeId.ListNode)
-            throw GetSystemFieldAccessException(SystemFieldTypeId.ListItemNode);
+        //Checked using the schema structure so it doesn't matter how this node was reached
+        if (Parent?.FieldType != FieldTypeId.List)
+            throw new InvalidOperationException($"Can't get the list item of `{PathWithParent}` as it isn't the repeated node of a LIST field");
 
         try
         {
-            var field = GetSingleOrByName("item");
-            field._systemFieldType = SystemFieldTypeId.ListItemNode;
-            return field;
+            return GetSingleOrByName("item");
         }
         catch (Exception ex)
         {
             throw new UnsupportedFieldException($"Cannot load field `{Path}`. Invalid List type.", ex);
         }
     }
+
+    /// <summary>
+    /// Gets the repeated key_value node of this MAP field.
+    /// </summary>
     public ParquetSchemaElement GetMapKeyValueField()
     {
         var field = GetSingleOrByName("key_value");
-        field._systemFieldType = SystemFieldTypeId.MapKeyValueNode;
+
+        if (field.RepetitionType != RepetitionTypeId.Repeated)
+            throw new MalformedFieldException($"Invalid MAP field `{PathWithParent}` has no repeated child");
+
         return field;
     }
+
+    /// <summary>
+    /// Gets the map's key. Must be called on a MAP field's key_value node (see <see cref="GetMapKeyValueField"/>).
+    /// </summary>
     public ParquetSchemaElement GetMapKeyField()
     {
-        if (_systemFieldType != SystemFieldTypeId.MapKeyValueNode)
-            throw GetSystemFieldAccessException(SystemFieldTypeId.MapKeyNode);
+        //Checked using the schema structure so it doesn't matter how this node was reached
+        if (Parent?.FieldType != FieldTypeId.Map)
+            throw new InvalidOperationException($"Can't get the map key of `{PathWithParent}` as it isn't the key_value node of a MAP field");
 
-        var field = GetChildCI("key");
-        field._systemFieldType = SystemFieldTypeId.MapKeyNode;
-        return field;
+        return GetChildCI("key");
     }
+
+    /// <summary>
+    /// Gets the map's value. Must be called on a MAP field's key_value node (see <see cref="GetMapKeyValueField"/>).
+    /// </summary>
     public ParquetSchemaElement GetMapValueField()
     {
-        if (_systemFieldType != SystemFieldTypeId.MapKeyValueNode)
-            throw GetSystemFieldAccessException(SystemFieldTypeId.MapValueNode);
+        //Checked using the schema structure so it doesn't matter how this node was reached
+        if (Parent?.FieldType != FieldTypeId.Map)
+            throw new InvalidOperationException($"Can't get the map value of `{PathWithParent}` as it isn't the key_value node of a MAP field");
 
-        var field = GetChildCI("value");
-        field._systemFieldType = SystemFieldTypeId.MapValueNode;
-        return field;
+        return GetChildCI("value");
     }
-    public bool BelongsToListField => _systemFieldType == SystemFieldTypeId.ListItemNode;
-    public bool BelongsToListOfStructsField =>
-        Parent?._systemFieldType == SystemFieldTypeId.ListItemNode && Parent?.FieldType == FieldTypeId.Struct;
-    public int NumberOfListParents => ParentsExcludingRoot.Count(@field => @field.SchemaElement.RepetitionType == FieldRepetitionType.REPEATED);
 
-    public int CurrentDefinitionLevel => ParentsExcludingRoot.Append(this)
-        .Count(
-            @field => @field.SchemaElement.RepetitionType == FieldRepetitionType.OPTIONAL
-            || (@field._systemFieldType == SystemFieldTypeId.ListNode && @field.Parent?._systemFieldType == SystemFieldTypeId.ListItemNode) //Fixes list-of-lists tests
-        );
+    private FieldLevels? _levels;
+
+    /// <summary>
+    /// The repetition/definition level arithmetic for this element, computed once and cached.
+    /// See <see cref="FieldLevels"/>.
+    /// </summary>
+    public FieldLevels Levels => _levels ??= FieldLevels.For(this);
 
     public bool IsPrimitive => FieldType == FieldTypeId.Primitive;
 
@@ -194,122 +194,20 @@ public class ParquetSchemaElement : IParquetSchemaElement
         {
             FieldTypeId.List => typeof(ListValue),
             FieldTypeId.Map => typeof(MapValue),
-            FieldTypeId.Struct => typeof(StructValueExt),
+            FieldTypeId.Struct => typeof(StructValue),
             FieldTypeId.Primitive => throw new InvalidOperationException($"Cannot determine CLR type for primitive field `{Path}` without ClrType information."),
             _ => throw new InvalidOperationException($"Unknown complex type {FieldType} detected for field `{Path}`")
         },
-        //Parquet.Net v6 handles byte[] and string values as ReadOnlyMemory types
+        //Parquet.Net v6 handles byte[] and string values as ReadOnlyMemory types.
         _ => DataField.ClrType switch
         {
             _ when DataField.ClrType == typeof(ReadOnlyMemory<char>) => typeof(string),
-            _ when DataField.ClrType == typeof(ReadOnlyMemory<byte>) => typeof(byte[]),
+            _ when DataField.ClrType == typeof(ReadOnlyMemory<byte>) => typeof(ByteArrayValue),
             _ => DataField.ClrType
         }
     };
 
-    public object? LogicalType => LogicalTypeToJSONObject(SchemaElement.LogicalType);
-
-    private static object? LogicalTypeToJSONObject(LogicalType? logicalType)
-    {
-        if (logicalType is null)
-        {
-            return null;
-        }
-        else if (logicalType.STRING is not null)
-        {
-            return new { Name = nameof(logicalType.STRING) };
-        }
-        else if (logicalType.MAP is not null)
-        {
-            return new { Name = nameof(logicalType.MAP) };
-        }
-        else if (logicalType.LIST is not null)
-        {
-            return new { Name = nameof(logicalType.LIST) };
-        }
-        else if (logicalType.ENUM is not null)
-        {
-            return new { Name = nameof(logicalType.ENUM) };
-        }
-        else if (logicalType.DECIMAL is not null)
-        {
-            return new
-            {
-                Name = nameof(logicalType.DECIMAL),
-                logicalType.DECIMAL.Scale,
-                logicalType.DECIMAL.Precision
-            };
-        }
-        else if (logicalType.DATE is not null)
-        {
-            return new { Name = nameof(logicalType.DATE) };
-        }
-        else if (logicalType.TIME is not null)
-        {
-            return new
-            {
-                Name = nameof(logicalType.TIME),
-                logicalType.TIME.IsAdjustedToUTC,
-                Unit = TimeUnitToString(logicalType.TIME.Unit)
-            };
-        }
-        else if (logicalType.TIMESTAMP is not null)
-        {
-            return new
-            {
-                Name = nameof(logicalType.TIMESTAMP),
-                logicalType.TIMESTAMP.IsAdjustedToUTC,
-                Unit = TimeUnitToString(logicalType.TIMESTAMP.Unit)
-            };
-        }
-        else if (logicalType.INTEGER is not null)
-        {
-            return new
-            {
-                Name = nameof(logicalType.INTEGER),
-                logicalType.INTEGER.BitWidth,
-                logicalType.INTEGER.IsSigned
-            };
-        }
-        else if (logicalType.JSON is not null)
-        {
-            return new { Name = nameof(logicalType.JSON) };
-        }
-        else if (logicalType.BSON is not null)
-        {
-            return new { Name = nameof(logicalType.BSON) };
-        }
-        else if (logicalType.UUID is not null)
-        {
-            return new { Name = nameof(logicalType.UUID) };
-        }
-        else if (logicalType.UNKNOWN is not null)
-        {
-            return new { Name = $"{logicalType.UNKNOWN.GetType().Name}" };
-        }
-        else
-        {
-            return new { Name = nameof(logicalType.UNKNOWN) };
-        }
-    }
-
-    static string TimeUnitToString(TimeUnit? timeUnit)
-    {
-        var timeUnitString = string.Empty;
-        if (timeUnit?.MILLIS is not null)
-        {
-            timeUnitString = nameof(timeUnit.MILLIS);
-        }
-        else if (timeUnit?.MICROS is not null)
-        {
-            timeUnitString = nameof(timeUnit.MICROS);
-        }
-        else if (timeUnit?.NANOS is not null)
-        {
-            timeUnitString = nameof(timeUnit.NANOS);
-        }
-        return timeUnitString;
-    }
+    public object? LogicalType => LogicalTypeMetadataResolver.LogicalTypeToJSONObject(SchemaElement.LogicalType);
 
     public RepetitionTypeId? RepetitionType => SchemaElement.RepetitionType switch
     {
@@ -324,12 +222,9 @@ public class ParquetSchemaElement : IParquetSchemaElement
     public string? ConvertedType => SchemaElement.ConvertedType?.ToString();
     public int? Scale => SchemaElement.Scale;
     public int? Precision => SchemaElement.Precision;
-    object? IParquetSchemaElement.LogicalType => LogicalType;
     public string? Type => SchemaElement.Type?.ToString();
 
-    private InvalidOperationException GetSystemFieldAccessException(SystemFieldTypeId fieldType)
-        => new($"Can't get {fieldType} node from '{Parent?._systemFieldType}' " +
-                $"for `{Parent?.Path + '/' + Path}` with types '{Parent?.FieldType.ToString() + '/' + FieldType.ToString()}'");
+    object? IParquetSchemaElement.LogicalType => LogicalType;
 
     IParquetSchemaElement IParquetSchemaElement.GetChildCI(string name)
         => GetChildCI(name);
@@ -354,14 +249,4 @@ public class ParquetSchemaElement : IParquetSchemaElement
 
     IParquetSchemaElement IParquetSchemaElement.GetMapValueField()
         => GetMapValueField();
-
-    private enum SystemFieldTypeId
-    {
-        ListNode,
-        ListItemNode,
-        StructValueNode,
-        MapKeyValueNode,
-        MapKeyNode,
-        MapValueNode
-    }
 }

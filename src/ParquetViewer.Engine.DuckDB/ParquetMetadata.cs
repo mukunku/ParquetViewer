@@ -6,7 +6,7 @@ public class ParquetMetadata : IParquetMetadata
 
     public int RowGroupCount { get; }
 
-    public int RowCount { get; }
+    public long RowCount { get; }
 
     public string CreatedBy { get; }
 
@@ -15,7 +15,7 @@ public class ParquetMetadata : IParquetMetadata
     public IParquetSchemaElement SchemaTree { get; }
 
     private ParquetMetadata(IParquetSchemaElement schemaTree, ICollection<IRowGroupMetadata> rowGroups,
-        int recordCount, int parquetVersion, string createdBy, int rowGroupCount)
+        long recordCount, int parquetVersion, string createdBy, int rowGroupCount)
     {
         SchemaTree = schemaTree;
         RowGroups = rowGroups;
@@ -138,7 +138,7 @@ public class ParquetMetadata : IParquetMetadata
         var footerSigningKeyMetadata = fileMetadata.IsDBNull(6) ? null : fileMetadata.GetString(6);
         #endregion
 
-        var metadata = new ParquetMetadata(schemaTree, rowGroups, (int)numRows, (int)parquetVersion, createdBy ?? string.Empty, (int)numRowGroups);
+        var metadata = new ParquetMetadata(schemaTree, rowGroups, numRows, (int)parquetVersion, createdBy ?? string.Empty, (int)numRowGroups);
         return metadata;
     }
 

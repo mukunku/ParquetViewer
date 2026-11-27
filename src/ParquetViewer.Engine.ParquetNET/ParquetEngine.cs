@@ -30,7 +30,7 @@ public sealed partial class ParquetEngine : IParquetEngine
     public string Path { get; }
 
     ParquetMetadata? _metadata = null;
-    public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(ThriftMetadata, BuildParquetSchemaTree(), (int)RecordCount);
+    public IParquetMetadata Metadata => _metadata ??= new ParquetMetadata(ThriftMetadata, BuildParquetSchemaTree(), RecordCount);
 
     private ParquetEngine(string fileOrFolderPath, params (string FilePath, ParquetReader Reader)[] parquetFiles)
     {
@@ -83,7 +83,7 @@ public sealed partial class ParquetEngine : IParquetEngine
         }
         else
         {
-            throw new FileNotFoundException($"Could not find file or folder at location: {fileOrFolderPath}");
+            throw new FileNotFoundException($"Could not find file or folder at location: `{fileOrFolderPath}`");
         }
     }
 
@@ -91,7 +91,7 @@ public sealed partial class ParquetEngine : IParquetEngine
     {
         if (!File.Exists(parquetFilePath)) //Handles null
         {
-            throw new FileNotFoundException($"Could not find parquet file at: {parquetFilePath}");
+            throw new FileNotFoundException($"Could not find parquet file at: `{parquetFilePath}`");
         }
 
         try
@@ -99,9 +99,9 @@ public sealed partial class ParquetEngine : IParquetEngine
             var parquetReader = await OpenReaderAsync(parquetFilePath, _defaultParquetOptions);
             return new ParquetEngine(parquetFilePath, (parquetFilePath, parquetReader));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException and not OutOfMemoryException) //Let these through so the UI can show a specific message
         {
-            throw new FileReadException(ex);
+            throw new FileOpenException(ex);
         }
     }
 
@@ -109,7 +109,7 @@ public sealed partial class ParquetEngine : IParquetEngine
     {
         if (!Directory.Exists(folderPath)) //Handles null
         {
-            throw new DirectoryNotFoundException($"Directory doesn't exist: {folderPath}");
+            throw new DirectoryNotFoundException($"Directory doesn't exist: `{folderPath}`");
         }
 
         var skippedFiles = new Dictionary<string, Exception>();
@@ -261,18 +261,13 @@ public sealed partial class ParquetEngine : IParquetEngine
         var columnType = column.DataType == typeof(ByteArrayValue) ? typeof(byte[]) : column.DataType;
         columnType = columnSourceDataField.IsNullable ? GetNullableVersion(columnType) : columnType;
 
-        var recordCountAfterSkip = dataTable.Rows.Count - skipCount;
+        var defaultView = dataTable.DefaultView;
+        var recordCountAfterSkip = defaultView.Count - skipCount;
         var recordCountToRead = fetchCount > recordCountAfterSkip ? recordCountAfterSkip : fetchCount;
         var values = Array.CreateInstance(columnType, recordCountToRead);
-        var index = 0;
-        foreach (DataRow row in dataTable.Rows)
+        for (var index = 0; index < recordCountToRead; index++)
         {
-            if (skipCount-- > 0)
-            {
-                continue;
-            }
-
-            var value = row[column];
+            var value = defaultView[skipCount + index][column.Ordinal];
             if (value == DBNull.Value)
                 value = null;
             else if (value is IByteArrayValue byteArray)
@@ -280,12 +275,7 @@ public sealed partial class ParquetEngine : IParquetEngine
             else if (value is IListValue || value is IMapValue || value is IStructValue)
                 throw new NotSupportedException("List, Map, and Struct types are currently not supported.");
 
-            values.SetValue(value, index++);
-
-            if (--fetchCount <= 0)
-            {
-                break;
-            }
+            values.SetValue(value, index);
         }
 
         return values;
